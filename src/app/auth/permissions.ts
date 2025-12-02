@@ -13,7 +13,7 @@ export type PermissionKey = (typeof PERMISSION_KEYS)[number]
 
 export type Permissions = Record<PermissionKey, boolean>
 
-const createPermissionSet = (overrides: Partial<Permissions> = {}): Permissions => ({
+export const createPermissionSet = (overrides: Partial<Permissions> = {}): Permissions => ({
   viewDashboard: false,
   manageLicenses: false,
   manageProducts: false,

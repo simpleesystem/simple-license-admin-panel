@@ -29,6 +29,7 @@ import { LoggerContext } from './logging/loggerContext'
 import { createTrackingClient } from './analytics/tracking'
 import { TrackingContext } from './analytics/trackingContext'
 import { DevToolbar } from './dev/DevToolbar'
+import { AbilityProvider } from './abilities/AbilityProvider'
 
 type AppProvidersProps = PropsWithChildren
 
@@ -64,14 +65,18 @@ function AppProvidersInner({ children }: AppProvidersProps) {
               <AppStateProvider>
                 <AuthProvider>
                   <AuthorizationProvider>
-                    <RouterContextBridge queryClient={queryClient} />
-                    <NotificationBusProvider>
-                      <SessionManager />
-                      <QueryErrorNotifierBridge />
-                      <ToastProvider />
-                      <AppErrorBoundary>{children ?? <RouterProvider router={router} />}</AppErrorBoundary>
-                      <DevToolbar />
-                    </NotificationBusProvider>
+                    <AbilityProvider>
+                      <RouterContextBridge queryClient={queryClient} />
+                      <NotificationBusProvider>
+                        <SessionManager />
+                        <QueryErrorNotifierBridge />
+                        <ToastProvider />
+                        <AppErrorBoundary>
+                          {children ?? <RouterProvider router={router} />}
+                        </AppErrorBoundary>
+                        <DevToolbar />
+                      </NotificationBusProvider>
+                    </AbilityProvider>
                   </AuthorizationProvider>
                 </AuthProvider>
               </AppStateProvider>

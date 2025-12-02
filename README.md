@@ -62,6 +62,31 @@ Environment variables (see `src/app/config/appConfig.ts`):
 4. Secure routes with `assertPermission` (see above).
 5. Add/adjust tests in `test/app/auth/permissions.test.ts` and `test/app/auth/AuthorizationProvider.test.tsx` to guarantee the new capability flows through contexts and hooks.
 
+## Ability-Driven UI Gating
+
+- Ability vocabulary (actions/subjects) and the permission-to-ability bridge live in `src/app/abilities/abilityMap.ts`. Update the map whenever a new permission needs UI affordances; constants originate from `src/app/constants.ts`.
+- `AbilityProvider` (wired into `AppProviders`) derives a CASL ability instance from the current user’s permissions via `buildAbilityFromPermissions`. Consumers retrieve it through `useAbility()` or the convenience `useCanAbility(action, subject)`.
+- Declarative helpers:
+  - `IfCan` renders/disable/fallbacks based on an ability tuple.
+  - `IfPermission` mirrors the older permission API for scenarios where you still reason about `PermissionKey`.
+  - Example:
+    ```tsx
+    import { IfCan } from '@/app/abilities/IfCan'
+    import { ABILITY_ACTION_MANAGE, ABILITY_SUBJECT_LICENSE } from '@/app/constants'
+
+    export function LicenseToolbar() {
+      return (
+        <IfCan action={ABILITY_ACTION_MANAGE} subject={ABILITY_SUBJECT_LICENSE} fallback={null}>
+          <Button variant="primary">Issue license</Button>
+        </IfCan>
+      )
+    }
+    ```
+- Tests covering this stack live under `test/app/abilities/`:
+  - Pure mapping and factory tests (`abilityMapping.test.ts`, `factory.test.ts`).
+  - Hook/provider/component behavior (`useAbility.test.tsx`, `IfCan.test.tsx`).
+  - Provider integration with Auth→Authorization→Ability (`integration.test.tsx`).
+
 ## QA & Tooling
 
 Full hygiene suite (run from `license-server/`):

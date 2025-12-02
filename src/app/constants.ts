@@ -29,6 +29,8 @@ export const I18N_KEY_DEV_TOOLBAR_RESET = 'dev.toolbar.reset' as const
 export const I18N_KEY_DEV_PERSONA_SUPERUSER = 'dev.persona.superuser' as const
 export const I18N_KEY_DEV_PERSONA_SUPPORT = 'dev.persona.support' as const
 export const I18N_KEY_DEV_PERSONA_VIEWER = 'dev.persona.viewer' as const
+export const I18N_KEY_ABILITY_ERROR_HEADING = 'ability.error.heading' as const
+export const I18N_KEY_ABILITY_ERROR_BODY = 'ability.error.body' as const
 
 export const ROUTE_ID_ROOT = 'route.root' as const
 export const ROUTE_ID_DASHBOARD = 'route.dashboard' as const
@@ -114,6 +116,14 @@ export const DEV_PERSONA_VIEWER_EMAIL = 'viewer@example.com' as const
 export const DEV_PERSONA_SUPERUSER_TOKEN = 'dev-superuser-token' as const
 export const DEV_PERSONA_SUPPORT_TOKEN = 'dev-support-token' as const
 export const DEV_PERSONA_VIEWER_TOKEN = 'dev-viewer-token' as const
+export const ABILITY_ACTION_VIEW = 'view' as const
+export const ABILITY_ACTION_MANAGE = 'manage' as const
+export const ABILITY_SUBJECT_DASHBOARD = 'Dashboard' as const
+export const ABILITY_SUBJECT_LICENSE = 'License' as const
+export const ABILITY_SUBJECT_PRODUCT = 'Product' as const
+export const ABILITY_SUBJECT_TENANT = 'Tenant' as const
+export const ABILITY_SUBJECT_USER = 'User' as const
+export const ABILITY_SUBJECT_ANALYTICS = 'Analytics' as const
 
 export const TEST_ID_APP_SHELL = 'app-shell' as const
 export const TEST_ID_TOAST_CONTAINER = 'toast-container' as const
@@ -135,4 +145,5 @@ export const ERROR_MESSAGE_NOTIFICATION_CONTEXT_UNAVAILABLE = 'Notification bus 
 export const ERROR_MESSAGE_AUTHORIZATION_CONTEXT_UNAVAILABLE = 'Authorization context is unavailable' as const
 export const ERROR_MESSAGE_LOGGER_CONTEXT_UNAVAILABLE = 'Logger context is unavailable' as const
 export const ERROR_MESSAGE_TRACKING_CONTEXT_UNAVAILABLE = 'Tracking context is unavailable' as const
+export const ERROR_MESSAGE_ABILITY_CONTEXT_UNAVAILABLE = 'Ability context is unavailable' as const
 
