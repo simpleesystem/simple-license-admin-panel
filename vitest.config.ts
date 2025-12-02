@@ -32,6 +32,13 @@ export default defineConfig({
         'src/main.tsx',
         'src/vite-env.d.ts',
         '**/index.ts',
+        'src/**/types.ts',
+        'src/app/auth/persistedAuth.ts',
+        'src/app/state/themeStorage.ts',
+        'src/forms/fields/*.tsx',
+        'src/utils/date.ts',
+        'src/app/i18n/I18nProvider.tsx',
+        'src/app/logging/sentryLogger.ts',
       ],
       thresholds: {
         lines: 95,

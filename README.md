@@ -1,73 +1,81 @@
-# React + TypeScript + Vite
+# Simple License Admin — Pre-UI Foundation
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The admin panel ships a non-UI foundation focused on configuration safety, authentication, RBAC, data/query infrastructure, observability, and developer ergonomics. React Bootstrap provides the eventual visual layer, but phase 2 concentrates on domain logic, providers, and testable helpers so feature teams can focus on business workflows.
 
-Currently, two official plugins are available:
+## Prerequisites & Install
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+All commands must run from the workspace root's `license-server` directory to ensure the correct package.json is used.
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+cd /Users/caseycapps/code/simple-license-system/license-server
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Environment variables (see `src/app/config/appConfig.ts`):
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+| Env var | Purpose | Example |
+| --- | --- | --- |
+| `VITE_API_BASE_URL` | Points the SDK to the backend gateway | `https://localhost:4000` |
+| `VITE_SENTRY_DSN` | Optional error reporting DSN | *(empty for local)* |
+| `VITE_FEATURE_DEV_TOOLS` | Enables dev personas + toolbar | `true` |
+| `VITE_FEATURE_QUERY_CACHE_PERSISTENCE` | Opt-in React Query cache persistence | `false` |
+| `VITE_FEATURE_EXPERIMENTAL_FILTERS` | Toggles experimental list filters | `false` |
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Dev Personas & Scenarios
+
+- Helpers live in `src/app/dev/devScenarios.ts`.
+- Dev tooling honours both `VITE_FEATURE_DEV_TOOLS=true` and `import.meta.env.MODE !== 'production'`.
+- `applyDevPersona(personaKey)` seeds local storage (token + user) via the same persistence helpers used by the real auth flow. `clearDevPersona()` removes everything.
+- `DevToolbar` renders automatically (bottom-right overlay) once the feature flag is enabled. Each persona button seeds auth state; the Reset button clears it. The toolbar never renders in production builds.
+- Tests live in `test/app/dev/devScenarios.test.ts` to guarantee helpers are no-ops outside dev environments.
+
+## Adding a Protected Route
+
+1. Create the route file under `src/routes/**` using TanStack Router's file-based convention.
+2. Import `assertAuthenticated` (and `assertPermission` when needed) from `src/app/router.tsx`.
+3. Attach guards inside the route's `beforeLoad` hook:
+   ```ts
+   export const Route = createFileRoute('/tenants')({
+     beforeLoad: (ctx) => {
+       assertAuthenticated(ctx)
+       assertPermission(ctx, 'canManageTenants')
+     },
+     component: TenantsScreen,
+   })
+   ```
+4. Extend `ROLE_PERMISSION_MATRIX` in `src/app/auth/permissions.ts` if the feature introduces new permission concepts.
+5. Cover the route through `test/app/router/guards.test.ts` (redirect behaviour) plus any scenario tests that exercise the new component(s).
+
+## Wiring a New Query
+
+1. Use React Query hooks from `@tanstack/react-query`. `createAppQueryClient` already injects retry strategy, error normalization, and toast notifications.
+2. Throw API errors or `ApiException` objects—`handleQueryError` maps them into notification payloads automatically.
+3. When fetching SDK collections, run the result through selectors in `src/utils/selectors.ts` to keep components presentation-focused.
+4. Opt into cache persistence by enabling the `enableQueryCachePersistence` feature flag; `AppProviders` takes care of persister wiring.
+5. Test pure data helpers in `test/utils/**` and wrap query hooks inside provider-aware tests with `renderWithProviders`.
+
+## Adding or Updating Permissions
+
+1. Extend `PERMISSION_KEYS` and the `Permissions` type in `src/app/auth/permissions.ts`.
+2. Update `ROLE_PERMISSION_MATRIX` so each `AdminRole` explicitly declares the new capability.
+3. Use `useCan('permissionKey')` inside components to gate interactions/rendering.
+4. Secure routes with `assertPermission` (see above).
+5. Add/adjust tests in `test/app/auth/permissions.test.ts` and `test/app/auth/AuthorizationProvider.test.tsx` to guarantee the new capability flows through contexts and hooks.
+
+## QA & Tooling
+
+Full hygiene suite (run from `license-server/`):
+
+```bash
+npm run lint
+npm run build
+npm run test:coverage
+npm run test:mutation
 ```
+
+## Additional References
+
+- `src/app/query/**`: Shared retry/error strategies, cache persistence helpers, query-aware notification bus bridge.
+- `src/app/logging/**` and `src/app/analytics/**`: Logger + tracking abstractions wired into `AppProviders`.
+- `src/app/auth/SessionManager.tsx`: Idle detection, user warning toast, auto-logout, cross-tab storage sync.
+- `src/app/lists/**`: Shared list state model for pagination, sorting, filtering, and query serialization.

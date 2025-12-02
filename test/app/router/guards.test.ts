@@ -1,0 +1,81 @@
+import type { User } from '@simple-license/react-sdk'
+import { QueryClient } from '@tanstack/react-query'
+import type { RouterLocation } from '@tanstack/react-router'
+import { describe, expect, it } from 'vitest'
+
+import { assertAuthenticated, assertPermission, type RouterContext } from '../../../src/app/router'
+import {
+  ROUTE_PATH_AUTH,
+  ROUTE_PATH_ROOT,
+} from '../../../src/app/constants'
+import { derivePermissionsFromUser } from '../../../src/app/auth/permissions'
+
+type RedirectResponse = Response & {
+  options?: {
+    to?: string
+    search?: Record<string, unknown>
+  }
+}
+
+const baseLocation: Pick<RouterLocation, 'href'> = { href: '/dashboard' }
+
+const createContext = (overrides: Partial<RouterContext> = {}): RouterContext => ({
+  queryClient: new QueryClient(),
+  ...overrides,
+})
+
+const createUserRole = (role: User['role']) => ({ role } as Pick<User, 'role'>)
+
+const captureRedirect = (fn: () => void): RedirectResponse => {
+  try {
+    fn()
+    throw new Error('Redirect was not thrown')
+  } catch (error) {
+    return error as RedirectResponse
+  }
+}
+
+describe('router guards', () => {
+  it('redirects unauthenticated requests to the auth route', () => {
+    const context = createContext()
+
+    const redirectResponse = captureRedirect(() => assertAuthenticated(context, baseLocation))
+
+    expect(redirectResponse.options?.to).toBe(ROUTE_PATH_AUTH)
+    expect(redirectResponse.options?.search).toMatchObject({ redirect: baseLocation.href })
+  })
+
+  it('permits access when the user is authenticated and authorized', () => {
+    const context = createContext({
+      authState: {
+        isAuthenticated: true,
+        permissions: derivePermissionsFromUser(createUserRole('SUPERUSER')),
+      },
+    })
+
+    expect(() => assertPermission(context, baseLocation, 'manageUsers')).not.toThrow()
+  })
+
+  it('redirects to root when the user lacks permission', () => {
+    const context = createContext({
+      authState: {
+        isAuthenticated: true,
+        permissions: derivePermissionsFromUser(createUserRole('VIEWER')),
+      },
+    })
+
+    const redirectResponse = captureRedirect(() => assertPermission(context, baseLocation, 'manageUsers'))
+
+    expect(redirectResponse.options?.to).toBe(ROUTE_PATH_ROOT)
+  })
+
+  it('falls back to the root path when redirect targets are empty', () => {
+    const context = createContext()
+
+    const redirectResponse = captureRedirect(() =>
+      assertAuthenticated(context, { href: '' as unknown as RouterLocation['href'] }),
+    )
+
+    expect(redirectResponse.options?.search).toMatchObject({ redirect: ROUTE_PATH_ROOT })
+  })
+})
