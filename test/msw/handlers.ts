@@ -28,10 +28,23 @@ export const handlers = [
   http.get(API_ENDPOINT_ADMIN_USERS_ME, () => {
     return HttpResponse.json(
       {
-        user: buildUser(),
+        success: true,
+        data: {
+          user: buildUser(),
+        },
       },
       { status: 200 },
     )
+  }),
+  http.options(API_ENDPOINT_ADMIN_USERS_ME, () => {
+    return new HttpResponse(null, {
+      status: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      },
+    })
   }),
 ]
 
