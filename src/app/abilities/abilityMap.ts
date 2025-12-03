@@ -46,10 +46,11 @@ export const PERMISSION_TO_ABILITIES: PermissionAbilityMap = {
     [ABILITY_ACTION_MANAGE, ABILITY_SUBJECT_USER],
   ],
   viewAnalytics: [[ABILITY_ACTION_VIEW, ABILITY_SUBJECT_ANALYTICS]],
+  changePassword: [],
 }
 
 export const getAbilitiesForPermission = (permission: PermissionKey): readonly AbilityTuple[] => {
-  return PERMISSION_TO_ABILITIES[permission] ?? []
+  return PERMISSION_TO_ABILITIES[permission]
 }
 
 

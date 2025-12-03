@@ -14,6 +14,7 @@ import { useNotificationBus } from '../notifications/busContext'
 import { AuthProvider } from './auth/AuthProvider'
 import { useAuth } from './auth/authContext'
 import { AuthorizationProvider } from './auth/AuthorizationProvider'
+import { PasswordResetGate } from './auth/PasswordResetGate'
 import { usePermissions } from './auth/useAuthorization'
 import { SessionManager } from './auth/SessionManager'
 import { AppConfigProvider, useAppConfig, useFeatureFlag } from './config'
@@ -72,7 +73,9 @@ function AppProvidersInner({ children }: AppProvidersProps) {
                       <QueryErrorNotifierBridge />
                       <QueryErrorObserver queryEvents={queryEvents} />
                       <ToastProvider />
-                      <AppErrorBoundary>{children ?? <RouterProvider router={router} />}</AppErrorBoundary>
+                      <AppErrorBoundary>
+                        <PasswordResetGate>{children ?? <RouterProvider router={router} />}</PasswordResetGate>
+                      </AppErrorBoundary>
                     </NotificationBusProvider>
                   </AuthorizationProvider>
                 </AuthProvider>

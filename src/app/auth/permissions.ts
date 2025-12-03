@@ -7,6 +7,7 @@ export const PERMISSION_KEYS = [
   'manageTenants',
   'manageUsers',
   'viewAnalytics',
+  'changePassword',
 ] as const
 
 export type PermissionKey = (typeof PERMISSION_KEYS)[number]
@@ -20,6 +21,7 @@ export const createPermissionSet = (overrides: Partial<Permissions> = {}): Permi
   manageTenants: false,
   manageUsers: false,
   viewAnalytics: false,
+  changePassword: false,
   ...overrides,
 })
 
@@ -54,7 +56,11 @@ const ROLE_PERMISSION_MATRIX: Record<AdminRole, Permissions> = {
 
 const DEFAULT_PERMISSIONS = createPermissionSet()
 
-export const derivePermissionsFromUser = (user: Pick<User, 'role'> | null | undefined): Permissions => {
+export const derivePermissionsFromUser = (user: Pick<User, 'role' | 'passwordResetRequired'> | null | undefined): Permissions => {
+  if (user?.passwordResetRequired) {
+    return createPermissionSet({ changePassword: true })
+  }
+
   if (!user?.role) {
     return { ...DEFAULT_PERMISSIONS }
   }

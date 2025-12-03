@@ -21,8 +21,14 @@ describe('permission to ability mapping', () => {
     const mappedPermissionKeys = Object.keys(PERMISSION_TO_ABILITIES)
     expect(mappedPermissionKeys).toHaveLength(PERMISSION_KEYS.length)
 
+    const permissionsWithoutAbilities = new Set(['changePassword'])
+
     PERMISSION_KEYS.forEach((permission) => {
-      expect(getAbilitiesForPermission(permission)).not.toHaveLength(0)
+      if (permissionsWithoutAbilities.has(permission)) {
+        expect(getAbilitiesForPermission(permission)).toHaveLength(0)
+      } else {
+        expect(getAbilitiesForPermission(permission)).not.toHaveLength(0)
+      }
     })
   })
 

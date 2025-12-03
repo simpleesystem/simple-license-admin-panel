@@ -2,8 +2,10 @@ import { faker } from '@faker-js/faker'
 import { describe, expect, test } from 'vitest'
 
 import {
+  createEntitlementBlueprint,
   createLicenseBlueprint,
   createProductBlueprint,
+  createTenantQuotaBlueprint,
   createUserBlueprint,
 } from '../../../src/ui/formBuilder/factories'
 import type { UiSelectOption } from '../../../src/ui/types'
@@ -94,6 +96,37 @@ describe('form blueprint factories', () => {
     const section = blueprint.sections.find((candidate) => candidate.id === 'details')
 
     expect(section?.fields.some((field) => field.name === 'password')).toBe(false)
+  })
+
+  test('entitlement blueprint configures value type select', () => {
+    const blueprint = createEntitlementBlueprint('create')
+    const valueTypeField = findField('value_type', 'details', blueprint)
+
+    expect(valueTypeField).toMatchObject({
+      component: 'select',
+      options: expect.arrayContaining([
+        expect.objectContaining({ value: 'number' }),
+        expect.objectContaining({ value: 'boolean' }),
+        expect.objectContaining({ value: 'string' }),
+      ]),
+    })
+  })
+
+  test('tenant quota blueprint exposes number fields for each limit', () => {
+    const blueprint = createTenantQuotaBlueprint()
+    const fields = [
+      'max_products',
+      'max_products_soft',
+      'max_activations_per_product',
+      'max_activations_per_product_soft',
+      'max_activations_total',
+      'max_activations_total_soft',
+      'quota_warning_threshold',
+    ]
+
+    fields.forEach((fieldName) => {
+      expect(findField(fieldName, 'limits', blueprint)).toMatchObject({ component: 'text' })
+    })
   })
 })
 

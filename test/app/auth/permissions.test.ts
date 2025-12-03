@@ -43,6 +43,12 @@ describe('derivePermissionsFromUser', () => {
     expect(viewerPermissions.viewAnalytics).toBe(true)
     expect(viewerPermissions.manageLicenses).toBe(false)
   })
+  it('limits permissions to changePassword when reset required', () => {
+    const permissions = derivePermissionsFromUser({ role: 'ADMIN', passwordResetRequired: true })
+    expect(permissions.changePassword).toBe(true)
+    expect(permissions.viewDashboard).toBe(false)
+    expect(permissions.manageUsers).toBe(false)
+  })
 })
 
 describe('hasPermission', () => {
@@ -54,6 +60,7 @@ describe('hasPermission', () => {
       manageTenants: false,
       manageUsers: false,
       viewAnalytics: true,
+      changePassword: false,
     }
 
     expect(hasPermission(permissions, 'viewDashboard')).toBe(true)
