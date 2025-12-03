@@ -1,6 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query'
 import { createRouter, createRoute, createRootRouteWithContext, redirect } from '@tanstack/react-router'
-import type { RouterLocation } from '@tanstack/react-router'
 
 import {
   ROUTE_PATH_AUTH,
@@ -21,6 +20,10 @@ export type AuthStateSnapshot = {
 export type RouterContext = {
   queryClient: QueryClient
   authState?: AuthStateSnapshot
+}
+
+type RouterLocationLike = {
+  href: string
 }
 
 const rootRoute = createRootRouteWithContext<RouterContext>()({
@@ -69,7 +72,7 @@ declare module '@tanstack/react-router' {
   }
 }
 
-const resolveRedirectTarget = (location: Pick<RouterLocation, 'href'>): string => {
+const resolveRedirectTarget = (location: RouterLocationLike): string => {
   const target = location.href
   if (typeof target === 'string' && target.trim().length > 0) {
     return target
@@ -77,7 +80,7 @@ const resolveRedirectTarget = (location: Pick<RouterLocation, 'href'>): string =
   return ROUTE_PATH_ROOT
 }
 
-export const assertAuthenticated = (context: RouterContext, location: Pick<RouterLocation, 'href'>) => {
+export const assertAuthenticated = (context: RouterContext, location: RouterLocationLike) => {
   if (!context.authState?.isAuthenticated) {
     throw redirect({
       to: ROUTE_PATH_AUTH,
@@ -90,7 +93,7 @@ export const assertAuthenticated = (context: RouterContext, location: Pick<Route
 
 export const assertPermission = (
   context: RouterContext,
-  location: Pick<RouterLocation, 'href'>,
+  location: RouterLocationLike,
   permission: PermissionKey,
 ) => {
   assertAuthenticated(context, location)

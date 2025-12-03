@@ -7,6 +7,7 @@ import {
   canUseDevTools,
   DEV_PERSONA_KEYS,
 } from '@/app/dev/devScenarios'
+import type { DevPersonaKey } from '@/app/dev/devScenarios'
 import {
   DEV_PERSONA_SUPERUSER,
   STORAGE_KEY_AUTH_TOKEN,
@@ -28,6 +29,20 @@ describe('devScenarios', () => {
 
     expect(persistAuthSpy).toHaveBeenCalledTimes(1)
     expect(persistAuthUserSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not persist persona data outside dev environments', () => {
+    const persistAuthSpy = vi.spyOn(persistedAuth, 'persistAuth')
+
+    applyDevPersona(DEV_PERSONA_SUPERUSER, 'production')
+
+    expect(persistAuthSpy).not.toHaveBeenCalled()
+  })
+
+  it('ignores unknown persona keys gracefully', () => {
+    const persistAuthSpy = vi.spyOn(persistedAuth, 'persistAuth')
+    applyDevPersona('unknown' as DevPersonaKey)
+    expect(persistAuthSpy).not.toHaveBeenCalled()
   })
 
   it('clears all stored auth state', () => {

@@ -13,13 +13,9 @@ export const useAbility = (): AppAbility => {
   return context
 }
 
-export const useCanAbility = (
-  action: AbilityAction,
-  subject: AbilitySubject,
-  conditions?: Record<string, unknown>,
-): boolean => {
+export const useCanAbility = (action: AbilityAction, subject: AbilitySubject): boolean => {
   const ability = useAbility()
-  return ability.can(action, subject, conditions)
+  return ability.can(action, subject)
 }
 
 

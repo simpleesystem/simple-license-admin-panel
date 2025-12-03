@@ -73,8 +73,8 @@ export const DEV_PERSONA_KEYS: DevPersonaKey[] = [
   DEV_PERSONA_VIEWER,
 ]
 
-export const applyDevPersona = (persona: DevPersonaKey): void => {
-  if (!isDevEnvironment()) {
+export const applyDevPersona = (persona: DevPersonaKey, mode?: string): void => {
+  if (!isDevEnvironment(mode)) {
     return
   }
   const definition = DEV_PERSONAS[persona]

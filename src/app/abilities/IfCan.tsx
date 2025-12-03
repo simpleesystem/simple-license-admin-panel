@@ -18,7 +18,6 @@ type IfCanProps = PropsWithChildren<{
   subject: AbilitySubject
   fallback?: FallbackType
   mode?: IfCanMode
-  conditions?: Record<string, unknown>
 }>
 
 const resolveFallback = (fallback: FallbackType | undefined, allowed: boolean): ReactNode => {
@@ -44,16 +43,9 @@ const disableChild = (child: ReactNode): ReactNode => {
   })
 }
 
-export function IfCan({
-  action,
-  subject,
-  fallback,
-  mode = 'hide',
-  children,
-  conditions,
-}: IfCanProps) {
+export function IfCan({ action, subject, fallback, mode = 'hide', children }: IfCanProps) {
   return (
-    <ContextualCan I={action} a={subject} this={conditions}>
+    <ContextualCan I={action} a={subject} passThrough>
       {(isAllowed: boolean) => {
         if (isAllowed) {
           return children

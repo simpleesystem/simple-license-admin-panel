@@ -10,7 +10,7 @@ import {
 import { AbilityProvider } from '@/app/abilities/AbilityProvider'
 import { useAbility, useCanAbility } from '@/app/abilities/useAbility'
 import { AuthorizationContext } from '@/app/auth/authorizationContext'
-import { buildPermissions } from '@/test/factories/permissionFactory'
+import { buildPermissions } from '@test/factories/permissionFactory'
 
 const withProviders = (permissions = buildPermissions({ viewDashboard: true })) => {
   return ({ children }: { children: ReactNode }) => (

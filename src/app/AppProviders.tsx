@@ -28,8 +28,8 @@ import { createAppLogger } from './logging/logger'
 import { LoggerContext } from './logging/loggerContext'
 import { createTrackingClient } from './analytics/tracking'
 import { TrackingContext } from './analytics/trackingContext'
-import { DevToolbar } from './dev/DevToolbar'
-import { AbilityProvider } from './abilities/AbilityProvider'
+import { createQueryEventBus } from './query/events'
+import { QueryErrorObserver } from './query/QueryErrorObserver'
 
 type AppProvidersProps = PropsWithChildren
 
@@ -45,7 +45,8 @@ function AppProvidersInner({ children }: AppProvidersProps) {
   const appConfig = useAppConfig()
   const logger = useMemo(() => createAppLogger(appConfig), [appConfig])
   const trackingClient = useMemo(() => createTrackingClient(), [])
-  const queryClient = useMemo(() => createAppQueryClient(logger), [logger])
+  const queryEvents = useMemo(() => createQueryEventBus(), [])
+  const queryClient = useMemo(() => createAppQueryClient(logger, queryEvents), [logger, queryEvents])
   const enableCachePersistence = useFeatureFlag('enableQueryCachePersistence')
 
   useEffect(() => {
@@ -65,18 +66,14 @@ function AppProvidersInner({ children }: AppProvidersProps) {
               <AppStateProvider>
                 <AuthProvider>
                   <AuthorizationProvider>
-                    <AbilityProvider>
-                      <RouterContextBridge queryClient={queryClient} />
-                      <NotificationBusProvider>
-                        <SessionManager />
-                        <QueryErrorNotifierBridge />
-                        <ToastProvider />
-                        <AppErrorBoundary>
-                          {children ?? <RouterProvider router={router} />}
-                        </AppErrorBoundary>
-                        <DevToolbar />
-                      </NotificationBusProvider>
-                    </AbilityProvider>
+                    <RouterContextBridge queryClient={queryClient} />
+                    <NotificationBusProvider>
+                      <SessionManager />
+                      <QueryErrorNotifierBridge />
+                      <QueryErrorObserver queryEvents={queryEvents} />
+                      <ToastProvider />
+                      <AppErrorBoundary>{children ?? <RouterProvider router={router} />}</AppErrorBoundary>
+                    </NotificationBusProvider>
                   </AuthorizationProvider>
                 </AuthProvider>
               </AppStateProvider>

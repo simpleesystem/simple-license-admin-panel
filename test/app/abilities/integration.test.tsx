@@ -9,7 +9,7 @@ import { AuthorizationProvider } from '@/app/auth/AuthorizationProvider'
 import { AuthContext } from '@/app/auth/authContext'
 import type { AuthContextValue } from '@/app/auth/types'
 import { AUTH_STATUS_IDLE, ABILITY_ACTION_MANAGE, ABILITY_SUBJECT_LICENSE } from '@/app/constants'
-import { buildUser } from '@/test/factories/userFactory'
+import { buildUser } from '@test/factories/userFactory'
 
 const createAuthValue = (userRole: AdminRole | null): AuthContextValue => {
   const user = userRole ? buildUser({ role: userRole }) : null

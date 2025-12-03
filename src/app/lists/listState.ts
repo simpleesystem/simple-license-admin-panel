@@ -11,7 +11,7 @@ import {
   LIST_SORT_DIRECTION_ASC,
   LIST_SORT_DIRECTION_DESC,
 } from '../constants'
-import type { ListFilterState, ListSortDirection, ListState } from './listTypes'
+import type { ListFilterState, ListPaginationState, ListSortDirection, ListState } from './listTypes'
 import { DEFAULT_LIST_STATE } from './listTypes'
 
 const clamp = (value: number, min: number, max: number): number => {
@@ -39,7 +39,7 @@ const isValidDirection = (direction?: string): direction is ListSortDirection =>
   direction === LIST_SORT_DIRECTION_ASC || direction === LIST_SORT_DIRECTION_DESC
 
 export const createListState = (partial: Partial<ListState> = {}): ListState => {
-  const paginationOverride = partial.pagination ?? {}
+  const paginationOverride: Partial<ListPaginationState> = partial.pagination ?? {}
   const page = normalizePage(paginationOverride.page)
   const pageSize = normalizePageSize(paginationOverride.pageSize)
   const sort = partial.sort ?? null

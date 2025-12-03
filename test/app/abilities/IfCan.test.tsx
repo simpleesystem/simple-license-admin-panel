@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { render, screen } from '@testing-library/react'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 
 import { IfCan } from '@/app/abilities/IfCan'
 import { IfPermission } from '@/app/abilities/IfPermission'
@@ -11,7 +11,7 @@ import {
 } from '@/app/constants'
 import { AbilityProvider } from '@/app/abilities/AbilityProvider'
 import { AuthorizationContext } from '@/app/auth/authorizationContext'
-import { buildPermissions } from '@/test/factories/permissionFactory'
+import { buildPermissions } from '@test/factories/permissionFactory'
 
 const renderWithProviders = (
   ui: ReactNode,
@@ -65,6 +65,27 @@ describe('IfCan', () => {
     expect(button).toBeDisabled()
     expect(button).toHaveAttribute('aria-disabled', 'true')
   })
+
+  it('renders fallback render functions when ability is denied', () => {
+    const fallbackRenderer = vi.fn((isAllowed: boolean) => (
+      <span data-testid="fn-fallback">{isAllowed ? 'allowed' : 'denied'}</span>
+    ))
+
+    renderWithProviders(
+      <IfCan
+        action={ABILITY_ACTION_VIEW}
+        subject={ABILITY_SUBJECT_LICENSE}
+        fallback={fallbackRenderer}
+      >
+        <span data-testid="fn-child">Hidden</span>
+      </IfCan>,
+      buildPermissions(),
+    )
+
+    expect(screen.queryByTestId('fn-child')).toBeNull()
+    expect(screen.getByTestId('fn-fallback')).toHaveTextContent('denied')
+    expect(fallbackRenderer).toHaveBeenCalledWith(false)
+  })
 })
 
 describe('IfPermission', () => {
@@ -88,6 +109,21 @@ describe('IfPermission', () => {
 
     expect(screen.queryByTestId('should-hide')).toBeNull()
     expect(screen.getByTestId('perm-fallback')).toBeInTheDocument()
+  })
+
+  it('supports fallback render functions for permissions', () => {
+    const fallbackFn = vi.fn(() => <span data-testid="perm-fn-fallback">Denied</span>)
+
+    renderWithProviders(
+      <IfPermission permission="manageLicenses" fallback={fallbackFn}>
+        <span data-testid="perm-hidden">Hidden</span>
+      </IfPermission>,
+      buildPermissions(),
+    )
+
+    expect(screen.queryByTestId('perm-hidden')).toBeNull()
+    expect(screen.getByTestId('perm-fn-fallback')).toBeInTheDocument()
+    expect(fallbackFn).toHaveBeenCalled()
   })
 })
 

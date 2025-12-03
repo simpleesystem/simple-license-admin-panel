@@ -21,11 +21,6 @@ import {
   I18N_KEY_SESSION_EXPIRED_TITLE,
   I18N_KEY_SESSION_WARNING_BODY,
   I18N_KEY_SESSION_WARNING_TITLE,
-  I18N_KEY_DEV_TOOLBAR_HEADING,
-  I18N_KEY_DEV_TOOLBAR_RESET,
-  I18N_KEY_DEV_PERSONA_SUPERUSER,
-  I18N_KEY_DEV_PERSONA_SUPPORT,
-  I18N_KEY_DEV_PERSONA_VIEWER,
 } from '../constants'
 
 type TranslationDictionary = Record<string, string>
@@ -51,11 +46,6 @@ export const i18nResources: ResourceBundle = {
     [I18N_KEY_SESSION_WARNING_BODY]: 'We have not detected any activity. Move your mouse or press a key to stay signed in.',
     [I18N_KEY_SESSION_EXPIRED_TITLE]: 'Your session expired',
     [I18N_KEY_SESSION_EXPIRED_BODY]: 'For security reasons you have been signed out. Please authenticate again.',
-    [I18N_KEY_DEV_TOOLBAR_HEADING]: 'Dev personas',
-    [I18N_KEY_DEV_TOOLBAR_RESET]: 'Reset session',
-    [I18N_KEY_DEV_PERSONA_SUPERUSER]: 'Superuser',
-    [I18N_KEY_DEV_PERSONA_SUPPORT]: 'Support',
-    [I18N_KEY_DEV_PERSONA_VIEWER]: 'Viewer',
   },
 }
 

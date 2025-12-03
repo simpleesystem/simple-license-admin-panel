@@ -24,13 +24,6 @@ export const I18N_KEY_SESSION_WARNING_TITLE = 'session.warning.title' as const
 export const I18N_KEY_SESSION_WARNING_BODY = 'session.warning.body' as const
 export const I18N_KEY_SESSION_EXPIRED_TITLE = 'session.expired.title' as const
 export const I18N_KEY_SESSION_EXPIRED_BODY = 'session.expired.body' as const
-export const I18N_KEY_DEV_TOOLBAR_HEADING = 'dev.toolbar.heading' as const
-export const I18N_KEY_DEV_TOOLBAR_RESET = 'dev.toolbar.reset' as const
-export const I18N_KEY_DEV_PERSONA_SUPERUSER = 'dev.persona.superuser' as const
-export const I18N_KEY_DEV_PERSONA_SUPPORT = 'dev.persona.support' as const
-export const I18N_KEY_DEV_PERSONA_VIEWER = 'dev.persona.viewer' as const
-export const I18N_KEY_ABILITY_ERROR_HEADING = 'ability.error.heading' as const
-export const I18N_KEY_ABILITY_ERROR_BODY = 'ability.error.body' as const
 
 export const ROUTE_ID_ROOT = 'route.root' as const
 export const ROUTE_ID_DASHBOARD = 'route.dashboard' as const
@@ -83,47 +76,10 @@ export const FORM_DEFAULT_DELAY_MS = 150 as const
 
 export const DATE_FORMAT_SHORT = 'PPP' as const
 export const DATE_FORMAT_TIME = 'p' as const
-export const SESSION_IDLE_WARNING_MS = 12 * 60 * 1_000 as const
-export const SESSION_IDLE_TIMEOUT_MS = 15 * 60 * 1_000 as const
-export const LICENSE_EXPIRY_WARNING_DAYS = 30 as const
-export const LIST_DEFAULT_PAGE = 1 as const
-export const LIST_DEFAULT_PAGE_SIZE = 25 as const
-export const LIST_MAX_PAGE_SIZE = 250 as const
-export const LIST_SORT_DIRECTION_ASC = 'asc' as const
-export const LIST_SORT_DIRECTION_DESC = 'desc' as const
-export const LIST_QUERY_PARAM_PAGE = 'page' as const
-export const LIST_QUERY_PARAM_PAGE_SIZE = 'pageSize' as const
-export const LIST_QUERY_PARAM_SORT = 'sort' as const
-export const LIST_QUERY_PARAM_DIRECTION = 'direction' as const
-export const LIST_QUERY_PARAM_SEARCH = 'search' as const
-export const LIST_FILTER_PARAM_PREFIX = 'filter.' as const
+export const SESSION_IDLE_WARNING_MS = 720_000 as const
+export const SESSION_IDLE_TIMEOUT_MS = 900_000 as const
 export const TRACKING_EVENT_SESSION_WARNING = 'session.warning' as const
 export const TRACKING_EVENT_SESSION_TIMEOUT = 'session.timeout' as const
-export const TEST_ID_DEV_TOOLBAR = 'dev-toolbar' as const
-
-export const DEV_PERSONA_SUPERUSER = 'superuser' as const
-export const DEV_PERSONA_SUPPORT = 'support' as const
-export const DEV_PERSONA_VIEWER = 'viewer' as const
-export const DEV_PERSONA_SUPERUSER_ID = 'dev-superuser' as const
-export const DEV_PERSONA_SUPPORT_ID = 'dev-support' as const
-export const DEV_PERSONA_VIEWER_ID = 'dev-viewer' as const
-export const DEV_PERSONA_SUPERUSER_USERNAME = 'dev-superuser' as const
-export const DEV_PERSONA_SUPPORT_USERNAME = 'dev-support' as const
-export const DEV_PERSONA_VIEWER_USERNAME = 'dev-viewer' as const
-export const DEV_PERSONA_SUPERUSER_EMAIL = 'dev-superuser@example.com' as const
-export const DEV_PERSONA_SUPPORT_EMAIL = 'support@example.com' as const
-export const DEV_PERSONA_VIEWER_EMAIL = 'viewer@example.com' as const
-export const DEV_PERSONA_SUPERUSER_TOKEN = 'dev-superuser-token' as const
-export const DEV_PERSONA_SUPPORT_TOKEN = 'dev-support-token' as const
-export const DEV_PERSONA_VIEWER_TOKEN = 'dev-viewer-token' as const
-export const ABILITY_ACTION_VIEW = 'view' as const
-export const ABILITY_ACTION_MANAGE = 'manage' as const
-export const ABILITY_SUBJECT_DASHBOARD = 'Dashboard' as const
-export const ABILITY_SUBJECT_LICENSE = 'License' as const
-export const ABILITY_SUBJECT_PRODUCT = 'Product' as const
-export const ABILITY_SUBJECT_TENANT = 'Tenant' as const
-export const ABILITY_SUBJECT_USER = 'User' as const
-export const ABILITY_SUBJECT_ANALYTICS = 'Analytics' as const
 
 export const TEST_ID_APP_SHELL = 'app-shell' as const
 export const TEST_ID_TOAST_CONTAINER = 'toast-container' as const
@@ -146,4 +102,57 @@ export const ERROR_MESSAGE_AUTHORIZATION_CONTEXT_UNAVAILABLE = 'Authorization co
 export const ERROR_MESSAGE_LOGGER_CONTEXT_UNAVAILABLE = 'Logger context is unavailable' as const
 export const ERROR_MESSAGE_TRACKING_CONTEXT_UNAVAILABLE = 'Tracking context is unavailable' as const
 export const ERROR_MESSAGE_ABILITY_CONTEXT_UNAVAILABLE = 'Ability context is unavailable' as const
+
+export const I18N_KEY_DEV_TOOLBAR_HEADING = 'dev.toolbar.heading' as const
+export const I18N_KEY_DEV_TOOLBAR_RESET = 'dev.toolbar.reset' as const
+export const I18N_KEY_DEV_PERSONA_SUPERUSER = 'dev.persona.superuser' as const
+export const I18N_KEY_DEV_PERSONA_SUPPORT = 'dev.persona.support' as const
+export const I18N_KEY_DEV_PERSONA_VIEWER = 'dev.persona.viewer' as const
+
+export const TEST_ID_DEV_TOOLBAR = 'dev-toolbar' as const
+
+export const DEV_PERSONA_SUPERUSER = 'dev.persona.superuser' as const
+export const DEV_PERSONA_SUPPORT = 'dev.persona.support' as const
+export const DEV_PERSONA_VIEWER = 'dev.persona.viewer' as const
+
+export const DEV_PERSONA_SUPERUSER_TOKEN = 'dev-token-superuser' as const
+export const DEV_PERSONA_SUPPORT_TOKEN = 'dev-token-support' as const
+export const DEV_PERSONA_VIEWER_TOKEN = 'dev-token-viewer' as const
+
+export const DEV_PERSONA_SUPERUSER_ID = 'dev-superuser-id' as const
+export const DEV_PERSONA_SUPPORT_ID = 'dev-support-id' as const
+export const DEV_PERSONA_VIEWER_ID = 'dev-viewer-id' as const
+
+export const DEV_PERSONA_SUPERUSER_USERNAME = 'dev.superuser' as const
+export const DEV_PERSONA_SUPPORT_USERNAME = 'dev.support' as const
+export const DEV_PERSONA_VIEWER_USERNAME = 'dev.viewer' as const
+
+export const DEV_PERSONA_SUPERUSER_EMAIL = 'superuser@example.dev' as const
+export const DEV_PERSONA_SUPPORT_EMAIL = 'support@example.dev' as const
+export const DEV_PERSONA_VIEWER_EMAIL = 'viewer@example.dev' as const
+
+export const ABILITY_ACTION_VIEW = 'view' as const
+export const ABILITY_ACTION_MANAGE = 'manage' as const
+
+export const ABILITY_SUBJECT_DASHBOARD = 'dashboard' as const
+export const ABILITY_SUBJECT_LICENSE = 'license' as const
+export const ABILITY_SUBJECT_PRODUCT = 'product' as const
+export const ABILITY_SUBJECT_TENANT = 'tenant' as const
+export const ABILITY_SUBJECT_USER = 'user' as const
+export const ABILITY_SUBJECT_ANALYTICS = 'analytics' as const
+
+export const LIST_DEFAULT_PAGE = 1 as const
+export const LIST_DEFAULT_PAGE_SIZE = 25 as const
+export const LIST_MAX_PAGE_SIZE = 100 as const
+export const LIST_FILTER_PARAM_PREFIX = 'filter:' as const
+export const LIST_QUERY_PARAM_PAGE = 'page' as const
+export const LIST_QUERY_PARAM_PAGE_SIZE = 'pageSize' as const
+export const LIST_QUERY_PARAM_SORT = 'sort' as const
+export const LIST_QUERY_PARAM_DIRECTION = 'direction' as const
+export const LIST_QUERY_PARAM_SEARCH = 'search' as const
+export const LIST_SORT_DIRECTION_ASC = 'asc' as const
+export const LIST_SORT_DIRECTION_DESC = 'desc' as const
+
+export const LICENSE_EXPIRY_WARNING_DAYS = 30 as const
+
 

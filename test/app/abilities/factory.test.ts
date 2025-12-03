@@ -7,7 +7,7 @@ import {
   ABILITY_SUBJECT_LICENSE,
 } from '@/app/constants'
 import { buildAbilityFromPermissions } from '@/app/abilities/factory'
-import { buildPermissions } from '@/test/factories/permissionFactory'
+import { buildPermissions } from '@test/factories/permissionFactory'
 
 describe('buildAbilityFromPermissions', () => {
   it('grants dashboard ability when permission is present', () => {
