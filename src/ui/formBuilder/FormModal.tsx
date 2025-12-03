@@ -6,7 +6,7 @@ import { ModalDialog } from '../overlay/ModalDialog'
 import { DynamicForm } from './DynamicForm'
 import type { FormBlueprint } from './blueprint'
 
-type FormModalProps<TFieldValues extends FieldValues> = Omit<
+export type FormModalProps<TFieldValues extends FieldValues> = Omit<
   ModalDialogProps,
   'body' | 'footer' | 'primaryAction' | 'secondaryAction'
 > & {
