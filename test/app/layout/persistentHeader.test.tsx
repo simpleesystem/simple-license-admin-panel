@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import type { Mock } from 'vitest'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
@@ -10,14 +10,17 @@ import { AUTH_STATUS_IDLE, ROUTE_PATH_DASHBOARD } from '../../../src/app/constan
 import {
   UI_HEADER_ACTION_CHANGE_PASSWORD,
   UI_HEADER_ACTION_SIGN_OUT,
+  UI_HEADER_MODAL_TITLE_CHANGE_PASSWORD,
   UI_NAV_LABEL_HEALTH,
   UI_NAV_LABEL_TENANTS,
   UI_NAV_LABEL_USERS,
+  UI_TEST_ID_MODAL_DIALOG,
 } from '../../../src/ui/constants'
 import { buildUser } from '../../factories/userFactory'
 import { buildPermissions } from '../../factories/permissionFactory'
 
 const mockUseRouterState = vi.hoisted(() => vi.fn()) as Mock
+const mockChangePasswordFlowRender = vi.hoisted(() => vi.fn())
 
 vi.mock('@tanstack/react-router', () => ({
   Link: ({
@@ -35,6 +38,19 @@ vi.mock('@tanstack/react-router', () => ({
     </a>
   ),
   useRouterState: mockUseRouterState,
+}))
+
+vi.mock('../../../src/ui/auth/ChangePasswordFlow', () => ({
+  ChangePasswordFlow: (props: { onSuccess?: () => void }) => {
+    mockChangePasswordFlowRender(props)
+    return (
+      <div data-testid="change-password-flow">
+        <button type="button" data-testid="complete-change-password" onClick={() => props.onSuccess?.()}>
+          Complete
+        </button>
+      </div>
+    )
+  },
 }))
 
 describe('PersistentHeader', () => {
@@ -89,6 +105,28 @@ describe('PersistentHeader', () => {
     renderHeader({ logoutMock })
     fireEvent.click(screen.getByRole('button', { name: UI_HEADER_ACTION_SIGN_OUT }))
     expect(logoutMock).toHaveBeenCalled()
+  })
+
+  test('opens change password modal when action clicked', () => {
+    renderHeader()
+    fireEvent.click(screen.getByRole('button', { name: UI_HEADER_ACTION_CHANGE_PASSWORD }))
+    expect(screen.getByTestId(UI_TEST_ID_MODAL_DIALOG)).toBeInTheDocument()
+    expect(screen.getByText(UI_HEADER_MODAL_TITLE_CHANGE_PASSWORD)).toBeInTheDocument()
+    expect(screen.getByTestId('change-password-flow')).toBeInTheDocument()
+  })
+
+  test('closes modal when close button pressed', async () => {
+    renderHeader()
+    fireEvent.click(screen.getByRole('button', { name: UI_HEADER_ACTION_CHANGE_PASSWORD }))
+    fireEvent.click(screen.getByLabelText('Close'))
+    await waitFor(() => expect(screen.queryByTestId(UI_TEST_ID_MODAL_DIALOG)).not.toBeInTheDocument())
+  })
+
+  test('invokes onSuccess from ChangePasswordFlow to close modal', async () => {
+    renderHeader()
+    fireEvent.click(screen.getByRole('button', { name: UI_HEADER_ACTION_CHANGE_PASSWORD }))
+    fireEvent.click(screen.getByTestId('complete-change-password'))
+    await waitFor(() => expect(screen.queryByTestId(UI_TEST_ID_MODAL_DIALOG)).not.toBeInTheDocument())
   })
 })
 

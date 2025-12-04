@@ -2,10 +2,16 @@ import type { Client, User } from '@simple-license/react-sdk'
 import { useDeleteUser } from '@simple-license/react-sdk'
 import type { ReactNode } from 'react'
 
+import { adaptMutation } from '../actions/mutationAdapter'
+import { createCrudActions } from '../actions/mutationActions'
+import {
+  UI_ENTITY_USER,
+  UI_USER_ACTION_DELETE,
+  UI_USER_ACTION_EDIT,
+  UI_USER_BUTTON_DELETE,
+} from '../constants'
 import { ActionMenu } from '../data/ActionMenu'
 import type { UiCommonProps } from '../types'
-import { createCrudActions } from '../actions/mutationActions'
-import { adaptMutation } from '../actions/mutationAdapter'
 
 type UserRowActionsProps = UiCommonProps & {
   client: Client
@@ -18,9 +24,9 @@ type UserRowActionsProps = UiCommonProps & {
 export function UserRowActions({ client, user, onEdit, onCompleted, buttonLabel, ...rest }: UserRowActionsProps) {
   const deleteMutation = adaptMutation(useDeleteUser(client))
 
-  const actions = createCrudActions<string, unknown, User>('User', {
+  const actions = createCrudActions<string, unknown, User>(UI_ENTITY_USER, {
     update: {
-      label: 'Edit User',
+      label: UI_USER_ACTION_EDIT,
       buildPayload: () => user,
       mutation: {
         mutateAsync: async () => user,
@@ -29,7 +35,7 @@ export function UserRowActions({ client, user, onEdit, onCompleted, buttonLabel,
       onSuccess: () => onEdit(user),
     },
     delete: {
-      label: 'Delete User',
+      label: UI_USER_ACTION_DELETE,
       buildPayload: () => user.id,
       mutation: {
         mutateAsync: async (payload) => {
@@ -46,7 +52,7 @@ export function UserRowActions({ client, user, onEdit, onCompleted, buttonLabel,
     <ActionMenu
       {...rest}
       items={actions}
-      buttonLabel={buttonLabel}
+      buttonLabel={buttonLabel ?? UI_USER_BUTTON_DELETE}
     />
   )
 }

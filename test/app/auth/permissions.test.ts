@@ -29,7 +29,7 @@ describe('derivePermissionsFromUser', () => {
   it('grants scoped permissions to vendor roles', () => {
     const managerPermissions = derivePermissionsFromUser(createUser('VENDOR_MANAGER'))
     expect(managerPermissions.viewDashboard).toBe(true)
-    expect(managerPermissions.manageUsers).toBe(false)
+    expect(managerPermissions.manageUsers).toBe(true)
     expect(managerPermissions.manageTenants).toBe(true)
 
     const adminPermissions = derivePermissionsFromUser(createUser('VENDOR_ADMIN'))

@@ -3,6 +3,10 @@ import { useCreateUser, useUpdateUser } from '@simple-license/react-sdk'
 import type { FieldValues } from 'react-hook-form'
 import type { ReactNode } from 'react'
 
+import {
+  UI_USER_FORM_SUBMIT_CREATE,
+  UI_USER_FORM_SUBMIT_UPDATE,
+} from '../constants'
 import { createUserBlueprint } from '../formBuilder/factories'
 import { FormModalWithMutation } from '../formBuilder/mutationBridge'
 import type { MutationAdapter } from '../actions/mutationActions'
@@ -15,6 +19,7 @@ type UserFormBaseProps = {
   submitLabel: ReactNode
   pendingLabel?: ReactNode
   secondaryActions?: ReactNode
+  onCompleted?: () => void
 }
 
 type UserFormCreateProps = UserFormBaseProps & {
@@ -49,9 +54,11 @@ const baseUpdateDefaults: UpdateUserRequest = {
 const withOnClose = <TFieldValues extends FieldValues>(
   adapter: MutationAdapter<TFieldValues>,
   onClose: () => void,
+  onCompleted?: () => void,
 ): MutationAdapter<TFieldValues> => ({
   mutateAsync: async (values) => {
     const result = await adapter.mutateAsync(values)
+    onCompleted?.()
     onClose()
     return result
   },
@@ -68,6 +75,7 @@ export function UserFormFlow(props: UserFormFlowProps) {
       ...baseCreateDefaults,
       ...props.defaultValues,
     }
+    const submitLabel = props.submitLabel ?? UI_USER_FORM_SUBMIT_CREATE
 
     return (
       <FormModalWithMutation
@@ -75,10 +83,10 @@ export function UserFormFlow(props: UserFormFlowProps) {
         onClose={props.onClose}
         blueprint={blueprint}
         defaultValues={defaultValues}
-        submitLabel={props.submitLabel}
+        submitLabel={submitLabel}
         pendingLabel={props.pendingLabel}
         secondaryActions={props.secondaryActions}
-        mutation={withOnClose(createMutation, props.onClose)}
+        mutation={withOnClose(createMutation, props.onClose, props.onCompleted)}
       />
     )
   }
@@ -87,6 +95,7 @@ export function UserFormFlow(props: UserFormFlowProps) {
     ...baseUpdateDefaults,
     ...props.defaultValues,
   }
+  const submitLabel = props.submitLabel ?? UI_USER_FORM_SUBMIT_UPDATE
 
   const adapter: MutationAdapter<UpdateUserRequest> = {
     mutateAsync: async (values) => {
@@ -104,10 +113,10 @@ export function UserFormFlow(props: UserFormFlowProps) {
       onClose={props.onClose}
       blueprint={createUserBlueprint('update')}
       defaultValues={defaultValues}
-      submitLabel={props.submitLabel}
+      submitLabel={submitLabel}
       pendingLabel={props.pendingLabel}
       secondaryActions={props.secondaryActions}
-      mutation={withOnClose(adapter, props.onClose)}
+      mutation={withOnClose(adapter, props.onClose, props.onCompleted)}
     />
   )
 }

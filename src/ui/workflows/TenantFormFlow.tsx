@@ -3,6 +3,7 @@ import { useCreateTenant, useUpdateTenant } from '@simple-license/react-sdk'
 import type { FieldValues } from 'react-hook-form'
 import type { ReactNode } from 'react'
 
+import { UI_TENANT_FORM_SUBMIT_CREATE, UI_TENANT_FORM_SUBMIT_UPDATE } from '../constants'
 import { createTenantBlueprint } from '../formBuilder/factories'
 import { FormModalWithMutation } from '../formBuilder/mutationBridge'
 import type { MutationAdapter } from '../actions/mutationActions'
@@ -15,6 +16,7 @@ type TenantFormBaseProps = {
   submitLabel: ReactNode
   pendingLabel?: ReactNode
   secondaryActions?: ReactNode
+  onCompleted?: () => void
 }
 
 type TenantFormCreateProps = TenantFormBaseProps & {
@@ -41,9 +43,11 @@ const baseUpdateDefaults: UpdateTenantRequest = {
 const withOnClose = <TFieldValues extends FieldValues>(
   adapter: MutationAdapter<TFieldValues>,
   onClose: () => void,
+  onCompleted?: () => void,
 ): MutationAdapter<TFieldValues> => ({
   mutateAsync: async (values) => {
     const result = await adapter.mutateAsync(values)
+    onCompleted?.()
     onClose()
     return result
   },
@@ -60,6 +64,7 @@ export function TenantFormFlow(props: TenantFormFlowProps) {
       ...baseCreateDefaults,
       ...props.defaultValues,
     }
+    const submitLabel = props.submitLabel ?? UI_TENANT_FORM_SUBMIT_CREATE
 
     return (
       <FormModalWithMutation
@@ -67,10 +72,10 @@ export function TenantFormFlow(props: TenantFormFlowProps) {
         onClose={props.onClose}
         blueprint={blueprint}
         defaultValues={defaultValues}
-        submitLabel={props.submitLabel}
+        submitLabel={submitLabel}
         pendingLabel={props.pendingLabel}
         secondaryActions={props.secondaryActions}
-        mutation={withOnClose(createMutation, props.onClose)}
+        mutation={withOnClose(createMutation, props.onClose, props.onCompleted)}
       />
     )
   }
@@ -79,6 +84,7 @@ export function TenantFormFlow(props: TenantFormFlowProps) {
     ...baseUpdateDefaults,
     ...props.defaultValues,
   }
+  const submitLabel = props.submitLabel ?? UI_TENANT_FORM_SUBMIT_UPDATE
 
   const adapter: MutationAdapter<UpdateTenantRequest> = {
     mutateAsync: async (values) => {
@@ -96,10 +102,10 @@ export function TenantFormFlow(props: TenantFormFlowProps) {
       onClose={props.onClose}
       blueprint={createTenantBlueprint('update')}
       defaultValues={defaultValues}
-      submitLabel={props.submitLabel}
+      submitLabel={submitLabel}
       pendingLabel={props.pendingLabel}
       secondaryActions={props.secondaryActions}
-      mutation={withOnClose(adapter, props.onClose)}
+      mutation={withOnClose(adapter, props.onClose, props.onCompleted)}
     />
   )
 }

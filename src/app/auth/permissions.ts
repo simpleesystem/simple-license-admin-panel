@@ -40,6 +40,7 @@ const ROLE_PERMISSION_MATRIX: Record<AdminRole, Permissions> = {
     manageLicenses: true,
     manageProducts: true,
     manageTenants: true,
+    manageUsers: true,
     viewAnalytics: true,
   }),
   VENDOR_ADMIN: createPermissionSet({
@@ -76,5 +77,183 @@ export const derivePermissionsFromUser = (user: Pick<User, 'role' | 'passwordRes
 
 export const hasPermission = (permissions: Permissions, permission: PermissionKey): boolean => {
   return Boolean(permissions[permission])
+}
+
+export const isVendorScopedUser = (user: Pick<User, 'role' | 'vendorId'> | null | undefined): boolean => {
+  if (!user) {
+    return false
+  }
+  if (user.role === 'SUPERUSER' || user.role === 'ADMIN') {
+    return false
+  }
+  return Boolean(user.vendorId)
+}
+
+export const isTenantOwnedByUser = (
+  user: Pick<User, 'vendorId'> | null | undefined,
+  tenant: { vendorId?: string | null },
+): boolean => {
+  if (!user?.vendorId) {
+    return false
+  }
+  return tenant.vendorId === user.vendorId
+}
+
+export const canCreateTenant = (user: Pick<User, 'role'> | null | undefined): boolean => {
+  return user?.role === 'SUPERUSER' || user?.role === 'ADMIN'
+}
+
+export const canDeleteTenant = (user: Pick<User, 'role'> | null | undefined): boolean => {
+  return canCreateTenant(user)
+}
+
+export const canUpdateTenant = (
+  user: Pick<User, 'role' | 'vendorId'> | null | undefined,
+  tenant: { vendorId?: string | null },
+): boolean => {
+  if (canCreateTenant(user)) {
+    return true
+  }
+  if (!user) {
+    return false
+  }
+  if (user.role === 'VENDOR_MANAGER') {
+    return isTenantOwnedByUser(user, tenant)
+  }
+  return false
+}
+
+export const canViewTenants = (user: Pick<User, 'role' | 'vendorId'> | null | undefined): boolean => {
+  const permissions = derivePermissionsFromUser(user)
+  if (hasPermission(permissions, 'manageTenants')) {
+    return true
+  }
+  return isVendorScopedUser(user)
+}
+
+export const isProductOwnedByUser = (
+  user: Pick<User, 'vendorId'> | null | undefined,
+  product: { vendorId?: string | null },
+): boolean => {
+  if (!user?.vendorId) {
+    return false
+  }
+  return product.vendorId === user.vendorId
+}
+
+export const canCreateProduct = (user: Pick<User, 'role'> | null | undefined): boolean => {
+  return user?.role === 'SUPERUSER' || user?.role === 'ADMIN'
+}
+
+export const canDeleteProduct = (user: Pick<User, 'role'> | null | undefined): boolean => {
+  return canCreateProduct(user)
+}
+
+export const canUpdateProduct = (
+  user: Pick<User, 'role' | 'vendorId'> | null | undefined,
+  product: { vendorId?: string | null },
+): boolean => {
+  if (canCreateProduct(user)) {
+    return true
+  }
+  if (!user) {
+    return false
+  }
+  if (user.role === 'VENDOR_MANAGER') {
+    return isProductOwnedByUser(user, product)
+  }
+  return false
+}
+
+export const canViewProducts = (user: Pick<User, 'role' | 'vendorId'> | null | undefined): boolean => {
+  const permissions = derivePermissionsFromUser(user)
+  if (hasPermission(permissions, 'manageProducts')) {
+    return true
+  }
+  return isVendorScopedUser(user)
+}
+
+export const isProductTierOwnedByUser = (
+  user: Pick<User, 'vendorId'> | null | undefined,
+  tier: { vendorId?: string | null },
+): boolean => {
+  if (!user?.vendorId) {
+    return false
+  }
+  return tier.vendorId === user.vendorId
+}
+
+export const canCreateProductTier = (user: Pick<User, 'role'> | null | undefined): boolean => {
+  return user?.role === 'SUPERUSER' || user?.role === 'ADMIN'
+}
+
+export const canDeleteProductTier = (user: Pick<User, 'role'> | null | undefined): boolean => {
+  return canCreateProductTier(user)
+}
+
+export const canUpdateProductTier = (
+  user: Pick<User, 'role' | 'vendorId'> | null | undefined,
+  tier: { vendorId?: string | null },
+): boolean => {
+  if (canCreateProductTier(user)) {
+    return true
+  }
+  if (!user) {
+    return false
+  }
+  if (user.role === 'VENDOR_MANAGER') {
+    return isProductTierOwnedByUser(user, tier)
+  }
+  return false
+}
+
+export const canViewProductTiers = (user: Pick<User, 'role' | 'vendorId'> | null | undefined): boolean => {
+  const permissions = derivePermissionsFromUser(user)
+  if (hasPermission(permissions, 'manageProducts')) {
+    return true
+  }
+  return isVendorScopedUser(user)
+}
+
+export const isEntitlementOwnedByUser = (
+  user: Pick<User, 'vendorId'> | null | undefined,
+  entitlement: { vendorId?: string | null },
+): boolean => {
+  if (!user?.vendorId) {
+    return false
+  }
+  return entitlement.vendorId === user.vendorId
+}
+
+export const canCreateEntitlement = (user: Pick<User, 'role'> | null | undefined): boolean => {
+  return user?.role === 'SUPERUSER' || user?.role === 'ADMIN'
+}
+
+export const canDeleteEntitlement = (user: Pick<User, 'role'> | null | undefined): boolean => {
+  return canCreateEntitlement(user)
+}
+
+export const canUpdateEntitlement = (
+  user: Pick<User, 'role' | 'vendorId'> | null | undefined,
+  entitlement: { vendorId?: string | null },
+): boolean => {
+  if (canCreateEntitlement(user)) {
+    return true
+  }
+  if (!user) {
+    return false
+  }
+  if (user.role === 'VENDOR_MANAGER') {
+    return isEntitlementOwnedByUser(user, entitlement)
+  }
+  return false
+}
+
+export const canViewEntitlements = (user: Pick<User, 'role' | 'vendorId'> | null | undefined): boolean => {
+  const permissions = derivePermissionsFromUser(user)
+  if (hasPermission(permissions, 'manageProducts')) {
+    return true
+  }
+  return isVendorScopedUser(user)
 }
 

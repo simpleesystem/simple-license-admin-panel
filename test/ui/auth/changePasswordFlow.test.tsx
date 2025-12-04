@@ -1,8 +1,23 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { describe, expect, beforeEach, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { ChangePasswordFlow } from '../../../src/ui/auth/ChangePasswordFlow'
 import { ApiContext } from '../../../src/api/apiContext'
+import { AuthContext } from '../../../src/app/auth/authContext'
+import type { AuthContextValue } from '../../../src/app/auth/types'
+import { AUTH_STATUS_IDLE } from '../../../src/app/constants'
+import {
+  UI_CHANGE_PASSWORD_BUTTON_UPDATE,
+  UI_CHANGE_PASSWORD_ERROR_EMAIL_INVALID,
+  UI_CHANGE_PASSWORD_ERROR_PASSWORDS_MATCH,
+  UI_CHANGE_PASSWORD_ERROR_REQUIRED,
+  UI_CHANGE_PASSWORD_ERROR_TITLE,
+  UI_CHANGE_PASSWORD_LABEL_CONFIRM_PASSWORD,
+  UI_CHANGE_PASSWORD_LABEL_CURRENT_PASSWORD,
+  UI_CHANGE_PASSWORD_LABEL_EMAIL,
+  UI_CHANGE_PASSWORD_LABEL_NEW_PASSWORD,
+} from '../../../src/ui/constants'
+import { buildUser } from '../../factories/userFactory'
 
 const useChangePasswordMock = vi.hoisted(() => vi.fn())
 
@@ -19,8 +34,23 @@ const mockMutation = () => ({
   isPending: false,
 })
 
-const renderWithApi = (ui: React.ReactElement) => {
-  return render(<ApiContext.Provider value={{} as never}>{ui}</ApiContext.Provider>)
+const renderWithProviders = (ui: React.ReactElement, authOverrides?: Partial<AuthContextValue>) => {
+  const authValue: AuthContextValue = {
+    token: 'token',
+    currentUser: authOverrides?.currentUser ?? buildUser({ email: 'current@example.com' }),
+    status: AUTH_STATUS_IDLE,
+    isAuthenticated: true,
+    login: vi.fn() as AuthContextValue['login'],
+    logout: vi.fn(),
+    refreshCurrentUser: vi.fn() as AuthContextValue['refreshCurrentUser'],
+    ...authOverrides,
+  }
+
+  return render(
+    <AuthContext.Provider value={authValue}>
+      <ApiContext.Provider value={{} as never}>{ui}</ApiContext.Provider>
+    </AuthContext.Provider>,
+  )
 }
 
 describe('ChangePasswordFlow', () => {
@@ -33,40 +63,106 @@ describe('ChangePasswordFlow', () => {
     useChangePasswordMock.mockReturnValue(mutation)
     const onSuccess = vi.fn()
 
-    renderWithApi(<ChangePasswordFlow onSuccess={onSuccess} />)
+    renderWithProviders(<ChangePasswordFlow onSuccess={onSuccess} />)
 
-    fireEvent.change(document.querySelector('input[name="current_password"]') as HTMLInputElement, {
+    fireEvent.change(screen.getByLabelText(UI_CHANGE_PASSWORD_LABEL_CURRENT_PASSWORD), {
       target: { value: 'old-pass' },
     })
-    fireEvent.change(document.querySelector('input[name="new_password"]') as HTMLInputElement, {
+    fireEvent.change(screen.getByLabelText(UI_CHANGE_PASSWORD_LABEL_NEW_PASSWORD), {
       target: { value: 'new-pass' },
     })
-    fireEvent.change(document.querySelector('input[name="confirm_new_password"]') as HTMLInputElement, {
+    fireEvent.change(screen.getByLabelText(UI_CHANGE_PASSWORD_LABEL_CONFIRM_PASSWORD), {
       target: { value: 'new-pass' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Update password' }))
+    fireEvent.click(screen.getByRole('button', { name: UI_CHANGE_PASSWORD_BUTTON_UPDATE }))
 
-    await waitFor(() => expect(mutation.mutateAsync).toHaveBeenCalledWith({ current_password: 'old-pass', new_password: 'new-pass' }))
+    await waitFor(() =>
+      expect(mutation.mutateAsync).toHaveBeenCalledWith({
+        current_password: 'old-pass',
+        new_password: 'new-pass',
+      }),
+    )
     expect(onSuccess).toHaveBeenCalled()
   })
 
-  test('prevents submission when confirmation mismatches', async () => {
+  test('submits email-only change', async () => {
+    const mutation = mockMutation()
+    useChangePasswordMock.mockReturnValue(mutation)
+    const onSuccess = vi.fn()
+
+    renderWithProviders(<ChangePasswordFlow onSuccess={onSuccess} />)
+
+    fireEvent.change(screen.getByLabelText(UI_CHANGE_PASSWORD_LABEL_EMAIL), {
+      target: { value: 'updated@example.com' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: UI_CHANGE_PASSWORD_BUTTON_UPDATE }))
+
+    await waitFor(() =>
+      expect(mutation.mutateAsync).toHaveBeenCalledWith({
+        email: 'updated@example.com',
+      }),
+    )
+    expect(onSuccess).toHaveBeenCalled()
+  })
+
+  test('requires at least one change before submission', async () => {
     const mutation = mockMutation()
     useChangePasswordMock.mockReturnValue(mutation)
 
-    renderWithApi(<ChangePasswordFlow />)
+    renderWithProviders(<ChangePasswordFlow />)
 
-    fireEvent.change(document.querySelector('input[name="new_password"]') as HTMLInputElement, {
-      target: { value: 'new-pass' },
-    })
-    fireEvent.change(document.querySelector('input[name="confirm_new_password"]') as HTMLInputElement, {
-      target: { value: 'different' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'Update password' }))
+    fireEvent.click(screen.getByRole('button', { name: UI_CHANGE_PASSWORD_BUTTON_UPDATE }))
 
-    await waitFor(() => expect(screen.getByText('Passwords must match')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(UI_CHANGE_PASSWORD_ERROR_REQUIRED)).toBeInTheDocument())
     expect(mutation.mutateAsync).not.toHaveBeenCalled()
   })
+
+  test('validates email format', async () => {
+    const mutation = mockMutation()
+    useChangePasswordMock.mockReturnValue(mutation)
+
+    renderWithProviders(<ChangePasswordFlow />)
+
+    fireEvent.change(screen.getByLabelText(UI_CHANGE_PASSWORD_LABEL_EMAIL), {
+      target: { value: 'not-an-email' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: UI_CHANGE_PASSWORD_BUTTON_UPDATE }))
+
+    await waitFor(() => expect(screen.getByText(UI_CHANGE_PASSWORD_ERROR_EMAIL_INVALID)).toBeInTheDocument())
+    expect(mutation.mutateAsync).not.toHaveBeenCalled()
+  })
+
+  test('enforces matching password confirmation', async () => {
+    const mutation = mockMutation()
+    useChangePasswordMock.mockReturnValue(mutation)
+
+    renderWithProviders(<ChangePasswordFlow />)
+
+    fireEvent.change(screen.getByLabelText(UI_CHANGE_PASSWORD_LABEL_NEW_PASSWORD), {
+      target: { value: 'new-pass' },
+    })
+    fireEvent.change(screen.getByLabelText(UI_CHANGE_PASSWORD_LABEL_CONFIRM_PASSWORD), {
+      target: { value: 'different' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: UI_CHANGE_PASSWORD_BUTTON_UPDATE }))
+
+    await waitFor(() => expect(screen.getByText(UI_CHANGE_PASSWORD_ERROR_PASSWORDS_MATCH)).toBeInTheDocument())
+    expect(mutation.mutateAsync).not.toHaveBeenCalled()
+  })
+
+  test('displays server errors using alert', async () => {
+    const mutation = mockMutation()
+    mutation.mutateAsync.mockRejectedValueOnce(new Error('Network issue'))
+    useChangePasswordMock.mockReturnValue(mutation)
+
+    renderWithProviders(<ChangePasswordFlow />)
+
+    fireEvent.change(screen.getByLabelText(UI_CHANGE_PASSWORD_LABEL_EMAIL), {
+      target: { value: 'updated@example.com' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: UI_CHANGE_PASSWORD_BUTTON_UPDATE }))
+
+    await waitFor(() => expect(screen.getByText(UI_CHANGE_PASSWORD_ERROR_TITLE)).toBeInTheDocument())
+    expect(screen.getByText('Network issue')).toBeInTheDocument()
+  })
 })
-
-

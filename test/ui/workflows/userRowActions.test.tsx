@@ -1,7 +1,9 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, beforeEach, test, vi } from 'vitest'
 
+import { UI_USER_ACTION_DELETE, UI_USER_ACTION_EDIT } from '../../../src/ui/constants'
 import { UserRowActions } from '../../../src/ui/workflows/UserRowActions'
+import { buildUser } from '../../factories/userFactory'
 
 const useDeleteUserMock = vi.hoisted(() => vi.fn())
 
@@ -30,15 +32,11 @@ const mockMutation = () => ({
   isPending: false,
 })
 
-const sampleUser = {
-  id: 'user-1',
-  username: 'user.one',
-  email: 'one@example.com',
-}
+const WAIT_FOR_MICROTASK_DELAY_MS = 0 as const
 
 const waitForMicrotasks = () =>
   new Promise<void>((resolve) => {
-    setTimeout(resolve, 0)
+    setTimeout(resolve, WAIT_FOR_MICROTASK_DELAY_MS)
   })
 
 describe('UserRowActions', () => {
@@ -50,25 +48,41 @@ describe('UserRowActions', () => {
     const deleteMutation = mockMutation()
     useDeleteUserMock.mockReturnValue(deleteMutation)
     const onEdit = vi.fn()
+    const user = buildUser()
 
-    render(<UserRowActions client={{} as never} user={sampleUser as never} onEdit={onEdit} />)
+    render(<UserRowActions client={{} as never} user={user as never} onEdit={onEdit} />)
 
-    fireEvent.click(screen.getByText('Edit User'))
+    fireEvent.click(screen.getByText(UI_USER_ACTION_EDIT))
     await waitForMicrotasks()
 
-    expect(onEdit).toHaveBeenCalledWith(sampleUser)
+    expect(onEdit).toHaveBeenCalledWith(user)
   })
 
   test('executes delete mutation when delete selected', async () => {
     const deleteMutation = mockMutation()
     useDeleteUserMock.mockReturnValue(deleteMutation)
+    const user = buildUser()
 
-    render(<UserRowActions client={{} as never} user={sampleUser as never} onEdit={vi.fn()} />)
+    render(<UserRowActions client={{} as never} user={user as never} onEdit={vi.fn()} />)
 
-    fireEvent.click(screen.getByText('Delete User'))
+    fireEvent.click(screen.getByText(UI_USER_ACTION_DELETE))
     await waitForMicrotasks()
 
-    expect(deleteMutation.mutateAsync).toHaveBeenCalledWith(sampleUser.id)
+    expect(deleteMutation.mutateAsync).toHaveBeenCalledWith(user.id)
+  })
+
+  test('invokes onCompleted callback after delete', async () => {
+    const deleteMutation = mockMutation()
+    useDeleteUserMock.mockReturnValue(deleteMutation)
+    const user = buildUser()
+    const onCompleted = vi.fn()
+
+    render(<UserRowActions client={{} as never} user={user as never} onEdit={vi.fn()} onCompleted={onCompleted} />)
+
+    fireEvent.click(screen.getByText(UI_USER_ACTION_DELETE))
+    await waitForMicrotasks()
+
+    expect(onCompleted).toHaveBeenCalled()
   })
 })
 

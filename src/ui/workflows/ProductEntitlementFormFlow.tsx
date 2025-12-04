@@ -7,6 +7,7 @@ import { useCreateEntitlement, useUpdateEntitlement } from '@simple-license/reac
 import type { FieldValues } from 'react-hook-form'
 import type { ReactNode } from 'react'
 
+import { UI_ENTITLEMENT_FORM_SUBMIT_CREATE, UI_ENTITLEMENT_FORM_SUBMIT_UPDATE } from '../constants'
 import { createEntitlementBlueprint } from '../formBuilder/factories'
 import { FormModalWithMutation } from '../formBuilder/mutationBridge'
 import type { MutationAdapter } from '../actions/mutationActions'
@@ -19,6 +20,7 @@ type ProductEntitlementBaseProps = {
   submitLabel: ReactNode
   pendingLabel?: ReactNode
   secondaryActions?: ReactNode
+  onCompleted?: () => void
 }
 
 type ProductEntitlementCreateProps = ProductEntitlementBaseProps & {
@@ -54,9 +56,11 @@ const baseUpdateDefaults: UpdateEntitlementRequest = {
 const withOnClose = <TFieldValues extends FieldValues>(
   adapter: MutationAdapter<TFieldValues>,
   onClose: () => void,
+  onCompleted?: () => void,
 ): MutationAdapter<TFieldValues> => ({
   mutateAsync: async (values) => {
     const result = await adapter.mutateAsync(values)
+    onCompleted?.()
     onClose()
     return result
   },
@@ -77,6 +81,7 @@ function ProductEntitlementCreateFlow(props: ProductEntitlementCreateProps) {
     ...baseCreateDefaults,
     ...props.defaultValues,
   }
+  const submitLabel = props.submitLabel ?? UI_ENTITLEMENT_FORM_SUBMIT_CREATE
 
   return (
     <FormModalWithMutation
@@ -84,10 +89,10 @@ function ProductEntitlementCreateFlow(props: ProductEntitlementCreateProps) {
       onClose={props.onClose}
       blueprint={createEntitlementBlueprint('create')}
       defaultValues={defaultValues}
-      submitLabel={props.submitLabel}
+      submitLabel={submitLabel}
       pendingLabel={props.pendingLabel}
       secondaryActions={props.secondaryActions}
-      mutation={withOnClose(createMutation, props.onClose)}
+      mutation={withOnClose(createMutation, props.onClose, props.onCompleted)}
     />
   )
 }
@@ -98,6 +103,7 @@ function ProductEntitlementUpdateFlow(props: ProductEntitlementUpdateProps) {
     ...baseUpdateDefaults,
     ...props.defaultValues,
   }
+  const submitLabel = props.submitLabel ?? UI_ENTITLEMENT_FORM_SUBMIT_UPDATE
 
   const adapter: MutationAdapter<UpdateEntitlementRequest> = {
     mutateAsync: async (values) => {
@@ -115,10 +121,10 @@ function ProductEntitlementUpdateFlow(props: ProductEntitlementUpdateProps) {
       onClose={props.onClose}
       blueprint={createEntitlementBlueprint('update')}
       defaultValues={defaultValues}
-      submitLabel={props.submitLabel}
+    submitLabel={submitLabel}
       pendingLabel={props.pendingLabel}
       secondaryActions={props.secondaryActions}
-      mutation={withOnClose(adapter, props.onClose)}
+    mutation={withOnClose(adapter, props.onClose, props.onCompleted)}
     />
   )
 }

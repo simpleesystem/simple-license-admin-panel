@@ -54,6 +54,31 @@ import {
   UI_LICENSE_FREEZE_SECTION_OPTIONS,
   UI_FIELD_LICENSE_FREEZE_ENTITLEMENTS,
   UI_FIELD_LICENSE_FREEZE_TIER,
+  UI_PRODUCT_FORM_ID_CREATE,
+  UI_PRODUCT_FORM_ID_UPDATE,
+  UI_PRODUCT_FORM_SECTION_DETAILS,
+  UI_PRODUCT_FORM_TITLE_CREATE,
+  UI_PRODUCT_FORM_TITLE_UPDATE,
+  UI_PRODUCT_TIER_FORM_ID_CREATE,
+  UI_PRODUCT_TIER_FORM_ID_UPDATE,
+  UI_PRODUCT_TIER_FORM_SECTION_DETAILS,
+  UI_PRODUCT_TIER_FORM_TITLE_CREATE,
+  UI_PRODUCT_TIER_FORM_TITLE_UPDATE,
+  UI_ENTITLEMENT_FORM_ID_CREATE,
+  UI_ENTITLEMENT_FORM_ID_UPDATE,
+  UI_ENTITLEMENT_FORM_SECTION_DETAILS,
+  UI_ENTITLEMENT_FORM_TITLE_CREATE,
+  UI_ENTITLEMENT_FORM_TITLE_UPDATE,
+  UI_TENANT_FORM_ID_CREATE,
+  UI_TENANT_FORM_ID_UPDATE,
+  UI_TENANT_FORM_TITLE_CREATE,
+  UI_TENANT_FORM_TITLE_UPDATE,
+  UI_TENANT_FORM_SECTION_DETAILS,
+  UI_USER_FORM_ID_CREATE,
+  UI_USER_FORM_ID_UPDATE,
+  UI_USER_FORM_SECTION_DETAILS,
+  UI_USER_FORM_TITLE_CREATE,
+  UI_USER_FORM_TITLE_UPDATE,
 } from '../constants'
 import type { UiSelectOption } from '../types'
 import { createFormBlueprint, type FormBlueprint, type FormSectionBlueprint } from './blueprint'
@@ -259,7 +284,7 @@ export const createLicenseFreezeBlueprint = (options?: BaseFactoryOptions<Freeze
 
 const PRODUCT_SECTION_BLUEPRINT: BlueprintSectionConfig<CreateProductRequest>[] = [
   {
-    id: 'details',
+    id: UI_PRODUCT_FORM_SECTION_DETAILS,
     layout: 2,
     fields: [
       {
@@ -304,8 +329,8 @@ export const createProductBlueprint = <TMode extends 'create' | 'update'>(
   if (mode === 'create') {
     return buildConfig<CreateProductRequest>(
       {
-        id: 'create-product',
-        title: 'Create Product',
+        id: UI_PRODUCT_FORM_ID_CREATE,
+        title: UI_PRODUCT_FORM_TITLE_CREATE,
         sections: PRODUCT_SECTION_BLUEPRINT,
       },
       options?.customize as BlueprintCustomizer<CreateProductRequest> | undefined
@@ -314,8 +339,8 @@ export const createProductBlueprint = <TMode extends 'create' | 'update'>(
 
   return buildConfig<UpdateProductRequest>(
     {
-      id: 'update-product',
-      title: 'Update Product',
+      id: UI_PRODUCT_FORM_ID_UPDATE,
+      title: UI_PRODUCT_FORM_TITLE_UPDATE,
       sections: PRODUCT_SECTIONS_UPDATE,
     },
     options?.customize as BlueprintCustomizer<UpdateProductRequest> | undefined
@@ -324,7 +349,7 @@ export const createProductBlueprint = <TMode extends 'create' | 'update'>(
 
 const PRODUCT_TIER_CREATE_SECTIONS: BlueprintSectionConfig<CreateProductTierRequest>[] = [
   {
-    id: 'details',
+    id: UI_PRODUCT_TIER_FORM_SECTION_DETAILS,
     layout: 2,
     fields: [
       {
@@ -358,7 +383,7 @@ const PRODUCT_TIER_CREATE_SECTIONS: BlueprintSectionConfig<CreateProductTierRequ
 
 const PRODUCT_TIER_UPDATE_SECTIONS: BlueprintSectionConfig<UpdateProductTierRequest>[] = [
   {
-    id: 'details',
+    id: UI_PRODUCT_TIER_FORM_SECTION_DETAILS,
     layout: 2,
     fields: [
       {
@@ -401,8 +426,8 @@ export const createProductTierBlueprint = <TMode extends 'create' | 'update'>(
   if (mode === 'create') {
     return buildConfig<CreateProductTierRequest>(
       {
-        id: 'create-product-tier',
-        title: 'Create Product Tier',
+        id: UI_PRODUCT_TIER_FORM_ID_CREATE,
+        title: UI_PRODUCT_TIER_FORM_TITLE_CREATE,
         sections: PRODUCT_TIER_CREATE_SECTIONS,
       },
       options?.customize as BlueprintCustomizer<CreateProductTierRequest> | undefined
@@ -411,8 +436,8 @@ export const createProductTierBlueprint = <TMode extends 'create' | 'update'>(
 
   return buildConfig<UpdateProductTierRequest>(
     {
-      id: 'update-product-tier',
-      title: 'Update Product Tier',
+      id: UI_PRODUCT_TIER_FORM_ID_UPDATE,
+      title: UI_PRODUCT_TIER_FORM_TITLE_UPDATE,
       sections: PRODUCT_TIER_UPDATE_SECTIONS,
     },
     options?.customize as BlueprintCustomizer<UpdateProductTierRequest> | undefined
@@ -436,7 +461,7 @@ const ENTITLEMENT_VALUE_TYPE_OPTIONS: readonly UiSelectOption[] = [
 
 const ENTITLEMENT_CREATE_SECTIONS: BlueprintSectionConfig<CreateEntitlementRequest>[] = [
   {
-    id: 'details',
+    id: UI_ENTITLEMENT_FORM_SECTION_DETAILS,
     layout: 2,
     fields: [
       {
@@ -475,7 +500,7 @@ const ENTITLEMENT_CREATE_SECTIONS: BlueprintSectionConfig<CreateEntitlementReque
 
 const ENTITLEMENT_UPDATE_SECTIONS: BlueprintSectionConfig<UpdateEntitlementRequest>[] = [
   {
-    id: 'details',
+    id: UI_ENTITLEMENT_FORM_SECTION_DETAILS,
     layout: 2,
     fields: [
       {
@@ -520,8 +545,8 @@ export const createEntitlementBlueprint = <TMode extends 'create' | 'update'>(
   if (mode === 'create') {
     return buildConfig<CreateEntitlementRequest>(
       {
-        id: 'create-entitlement',
-        title: 'Create Entitlement',
+        id: UI_ENTITLEMENT_FORM_ID_CREATE,
+        title: UI_ENTITLEMENT_FORM_TITLE_CREATE,
         sections: ENTITLEMENT_CREATE_SECTIONS as BlueprintSectionConfig<CreateEntitlementRequest>[],
       },
       options?.customize as BlueprintCustomizer<CreateEntitlementRequest> | undefined,
@@ -530,8 +555,8 @@ export const createEntitlementBlueprint = <TMode extends 'create' | 'update'>(
 
   return buildConfig<UpdateEntitlementRequest>(
     {
-      id: 'update-entitlement',
-      title: 'Update Entitlement',
+      id: UI_ENTITLEMENT_FORM_ID_UPDATE,
+      title: UI_ENTITLEMENT_FORM_TITLE_UPDATE,
       sections: ENTITLEMENT_UPDATE_SECTIONS as BlueprintSectionConfig<UpdateEntitlementRequest>[],
     },
     options?.customize as BlueprintCustomizer<UpdateEntitlementRequest> | undefined,
@@ -590,7 +615,7 @@ export const createTenantQuotaBlueprint = (
 
 const USER_CREATE_SECTIONS: BlueprintSectionConfig<CreateUserRequest>[] = [
   {
-    id: 'details',
+    id: UI_USER_FORM_SECTION_DETAILS,
     layout: 2,
     fields: [
       {
@@ -624,7 +649,7 @@ const USER_CREATE_SECTIONS: BlueprintSectionConfig<CreateUserRequest>[] = [
 ]
 const USER_UPDATE_SECTIONS: BlueprintSectionConfig<UpdateUserRequest>[] = [
   {
-    id: 'details',
+    id: UI_USER_FORM_SECTION_DETAILS,
     layout: 2,
     fields: [
       {
@@ -660,8 +685,8 @@ export const createUserBlueprint = <TMode extends 'create' | 'update'>(
   if (mode === 'create') {
     return buildConfig<CreateUserRequest>(
       {
-        id: 'create-user',
-        title: 'Create User',
+        id: UI_USER_FORM_ID_CREATE,
+        title: UI_USER_FORM_TITLE_CREATE,
         sections: USER_CREATE_SECTIONS,
       },
       options?.customize as BlueprintCustomizer<CreateUserRequest> | undefined
@@ -670,8 +695,8 @@ export const createUserBlueprint = <TMode extends 'create' | 'update'>(
 
   return buildConfig<UpdateUserRequest>(
     {
-      id: 'update-user',
-      title: 'Update User',
+      id: UI_USER_FORM_ID_UPDATE,
+      title: UI_USER_FORM_TITLE_UPDATE,
       sections: USER_UPDATE_SECTIONS,
     },
     options?.customize as BlueprintCustomizer<UpdateUserRequest> | undefined
@@ -680,7 +705,7 @@ export const createUserBlueprint = <TMode extends 'create' | 'update'>(
 
 const TENANT_CREATE_SECTIONS: BlueprintSectionConfig<CreateTenantRequest>[] = [
   {
-    id: 'details',
+    id: UI_TENANT_FORM_SECTION_DETAILS,
     fields: [
       {
         name: 'name',
@@ -693,7 +718,7 @@ const TENANT_CREATE_SECTIONS: BlueprintSectionConfig<CreateTenantRequest>[] = [
 
 const TENANT_UPDATE_SECTIONS: BlueprintSectionConfig<UpdateTenantRequest>[] = [
   {
-    id: 'details',
+    id: UI_TENANT_FORM_SECTION_DETAILS,
     fields: [
       {
         name: 'name',
@@ -715,8 +740,8 @@ export const createTenantBlueprint = <TMode extends 'create' | 'update'>(
   if (mode === 'create') {
     return buildConfig<CreateTenantRequest>(
       {
-        id: 'create-tenant',
-        title: 'Create Tenant',
+        id: UI_TENANT_FORM_ID_CREATE,
+        title: UI_TENANT_FORM_TITLE_CREATE,
         sections: TENANT_CREATE_SECTIONS,
       },
       options?.customize as BlueprintCustomizer<CreateTenantRequest> | undefined
@@ -725,8 +750,8 @@ export const createTenantBlueprint = <TMode extends 'create' | 'update'>(
 
   return buildConfig<UpdateTenantRequest>(
     {
-      id: 'update-tenant',
-      title: 'Update Tenant',
+      id: UI_TENANT_FORM_ID_UPDATE,
+      title: UI_TENANT_FORM_TITLE_UPDATE,
       sections: TENANT_UPDATE_SECTIONS,
     },
     options?.customize as BlueprintCustomizer<UpdateTenantRequest> | undefined

@@ -1,7 +1,13 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, beforeEach, test, vi } from 'vitest'
 
+import {
+  UI_PRODUCT_TIER_ACTION_DELETE,
+  UI_PRODUCT_TIER_ACTION_EDIT,
+} from '../../../src/ui/constants'
 import { ProductTierRowActions } from '../../../src/ui/workflows/ProductTierRowActions'
+import { buildProductTier } from '../../factories/productTierFactory'
+import { buildUser } from '../../factories/userFactory'
 
 const useDeleteProductTierMock = vi.hoisted(() => vi.fn())
 
@@ -14,10 +20,10 @@ vi.mock('@simple-license/react-sdk', async () => {
 })
 
 vi.mock('../../../src/ui/data/ActionMenu', () => ({
-  ActionMenu: ({ items }: { items: Array<{ id: string; label: string; onSelect: () => void }> }) => (
+  ActionMenu: ({ items }: { items: Array<{ id: string; label: string; disabled?: boolean; onSelect: () => void }> }) => (
     <div>
       {items.map((item) => (
-        <button key={item.id} onClick={item.onSelect}>
+        <button key={item.id} onClick={item.onSelect} disabled={item.disabled}>
           {item.label}
         </button>
       ))}
@@ -35,31 +41,68 @@ describe('ProductTierRowActions', () => {
     vi.clearAllMocks()
   })
 
-  const tier = {
-    id: 'tier-1',
-    tierName: 'Pro',
-    tierCode: 'PRO',
-  }
-
-  test('invokes edit callback', async () => {
+  test('superuser can edit and delete tier', async () => {
     const deleteMutation = mockMutation()
     useDeleteProductTierMock.mockReturnValue(deleteMutation)
     const onEdit = vi.fn()
+    const tier = buildProductTier()
+    const superuser = buildUser({ role: 'SUPERUSER' })
 
-    render(<ProductTierRowActions client={{} as never} tier={tier as never} onEdit={onEdit} />)
+    render(
+      <ProductTierRowActions
+        client={{} as never}
+        tier={tier as never}
+        onEdit={onEdit}
+        currentUser={superuser}
+        vendorId={tier.vendorId}
+      />,
+    )
 
-    fireEvent.click(screen.getByText('Edit Tier'))
+    fireEvent.click(screen.getByText(UI_PRODUCT_TIER_ACTION_EDIT))
     await waitFor(() => expect(onEdit).toHaveBeenCalledWith(tier))
+
+    fireEvent.click(screen.getByText(UI_PRODUCT_TIER_ACTION_DELETE))
+    await waitFor(() => expect(deleteMutation.mutateAsync).toHaveBeenCalledWith(tier.id))
   })
 
-  test('invokes delete mutation', async () => {
+  test('vendor manager can edit own tier but not delete', async () => {
     const deleteMutation = mockMutation()
     useDeleteProductTierMock.mockReturnValue(deleteMutation)
+    const tier = buildProductTier()
+    const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId: tier.vendorId ?? undefined })
 
-    render(<ProductTierRowActions client={{} as never} tier={tier as never} onEdit={vi.fn()} />)
+    render(
+      <ProductTierRowActions
+        client={{} as never}
+        tier={tier as never}
+        onEdit={vi.fn()}
+        currentUser={vendorManager}
+        vendorId={tier.vendorId}
+      />,
+    )
 
-    fireEvent.click(screen.getByText('Delete Tier'))
-    await waitFor(() => expect(deleteMutation.mutateAsync).toHaveBeenCalledWith(tier.id))
+    expect(screen.queryByText(UI_PRODUCT_TIER_ACTION_DELETE)).toBeNull()
+    fireEvent.click(screen.getByText(UI_PRODUCT_TIER_ACTION_EDIT))
+    await waitFor(() => expect(deleteMutation.mutateAsync).not.toHaveBeenCalled())
+  })
+
+  test('vendor manager cannot act on other vendor tiers', async () => {
+    const deleteMutation = mockMutation()
+    useDeleteProductTierMock.mockReturnValue(deleteMutation)
+    const tier = buildProductTier()
+    const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId: `${tier.vendorId}-other` })
+
+    const { container } = render(
+      <ProductTierRowActions
+        client={{} as never}
+        tier={tier as never}
+        onEdit={vi.fn()}
+        currentUser={vendorManager}
+        vendorId={tier.vendorId}
+      />,
+    )
+
+    expect(container).toBeEmptyDOMElement()
   })
 })
 

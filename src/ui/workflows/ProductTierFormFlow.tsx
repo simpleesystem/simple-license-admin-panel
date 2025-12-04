@@ -7,6 +7,7 @@ import { useCreateProductTier, useUpdateProductTier } from '@simple-license/reac
 import type { FieldValues } from 'react-hook-form'
 import type { ReactNode } from 'react'
 
+import { UI_PRODUCT_TIER_FORM_SUBMIT_CREATE, UI_PRODUCT_TIER_FORM_SUBMIT_UPDATE } from '../constants'
 import { createProductTierBlueprint } from '../formBuilder/factories'
 import { FormModalWithMutation } from '../formBuilder/mutationBridge'
 import type { MutationAdapter } from '../actions/mutationActions'
@@ -19,6 +20,7 @@ type ProductTierBaseProps = {
   submitLabel: ReactNode
   pendingLabel?: ReactNode
   secondaryActions?: ReactNode
+  onCompleted?: () => void
 }
 
 type ProductTierCreateProps = ProductTierBaseProps & {
@@ -52,9 +54,11 @@ const baseUpdateDefaults: UpdateProductTierRequest = {
 const withOnClose = <TFieldValues extends FieldValues>(
   adapter: MutationAdapter<TFieldValues>,
   onClose: () => void,
+  onCompleted?: () => void,
 ): MutationAdapter<TFieldValues> => ({
   mutateAsync: async (values) => {
     const result = await adapter.mutateAsync(values)
+    onCompleted?.()
     onClose()
     return result
   },
@@ -75,6 +79,7 @@ function ProductTierCreateFlow(props: ProductTierCreateProps) {
     ...baseCreateDefaults,
     ...props.defaultValues,
   }
+  const submitLabel = props.submitLabel ?? UI_PRODUCT_TIER_FORM_SUBMIT_CREATE
 
   return (
     <FormModalWithMutation
@@ -82,10 +87,10 @@ function ProductTierCreateFlow(props: ProductTierCreateProps) {
       onClose={props.onClose}
       blueprint={createProductTierBlueprint('create')}
       defaultValues={defaultValues}
-      submitLabel={props.submitLabel}
+      submitLabel={submitLabel}
       pendingLabel={props.pendingLabel}
       secondaryActions={props.secondaryActions}
-      mutation={withOnClose(createMutation, props.onClose)}
+      mutation={withOnClose(createMutation, props.onClose, props.onCompleted)}
     />
   )
 }
@@ -96,6 +101,7 @@ function ProductTierUpdateFlow(props: ProductTierUpdateProps) {
     ...baseUpdateDefaults,
     ...props.defaultValues,
   }
+  const submitLabel = props.submitLabel ?? UI_PRODUCT_TIER_FORM_SUBMIT_UPDATE
 
   const adapter: MutationAdapter<UpdateProductTierRequest> = {
     mutateAsync: async (values) => {
@@ -113,10 +119,10 @@ function ProductTierUpdateFlow(props: ProductTierUpdateProps) {
       onClose={props.onClose}
       blueprint={createProductTierBlueprint('update')}
       defaultValues={defaultValues}
-      submitLabel={props.submitLabel}
+    submitLabel={submitLabel}
       pendingLabel={props.pendingLabel}
       secondaryActions={props.secondaryActions}
-      mutation={withOnClose(adapter, props.onClose)}
+    mutation={withOnClose(adapter, props.onClose, props.onCompleted)}
     />
   )
 }

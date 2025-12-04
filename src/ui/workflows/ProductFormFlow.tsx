@@ -3,6 +3,7 @@ import { useCreateProduct, useUpdateProduct } from '@simple-license/react-sdk'
 import type { FieldValues } from 'react-hook-form'
 import type { ReactNode } from 'react'
 
+import { UI_PRODUCT_FORM_SUBMIT_CREATE, UI_PRODUCT_FORM_SUBMIT_UPDATE } from '../constants'
 import { createProductBlueprint } from '../formBuilder/factories'
 import { FormModalWithMutation } from '../formBuilder/mutationBridge'
 import type { MutationAdapter } from '../actions/mutationActions'
@@ -15,6 +16,7 @@ type ProductFormBaseProps = {
   submitLabel: ReactNode
   pendingLabel?: ReactNode
   secondaryActions?: ReactNode
+  onCompleted?: () => void
 }
 
 type ProductFormCreateProps = ProductFormBaseProps & {
@@ -47,9 +49,11 @@ const baseUpdateDefaults: UpdateProductRequest = {
 const withOnClose = <TFieldValues extends FieldValues>(
   adapter: MutationAdapter<TFieldValues>,
   onClose: () => void,
+  onCompleted?: () => void,
 ): MutationAdapter<TFieldValues> => ({
   mutateAsync: async (values) => {
     const result = await adapter.mutateAsync(values)
+    onCompleted?.()
     onClose()
     return result
   },
@@ -66,6 +70,7 @@ export function ProductFormFlow(props: ProductFormFlowProps) {
       ...baseCreateDefaults,
       ...props.defaultValues,
     }
+    const submitLabel = props.submitLabel ?? UI_PRODUCT_FORM_SUBMIT_CREATE
 
     return (
       <FormModalWithMutation
@@ -73,10 +78,10 @@ export function ProductFormFlow(props: ProductFormFlowProps) {
         onClose={props.onClose}
         blueprint={blueprint}
         defaultValues={defaultValues}
-        submitLabel={props.submitLabel}
+        submitLabel={submitLabel}
         pendingLabel={props.pendingLabel}
         secondaryActions={props.secondaryActions}
-        mutation={withOnClose(createMutation, props.onClose)}
+        mutation={withOnClose(createMutation, props.onClose, props.onCompleted)}
       />
     )
   }
@@ -85,6 +90,7 @@ export function ProductFormFlow(props: ProductFormFlowProps) {
     ...baseUpdateDefaults,
     ...props.defaultValues,
   }
+  const submitLabel = props.submitLabel ?? UI_PRODUCT_FORM_SUBMIT_UPDATE
   const adapter: MutationAdapter<UpdateProductRequest> = {
     mutateAsync: async (values) => {
       const result = await updateMutation.mutateAsync({ id: props.productId, data: values })
@@ -99,10 +105,10 @@ export function ProductFormFlow(props: ProductFormFlowProps) {
       onClose={props.onClose}
       blueprint={createProductBlueprint('update')}
       defaultValues={defaultValues}
-      submitLabel={props.submitLabel}
+      submitLabel={submitLabel}
       pendingLabel={props.pendingLabel}
       secondaryActions={props.secondaryActions}
-      mutation={withOnClose(adapter, props.onClose)}
+      mutation={withOnClose(adapter, props.onClose, props.onCompleted)}
     />
   )
 }
