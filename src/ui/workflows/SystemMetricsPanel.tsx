@@ -60,6 +60,7 @@ import { InlineAlert } from '../feedback/InlineAlert'
 import { Stack } from '../layout/Stack'
 import { BadgeText } from '../typography/BadgeText'
 import { getLiveStatusDescriptor } from '../utils/liveStatus'
+import { useLiveData } from '../../hooks/useLiveData'
 
 type SystemMetricsPanelProps = {
   client: Client
@@ -167,54 +168,59 @@ const buildMetricItems = (
 }
 
 export function SystemMetricsPanel({ client, title = UI_SYSTEM_METRICS_TITLE }: SystemMetricsPanelProps) {
-  const metricsQuery = useSystemMetrics(client, { retry: false })
-  const healthSocket = useHealthWebSocket(client)
+  const {
+    data: metricsSource,
+    socketResult: healthSocket,
+    isLoading,
+    isError,
+    refresh,
+  } = useLiveData({
+    query: () => useSystemMetrics(client, { retry: false }),
+    socket: () => useHealthWebSocket(client),
+    selectQueryData: (data) => data,
+    selectSocketData: (socket) => socket.healthData,
+    merge: ({ liveData, queryData, socketResult }) => {
+      const liveMetrics = createLiveMetricsResponse(liveData, socketResult.healthMessage?.timestamp)
+      if (!queryData) {
+        return liveMetrics
+      }
+      if (!liveMetrics) {
+        return queryData
+      }
+      return {
+        ...queryData,
+        timestamp: liveMetrics.timestamp ?? queryData.timestamp,
+        system: {
+          ...queryData.system,
+          uptime: liveMetrics.system.uptime ?? queryData.system.uptime,
+          memory: {
+            ...queryData.system.memory,
+            rss: liveMetrics.system.memory.rss ?? queryData.system.memory.rss,
+            heapTotal: liveMetrics.system.memory.heapTotal ?? queryData.system.memory.heapTotal,
+            heapUsed: liveMetrics.system.memory.heapUsed ?? queryData.system.memory.heapUsed,
+          },
+        },
+        database: {
+          ...queryData.database,
+          ...liveMetrics.database,
+        },
+        cache: queryData.cache,
+        security: {
+          ...queryData.security,
+          ...liveMetrics.security,
+        },
+        tenants: {
+          ...queryData.tenants,
+          ...liveMetrics.tenants,
+        },
+      }
+    },
+  })
   const numberFormatter = useMemo(() => new Intl.NumberFormat(), [])
   const dateFormatter = useMemo(
     () => new Intl.DateTimeFormat(UI_DATE_FORMAT_LOCALE, UI_DATE_TIME_FORMAT_OPTIONS),
     []
   )
-
-  const metricsSource = useMemo<MetricsResponse | undefined>(() => {
-    const liveMetrics = createLiveMetricsResponse(healthSocket.healthData, healthSocket.healthMessage?.timestamp)
-    const apiMetrics = metricsQuery.data
-
-    if (!apiMetrics) {
-      return liveMetrics
-    }
-
-    if (!liveMetrics) {
-      return apiMetrics
-    }
-
-    return {
-      ...apiMetrics,
-      timestamp: liveMetrics.timestamp ?? apiMetrics.timestamp,
-      system: {
-        ...apiMetrics.system,
-        uptime: liveMetrics.system.uptime ?? apiMetrics.system.uptime,
-        memory: {
-          ...apiMetrics.system.memory,
-          rss: liveMetrics.system.memory.rss ?? apiMetrics.system.memory.rss,
-          heapTotal: liveMetrics.system.memory.heapTotal ?? apiMetrics.system.memory.heapTotal,
-          heapUsed: liveMetrics.system.memory.heapUsed ?? apiMetrics.system.memory.heapUsed,
-        },
-      },
-      database: {
-        ...apiMetrics.database,
-        ...liveMetrics.database,
-      },
-      cache: apiMetrics.cache,
-      security: {
-        ...apiMetrics.security,
-        ...liveMetrics.security,
-      },
-      tenants: {
-        ...apiMetrics.tenants,
-        ...liveMetrics.tenants,
-      },
-    }
-  }, [healthSocket.healthData, healthSocket.healthMessage, metricsQuery.data])
 
   const buildApplicationItems = useCallback((metrics: MetricsResponse | undefined): UiKeyValueItem[] => {
     if (!metrics?.application) {
@@ -347,7 +353,7 @@ export function SystemMetricsPanel({ client, title = UI_SYSTEM_METRICS_TITLE }: 
 
   const renderContent = () => {
     if (!metricsSource || sections.length === 0) {
-      if (metricsQuery.isLoading && !metricsSource) {
+      if (isLoading && !metricsSource) {
         return (
           <InlineAlert variant="info" title={UI_SYSTEM_METRICS_LOADING_TITLE}>
             {UI_SYSTEM_METRICS_LOADING_BODY}
@@ -355,7 +361,7 @@ export function SystemMetricsPanel({ client, title = UI_SYSTEM_METRICS_TITLE }: 
         )
       }
 
-      if (metricsQuery.isError && !metricsSource) {
+      if (isError && !metricsSource) {
         return (
           <InlineAlert variant="danger" title={UI_SYSTEM_METRICS_ERROR_TITLE}>
             {UI_SYSTEM_METRICS_ERROR_BODY}
@@ -387,11 +393,6 @@ export function SystemMetricsPanel({ client, title = UI_SYSTEM_METRICS_TITLE }: 
     Boolean(healthSocket.error)
   )
 
-  const handleRefresh = useCallback(() => {
-    void metricsQuery.refetch()
-    healthSocket.requestHealth()
-  }, [healthSocket, metricsQuery.refetch])
-
   return (
     <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
@@ -401,7 +402,7 @@ export function SystemMetricsPanel({ client, title = UI_SYSTEM_METRICS_TITLE }: 
         </div>
         <div className="d-flex flex-wrap align-items-center gap-2">
           <BadgeText text={liveStatusDescriptor.text} variant={liveStatusDescriptor.variant} />
-          <Button variant="outline-secondary" onClick={handleRefresh}>
+          <Button variant="outline-secondary" onClick={refresh}>
             {UI_SYSTEM_METRICS_REFRESH_LABEL}
           </Button>
         </div>

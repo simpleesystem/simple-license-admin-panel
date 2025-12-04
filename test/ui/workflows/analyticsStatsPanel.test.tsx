@@ -16,18 +16,10 @@ import {
   UI_LIVE_STATUS_CONNECTED,
 } from '../../../src/ui/constants'
 import { AnalyticsStatsPanel } from '../../../src/ui/workflows/AnalyticsStatsPanel'
+import type { UseLiveDataResult } from '../../../src/hooks/useLiveData'
+import { useLiveData } from '../../../src/hooks/useLiveData'
 
-const useSystemStatsMock = vi.hoisted(() => vi.fn())
-const useHealthWebSocketMock = vi.hoisted(() => vi.fn())
-
-vi.mock('@simple-license/react-sdk', async () => {
-  const actual = await vi.importActual<typeof import('@simple-license/react-sdk')>('@simple-license/react-sdk')
-  return {
-    ...actual,
-    useSystemStats: useSystemStatsMock,
-    useHealthWebSocket: useHealthWebSocketMock,
-  }
-})
+vi.mock('../../../src/hooks/useLiveData')
 
 const createStats = () => ({
   stats: {
@@ -38,33 +30,66 @@ const createStats = () => ({
   },
 })
 
-const createHealthSocketValue = (
-  overrides: Partial<ReturnType<typeof useHealthWebSocketMock>> = {}
-) => ({
-  connected: false,
+const createSocketResultBase = () => ({
   connectionInfo: { state: WS_STATE_DISCONNECTED, connectedAt: undefined, disconnectedAt: undefined },
   error: undefined,
-  healthData: undefined,
-  healthMessage: undefined,
-  lastMessage: undefined,
   requestHealth: vi.fn(),
-  send: vi.fn(),
-  sendPing: vi.fn(),
-  disconnect: vi.fn(),
-  reconnect: vi.fn(),
+})
+
+type LiveDataResult = UseLiveDataResult<unknown, ReturnType<typeof createSocketResultBase>, ReturnType<typeof createStats>['stats']>
+type SocketResult = LiveDataResult['socketResult']
+
+const createSocketResult = (overrides: Partial<SocketResult> = {}): SocketResult => ({
+  ...createSocketResultBase(),
   ...overrides,
 })
 
-describe('AnalyticsStatsPanel', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    useSystemStatsMock.mockReturnValue({
-      data: createStats(),
+const createLiveDataResult = (
+  overrides: Partial<LiveDataResult> = {},
+): LiveDataResult => {
+  const socketResult = overrides.socketResult ?? createSocketResult()
+  const data = overrides.data
+  const queryData = overrides.queryData
+  const liveData = overrides.liveData
+  const hasDataOverride =
+    overrides.hasData ??
+    Boolean(
+      (data !== undefined && data !== null) ||
+        (queryData !== undefined && queryData !== null) ||
+        (liveData !== undefined && liveData !== null),
+    )
+
+  return {
+    data,
+    queryData,
+    liveData,
+    hasData: hasDataOverride,
+    isLoading: false,
+    isError: false,
+    queryResult: {
+      data: undefined,
       isLoading: false,
       isError: false,
       refetch: vi.fn(),
-    })
-    useHealthWebSocketMock.mockReturnValue(createHealthSocketValue())
+    } as LiveDataResult['queryResult'],
+    socketResult,
+    refresh: vi.fn(),
+    ...overrides,
+    socketResult,
+    hasData: hasDataOverride,
+  }
+}
+
+describe('AnalyticsStatsPanel', () => {
+  const useLiveDataMock = vi.mocked(useLiveData)
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    useLiveDataMock.mockReturnValue(
+      createLiveDataResult({
+        data: createStats().stats,
+      }),
+    )
   })
 
   test('renders summary list when data available', () => {
@@ -76,82 +101,71 @@ describe('AnalyticsStatsPanel', () => {
   })
 
   test('shows loading alert when no data yet', () => {
-    useSystemStatsMock.mockReturnValueOnce({
-      data: undefined,
-      isLoading: true,
-      isError: false,
-      refetch: vi.fn(),
-    })
+    useLiveDataMock.mockReturnValueOnce(
+      createLiveDataResult({
+        data: undefined,
+        isLoading: true,
+        hasData: false,
+      }),
+    )
     render(<AnalyticsStatsPanel client={{} as never} />)
     expect(screen.getByText(UI_ANALYTICS_STATS_LOADING_TITLE)).toBeInTheDocument()
     expect(screen.getByText(UI_ANALYTICS_STATS_LOADING_BODY)).toBeInTheDocument()
   })
 
   test('shows error alert when both sources fail', () => {
-    useSystemStatsMock.mockReturnValueOnce({
-      data: undefined,
-      isLoading: false,
-      isError: true,
-      refetch: vi.fn(),
-    })
+    useLiveDataMock.mockReturnValueOnce(
+      createLiveDataResult({
+        data: undefined,
+        isError: true,
+        hasData: false,
+      }),
+    )
     render(<AnalyticsStatsPanel client={{} as never} />)
     expect(screen.getByText(UI_ANALYTICS_STATS_ERROR_TITLE)).toBeInTheDocument()
     expect(screen.getByText(UI_ANALYTICS_STATS_ERROR_BODY)).toBeInTheDocument()
   })
 
   test('shows empty state when stats missing', () => {
-    useSystemStatsMock.mockReturnValueOnce({
-      data: undefined,
-      isLoading: false,
-      isError: false,
-      refetch: vi.fn(),
-    })
+    useLiveDataMock.mockReturnValueOnce(
+      createLiveDataResult({
+        data: undefined,
+        hasData: false,
+      }),
+    )
     render(<AnalyticsStatsPanel client={{} as never} />)
     expect(screen.getByText(UI_ANALYTICS_STATS_EMPTY_TITLE)).toBeInTheDocument()
     expect(screen.getByText(UI_ANALYTICS_STATS_EMPTY_BODY)).toBeInTheDocument()
   })
 
   test('allows manual refresh and triggers live request', () => {
-    const refetch = vi.fn()
-    const requestHealth = vi.fn()
-    useSystemStatsMock.mockReturnValueOnce({
-      data: createStats(),
-      isLoading: false,
-      isError: false,
-      refetch,
+    const refresh = vi.fn()
+    const socketResult = createSocketResult({
+      connectionInfo: { state: WS_STATE_CONNECTED, connectedAt: new Date().toISOString(), disconnectedAt: undefined },
     })
-    useHealthWebSocketMock.mockReturnValueOnce(
-      createHealthSocketValue({
-        requestHealth,
-        connectionInfo: { state: WS_STATE_CONNECTED, connectedAt: new Date().toISOString(), disconnectedAt: undefined },
-      })
+    useLiveDataMock.mockReturnValueOnce(
+      createLiveDataResult({
+        data: createStats().stats,
+        refresh,
+        socketResult,
+      }),
     )
 
     render(<AnalyticsStatsPanel client={{} as never} />)
     fireEvent.click(screen.getByRole('button', { name: UI_ANALYTICS_STATS_REFRESH_LABEL }))
-    expect(refetch).toHaveBeenCalledTimes(1)
-    expect(requestHealth).toHaveBeenCalledTimes(1)
+    expect(refresh).toHaveBeenCalledTimes(1)
   })
 
   test('uses live stats when API data unavailable', () => {
-    useSystemStatsMock.mockReturnValueOnce({
-      data: undefined,
-      isLoading: false,
-      isError: false,
-      refetch: vi.fn(),
-    })
-    useHealthWebSocketMock.mockReturnValueOnce(
-      createHealthSocketValue({
-        healthMessage: { type: 'health_update', timestamp: new Date().toISOString(), data: {} } as never,
-        healthData: {
-          stats: {
-            active_licenses: 200,
-            expired_licenses: 10,
-            total_customers: 40,
-            total_activations: 800,
-          },
+    useLiveDataMock.mockReturnValueOnce(
+      createLiveDataResult({
+        data: {
+          active_licenses: 200,
+          expired_licenses: 10,
+          total_customers: 40,
+          total_activations: 800,
         },
-      })
+      }),
     )
 
     render(<AnalyticsStatsPanel client={{} as never} />)
@@ -160,10 +174,12 @@ describe('AnalyticsStatsPanel', () => {
   })
 
   test('renders live status badge text', () => {
-    useHealthWebSocketMock.mockReturnValueOnce(
-      createHealthSocketValue({
-        connectionInfo: { state: WS_STATE_CONNECTED, connectedAt: new Date().toISOString(), disconnectedAt: undefined },
-      })
+    useLiveDataMock.mockReturnValueOnce(
+      createLiveDataResult({
+        socketResult: createSocketResult({
+          connectionInfo: { state: WS_STATE_CONNECTED, connectedAt: new Date().toISOString(), disconnectedAt: undefined },
+        }),
+      }),
     )
     render(<AnalyticsStatsPanel client={{} as never} />)
     expect(screen.getByText(UI_LIVE_STATUS_CONNECTED)).toBeInTheDocument()

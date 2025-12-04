@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
 import type { Client } from '@simple-license/react-sdk'
 import { useHealthWebSocket, useServerStatus } from '@simple-license/react-sdk'
@@ -35,6 +36,7 @@ import { InlineAlert } from '../feedback/InlineAlert'
 import { Stack } from '../layout/Stack'
 import { BadgeText } from '../typography/BadgeText'
 import { getLiveStatusDescriptor } from '../utils/liveStatus'
+import { useLiveData } from '../../hooks/useLiveData'
 
 type SystemStatusPanelProps = {
   client: Client
@@ -75,30 +77,40 @@ const formatDatabaseState = (activeConnections: number | undefined) => {
 }
 
 export function SystemStatusPanel({ client, title = UI_SYSTEM_STATUS_TITLE }: SystemStatusPanelProps) {
-  const statusQuery = useServerStatus(client, { retry: false })
-  const healthSocket = useHealthWebSocket(client)
+  const {
+    queryData: statusData,
+    liveData: livePayload,
+    socketResult: healthSocket,
+    isLoading,
+    isError,
+    refresh,
+  } = useLiveData({
+    query: () => useServerStatus(client, { retry: false }),
+    socket: () => useHealthWebSocket(client),
+    selectQueryData: (data) => data,
+    selectSocketData: (socket) => socket.healthData,
+  })
   const dateFormatter = useMemo(
     () => new Intl.DateTimeFormat(UI_DATE_FORMAT_LOCALE, UI_DATE_TIME_FORMAT_OPTIONS),
     []
   )
 
   const liveStatus = useMemo<LiveStatusSnapshot | undefined>(() => {
-    const payload = healthSocket.healthData
-    if (!payload) {
+    if (!livePayload) {
       return undefined
     }
     return {
-      status: payload.error ? 'unhealthy' : 'healthy',
+      status: livePayload.error ? 'unhealthy' : 'healthy',
       timestamp: healthSocket.healthMessage?.timestamp ?? null,
-      database: formatDatabaseState(payload.database?.active_connections),
+      database: formatDatabaseState(livePayload.database?.active_connections),
     }
-  }, [healthSocket.healthData, healthSocket.healthMessage])
+  }, [healthSocket.healthMessage, livePayload])
 
   const summaryItems = useMemo<UiKeyValueItem[]>(() => {
     const items: UiKeyValueItem[] = []
-    const statusValue = liveStatus?.status ?? statusQuery.data?.status
-    const timestampValue = liveStatus?.timestamp ?? statusQuery.data?.timestamp
-    const databaseValue = liveStatus?.database ?? statusQuery.data?.checks?.database
+    const statusValue = liveStatus?.status ?? statusData?.status
+    const timestampValue = liveStatus?.timestamp ?? statusData?.timestamp
+    const databaseValue = liveStatus?.database ?? statusData?.checks?.database
 
     if (statusValue) {
       items.push({
@@ -125,11 +137,11 @@ export function SystemStatusPanel({ client, title = UI_SYSTEM_STATUS_TITLE }: Sy
     }
 
     return items
-  }, [dateFormatter, liveStatus, statusQuery.data])
+  }, [dateFormatter, liveStatus, statusData])
 
   const renderContent = () => {
     if (summaryItems.length === 0) {
-      if (statusQuery.isLoading && !liveStatus) {
+      if (isLoading && !liveStatus) {
         return (
           <InlineAlert variant="info" title={UI_SYSTEM_STATUS_LOADING_TITLE}>
             {UI_SYSTEM_STATUS_LOADING_BODY}
@@ -137,7 +149,7 @@ export function SystemStatusPanel({ client, title = UI_SYSTEM_STATUS_TITLE }: Sy
         )
       }
 
-      if (statusQuery.isError && !liveStatus) {
+      if (isError && !liveStatus) {
         return (
           <InlineAlert variant="danger" title={UI_SYSTEM_STATUS_ERROR_TITLE}>
             {UI_SYSTEM_STATUS_ERROR_BODY}
@@ -160,11 +172,6 @@ export function SystemStatusPanel({ client, title = UI_SYSTEM_STATUS_TITLE }: Sy
     Boolean(healthSocket.error)
   )
 
-  const handleRefresh = useCallback(() => {
-    void statusQuery.refetch()
-    healthSocket.requestHealth()
-  }, [healthSocket, statusQuery])
-
   return (
     <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
@@ -174,7 +181,7 @@ export function SystemStatusPanel({ client, title = UI_SYSTEM_STATUS_TITLE }: Sy
         </div>
         <div className="d-flex flex-wrap align-items-center gap-2">
           <BadgeText text={liveStatusDescriptor.text ?? UI_LIVE_STATUS_DISCONNECTED} variant={liveStatusDescriptor.variant ?? UI_BADGE_VARIANT_SECONDARY} />
-          <Button variant="outline-secondary" onClick={handleRefresh}>
+          <Button variant="outline-secondary" onClick={refresh}>
             {UI_SYSTEM_STATUS_REFRESH_LABEL}
           </Button>
         </div>

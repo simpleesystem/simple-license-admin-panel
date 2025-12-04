@@ -1,10 +1,8 @@
 import { render, screen } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { Client } from '@simple-license/react-sdk'
 import { WS_STATE_DISCONNECTED } from '@simple-license/react-sdk'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 
-import { ApiContext } from '../../../src/api/apiContext'
 import {
   UI_HEALTH_METRICS_EMPTY_BODY,
   UI_HEALTH_METRICS_EMPTY_TITLE,
@@ -15,58 +13,71 @@ import {
   UI_HEALTH_METRICS_TITLE,
 } from '../../../src/ui/constants'
 import { HealthMetricsPanel } from '../../../src/ui/workflows/HealthMetricsPanel'
+import type { UseLiveDataResult } from '../../../src/hooks/useLiveData'
+import { useLiveData } from '../../../src/hooks/useLiveData'
 
-const useHealthMetricsMock = vi.hoisted(() => vi.fn())
-const useHealthWebSocketMock = vi.hoisted(() => vi.fn())
-
-vi.mock('@simple-license/react-sdk', async () => {
-  const actual = await vi.importActual<typeof import('@simple-license/react-sdk')>('@simple-license/react-sdk')
-  return {
-    ...actual,
-    useHealthMetrics: useHealthMetricsMock,
-    useHealthWebSocket: useHealthWebSocketMock,
-  }
-})
+vi.mock('../../../src/hooks/useLiveData')
 
 const createMockClient = () => ({}) as Client
 
-const renderWithProviders = (ui: React.ReactElement, client: Client) => {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  })
-
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <ApiContext.Provider value={{ client }}>{ui}</ApiContext.Provider>
-    </QueryClientProvider>
-  )
+type MetricsSource = {
+  uptime: number | null
+  memory: {
+    rss: number | null
+    heapTotal: number | null
+    heapUsed: number | null
+    external: number | null
+  }
+  cpu?: {
+    user?: number | null
+    system?: number | null
+  }
 }
 
-const createHealthSocketValue = () => ({
-  connected: false,
+type LiveDataResult = UseLiveDataResult<unknown, ReturnType<typeof createSocketResult>, MetricsSource | undefined>
+type SocketResult = LiveDataResult['socketResult']
+
+const createSocketResult = (overrides: Partial<SocketResult> = {}): SocketResult => ({
   connectionInfo: { state: WS_STATE_DISCONNECTED, connectedAt: undefined, disconnectedAt: undefined },
   error: undefined,
-  healthData: undefined,
-  healthMessage: undefined,
-  lastMessage: undefined,
   requestHealth: vi.fn(),
-  send: vi.fn(),
-  sendPing: vi.fn(),
-  disconnect: vi.fn(),
-  reconnect: vi.fn(),
+  ...overrides,
 })
 
+const createLiveDataResult = (overrides: Partial<LiveDataResult> = {}): LiveDataResult => {
+  const socketResult = overrides.socketResult ?? createSocketResult()
+  const data = overrides.data
+  const hasDataOverride = overrides.hasData ?? Boolean(data)
+
+  return {
+    data,
+    queryData: overrides.queryData,
+    liveData: overrides.liveData,
+    hasData: hasDataOverride,
+    isLoading: overrides.isLoading ?? false,
+    isError: overrides.isError ?? false,
+    queryResult: {
+      data: overrides.queryData,
+      isLoading: Boolean(overrides.isLoading),
+      isError: Boolean(overrides.isError),
+      refetch: vi.fn(),
+    } as LiveDataResult['queryResult'],
+    socketResult,
+    refresh: overrides.refresh ?? vi.fn(),
+    ...overrides,
+    socketResult,
+    hasData: hasDataOverride,
+  }
+}
+
 describe('HealthMetricsPanel', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    useHealthWebSocketMock.mockReturnValue(createHealthSocketValue())
-  })
+  const useLiveDataMock = vi.mocked(useLiveData)
 
   test('renders health metrics summary', () => {
     const client = createMockClient()
-    useHealthMetricsMock.mockReturnValue({
-      data: {
-        metrics: {
+    useLiveDataMock.mockReturnValueOnce(
+      createLiveDataResult({
+        data: {
           uptime: 100,
           memory: {
             rss: 200,
@@ -79,13 +90,10 @@ describe('HealthMetricsPanel', () => {
             system: 10,
           },
         },
-      },
-      isLoading: false,
-      isError: false,
-      refetch: vi.fn(),
-    })
+      }),
+    )
 
-    renderWithProviders(<HealthMetricsPanel client={client} />, client)
+    render(<HealthMetricsPanel client={client} />)
 
     expect(screen.getByText(UI_HEALTH_METRICS_TITLE)).toBeInTheDocument()
     expect(screen.getByText('100')).toBeInTheDocument()
@@ -93,14 +101,15 @@ describe('HealthMetricsPanel', () => {
 
   test('renders loading state', () => {
     const client = createMockClient()
-    useHealthMetricsMock.mockReturnValue({
-      data: undefined,
-      isLoading: true,
-      isError: false,
-      refetch: vi.fn(),
-    })
+    useLiveDataMock.mockReturnValueOnce(
+      createLiveDataResult({
+        data: undefined,
+        isLoading: true,
+        hasData: false,
+      }),
+    )
 
-    renderWithProviders(<HealthMetricsPanel client={client} />, client)
+    render(<HealthMetricsPanel client={client} />)
 
     expect(screen.getByText(UI_HEALTH_METRICS_LOADING_TITLE)).toBeInTheDocument()
     expect(screen.getByText(UI_HEALTH_METRICS_LOADING_BODY)).toBeInTheDocument()
@@ -108,14 +117,15 @@ describe('HealthMetricsPanel', () => {
 
   test('renders error state', () => {
     const client = createMockClient()
-    useHealthMetricsMock.mockReturnValue({
-      data: undefined,
-      isLoading: false,
-      isError: true,
-      refetch: vi.fn(),
-    })
+    useLiveDataMock.mockReturnValueOnce(
+      createLiveDataResult({
+        data: undefined,
+        isError: true,
+        hasData: false,
+      }),
+    )
 
-    renderWithProviders(<HealthMetricsPanel client={client} />, client)
+    render(<HealthMetricsPanel client={client} />)
 
     expect(screen.getByText(UI_HEALTH_METRICS_ERROR_TITLE)).toBeInTheDocument()
     expect(screen.getByText(UI_HEALTH_METRICS_ERROR_BODY)).toBeInTheDocument()
@@ -123,14 +133,14 @@ describe('HealthMetricsPanel', () => {
 
   test('renders empty state when metrics missing', () => {
     const client = createMockClient()
-    useHealthMetricsMock.mockReturnValue({
-      data: undefined,
-      isLoading: false,
-      isError: false,
-      refetch: vi.fn(),
-    })
+    useLiveDataMock.mockReturnValueOnce(
+      createLiveDataResult({
+        data: undefined,
+        hasData: false,
+      }),
+    )
 
-    renderWithProviders(<HealthMetricsPanel client={client} />, client)
+    render(<HealthMetricsPanel client={client} />)
 
     expect(screen.getByText(UI_HEALTH_METRICS_EMPTY_TITLE)).toBeInTheDocument()
     expect(screen.getByText(UI_HEALTH_METRICS_EMPTY_BODY)).toBeInTheDocument()

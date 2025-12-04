@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react'
+import { useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
 import type { Client } from '@simple-license/react-sdk'
 import { useHealthWebSocket, useSystemStats } from '@simple-license/react-sdk'
@@ -30,6 +30,7 @@ import { InlineAlert } from '../feedback/InlineAlert'
 import { Stack } from '../layout/Stack'
 import { BadgeText } from '../typography/BadgeText'
 import { getLiveStatusDescriptor } from '../utils/liveStatus'
+import { useLiveData } from '../../hooks/useLiveData'
 
 type AnalyticsStatsPanelProps = {
   client: Client
@@ -44,16 +45,18 @@ const formatNumber = (value: number | undefined) => {
 }
 
 export function AnalyticsStatsPanel({ client, title = UI_ANALYTICS_STATS_TITLE }: AnalyticsStatsPanelProps) {
-  const statsQuery = useSystemStats(client, { retry: false })
-  const { refetch } = statsQuery
-  const healthSocket = useHealthWebSocket(client)
-
-  const statsSource = useMemo(() => {
-    if (healthSocket.healthData?.stats) {
-      return healthSocket.healthData.stats
-    }
-    return statsQuery.data?.stats
-  }, [healthSocket.healthData?.stats, statsQuery.data?.stats])
+  const {
+    data: statsSource,
+    isLoading,
+    isError,
+    socketResult: healthSocket,
+    refresh,
+  } = useLiveData({
+    query: () => useSystemStats(client, { retry: false }),
+    socket: () => useHealthWebSocket(client),
+    selectQueryData: (data) => data?.stats,
+    selectSocketData: (socket) => socket.healthData?.stats,
+  })
 
   const statItems = useMemo<UiSummaryCardItem[]>(() => {
     if (!statsSource) {
@@ -84,19 +87,14 @@ export function AnalyticsStatsPanel({ client, title = UI_ANALYTICS_STATS_TITLE }
     ]
   }, [statsSource])
 
-  const shouldShowLoading = statsQuery.isLoading && !statsSource
-  const shouldShowError = statsQuery.isError && !statsSource
+  const shouldShowLoading = isLoading && !statsSource
+  const shouldShowError = isError && !statsSource
   const shouldShowEmpty = !shouldShowLoading && !shouldShowError && statItems.length === 0
 
   const liveStatusDescriptor = getLiveStatusDescriptor(
     healthSocket.connectionInfo.state,
     Boolean(healthSocket.error)
   )
-
-  const handleRefresh = useCallback(() => {
-    void refetch()
-    healthSocket.requestHealth()
-  }, [healthSocket, refetch])
 
   const renderContent = () => {
     if (shouldShowLoading) {
@@ -135,7 +133,7 @@ export function AnalyticsStatsPanel({ client, title = UI_ANALYTICS_STATS_TITLE }
         </div>
         <div className="d-flex flex-wrap align-items-center gap-2">
           <BadgeText text={liveStatusDescriptor.text} variant={liveStatusDescriptor.variant} />
-          <Button variant="outline-secondary" onClick={handleRefresh}>
+          <Button variant="outline-secondary" onClick={refresh}>
             {UI_ANALYTICS_STATS_REFRESH_LABEL}
           </Button>
         </div>

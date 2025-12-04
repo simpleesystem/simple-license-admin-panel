@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react'
+import { useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
 import type { Client } from '@simple-license/react-sdk'
 import { useHealthMetrics, useHealthWebSocket } from '@simple-license/react-sdk'
@@ -36,6 +36,7 @@ import { InlineAlert } from '../feedback/InlineAlert'
 import { Stack } from '../layout/Stack'
 import { BadgeText } from '../typography/BadgeText'
 import { getLiveStatusDescriptor } from '../utils/liveStatus'
+import { useLiveData } from '../../hooks/useLiveData'
 
 type HealthMetricsPanelProps = {
   client: Client
@@ -50,29 +51,34 @@ const formatNumber = (value: number | null | undefined, formatter: Intl.NumberFo
 }
 
 export function HealthMetricsPanel({ client, title = UI_HEALTH_METRICS_TITLE }: HealthMetricsPanelProps) {
-  const metricsQuery = useHealthMetrics(client, { retry: false })
-  const healthSocket = useHealthWebSocket(client)
+  const {
+    data: metricsSource,
+    socketResult: healthSocket,
+    isLoading,
+    isError,
+    refresh,
+  } = useLiveData({
+    query: () => useHealthMetrics(client, { retry: false }),
+    socket: () => useHealthWebSocket(client),
+    selectQueryData: (data) => data?.metrics,
+    selectSocketData: (socket) => socket.healthData?.system,
+    merge: ({ liveData, queryData }) => {
+      if (!liveData) {
+        return queryData
+      }
+      return {
+        uptime: liveData.uptime ?? queryData?.uptime ?? null,
+        memory: {
+          rss: queryData?.memory.rss ?? liveData.memory.heap_total ?? null,
+          heapTotal: liveData.memory.heap_total ?? queryData?.memory.heapTotal ?? null,
+          heapUsed: liveData.memory.heap_used ?? queryData?.memory.heapUsed ?? null,
+          external: queryData?.memory.external ?? null,
+        },
+        cpu: queryData?.cpu,
+      }
+    },
+  })
   const numberFormatter = useMemo(() => new Intl.NumberFormat(), [])
-
-  const metricsSource = useMemo(() => {
-    const apiMetrics = metricsQuery.data?.metrics
-    const liveMetrics = healthSocket.healthData?.system
-
-    if (!liveMetrics) {
-      return apiMetrics
-    }
-
-    return {
-      uptime: liveMetrics.uptime ?? apiMetrics?.uptime ?? null,
-      memory: {
-        rss: apiMetrics?.memory.rss ?? liveMetrics.memory.heap_total ?? null,
-        heapTotal: liveMetrics.memory.heap_total ?? apiMetrics?.memory.heapTotal ?? null,
-        heapUsed: liveMetrics.memory.heap_used ?? apiMetrics?.memory.heapUsed ?? null,
-        external: apiMetrics?.memory.external ?? null,
-      },
-      cpu: apiMetrics?.cpu,
-    }
-  }, [healthSocket.healthData?.system, metricsQuery.data?.metrics])
 
   const summaryItems = useMemo<UiKeyValueItem[]>(() => {
     if (!metricsSource) {
@@ -120,7 +126,7 @@ export function HealthMetricsPanel({ client, title = UI_HEALTH_METRICS_TITLE }: 
 
   const renderContent = () => {
     if (summaryItems.length === 0) {
-      if (metricsQuery.isLoading && !metricsSource) {
+      if (isLoading && !metricsSource) {
         return (
           <InlineAlert variant="info" title={UI_HEALTH_METRICS_LOADING_TITLE}>
             {UI_HEALTH_METRICS_LOADING_BODY}
@@ -128,7 +134,7 @@ export function HealthMetricsPanel({ client, title = UI_HEALTH_METRICS_TITLE }: 
         )
       }
 
-      if (metricsQuery.isError && !metricsSource) {
+      if (isError && !metricsSource) {
         return (
           <InlineAlert variant="danger" title={UI_HEALTH_METRICS_ERROR_TITLE}>
             {UI_HEALTH_METRICS_ERROR_BODY}
@@ -151,11 +157,6 @@ export function HealthMetricsPanel({ client, title = UI_HEALTH_METRICS_TITLE }: 
     Boolean(healthSocket.error)
   )
 
-  const handleRefresh = useCallback(() => {
-    void metricsQuery.refetch()
-    healthSocket.requestHealth()
-  }, [healthSocket, metricsQuery])
-
   return (
     <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
@@ -165,7 +166,7 @@ export function HealthMetricsPanel({ client, title = UI_HEALTH_METRICS_TITLE }: 
         </div>
         <div className="d-flex flex-wrap align-items-center gap-2">
           <BadgeText text={liveStatusDescriptor.text} variant={liveStatusDescriptor.variant} />
-          <Button variant="outline-secondary" onClick={handleRefresh}>
+          <Button variant="outline-secondary" onClick={refresh}>
             {UI_HEALTH_METRICS_REFRESH_LABEL}
           </Button>
         </div>
