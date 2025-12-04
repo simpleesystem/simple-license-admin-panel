@@ -1,7 +1,13 @@
+import { faker } from '@faker-js/faker'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, beforeEach, test, vi } from 'vitest'
 
+import {
+  UI_LICENSE_ACTION_DELETE,
+  UI_LICENSE_ACTION_SUSPEND,
+} from '../../../src/ui/constants'
 import { LicenseRowActions } from '../../../src/ui/workflows/LicenseRowActions'
+import { buildLicense } from '../../factories/licenseFactory'
 
 const useRevokeLicenseMock = vi.hoisted(() => vi.fn())
 const useSuspendLicenseMock = vi.hoisted(() => vi.fn())
@@ -40,6 +46,7 @@ describe('LicenseRowActions', () => {
   })
 
   test('renders action buttons and executes revoke mutation', async () => {
+    const license = buildLicense({ status: 'ACTIVE' })
     const deleteMutation = mockMutation()
     const suspendMutation = mockMutation()
     const resumeMutation = mockMutation()
@@ -50,18 +57,20 @@ describe('LicenseRowActions', () => {
     render(
       <LicenseRowActions
         client={{} as never}
-        licenseId="license-1"
-        licenseStatus="ACTIVE"
-        buttonLabel="Row actions"
+        licenseId={license.id}
+        licenseVendorId={license.vendorId}
+        licenseStatus={license.status}
+        currentUser={{ role: 'SUPERUSER', vendorId: license.vendorId }}
       />,
     )
 
-    fireEvent.click(screen.getByText('Delete License'))
+    fireEvent.click(screen.getByText(UI_LICENSE_ACTION_DELETE))
 
-    expect(deleteMutation.mutateAsync).toHaveBeenCalledWith('license-1')
+    expect(deleteMutation.mutateAsync).toHaveBeenCalledWith(license.id)
   })
 
   test('disables resume action when license is not suspended', () => {
+    const license = buildLicense({ status: 'ACTIVE' })
     const deleteMutation = mockMutation()
     const suspendMutation = mockMutation()
     const resumeMutation = mockMutation()
@@ -70,12 +79,56 @@ describe('LicenseRowActions', () => {
     useResumeLicenseMock.mockReturnValue(resumeMutation)
 
     render(
-      <LicenseRowActions client={{} as never} licenseId="license-2" licenseStatus="ACTIVE" />,
+      <LicenseRowActions
+        client={{} as never}
+        licenseId={license.id}
+        licenseVendorId={license.vendorId}
+        licenseStatus={license.status}
+        currentUser={{ role: 'SUPERUSER', vendorId: license.vendorId }}
+      />,
     )
 
-    fireEvent.click(screen.getByText('Suspend License'))
+    fireEvent.click(screen.getByText(UI_LICENSE_ACTION_SUSPEND))
 
-    expect(suspendMutation.mutateAsync).toHaveBeenCalledWith('license-2')
+    expect(suspendMutation.mutateAsync).toHaveBeenCalledWith(license.id)
+  })
+
+  test('hides delete action for vendor manager while allowing updates', () => {
+    const license = buildLicense({ status: 'ACTIVE' })
+    const deleteMutation = mockMutation()
+    const suspendMutation = mockMutation()
+    const resumeMutation = mockMutation()
+    useRevokeLicenseMock.mockReturnValue(deleteMutation)
+    useSuspendLicenseMock.mockReturnValue(suspendMutation)
+    useResumeLicenseMock.mockReturnValue(resumeMutation)
+
+    render(
+      <LicenseRowActions
+        client={{} as never}
+        licenseId={license.id}
+        licenseVendorId={license.vendorId}
+        licenseStatus={license.status}
+        currentUser={{ role: 'VENDOR_MANAGER', vendorId: license.vendorId }}
+      />,
+    )
+
+    expect(screen.queryByText(UI_LICENSE_ACTION_DELETE)).toBeNull()
+    expect(screen.getByText(UI_LICENSE_ACTION_SUSPEND)).toBeInTheDocument()
+  })
+
+  test('hides all actions when vendor scoped user does not own the license', () => {
+    const license = buildLicense({ status: 'ACTIVE' })
+    const view = render(
+      <LicenseRowActions
+        client={{} as never}
+        licenseId={license.id}
+        licenseVendorId={license.vendorId}
+        licenseStatus={license.status}
+        currentUser={{ role: 'VENDOR_MANAGER', vendorId: faker.string.uuid() }}
+      />,
+    )
+
+    expect(view.container.childElementCount).toBe(0)
   })
 })
 

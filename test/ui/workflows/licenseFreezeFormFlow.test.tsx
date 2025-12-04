@@ -8,6 +8,7 @@ import {
   UI_LICENSE_FREEZE_LABEL_TIER,
 } from '../../../src/ui/constants'
 import { LicenseFreezeFormFlow } from '../../../src/ui/workflows/LicenseFreezeFormFlow'
+import { buildLicense } from '../../factories/licenseFactory'
 
 const useFreezeLicenseMock = vi.hoisted(() => vi.fn())
 
@@ -32,19 +33,28 @@ describe('LicenseFreezeFormFlow', () => {
   })
 
   test('submits defaults and invokes success handler', async () => {
+    const license = buildLicense({ status: 'ACTIVE' })
     const mutation = createMutation()
     useFreezeLicenseMock.mockReturnValue(mutation)
     const onSuccess = vi.fn()
 
     render(
-      <LicenseFreezeFormFlow client={createClient()} licenseId="license-123" show onClose={vi.fn()} onSuccess={onSuccess} />,
+      <LicenseFreezeFormFlow
+        client={createClient()}
+        licenseId={license.id}
+        licenseVendorId={license.vendorId}
+        currentUser={{ role: 'SUPERUSER', vendorId: license.vendorId }}
+        show
+        onClose={vi.fn()}
+        onSuccess={onSuccess}
+      />,
     )
 
     fireEvent.click(screen.getByRole('button', { name: UI_LICENSE_FREEZE_FORM_SUBMIT_LABEL }))
 
     await waitFor(() => {
       expect(mutation.mutateAsync).toHaveBeenCalledWith({
-        id: 'license-123',
+        id: license.id,
         data: { freeze_entitlements: true, freeze_tier: true },
       })
     })
@@ -52,10 +62,20 @@ describe('LicenseFreezeFormFlow', () => {
   })
 
   test('allows toggling freeze options before submission', async () => {
+    const license = buildLicense({ status: 'ACTIVE' })
     const mutation = createMutation()
     useFreezeLicenseMock.mockReturnValue(mutation)
 
-    render(<LicenseFreezeFormFlow client={createClient()} licenseId="license-456" show onClose={vi.fn()} />)
+    render(
+      <LicenseFreezeFormFlow
+        client={createClient()}
+        licenseId={license.id}
+        licenseVendorId={license.vendorId}
+        currentUser={{ role: 'SUPERUSER', vendorId: license.vendorId }}
+        show
+        onClose={vi.fn()}
+      />,
+    )
 
     fireEvent.click(screen.getByLabelText(UI_LICENSE_FREEZE_LABEL_ENTITLEMENTS))
     fireEvent.click(screen.getByLabelText(UI_LICENSE_FREEZE_LABEL_TIER))

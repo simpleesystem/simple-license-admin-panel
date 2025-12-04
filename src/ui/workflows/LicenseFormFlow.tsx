@@ -14,14 +14,22 @@ import { FormModalWithMutation } from '../formBuilder/FormModalWithMutation'
 import { createLicenseBlueprint } from '../formBuilder/factories'
 import type { MutationAdapter } from '../actions/mutationActions'
 import { adaptMutation } from '../actions/mutationAdapter'
+import {
+  UI_LICENSE_FORM_PENDING_CREATE,
+  UI_LICENSE_FORM_PENDING_UPDATE,
+  UI_LICENSE_FORM_SUBMIT_CREATE,
+  UI_LICENSE_FORM_SUBMIT_UPDATE,
+} from '../constants'
 
 type LicenseFormFlowBaseProps = {
   client: Client
   show: boolean
   onClose: () => void
-  submitLabel: ReactNode
+  submitLabel?: ReactNode
   pendingLabel?: ReactNode
   tierOptions?: readonly UiSelectOption[]
+  licenseVendorId?: string | null
+  onCompleted?: () => void
 }
 
 type LicenseFormCreateProps = LicenseFormFlowBaseProps & {
@@ -58,11 +66,13 @@ const baseUpdateDefaults: UpdateLicenseRequest = {
 
 const ensureAdapter = <TPayload,>(
   adapter: MutationAdapter<TPayload>,
-  handler?: (payload: TPayload) => void,
+  handlers?: {
+    onSuccess?: (payload: TPayload) => void
+  },
 ) => ({
   mutateAsync: async (values: TPayload) => {
     const result = await adapter.mutateAsync(values)
-    handler?.(values)
+    handlers?.onSuccess?.(values)
     return result
   },
   isPending: adapter.isPending,
@@ -73,6 +83,8 @@ export function LicenseFormFlow(props: LicenseFormFlowProps) {
   const updateMutation = useUpdateLicense(props.client)
 
   if (props.mode === 'create') {
+    const submitLabel = props.submitLabel ?? UI_LICENSE_FORM_SUBMIT_CREATE
+    const pendingLabel = props.pendingLabel ?? UI_LICENSE_FORM_PENDING_CREATE
     const blueprint = createLicenseBlueprint('create', {
       productOptions: props.productOptions,
       tierOptions: props.tierOptions,
@@ -88,9 +100,14 @@ export function LicenseFormFlow(props: LicenseFormFlowProps) {
         onClose={props.onClose}
         blueprint={blueprint}
         defaultValues={defaultValues}
-        submitLabel={props.submitLabel}
-        pendingLabel={props.pendingLabel}
-        mutation={ensureAdapter(adaptMutation(createMutation), props.onClose)}
+        submitLabel={submitLabel}
+        pendingLabel={pendingLabel}
+        mutation={ensureAdapter(adaptMutation(createMutation), {
+          onSuccess: () => {
+            props.onCompleted?.()
+            props.onClose()
+          },
+        })}
       />
     )
   }
@@ -114,15 +131,23 @@ export function LicenseFormFlow(props: LicenseFormFlowProps) {
     isPending: updateMutation.isPending,
   }
 
+  const submitLabel = props.submitLabel ?? UI_LICENSE_FORM_SUBMIT_UPDATE
+  const pendingLabel = props.pendingLabel ?? UI_LICENSE_FORM_PENDING_UPDATE
+
   return (
     <FormModalWithMutation
       show={props.show}
       onClose={props.onClose}
       blueprint={blueprint}
       defaultValues={defaultValues}
-      submitLabel={props.submitLabel}
-      pendingLabel={props.pendingLabel}
-      mutation={ensureAdapter(adapter, props.onClose)}
+      submitLabel={submitLabel}
+      pendingLabel={pendingLabel}
+      mutation={ensureAdapter(adapter, {
+        onSuccess: () => {
+          props.onCompleted?.()
+          props.onClose()
+        },
+      })}
     />
   )
 }

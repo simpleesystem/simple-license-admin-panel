@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import type { Client, LicenseActivation } from '@simple-license/react-sdk'
+import type { Client, LicenseActivation, User } from '@simple-license/react-sdk'
 import { useLicenseActivations } from '@simple-license/react-sdk'
 
 import {
@@ -33,6 +33,11 @@ import {
   UI_TEXT_ALIGN_END,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
+import {
+  canViewActivations,
+  isActivationOwnedByUser,
+  isVendorScopedUser,
+} from '../app/auth/permissions'
 import { DataTable } from '../data/DataTable'
 import { InlineAlert } from '../feedback/InlineAlert'
 import { Stack } from '../layout/Stack'
@@ -41,6 +46,8 @@ import type { UiDataTableColumn } from '../types'
 type LicenseActivationsPanelProps = {
   client: Client
   licenseId: string
+  licenseVendorId?: string | null
+  currentUser?: Pick<User, 'role' | 'vendorId'> | null
   title?: string
   maxRows?: number
 }
@@ -64,9 +71,13 @@ const formatValue = (value: string | number | null | undefined) => {
 export function LicenseActivationsPanel({
   client,
   licenseId,
+  licenseVendorId,
+  currentUser,
   title = UI_LICENSE_ACTIVATIONS_TITLE,
   maxRows,
 }: LicenseActivationsPanelProps) {
+  const allowView = canViewActivations(currentUser ?? null)
+  const isVendorScoped = isVendorScopedUser(currentUser)
   const dateTimeFormatter = useMemo(
     () => new Intl.DateTimeFormat(UI_DATE_FORMAT_LOCALE, UI_DATE_TIME_FORMAT_OPTIONS),
     [],
@@ -77,8 +88,11 @@ export function LicenseActivationsPanel({
 
   const rows = useMemo(() => {
     const activations = activationsQuery.data?.activations ?? []
-    return activations.slice(0, rowLimit)
-  }, [activationsQuery.data?.activations, rowLimit])
+    const scoped = isVendorScoped
+      ? activations.filter((activation) => isActivationOwnedByUser(currentUser ?? null, activation))
+      : activations
+    return scoped.slice(0, rowLimit)
+  }, [activationsQuery.data?.activations, currentUser, isVendorScoped, rowLimit])
 
   const columns = useMemo<UiDataTableColumn<LicenseActivationRow>[]>(() => {
     return [
@@ -127,6 +141,14 @@ export function LicenseActivationsPanel({
       },
     ]
   }, [dateTimeFormatter])
+
+  if (!allowView || (isVendorScoped && licenseVendorId && !isActivationOwnedByUser(currentUser ?? null, { vendorId: licenseVendorId }))) {
+    return (
+      <InlineAlert variant="danger" title={UI_LICENSE_ACTIVATIONS_ERROR_TITLE}>
+        {UI_LICENSE_ACTIVATIONS_ERROR_BODY}
+      </InlineAlert>
+    )
+  }
 
   if (!licenseId) {
     return (

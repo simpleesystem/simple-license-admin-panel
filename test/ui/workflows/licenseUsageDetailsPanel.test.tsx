@@ -5,6 +5,14 @@ import type { Client, LicenseUsageDetailsResponse } from '@simple-license/react-
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { ApiContext } from '../../../src/api/apiContext'
+import {
+  UI_ANALYTICS_LICENSE_DETAILS_ERROR_BODY,
+  UI_ANALYTICS_LICENSE_DETAILS_ERROR_TITLE,
+  UI_ANALYTICS_LICENSE_DETAILS_LOADING_BODY,
+  UI_ANALYTICS_LICENSE_DETAILS_LOADING_TITLE,
+  UI_ANALYTICS_LICENSE_DETAILS_TITLE,
+  UI_ANALYTICS_COLUMN_ACTIVATIONS,
+} from '../../../src/ui/constants'
 import { LicenseUsageDetailsPanel } from '../../../src/ui/workflows/LicenseUsageDetailsPanel'
 
 const useLicenseUsageDetailsMock = vi.hoisted(() => vi.fn())
@@ -57,9 +65,10 @@ describe('LicenseUsageDetailsPanel', () => {
   test('renders license usage data when available', () => {
     const client = createMockClient()
     const summary = buildSummary()
+    const licenseKey = faker.string.alphanumeric({ length: 12 })
     useLicenseUsageDetailsMock.mockReturnValue({
       data: {
-        licenseKey: 'LIC-123',
+        licenseKey,
         licenseId: 42,
         summaries: [summary],
       },
@@ -68,12 +77,17 @@ describe('LicenseUsageDetailsPanel', () => {
     })
 
     renderWithProviders(
-      <LicenseUsageDetailsPanel client={client} licenseKey="LIC-123" />,
+      <LicenseUsageDetailsPanel
+        client={client}
+        licenseKey={licenseKey}
+        licenseVendorId={faker.string.uuid()}
+        currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() }}
+      />,
       client,
     )
 
-    expect(screen.getByText('License Usage Details')).toBeInTheDocument()
-    expect(screen.getByText('Activations')).toBeInTheDocument()
+    expect(screen.getByText(UI_ANALYTICS_LICENSE_DETAILS_TITLE)).toBeInTheDocument()
+    expect(screen.getByText(UI_ANALYTICS_COLUMN_ACTIVATIONS)).toBeInTheDocument()
     expect(screen.getByText(summary.totalActivations.toLocaleString())).toBeInTheDocument()
   })
 
@@ -86,12 +100,17 @@ describe('LicenseUsageDetailsPanel', () => {
     })
 
     renderWithProviders(
-      <LicenseUsageDetailsPanel client={client} licenseKey="LIC-123" />,
+      <LicenseUsageDetailsPanel
+        client={client}
+        licenseKey={faker.string.alphanumeric({ length: 12 })}
+        licenseVendorId={faker.string.uuid()}
+        currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() }}
+      />,
       client,
     )
 
-    expect(screen.getByText('Loading license usage details')).toBeInTheDocument()
-    expect(screen.getByText('Fetching the selected license history…')).toBeInTheDocument()
+    expect(screen.getByText(UI_ANALYTICS_LICENSE_DETAILS_LOADING_TITLE)).toBeInTheDocument()
+    expect(screen.getByText(UI_ANALYTICS_LICENSE_DETAILS_LOADING_BODY)).toBeInTheDocument()
   })
 
   test('renders error state', () => {
@@ -103,12 +122,42 @@ describe('LicenseUsageDetailsPanel', () => {
     })
 
     renderWithProviders(
-      <LicenseUsageDetailsPanel client={client} licenseKey="LIC-123" />,
+      <LicenseUsageDetailsPanel
+        client={client}
+        licenseKey={faker.string.alphanumeric({ length: 12 })}
+        licenseVendorId={faker.string.uuid()}
+        currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() }}
+      />,
       client,
     )
 
-    expect(screen.getByText('Unable to load license usage details')).toBeInTheDocument()
-    expect(screen.getByText('Verify the license key and try refreshing the panel.')).toBeInTheDocument()
+    expect(screen.getByText(UI_ANALYTICS_LICENSE_DETAILS_ERROR_TITLE)).toBeInTheDocument()
+    expect(screen.getByText(UI_ANALYTICS_LICENSE_DETAILS_ERROR_BODY)).toBeInTheDocument()
+  })
+
+  test('blocks vendor scoped users from viewing another vendor license usage', () => {
+    const client = createMockClient()
+    useLicenseUsageDetailsMock.mockReturnValue({
+      data: {
+        licenseKey: faker.string.alphanumeric({ length: 12 }),
+        licenseId: 100,
+        summaries: [],
+      },
+      isLoading: false,
+      isError: false,
+    })
+
+    renderWithProviders(
+      <LicenseUsageDetailsPanel
+        client={client}
+        licenseKey={faker.string.alphanumeric({ length: 12 })}
+        licenseVendorId={faker.string.uuid()}
+        currentUser={{ role: 'VENDOR_MANAGER', vendorId: faker.string.uuid() }}
+      />,
+      client,
+    )
+
+    expect(screen.getByText(UI_ANALYTICS_LICENSE_DETAILS_ERROR_TITLE)).toBeInTheDocument()
   })
 })
 

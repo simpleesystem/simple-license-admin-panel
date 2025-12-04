@@ -46,6 +46,14 @@ import {
   UI_FORM_CONTROL_TYPE_PASSWORD,
   UI_FORM_CONTROL_TYPE_TEXT,
   UI_FORM_TEXTAREA_MIN_ROWS,
+  UI_LICENSE_FORM_ID_CREATE,
+  UI_LICENSE_FORM_ID_UPDATE,
+  UI_LICENSE_FORM_PLACEHOLDER_DOMAIN,
+  UI_LICENSE_FORM_SECTION_DETAILS,
+  UI_LICENSE_FORM_SECTION_LIMITS,
+  UI_LICENSE_FORM_SECTION_METADATA,
+  UI_LICENSE_FORM_TITLE_CREATE,
+  UI_LICENSE_FORM_TITLE_UPDATE,
   UI_LICENSE_FREEZE_FORM_DESCRIPTION,
   UI_LICENSE_FREEZE_FORM_ID,
   UI_LICENSE_FREEZE_FORM_TITLE,
@@ -114,7 +122,7 @@ const buildCreateLicenseBlueprint = (options?: LicenseBlueprintOptions<CreateLic
   const tierOptions = options?.tierOptions ?? []
   const sections: BlueprintSectionConfig<CreateLicenseRequest>[] = [
     {
-      id: 'details',
+      id: UI_LICENSE_FORM_SECTION_DETAILS,
       layout: 2,
       fields: [
         {
@@ -138,12 +146,12 @@ const buildCreateLicenseBlueprint = (options?: LicenseBlueprintOptions<CreateLic
         {
           name: 'domain',
           kind: 'string',
-          placeholder: 'example.com',
+          placeholder: UI_LICENSE_FORM_PLACEHOLDER_DOMAIN,
         },
       ],
     },
     {
-      id: 'limits',
+      id: UI_LICENSE_FORM_SECTION_LIMITS,
       layout: 2,
       fields: [
         {
@@ -157,7 +165,7 @@ const buildCreateLicenseBlueprint = (options?: LicenseBlueprintOptions<CreateLic
       ],
     },
     {
-      id: 'metadata',
+      id: UI_LICENSE_FORM_SECTION_METADATA,
       fields: [
         {
           name: 'metadata',
@@ -170,8 +178,8 @@ const buildCreateLicenseBlueprint = (options?: LicenseBlueprintOptions<CreateLic
 
   return buildConfig<CreateLicenseRequest>(
     {
-      id: 'create-license',
-      title: 'Create License',
+      id: UI_LICENSE_FORM_ID_CREATE,
+      title: UI_LICENSE_FORM_TITLE_CREATE,
       sections,
     },
     options?.customize
@@ -182,7 +190,7 @@ const buildUpdateLicenseBlueprint = (options?: LicenseBlueprintOptions<UpdateLic
   const tierOptions = options?.tierOptions ?? []
   const sections: BlueprintSectionConfig<UpdateLicenseRequest>[] = [
     {
-      id: 'details',
+      id: UI_LICENSE_FORM_SECTION_DETAILS,
       layout: 2,
       fields: [
         {
@@ -198,7 +206,7 @@ const buildUpdateLicenseBlueprint = (options?: LicenseBlueprintOptions<UpdateLic
       ],
     },
     {
-      id: 'limits',
+      id: UI_LICENSE_FORM_SECTION_LIMITS,
       layout: 2,
       fields: [
         {
@@ -212,7 +220,7 @@ const buildUpdateLicenseBlueprint = (options?: LicenseBlueprintOptions<UpdateLic
       ],
     },
     {
-      id: 'metadata',
+      id: UI_LICENSE_FORM_SECTION_METADATA,
       fields: [
         {
           name: 'metadata',
@@ -225,8 +233,8 @@ const buildUpdateLicenseBlueprint = (options?: LicenseBlueprintOptions<UpdateLic
 
   return buildConfig<UpdateLicenseRequest>(
     {
-      id: 'update-license',
-      title: 'Update License',
+      id: UI_LICENSE_FORM_ID_UPDATE,
+      title: UI_LICENSE_FORM_TITLE_UPDATE,
       sections,
     },
     options?.customize

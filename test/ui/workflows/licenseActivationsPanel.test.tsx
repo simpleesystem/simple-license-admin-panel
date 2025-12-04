@@ -12,8 +12,10 @@ import {
   UI_LICENSE_ACTIVATIONS_LOADING_BODY,
   UI_LICENSE_ACTIVATIONS_LOADING_TITLE,
   UI_LICENSE_ACTIVATIONS_TITLE,
+  UI_VALUE_PLACEHOLDER,
 } from '../../../src/ui/constants'
 import { LicenseActivationsPanel } from '../../../src/ui/workflows/LicenseActivationsPanel'
+import { buildActivation } from '../../factories/activationFactory'
 
 const useLicenseActivationsMock = vi.hoisted(() => vi.fn())
 
@@ -49,20 +51,6 @@ const renderWithProviders = (ui: React.ReactElement, client: Client) => {
   )
 }
 
-const buildActivation = (): LicenseActivation => ({
-  id: faker.string.ulid(),
-  licenseId: faker.string.uuid(),
-  licenseKey: faker.string.alphanumeric({ length: 12 }),
-  domain: faker.internet.domainName(),
-  siteName: faker.company.name(),
-  ipAddress: faker.internet.ipv4(),
-  status: 'ACTIVE',
-  activatedAt: faker.date.past().toISOString(),
-  lastSeenAt: faker.date.recent().toISOString(),
-  region: faker.location.countryCode('alpha-2'),
-  clientVersion: `v${faker.number.float({ min: 1, max: 5, precision: 0.1 }).toFixed(1)}`,
-})
-
 describe('LicenseActivationsPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -79,7 +67,15 @@ describe('LicenseActivationsPanel', () => {
       isError: false,
     })
 
-    renderWithProviders(<LicenseActivationsPanel client={client} licenseId={activation.licenseId ?? 'test-id'} />, client)
+    renderWithProviders(
+      <LicenseActivationsPanel
+        client={client}
+        licenseId={activation.licenseId ?? 'test-id'}
+        licenseVendorId={activation.vendorId ?? undefined}
+        currentUser={{ role: 'SUPERUSER', vendorId: activation.vendorId ?? undefined }}
+      />,
+      client,
+    )
 
     await waitFor(() => {
       expect(screen.getByText(UI_LICENSE_ACTIVATIONS_TITLE)).toBeInTheDocument()
@@ -98,7 +94,15 @@ describe('LicenseActivationsPanel', () => {
       isError: false,
     })
 
-    renderWithProviders(<LicenseActivationsPanel client={client} licenseId="license-id" />, client)
+    const licenseId = faker.string.uuid()
+    renderWithProviders(
+      <LicenseActivationsPanel
+        client={client}
+        licenseId={licenseId}
+        currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() }}
+      />,
+      client,
+    )
 
     expect(screen.getByText(UI_LICENSE_ACTIVATIONS_LOADING_TITLE)).toBeInTheDocument()
     expect(screen.getByText(UI_LICENSE_ACTIVATIONS_LOADING_BODY)).toBeInTheDocument()
@@ -112,7 +116,15 @@ describe('LicenseActivationsPanel', () => {
       isError: true,
     })
 
-    renderWithProviders(<LicenseActivationsPanel client={client} licenseId="license-id" />, client)
+    const licenseId = faker.string.uuid()
+    renderWithProviders(
+      <LicenseActivationsPanel
+        client={client}
+        licenseId={licenseId}
+        currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() }}
+      />,
+      client,
+    )
 
     expect(screen.getByText(UI_LICENSE_ACTIVATIONS_ERROR_TITLE)).toBeInTheDocument()
     expect(screen.getByText(UI_LICENSE_ACTIVATIONS_ERROR_BODY)).toBeInTheDocument()
@@ -126,7 +138,15 @@ describe('LicenseActivationsPanel', () => {
       isError: false,
     })
 
-    renderWithProviders(<LicenseActivationsPanel client={client} licenseId="license-id" />, client)
+    const licenseId = faker.string.uuid()
+    renderWithProviders(
+      <LicenseActivationsPanel
+        client={client}
+        licenseId={licenseId}
+        currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() }}
+      />,
+      client,
+    )
 
     expect(screen.getByText(UI_LICENSE_ACTIVATIONS_EMPTY_STATE)).toBeInTheDocument()
   })
@@ -139,35 +159,72 @@ describe('LicenseActivationsPanel', () => {
       isError: false,
     })
 
-    renderWithProviders(<LicenseActivationsPanel client={client} licenseId="" />, client)
+    renderWithProviders(
+      <LicenseActivationsPanel
+        client={client}
+        licenseId=""
+        currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() }}
+      />,
+      client,
+    )
 
     expect(screen.getByText(UI_LICENSE_ACTIVATIONS_ERROR_TITLE)).toBeInTheDocument()
     expect(screen.getByText(UI_LICENSE_ACTIVATIONS_ERROR_BODY)).toBeInTheDocument()
   })
 
+  test('blocks vendor-scoped users from viewing another vendor license', () => {
+    const client = createMockClient()
+    useLicenseActivationsMock.mockReturnValue({
+      data: { activations: [buildActivation()] },
+      isLoading: false,
+      isError: false,
+    })
+
+    renderWithProviders(
+      <LicenseActivationsPanel
+        client={client}
+        licenseId={faker.string.uuid()}
+        licenseVendorId={faker.string.uuid()}
+        currentUser={{ role: 'VENDOR_MANAGER', vendorId: faker.string.uuid() }}
+      />,
+      client,
+    )
+
+    expect(screen.getByText(UI_LICENSE_ACTIVATIONS_ERROR_TITLE)).toBeInTheDocument()
+  })
+
   test('renders placeholders for missing optional values', async () => {
     const client = createMockClient()
-    const activation: LicenseActivation = {
-      id: faker.string.ulid(),
-      licenseId: faker.string.uuid(),
-      licenseKey: faker.string.alphanumeric({ length: 12 }),
-      domain: faker.internet.domainName(),
+    const activation: LicenseActivation = buildActivation({
       status: 'SUSPENDED',
-      activatedAt: faker.date.past().toISOString(),
-    }
+      lastSeenAt: undefined,
+      lastCheckedAt: undefined,
+      siteName: undefined,
+      ipAddress: undefined,
+      region: undefined,
+      clientVersion: undefined,
+    })
     useLicenseActivationsMock.mockReturnValue({
       data: { activations: [activation] },
       isLoading: false,
       isError: false,
     })
 
-    renderWithProviders(<LicenseActivationsPanel client={client} licenseId={activation.licenseId ?? 'test-id'} />, client)
+    renderWithProviders(
+      <LicenseActivationsPanel
+        client={client}
+        licenseId={activation.licenseId ?? 'test-id'}
+        licenseVendorId={activation.vendorId ?? undefined}
+        currentUser={{ role: 'SUPERUSER', vendorId: activation.vendorId ?? undefined }}
+      />,
+      client,
+    )
 
     await waitFor(() => {
       expect(screen.getByText(UI_LICENSE_ACTIVATIONS_TITLE)).toBeInTheDocument()
     })
 
-    expect(screen.getAllByText('—').length).toBeGreaterThan(0)
+    expect(screen.getAllByText(UI_VALUE_PLACEHOLDER).length).toBeGreaterThan(0)
   })
 })
 

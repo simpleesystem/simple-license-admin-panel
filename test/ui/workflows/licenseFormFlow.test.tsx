@@ -2,6 +2,7 @@ import { faker } from '@faker-js/faker'
 import { fireEvent, render, waitFor } from '@testing-library/react'
 import { describe, expect, beforeEach, test, vi } from 'vitest'
 
+import { UI_LICENSE_FORM_SUBMIT_CREATE, UI_LICENSE_FORM_SUBMIT_UPDATE } from '../../../src/ui/constants'
 import { LicenseFormFlow } from '../../../src/ui/workflows/LicenseFormFlow'
 import type { UiSelectOption } from '../../../src/ui/types'
 
@@ -18,11 +19,11 @@ vi.mock('@simple-license/react-sdk', async () => {
 })
 
 const productOptions: readonly UiSelectOption[] = [
-  { value: 'product-a', label: 'Product A' },
+  { value: faker.string.alphanumeric(8), label: faker.commerce.productName() },
 ]
 
 const tierOptions: readonly UiSelectOption[] = [
-  { value: 'tier-a', label: 'Tier A' },
+  { value: faker.string.alphanumeric(8), label: faker.commerce.productAdjective() },
 ]
 
 const mockMutation = () => ({
@@ -50,13 +51,13 @@ describe('LicenseFormFlow', () => {
         mode="create"
         show
         onClose={onClose}
-        submitLabel="Create"
+        submitLabel={UI_LICENSE_FORM_SUBMIT_CREATE}
         tierOptions={tierOptions}
         productOptions={productOptions}
       />,
     )
 
-    fireEvent.click(getByRole('button', { name: 'Create' }))
+    fireEvent.click(getByRole('button', { name: UI_LICENSE_FORM_SUBMIT_CREATE }))
 
     await waitFor(() => {
       expect(createMutation.mutateAsync).toHaveBeenCalled()
@@ -77,12 +78,12 @@ describe('LicenseFormFlow', () => {
         show
         licenseId="license-1"
         onClose={vi.fn()}
-        submitLabel="Save"
+        submitLabel={UI_LICENSE_FORM_SUBMIT_UPDATE}
         tierOptions={tierOptions}
       />,
     )
 
-    fireEvent.click(getByRole('button', { name: 'Save' }))
+    fireEvent.click(getByRole('button', { name: UI_LICENSE_FORM_SUBMIT_UPDATE }))
 
     await waitFor(() => {
       expect(updateMutation.mutateAsync).toHaveBeenCalledWith({

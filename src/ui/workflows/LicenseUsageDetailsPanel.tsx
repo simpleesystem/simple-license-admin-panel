@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import type { Client, LicenseUsageDetailsResponse } from '@simple-license/react-sdk'
+import type { Client, LicenseUsageDetailsResponse, User } from '@simple-license/react-sdk'
 import { useLicenseUsageDetails } from '@simple-license/react-sdk'
 
 import {
@@ -30,6 +30,7 @@ import {
   UI_TEXT_ALIGN_END,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
+import { canViewLicenses, isVendorScopedUser } from '../app/auth/permissions'
 import { DataTable } from '../data/DataTable'
 import { InlineAlert } from '../feedback/InlineAlert'
 import { Stack } from '../layout/Stack'
@@ -38,6 +39,8 @@ import type { UiDataTableColumn } from '../types'
 type LicenseUsageDetailsPanelProps = {
   client: Client
   licenseKey: string
+  licenseVendorId?: string | null
+  currentUser?: Pick<User, 'role' | 'vendorId'> | null
   title?: string
   periodStart?: string
   periodEnd?: string
@@ -62,11 +65,15 @@ const formatNumber = (value: number | null | undefined) => {
 export function LicenseUsageDetailsPanel({
   client,
   licenseKey,
+  licenseVendorId,
+  currentUser,
   title = UI_ANALYTICS_LICENSE_DETAILS_TITLE,
   periodStart,
   periodEnd,
   maxRows,
 }: LicenseUsageDetailsPanelProps) {
+  const allowView = canViewLicenses(currentUser ?? null)
+  const isVendorScoped = isVendorScopedUser(currentUser)
   const queryParams = useMemo(() => {
     if (!periodStart && !periodEnd) {
       return undefined
@@ -128,6 +135,14 @@ export function LicenseUsageDetailsPanel({
     const summaries = detailsQuery.data?.summaries ?? []
     return summaries.slice(0, rowLimit)
   }, [detailsQuery.data?.summaries, rowLimit])
+
+  if (!allowView || (isVendorScoped && licenseVendorId && licenseVendorId !== currentUser?.vendorId)) {
+    return (
+      <InlineAlert variant="danger" title={UI_ANALYTICS_LICENSE_DETAILS_ERROR_TITLE}>
+        {UI_ANALYTICS_LICENSE_DETAILS_ERROR_BODY}
+      </InlineAlert>
+    )
+  }
 
   if (!licenseKey) {
     return (

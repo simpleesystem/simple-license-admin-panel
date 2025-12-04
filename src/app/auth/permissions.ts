@@ -257,3 +257,59 @@ export const canViewEntitlements = (user: Pick<User, 'role' | 'vendorId'> | null
   return isVendorScopedUser(user)
 }
 
+export const isLicenseOwnedByUser = (
+  user: Pick<User, 'vendorId'> | null | undefined,
+  license: { vendorId?: string | null },
+): boolean => {
+  if (!user?.vendorId) {
+    return false
+  }
+  return license.vendorId === user.vendorId
+}
+
+export const canCreateLicense = (user: Pick<User, 'role'> | null | undefined): boolean => {
+  return user?.role === 'SUPERUSER' || user?.role === 'ADMIN'
+}
+
+export const canDeleteLicense = (user: Pick<User, 'role'> | null | undefined): boolean => {
+  return canCreateLicense(user)
+}
+
+export const canUpdateLicense = (
+  user: Pick<User, 'role' | 'vendorId'> | null | undefined,
+  license: { vendorId?: string | null },
+): boolean => {
+  if (canCreateLicense(user)) {
+    return true
+  }
+  if (!user) {
+    return false
+  }
+  if (user.role === 'VENDOR_MANAGER') {
+    return isLicenseOwnedByUser(user, license)
+  }
+  return false
+}
+
+export const canViewLicenses = (user: Pick<User, 'role' | 'vendorId'> | null | undefined): boolean => {
+  const permissions = derivePermissionsFromUser(user)
+  if (hasPermission(permissions, 'manageLicenses')) {
+    return true
+  }
+  return isVendorScopedUser(user)
+}
+
+export const isActivationOwnedByUser = (
+  user: Pick<User, 'vendorId'> | null | undefined,
+  activation: { vendorId?: string | null },
+): boolean => {
+  if (!user?.vendorId) {
+    return false
+  }
+  return activation.vendorId === user.vendorId
+}
+
+export const canViewActivations = (user: Pick<User, 'role' | 'vendorId'> | null | undefined): boolean => {
+  return canViewLicenses(user)
+}
+

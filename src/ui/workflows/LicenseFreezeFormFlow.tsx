@@ -1,4 +1,4 @@
-import type { Client, FreezeLicenseRequest } from '@simple-license/react-sdk'
+import type { Client, FreezeLicenseRequest, User } from '@simple-license/react-sdk'
 import { useFreezeLicense } from '@simple-license/react-sdk'
 
 import { adaptMutation } from '../actions/mutationAdapter'
@@ -7,12 +7,15 @@ import {
   UI_LICENSE_FREEZE_FORM_PENDING_LABEL,
   UI_LICENSE_FREEZE_FORM_SUBMIT_LABEL,
 } from '../constants'
+import { canUpdateLicense, isLicenseOwnedByUser } from '../app/auth/permissions'
 import { createLicenseFreezeBlueprint } from '../formBuilder/factories'
 import { FormModalWithMutation } from '../formBuilder/mutationBridge'
 
 type LicenseFreezeFormFlowProps = {
   client: Client
   licenseId: string
+  licenseVendorId?: string | null
+  currentUser?: Pick<User, 'role' | 'vendorId'> | null
   show: boolean
   onClose: () => void
   onSuccess?: () => void
@@ -26,9 +29,17 @@ const DEFAULT_FREEZE_VALUES: FreezeLicenseRequest = {
 export function LicenseFreezeFormFlow({
   client,
   licenseId,
+  licenseVendorId,
+  currentUser,
   onSuccess,
   ...modalProps
 }: LicenseFreezeFormFlowProps) {
+  const allowFreeze = canUpdateLicense(currentUser ?? null, { vendorId: licenseVendorId })
+
+  if (!allowFreeze) {
+    return null
+  }
+
   const mutation = adaptMutation(useFreezeLicense(client))
 
   const mutationAdapter: MutationAdapter<FreezeLicenseRequest> = {
