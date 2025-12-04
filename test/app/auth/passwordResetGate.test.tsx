@@ -55,6 +55,23 @@ describe('PasswordResetGate', () => {
     expect(screen.getByTestId('change-password-flow')).toBeInTheDocument()
     expect(screen.queryByTestId('app-shell')).not.toBeInTheDocument()
   })
+
+  test('renders children when no user is present', () => {
+    const value = buildAuthContext({
+      currentUser: null,
+    })
+
+    render(
+      <AuthContext.Provider value={value}>
+        <PasswordResetGate>
+          <div data-testid="app-shell">App</div>
+        </PasswordResetGate>
+      </AuthContext.Provider>,
+    )
+
+    expect(screen.getByTestId('app-shell')).toBeInTheDocument()
+    expect(screen.queryByTestId('change-password-flow')).not.toBeInTheDocument()
+  })
 })
 
 

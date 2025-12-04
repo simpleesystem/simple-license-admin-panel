@@ -3,7 +3,13 @@ import { QueryClient } from '@tanstack/react-query'
 import type { RouterLocation } from '@tanstack/react-router'
 import { describe, expect, it } from 'vitest'
 
-import { assertAuthenticated, assertPermission, type RouterContext } from '../../../src/app/router'
+import {
+  assertAuthenticated,
+  assertPermission,
+  assertSystemAccess,
+  assertTenantAccess,
+  type RouterContext,
+} from '../../../src/app/router'
 import {
   ROUTE_PATH_AUTH,
   ROUTE_PATH_ROOT,
@@ -77,5 +83,56 @@ describe('router guards', () => {
     )
 
     expect(redirectResponse.options?.search).toMatchObject({ redirect: ROUTE_PATH_ROOT })
+  })
+
+  it('allows tenant access when the user is vendor scoped', () => {
+    const context = createContext({
+      authState: {
+        isAuthenticated: true,
+        permissions: derivePermissionsFromUser(createUserRole('VIEWER')),
+        currentUserVendorId: 'tenant-123',
+      },
+    })
+
+    expect(() => assertTenantAccess(context, baseLocation)).not.toThrow()
+  })
+
+  it('denies tenant access when the user lacks scope and permission', () => {
+    const context = createContext({
+      authState: {
+        isAuthenticated: true,
+        permissions: derivePermissionsFromUser(createUserRole('VIEWER')),
+      },
+    })
+
+    const redirectResponse = captureRedirect(() => assertTenantAccess(context, baseLocation))
+
+    expect(redirectResponse.options?.to).toBe(ROUTE_PATH_ROOT)
+  })
+
+  it('allows system access for administrators', () => {
+    const context = createContext({
+      authState: {
+        isAuthenticated: true,
+        permissions: derivePermissionsFromUser(createUserRole('ADMIN')),
+        currentUserRole: 'ADMIN',
+      },
+    })
+
+    expect(() => assertSystemAccess(context, baseLocation)).not.toThrow()
+  })
+
+  it('blocks system access for non-admins', () => {
+    const context = createContext({
+      authState: {
+        isAuthenticated: true,
+        permissions: derivePermissionsFromUser(createUserRole('VIEWER')),
+        currentUserRole: 'VIEWER',
+      },
+    })
+
+    const redirectResponse = captureRedirect(() => assertSystemAccess(context, baseLocation))
+
+    expect(redirectResponse.options?.to).toBe(ROUTE_PATH_ROOT)
   })
 })

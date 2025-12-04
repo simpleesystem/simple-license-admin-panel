@@ -52,6 +52,9 @@ const ROLE_PERMISSION_MATRIX: Record<AdminRole, Permissions> = {
     viewDashboard: true,
     viewAnalytics: true,
   }),
+  API_READ_ONLY: createPermissionSet(),
+  API_VENDOR_WRITE: createPermissionSet(),
+  API_CONSUMER_ACTIVATE: createPermissionSet(),
 }
 
 const DEFAULT_PERMISSIONS = createPermissionSet()

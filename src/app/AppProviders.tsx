@@ -89,7 +89,7 @@ function AppProvidersInner({ children }: AppProvidersProps) {
 }
 
 function RouterContextBridge({ queryClient }: { queryClient: QueryClient }) {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, currentUser } = useAuth()
   const permissions = usePermissions()
 
   router.update({
@@ -98,6 +98,8 @@ function RouterContextBridge({ queryClient }: { queryClient: QueryClient }) {
       authState: {
         isAuthenticated,
         permissions,
+        currentUserRole: currentUser?.role,
+        currentUserVendorId: currentUser?.vendorId ?? null,
       },
     },
   })

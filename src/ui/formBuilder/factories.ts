@@ -5,6 +5,7 @@ import type {
   CreateProductTierRequest,
   CreateTenantRequest,
   CreateUserRequest,
+  FreezeLicenseRequest,
   UpdateAlertThresholdsRequest,
   UpdateEntitlementRequest,
   UpdateLicenseRequest,
@@ -45,9 +46,17 @@ import {
   UI_FORM_CONTROL_TYPE_PASSWORD,
   UI_FORM_CONTROL_TYPE_TEXT,
   UI_FORM_TEXTAREA_MIN_ROWS,
+  UI_LICENSE_FREEZE_FORM_DESCRIPTION,
+  UI_LICENSE_FREEZE_FORM_ID,
+  UI_LICENSE_FREEZE_FORM_TITLE,
+  UI_LICENSE_FREEZE_LABEL_ENTITLEMENTS,
+  UI_LICENSE_FREEZE_LABEL_TIER,
+  UI_LICENSE_FREEZE_SECTION_OPTIONS,
+  UI_FIELD_LICENSE_FREEZE_ENTITLEMENTS,
+  UI_FIELD_LICENSE_FREEZE_TIER,
 } from '../constants'
 import type { UiSelectOption } from '../types'
-import type { FormBlueprint } from './blueprint'
+import { createFormBlueprint, type FormBlueprint, type FormSectionBlueprint } from './blueprint'
 import { type BlueprintConfig, type BlueprintSectionConfig, generateBlueprintFromType } from './typeIntrospection'
 
 type BlueprintCustomizer<TFieldValues extends FieldValues> = (
@@ -215,6 +224,37 @@ export const createLicenseBlueprint = <TMode extends 'create' | 'update'>(
   return buildUpdateLicenseBlueprint(options as LicenseBlueprintOptions<UpdateLicenseRequest>) as FormBlueprint<
     LicenseModeValues<TMode>
   >
+}
+
+const LICENSE_FREEZE_SECTIONS: FormSectionBlueprint<FreezeLicenseRequest>[] = [
+  {
+    id: UI_LICENSE_FREEZE_SECTION_OPTIONS,
+    fields: [
+      {
+        id: UI_FIELD_LICENSE_FREEZE_ENTITLEMENTS,
+        name: UI_FIELD_LICENSE_FREEZE_ENTITLEMENTS,
+        label: UI_LICENSE_FREEZE_LABEL_ENTITLEMENTS,
+        component: 'checkbox',
+      },
+      {
+        id: UI_FIELD_LICENSE_FREEZE_TIER,
+        name: UI_FIELD_LICENSE_FREEZE_TIER,
+        label: UI_LICENSE_FREEZE_LABEL_TIER,
+        component: 'checkbox',
+      },
+    ],
+  },
+]
+
+export const createLicenseFreezeBlueprint = (options?: BaseFactoryOptions<FreezeLicenseRequest>) => {
+  const blueprint = createFormBlueprint<FreezeLicenseRequest>({
+    id: UI_LICENSE_FREEZE_FORM_ID,
+    title: UI_LICENSE_FREEZE_FORM_TITLE,
+    description: UI_LICENSE_FREEZE_FORM_DESCRIPTION,
+    sections: LICENSE_FREEZE_SECTIONS,
+  })
+
+  return applyCustomize(blueprint, options?.customize)
 }
 
 const PRODUCT_SECTION_BLUEPRINT: BlueprintSectionConfig<CreateProductRequest>[] = [

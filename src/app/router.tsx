@@ -1,20 +1,37 @@
+import type { AdminRole } from '@simple-license/react-sdk'
 import type { QueryClient } from '@tanstack/react-query'
 import { createRouter, createRoute, createRootRouteWithContext, redirect } from '@tanstack/react-router'
 
 import {
+  ROUTE_PATH_ANALYTICS,
+  ROUTE_PATH_AUDIT,
   ROUTE_PATH_AUTH,
   ROUTE_PATH_DASHBOARD,
+  ROUTE_PATH_HEALTH,
+  ROUTE_PATH_LICENSES,
+  ROUTE_PATH_PRODUCTS,
   ROUTE_PATH_ROOT,
+  ROUTE_PATH_TENANTS,
+  ROUTE_PATH_USERS,
 } from './constants'
 import { AuthRouteComponent } from '../routes/auth/AuthRoute'
+import { AuditRouteComponent } from '../routes/audit/AuditRoute'
+import { AnalyticsRouteComponent } from '../routes/analytics/AnalyticsRoute'
 import { DashboardRouteComponent } from '../routes/dashboard/DashboardRoute'
+import { HealthRouteComponent } from '../routes/health/HealthRoute'
+import { LicensesRouteComponent } from '../routes/licenses/LicensesRoute'
 import { NotFoundRouteComponent } from '../routes/notFound/NotFoundRoute'
 import { RootRouteComponent } from '../routes/root/RootRoute'
+import { ProductsRouteComponent } from '../routes/products/ProductsRoute'
+import { TenantsRouteComponent } from '../routes/tenants/TenantsRoute'
+import { UsersRouteComponent } from '../routes/users/UsersRoute'
 import type { Permissions, PermissionKey } from './auth/permissions'
 
 export type AuthStateSnapshot = {
   isAuthenticated: boolean
   permissions: Permissions
+  currentUserRole?: AdminRole
+  currentUserVendorId?: string | null
 }
 
 export type RouterContext = {
@@ -25,6 +42,7 @@ export type RouterContext = {
 type RouterLocationLike = {
   href: string
 }
+
 
 const rootRoute = createRootRouteWithContext<RouterContext>()({
   component: RootRouteComponent,
@@ -54,7 +72,81 @@ const authRoute = createRoute({
   component: AuthRouteComponent,
 })
 
-const routeTree = rootRoute.addChildren([dashboardRoute, dashboardIndexRoute, authRoute])
+const licensesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: ROUTE_PATH_LICENSES,
+  beforeLoad: ({ context, location }) => {
+    assertPermission(context, location, 'manageLicenses')
+  },
+  component: LicensesRouteComponent,
+})
+
+const productsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: ROUTE_PATH_PRODUCTS,
+  beforeLoad: ({ context, location }) => {
+    assertPermission(context, location, 'manageProducts')
+  },
+  component: ProductsRouteComponent,
+})
+
+const tenantsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: ROUTE_PATH_TENANTS,
+  beforeLoad: ({ context, location }) => {
+    assertTenantAccess(context, location)
+  },
+  component: TenantsRouteComponent,
+})
+
+const usersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: ROUTE_PATH_USERS,
+  beforeLoad: ({ context, location }) => {
+    assertPermission(context, location, 'manageUsers')
+  },
+  component: UsersRouteComponent,
+})
+
+const analyticsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: ROUTE_PATH_ANALYTICS,
+  beforeLoad: ({ context, location }) => {
+    assertPermission(context, location, 'viewAnalytics')
+  },
+  component: AnalyticsRouteComponent,
+})
+
+const healthRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: ROUTE_PATH_HEALTH,
+  beforeLoad: ({ context, location }) => {
+    assertSystemAccess(context, location)
+  },
+  component: HealthRouteComponent,
+})
+
+const auditRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: ROUTE_PATH_AUDIT,
+  beforeLoad: ({ context, location }) => {
+    assertSystemAccess(context, location)
+  },
+  component: AuditRouteComponent,
+})
+
+const routeTree = rootRoute.addChildren([
+  dashboardRoute,
+  dashboardIndexRoute,
+  authRoute,
+  licensesRoute,
+  productsRoute,
+  tenantsRoute,
+  usersRoute,
+  analyticsRoute,
+  healthRoute,
+  auditRoute,
+])
 
 export const router = createRouter({
   routeTree,
@@ -98,6 +190,23 @@ export const assertPermission = (
 ) => {
   assertAuthenticated(context, location)
   if (!context.authState?.permissions[permission]) {
+    throw redirect({ to: ROUTE_PATH_ROOT })
+  }
+}
+
+export const assertSystemAccess = (context: RouterContext, location: RouterLocationLike) => {
+  assertAuthenticated(context, location)
+  const role = context.authState?.currentUserRole
+  if (role !== 'SUPERUSER' && role !== 'ADMIN') {
+    throw redirect({ to: ROUTE_PATH_ROOT })
+  }
+}
+
+export const assertTenantAccess = (context: RouterContext, location: RouterLocationLike) => {
+  assertAuthenticated(context, location)
+  const canManageTenants = context.authState?.permissions.manageTenants
+  const hasVendorScope = Boolean(context.authState?.currentUserVendorId)
+  if (!canManageTenants && !hasVendorScope) {
     throw redirect({ to: ROUTE_PATH_ROOT })
   }
 }

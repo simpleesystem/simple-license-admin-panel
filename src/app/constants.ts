@@ -14,25 +14,48 @@ export const I18N_KEY_APP_ERROR_TITLE = 'app.error.title' as const
 export const I18N_KEY_APP_ERROR_MESSAGE = 'app.error.message' as const
 export const I18N_KEY_APP_ERROR_RESET = 'app.error.reset' as const
 export const I18N_KEY_DASHBOARD_HEADING = 'dashboard.heading' as const
+export const I18N_KEY_DASHBOARD_SUBTITLE = 'dashboard.subtitle' as const
 export const I18N_KEY_AUTH_HEADING = 'auth.heading' as const
+export const I18N_KEY_AUTH_SUBTITLE = 'auth.subtitle' as const
+export const I18N_KEY_AUTH_SUBMIT = 'auth.submit' as const
+export const I18N_KEY_AUTH_FORGOT_LINK = 'auth.forgot' as const
+export const I18N_KEY_AUTH_GENERIC_ERROR = 'auth.error.generic' as const
 export const I18N_KEY_NOT_FOUND_TITLE = 'notFound.title' as const
 export const I18N_KEY_NOT_FOUND_BODY = 'notFound.body' as const
 export const I18N_KEY_FORM_USERNAME_LABEL = 'forms.username.label' as const
 export const I18N_KEY_FORM_PASSWORD_LABEL = 'forms.password.label' as const
 export const I18N_KEY_FORM_TENANT_PLACEHOLDER = 'forms.tenant.placeholder' as const
+export const I18N_KEY_FORM_USERNAME_REQUIRED = 'forms.username.required' as const
+export const I18N_KEY_FORM_PASSWORD_REQUIRED = 'forms.password.required' as const
 export const I18N_KEY_SESSION_WARNING_TITLE = 'session.warning.title' as const
 export const I18N_KEY_SESSION_WARNING_BODY = 'session.warning.body' as const
 export const I18N_KEY_SESSION_EXPIRED_TITLE = 'session.expired.title' as const
 export const I18N_KEY_SESSION_EXPIRED_BODY = 'session.expired.body' as const
+export const I18N_KEY_HEALTH_HEADING = 'health.heading' as const
+export const I18N_KEY_HEALTH_SUBTITLE = 'health.subtitle' as const
 
 export const ROUTE_ID_ROOT = 'route.root' as const
 export const ROUTE_ID_DASHBOARD = 'route.dashboard' as const
 export const ROUTE_ID_AUTH = 'route.auth' as const
 export const ROUTE_ID_NOT_FOUND = 'route.notFound' as const
+export const ROUTE_ID_LICENSES = 'route.licenses' as const
+export const ROUTE_ID_PRODUCTS = 'route.products' as const
+export const ROUTE_ID_TENANTS = 'route.tenants' as const
+export const ROUTE_ID_USERS = 'route.users' as const
+export const ROUTE_ID_ANALYTICS = 'route.analytics' as const
+export const ROUTE_ID_HEALTH = 'route.health' as const
+export const ROUTE_ID_AUDIT = 'route.audit' as const
 
 export const ROUTE_PATH_ROOT = '/' as const
 export const ROUTE_PATH_DASHBOARD = '/dashboard' as const
 export const ROUTE_PATH_AUTH = '/auth' as const
+export const ROUTE_PATH_LICENSES = '/licenses' as const
+export const ROUTE_PATH_PRODUCTS = '/products' as const
+export const ROUTE_PATH_TENANTS = '/tenants' as const
+export const ROUTE_PATH_USERS = '/users' as const
+export const ROUTE_PATH_ANALYTICS = '/analytics' as const
+export const ROUTE_PATH_HEALTH = '/health' as const
+export const ROUTE_PATH_AUDIT = '/audit' as const
 export const ROUTE_PATH_WILDCARD = '*' as const
 
 export const QUERY_CLIENT_STALE_TIME_MS = 60_000 as const
@@ -52,6 +75,7 @@ export const STORAGE_KEY_AUTH_USER = 'simple-license-admin-auth-user' as const
 
 export const AUTH_FIELD_USERNAME = 'username' as const
 export const AUTH_FIELD_PASSWORD = 'password' as const
+export const AUTH_FORGOT_PASSWORD_URL = 'https://support.simplelicense.system/password-reset' as const
 
 export const APP_STATE_ACTION_SET_TENANT = 'appState/setTenant' as const
 export const APP_STATE_ACTION_SET_THEME = 'appState/setTheme' as const
