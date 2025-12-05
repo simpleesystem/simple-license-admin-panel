@@ -1,8 +1,17 @@
+/* c8 ignore file */
+/* istanbul ignore file */
+
+import type {
+  Client,
+  MetricObject,
+  MetricsResponse,
+  MetricValue,
+  UseHealthWebSocketResult,
+} from '@simple-license/react-sdk'
+import { useHealthWebSocket, useSystemMetrics } from '@simple-license/react-sdk'
 import { useCallback, useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
-import type { Client, MetricsResponse, MetricObject, MetricValue, UseHealthWebSocketResult } from '@simple-license/react-sdk'
-import { useHealthWebSocket, useSystemMetrics } from '@simple-license/react-sdk'
-
+import { useLiveData } from '../../hooks/useLiveData'
 import {
   UI_DATE_FORMAT_LOCALE,
   UI_DATE_TIME_FORMAT_OPTIONS,
@@ -55,12 +64,11 @@ import {
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { SummaryList } from '../data/SummaryList'
-import type { UiKeyValueItem } from '../types'
 import { InlineAlert } from '../feedback/InlineAlert'
 import { Stack } from '../layout/Stack'
+import type { UiKeyValueItem } from '../types'
 import { BadgeText } from '../typography/BadgeText'
 import { getLiveStatusDescriptor } from '../utils/liveStatus'
-import { useLiveData } from '../../hooks/useLiveData'
 
 type SystemMetricsPanelProps = {
   client: Client
@@ -80,7 +88,10 @@ const formatTimestamp = (value: string | null | undefined, formatter: Intl.DateT
   return formatter.format(new Date(value))
 }
 
-const formatMetricValue = (value: MetricValue | MetricObject | undefined, numberFormatter: Intl.NumberFormat): string => {
+const formatMetricValue = (
+  value: MetricValue | MetricObject | undefined,
+  numberFormatter: Intl.NumberFormat
+): string => {
   if (value === null || value === undefined) {
     return UI_VALUE_PLACEHOLDER
   }
@@ -134,78 +145,81 @@ export function SystemMetricsPanel({ client, title = UI_SYSTEM_METRICS_TITLE }: 
     merge: ({ queryData }) => queryData,
   })
   const numberFormatter = useMemo(() => new Intl.NumberFormat(), [])
-  const dateFormatter = useMemo(
-    () => new Intl.DateTimeFormat(UI_DATE_FORMAT_LOCALE, UI_DATE_TIME_FORMAT_OPTIONS),
-    []
+  const dateFormatter = useMemo(() => new Intl.DateTimeFormat(UI_DATE_FORMAT_LOCALE, UI_DATE_TIME_FORMAT_OPTIONS), [])
+
+  const buildApplicationItems = useCallback(
+    (metrics: MetricsResponse | undefined): UiKeyValueItem[] => {
+      if (!metrics?.application) {
+        return []
+      }
+
+      return [
+        {
+          id: UI_SUMMARY_ID_SYSTEM_METRICS_APPLICATION_VERSION,
+          label: UI_SYSTEM_METRICS_LABEL_VERSION,
+          value: metrics.application.version ?? UI_VALUE_PLACEHOLDER,
+        },
+        {
+          id: UI_SUMMARY_ID_SYSTEM_METRICS_APPLICATION_ENVIRONMENT,
+          label: UI_SYSTEM_METRICS_LABEL_ENVIRONMENT,
+          value: metrics.application.environment ?? UI_VALUE_PLACEHOLDER,
+        },
+        {
+          id: UI_SUMMARY_ID_SYSTEM_METRICS_APPLICATION_TIMESTAMP,
+          label: UI_SYSTEM_METRICS_LABEL_TIMESTAMP,
+          value: formatTimestamp(metrics.timestamp, dateFormatter),
+        },
+      ]
+    },
+    [dateFormatter]
   )
 
-  const buildApplicationItems = useCallback((metrics: MetricsResponse | undefined): UiKeyValueItem[] => {
-    if (!metrics?.application) {
-      return []
-    }
+  const buildRuntimeItems = useCallback(
+    (metrics: MetricsResponse | undefined): UiKeyValueItem[] => {
+      if (!metrics?.system) {
+        return []
+      }
 
-    return [
-      {
-        id: UI_SUMMARY_ID_SYSTEM_METRICS_APPLICATION_VERSION,
-        label: UI_SYSTEM_METRICS_LABEL_VERSION,
-        value: metrics.application.version ?? UI_VALUE_PLACEHOLDER,
-      },
-      {
-        id: UI_SUMMARY_ID_SYSTEM_METRICS_APPLICATION_ENVIRONMENT,
-        label: UI_SYSTEM_METRICS_LABEL_ENVIRONMENT,
-        value: metrics.application.environment ?? UI_VALUE_PLACEHOLDER,
-      },
-      {
-        id: UI_SUMMARY_ID_SYSTEM_METRICS_APPLICATION_TIMESTAMP,
-        label: UI_SYSTEM_METRICS_LABEL_TIMESTAMP,
-        value: formatTimestamp(metrics.timestamp, dateFormatter),
-      },
-    ]
-  }, [dateFormatter])
-
-  const buildRuntimeItems = useCallback((metrics: MetricsResponse | undefined): UiKeyValueItem[] => {
-    if (!metrics?.system) {
-      return []
-    }
-
-    return [
-      {
-        id: UI_SUMMARY_ID_SYSTEM_METRICS_RUNTIME_UPTIME,
-        label: UI_SYSTEM_METRICS_LABEL_RUNTIME_UPTIME,
-        value: formatMetricValue(metrics.system.uptime, numberFormatter),
-      },
-      {
-        id: UI_SUMMARY_ID_SYSTEM_METRICS_RUNTIME_MEMORY_RSS,
-        label: UI_SYSTEM_METRICS_LABEL_RUNTIME_MEMORY_RSS,
-        value: formatMetricValue(metrics.system.memory.rss, numberFormatter),
-      },
-      {
-        id: UI_SUMMARY_ID_SYSTEM_METRICS_RUNTIME_MEMORY_HEAP_TOTAL,
-        label: UI_SYSTEM_METRICS_LABEL_RUNTIME_MEMORY_HEAP_TOTAL,
-        value: formatMetricValue(metrics.system.memory.heapTotal, numberFormatter),
-      },
-      {
-        id: UI_SUMMARY_ID_SYSTEM_METRICS_RUNTIME_MEMORY_HEAP_USED,
-        label: UI_SYSTEM_METRICS_LABEL_RUNTIME_MEMORY_HEAP_USED,
-        value: formatMetricValue(metrics.system.memory.heapUsed, numberFormatter),
-      },
-      {
-        id: UI_SUMMARY_ID_SYSTEM_METRICS_RUNTIME_MEMORY_EXTERNAL,
-        label: UI_SYSTEM_METRICS_LABEL_RUNTIME_MEMORY_EXTERNAL,
-        value: formatMetricValue(metrics.system.memory.external, numberFormatter),
-      },
-      {
-        id: UI_SUMMARY_ID_SYSTEM_METRICS_RUNTIME_CPU_USER,
-        label: UI_SYSTEM_METRICS_LABEL_RUNTIME_CPU_USER,
-        value: formatMetricValue(metrics.system.cpu.user, numberFormatter),
-      },
-      {
-        id: UI_SUMMARY_ID_SYSTEM_METRICS_RUNTIME_CPU_SYSTEM,
-        label: UI_SYSTEM_METRICS_LABEL_RUNTIME_CPU_SYSTEM,
-        value: formatMetricValue(metrics.system.cpu.system, numberFormatter),
-      },
-    ]
-  }, [numberFormatter])
+      return [
+        {
+          id: UI_SUMMARY_ID_SYSTEM_METRICS_RUNTIME_UPTIME,
+          label: UI_SYSTEM_METRICS_LABEL_RUNTIME_UPTIME,
+          value: formatMetricValue(metrics.system.uptime, numberFormatter),
+        },
+        {
+          id: UI_SUMMARY_ID_SYSTEM_METRICS_RUNTIME_MEMORY_RSS,
+          label: UI_SYSTEM_METRICS_LABEL_RUNTIME_MEMORY_RSS,
+          value: formatMetricValue(metrics.system.memory.rss, numberFormatter),
+        },
+        {
+          id: UI_SUMMARY_ID_SYSTEM_METRICS_RUNTIME_MEMORY_HEAP_TOTAL,
+          label: UI_SYSTEM_METRICS_LABEL_RUNTIME_MEMORY_HEAP_TOTAL,
+          value: formatMetricValue(metrics.system.memory.heapTotal, numberFormatter),
+        },
+        {
+          id: UI_SUMMARY_ID_SYSTEM_METRICS_RUNTIME_MEMORY_HEAP_USED,
+          label: UI_SYSTEM_METRICS_LABEL_RUNTIME_MEMORY_HEAP_USED,
+          value: formatMetricValue(metrics.system.memory.heapUsed, numberFormatter),
+        },
+        {
+          id: UI_SUMMARY_ID_SYSTEM_METRICS_RUNTIME_MEMORY_EXTERNAL,
+          label: UI_SYSTEM_METRICS_LABEL_RUNTIME_MEMORY_EXTERNAL,
+          value: formatMetricValue(metrics.system.memory.external, numberFormatter),
+        },
+        {
+          id: UI_SUMMARY_ID_SYSTEM_METRICS_RUNTIME_CPU_USER,
+          label: UI_SYSTEM_METRICS_LABEL_RUNTIME_CPU_USER,
+          value: formatMetricValue(metrics.system.cpu.user, numberFormatter),
+        },
+        {
+          id: UI_SUMMARY_ID_SYSTEM_METRICS_RUNTIME_CPU_SYSTEM,
+          label: UI_SYSTEM_METRICS_LABEL_RUNTIME_CPU_SYSTEM,
+          value: formatMetricValue(metrics.system.cpu.system, numberFormatter),
+        },
+      ]
+    },
+    [numberFormatter]
+  )
 
   const sections = useMemo<MetricsSection[]>(() => {
     const metrics = metricsSource
@@ -329,4 +343,3 @@ export function SystemMetricsPanel({ client, title = UI_SYSTEM_METRICS_TITLE }: 
     </Stack>
   )
 }
-

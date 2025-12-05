@@ -72,7 +72,7 @@ describe('ProductEntitlementManagementExample', () => {
         entitlements={[entitlement]}
         currentUser={adminUser}
         onRefresh={onRefresh}
-      />,
+      />
     )
 
     fireEvent.click(getByText(UI_ENTITLEMENT_BUTTON_CREATE))
@@ -98,7 +98,7 @@ describe('ProductEntitlementManagementExample', () => {
         entitlements={[entitlement]}
         currentUser={adminUser}
         onRefresh={onRefresh}
-      />,
+      />
     )
 
     fireEvent.click(getByText(UI_ENTITLEMENT_BUTTON_EDIT))
@@ -108,7 +108,7 @@ describe('ProductEntitlementManagementExample', () => {
       expect(updateMutation.mutateAsync).toHaveBeenCalledWith({
         id: entitlement.id,
         data: expect.any(Object),
-      }),
+      })
     )
     expect(onRefresh).toHaveBeenCalledTimes(1)
   })
@@ -129,7 +129,7 @@ describe('ProductEntitlementManagementExample', () => {
         entitlements={[entitlement]}
         currentUser={vendorManager}
         onRefresh={onRefresh}
-      />,
+      />
     )
 
     expect(queryByText(UI_ENTITLEMENT_BUTTON_CREATE)).toBeNull()
@@ -141,7 +141,7 @@ describe('ProductEntitlementManagementExample', () => {
       expect(updateMutation.mutateAsync).toHaveBeenCalledWith({
         id: entitlement.id,
         data: expect.any(Object),
-      }),
+      })
     )
     expect(onRefresh).toHaveBeenCalledTimes(1)
   })
@@ -160,11 +160,56 @@ describe('ProductEntitlementManagementExample', () => {
         productId={buildText()}
         entitlements={[entitlement]}
         currentUser={vendorManager}
-      />,
+      />
     )
 
     expect(queryByText(UI_ENTITLEMENT_BUTTON_CREATE)).toBeNull()
     expect(queryByText(UI_ENTITLEMENT_BUTTON_EDIT)).toBeNull()
+  })
+
+  test('vendor-scoped user sees only own entitlements in view-only mode', () => {
+    const createMutation = mockMutation()
+    const updateMutation = mockMutation()
+    useCreateEntitlementMock.mockReturnValue(createMutation)
+    useUpdateEntitlementMock.mockReturnValue(updateMutation)
+    const vendorId = 'vendor-entitlements-1'
+    const ownEntitlement = buildEntitlement({ vendorId })
+    const otherEntitlement = buildEntitlement({ vendorId: 'vendor-entitlements-2' })
+    const vendorUser = buildUser({ role: 'VENDOR_ADMIN', vendorId })
+
+    const { getByText, queryByText } = render(
+      <ProductEntitlementManagementExample
+        client={{} as never}
+        productId={buildText()}
+        entitlements={[ownEntitlement, otherEntitlement]}
+        currentUser={vendorUser}
+      />
+    )
+
+    expect(getByText(ownEntitlement.key)).toBeInTheDocument()
+    expect(queryByText(otherEntitlement.key)).toBeNull()
+    expect(queryByText(UI_ENTITLEMENT_BUTTON_CREATE)).toBeNull()
+    expect(queryByText(UI_ENTITLEMENT_BUTTON_EDIT)).toBeNull()
+  })
+
+  test('vendor-scoped user with no own entitlements sees empty state', () => {
+    const createMutation = mockMutation()
+    const updateMutation = mockMutation()
+    useCreateEntitlementMock.mockReturnValue(createMutation)
+    useUpdateEntitlementMock.mockReturnValue(updateMutation)
+    const vendorUser = buildUser({ role: 'VENDOR_ADMIN', vendorId: buildText() })
+    const otherEntitlement = buildEntitlement({ vendorId: `${vendorUser.vendorId}-other` })
+
+    const { getByText } = render(
+      <ProductEntitlementManagementExample
+        client={{} as never}
+        productId={buildText()}
+        entitlements={[otherEntitlement]}
+        currentUser={vendorUser}
+      />
+    )
+
+    expect(getByText(UI_ENTITLEMENT_EMPTY_STATE_MESSAGE)).toBeInTheDocument()
   })
 
   test('vendor-scoped user sees only own entitlements in view-only mode', async () => {
@@ -182,7 +227,7 @@ describe('ProductEntitlementManagementExample', () => {
         productId={buildText()}
         entitlements={[ownEntitlement, otherEntitlement]}
         currentUser={vendorUser}
-      />,
+      />
     )
 
     expect(getByText(ownEntitlement.key)).toBeInTheDocument()
@@ -205,7 +250,7 @@ describe('ProductEntitlementManagementExample', () => {
         productId={buildText()}
         entitlements={[otherEntitlement]}
         currentUser={vendorUser}
-      />,
+      />
     )
 
     expect(getByText(UI_ENTITLEMENT_EMPTY_STATE_MESSAGE)).toBeInTheDocument()
@@ -233,7 +278,7 @@ describe('ProductEntitlementManagementExample', () => {
         entitlements={[entitlement]}
         currentUser={adminUser}
         onRefresh={onRefresh}
-      />,
+      />
     )
 
     fireEvent.click(getByText(UI_ENTITLEMENT_BUTTON_CREATE))
@@ -245,5 +290,3 @@ describe('ProductEntitlementManagementExample', () => {
     expect(onRefresh).not.toHaveBeenCalled()
   })
 })
-
-

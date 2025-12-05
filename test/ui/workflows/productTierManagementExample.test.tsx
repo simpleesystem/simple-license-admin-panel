@@ -1,5 +1,5 @@
 import { fireEvent, render, waitFor } from '@testing-library/react'
-import { describe, expect, beforeEach, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import {
   UI_PRODUCT_TIER_BUTTON_CREATE,
@@ -74,7 +74,7 @@ describe('ProductTierManagementExample', () => {
         tiers={[tier]}
         currentUser={adminUser}
         onRefresh={onRefresh}
-      />,
+      />
     )
 
     fireEvent.click(getByText(UI_PRODUCT_TIER_BUTTON_CREATE))
@@ -100,7 +100,7 @@ describe('ProductTierManagementExample', () => {
         tiers={[tier]}
         currentUser={adminUser}
         onRefresh={onRefresh}
-      />,
+      />
     )
 
     fireEvent.click(getByText(UI_PRODUCT_TIER_BUTTON_EDIT))
@@ -110,7 +110,7 @@ describe('ProductTierManagementExample', () => {
       expect(updateMutation.mutateAsync).toHaveBeenCalledWith({
         id: tier.id,
         data: expect.any(Object),
-      }),
+      })
     )
     expect(onRefresh).toHaveBeenCalledTimes(SINGLE_INVOCATION_COUNT)
   })
@@ -131,7 +131,7 @@ describe('ProductTierManagementExample', () => {
         tiers={[tier]}
         currentUser={vendorManager}
         onRefresh={onRefresh}
-      />,
+      />
     )
 
     expect(queryByText(UI_PRODUCT_TIER_BUTTON_CREATE)).toBeNull()
@@ -143,7 +143,7 @@ describe('ProductTierManagementExample', () => {
       expect(updateMutation.mutateAsync).toHaveBeenCalledWith({
         id: tier.id,
         data: expect.any(Object),
-      }),
+      })
     )
     expect(onRefresh).toHaveBeenCalledTimes(SINGLE_INVOCATION_COUNT)
   })
@@ -162,7 +162,7 @@ describe('ProductTierManagementExample', () => {
         productId={buildText()}
         tiers={[tier]}
         currentUser={vendorManager}
-      />,
+      />
     )
 
     expect(queryByText(UI_PRODUCT_TIER_BUTTON_CREATE)).toBeNull()
@@ -174,9 +174,10 @@ describe('ProductTierManagementExample', () => {
     const updateMutation = mockMutation()
     useCreateProductTierMock.mockReturnValue(createMutation)
     useUpdateProductTierMock.mockReturnValue(updateMutation)
-    const ownTier = buildProductTier()
-    const otherTier = buildProductTier({ vendorId: `${ownTier.vendorId}-other` })
-    const vendorUser = buildUser({ role: 'VENDOR_ADMIN', vendorId: ownTier.vendorId ?? buildText() })
+    const ownVendorId = 'vendor-1'
+    const ownTier = buildProductTier({ vendorId: ownVendorId })
+    const otherTier = buildProductTier({ vendorId: 'vendor-2' })
+    const vendorUser = buildUser({ role: 'VENDOR_ADMIN', vendorId: ownVendorId })
 
     const { getByText, queryByText } = render(
       <ProductTierManagementExample
@@ -184,7 +185,7 @@ describe('ProductTierManagementExample', () => {
         productId={buildText()}
         tiers={[ownTier, otherTier]}
         currentUser={vendorUser}
-      />,
+      />
     )
 
     expect(getByText(ownTier.tierName)).toBeInTheDocument()
@@ -207,7 +208,7 @@ describe('ProductTierManagementExample', () => {
         productId={buildText()}
         tiers={[otherTier]}
         currentUser={vendorUser}
-      />,
+      />
     )
 
     expect(getByText(UI_PRODUCT_TIER_EMPTY_STATE_MESSAGE)).toBeInTheDocument()
@@ -235,7 +236,7 @@ describe('ProductTierManagementExample', () => {
         tiers={[tier]}
         currentUser={adminUser}
         onRefresh={onRefresh}
-      />,
+      />
     )
 
     fireEvent.click(getByText(UI_PRODUCT_TIER_BUTTON_CREATE))
@@ -246,6 +247,20 @@ describe('ProductTierManagementExample', () => {
     await expect(mutateCall).rejects.toThrow(mutationError)
     expect(onRefresh).not.toHaveBeenCalled()
   })
+
+  test('unauthenticated user cannot view tiers or actions', () => {
+    const createMutation = mockMutation()
+    const updateMutation = mockMutation()
+    useCreateProductTierMock.mockReturnValue(createMutation)
+    useUpdateProductTierMock.mockReturnValue(updateMutation)
+    const tier = buildProductTier()
+
+    const { queryByText } = render(
+      <ProductTierManagementExample client={{} as never} productId={buildText()} tiers={[tier]} currentUser={null} />
+    )
+
+    expect(queryByText(tier.tierName)).toBeNull()
+    expect(queryByText(UI_PRODUCT_TIER_BUTTON_CREATE)).toBeNull()
+    expect(queryByText(UI_PRODUCT_TIER_BUTTON_EDIT)).toBeNull()
+  })
 })
-
-

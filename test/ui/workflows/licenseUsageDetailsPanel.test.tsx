@@ -159,4 +159,26 @@ describe('LicenseUsageDetailsPanel', () => {
 
     expect(screen.getByText(UI_ANALYTICS_LICENSE_DETAILS_ERROR_TITLE)).toBeInTheDocument()
   })
+
+  test('renders error when license key is missing', () => {
+    const client = createMockClient()
+    useLicenseUsageDetailsMock.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+    })
+
+    renderWithProviders(
+      <LicenseUsageDetailsPanel
+        client={client}
+        licenseKey=""
+        licenseVendorId={faker.string.uuid()}
+        currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() }}
+      />,
+      client
+    )
+
+    expect(screen.getByText(UI_ANALYTICS_LICENSE_DETAILS_ERROR_TITLE)).toBeInTheDocument()
+    expect(screen.getByText(UI_ANALYTICS_LICENSE_DETAILS_ERROR_BODY)).toBeInTheDocument()
+  })
 })

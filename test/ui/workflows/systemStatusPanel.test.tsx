@@ -341,6 +341,31 @@ describe('SystemStatusPanel', () => {
     expect(screen.getByText(UI_SYSTEM_STATUS_EMPTY_BODY)).toBeInTheDocument()
   })
 
+  test('formats numeric database connections from live payload as connected', () => {
+    const client = createMockClient()
+    useLiveDataMock.mockReturnValueOnce(
+      createLiveDataResult({
+        liveData: {
+          status: 'healthy',
+          timestamp: new Date().toISOString(),
+          checks: { database: 2 },
+        },
+        socketResult: createSocketResult({
+          connectionInfo: {
+            state: WS_STATE_CONNECTED,
+            connectedAt: new Date().toISOString(),
+            disconnectedAt: undefined,
+          },
+        }),
+      })
+    )
+
+    render(<SystemStatusPanel client={client} />)
+
+    expect(screen.getByText(UI_SYSTEM_STATUS_VALUE_HEALTHY)).toBeInTheDocument()
+    expect(screen.getByText(UI_SYSTEM_STATUS_VALUE_DATABASE_CONNECTED)).toBeInTheDocument()
+  })
+
   test('renders error state when query fails and no live payload', () => {
     useLiveDataMock.mockReturnValueOnce(
       createLiveDataResult({
@@ -357,5 +382,22 @@ describe('SystemStatusPanel', () => {
 
     expect(screen.getByText(UI_SYSTEM_STATUS_ERROR_TITLE)).toBeInTheDocument()
     expect(screen.getByText(UI_SYSTEM_STATUS_ERROR_BODY)).toBeInTheDocument()
+  })
+
+  test('renders timestamp-only summary when status missing', () => {
+    const timestamp = new Date().toISOString()
+    useLiveDataMock.mockReturnValueOnce(
+      createLiveDataResult({
+        queryData: {
+          status: undefined,
+          timestamp,
+          checks: { database: undefined },
+        },
+      })
+    )
+
+    render(<SystemStatusPanel client={createMockClient()} />)
+
+    expect(screen.getByText(UI_SYSTEM_STATUS_LABEL_LAST_CHECKED)).toBeInTheDocument()
   })
 })

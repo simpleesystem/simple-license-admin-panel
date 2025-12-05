@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import type { Client, MetricValue, MetricsResponse } from '@simple-license/react-sdk'
+import type { Client, MetricsResponse, MetricValue } from '@simple-license/react-sdk'
 import { WS_STATE_DISCONNECTED } from '@simple-license/react-sdk'
 import { render, screen } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
@@ -26,6 +26,7 @@ import {
   UI_SYSTEM_METRICS_ERROR_TITLE,
   UI_SYSTEM_METRICS_LOADING_BODY,
   UI_SYSTEM_METRICS_LOADING_TITLE,
+  UI_SYSTEM_METRICS_REFRESH_LABEL,
   UI_SYSTEM_METRICS_SECTION_APPLICATION,
   UI_SYSTEM_METRICS_SECTION_DATABASE,
   UI_SYSTEM_METRICS_SECTION_SYSTEM,
@@ -232,5 +233,62 @@ describe('SystemMetricsPanel', () => {
 
     expect(screen.getByText(UI_SYSTEM_METRICS_EMPTY_TITLE)).toBeInTheDocument()
     expect(screen.getByText(UI_SYSTEM_METRICS_EMPTY_BODY)).toBeInTheDocument()
+  })
+
+  test('renders empty state when metrics exist but no sections after filtering', () => {
+    const client = createMockClient()
+    useLiveDataMock.mockReturnValueOnce(
+      createLiveDataResult({
+        data: {
+          timestamp: undefined,
+          application: undefined,
+          system: undefined,
+          database: undefined,
+          cache: undefined,
+          security: undefined,
+          tenants: undefined,
+        },
+        hasData: true,
+        isLoading: false,
+        isError: false,
+      })
+    )
+
+    render(<SystemMetricsPanel client={client} />)
+
+    expect(screen.getByText(UI_SYSTEM_METRICS_EMPTY_TITLE)).toBeInTheDocument()
+    expect(screen.getByText(UI_SYSTEM_METRICS_EMPTY_BODY)).toBeInTheDocument()
+  })
+
+  test('formats array metric values and triggers refresh', () => {
+    const client = createMockClient()
+    const refresh = vi.fn()
+    useLiveDataMock.mockReturnValueOnce(
+      createLiveDataResult({
+        data: {
+          timestamp: new Date().toISOString(),
+          application: { version: '1.0.0', environment: 'prod' },
+          system: {
+            uptime: 10,
+            memory: { rss: 1, heapTotal: 1, heapUsed: 1, external: 1 },
+            cpu: { user: 1, system: 1 },
+          },
+          database: undefined,
+          cache: { nodes: [1, 2, 3] },
+          security: undefined,
+          tenants: undefined,
+        },
+        hasData: true,
+        isLoading: false,
+        isError: false,
+        refresh,
+      })
+    )
+
+    render(<SystemMetricsPanel client={client} />)
+
+    expect(screen.getByText('1, 2, 3')).toBeInTheDocument()
+    screen.getByRole('button', { name: UI_SYSTEM_METRICS_REFRESH_LABEL }).click()
+    expect(refresh).toHaveBeenCalled()
   })
 })
