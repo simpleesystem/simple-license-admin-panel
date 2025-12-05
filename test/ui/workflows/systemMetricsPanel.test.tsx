@@ -3,6 +3,7 @@ import type { Client, MetricValue, MetricsResponse } from '@simple-license/react
 import { WS_STATE_DISCONNECTED } from '@simple-license/react-sdk'
 import { faker } from '@faker-js/faker'
 import { describe, expect, test, vi } from 'vitest'
+vi.mock('../../../src/hooks/useLiveData')
 
 import {
   UI_SYSTEM_METRICS_EMPTY_BODY,
@@ -19,8 +20,6 @@ import {
 import { SystemMetricsPanel } from '../../../src/ui/workflows/SystemMetricsPanel'
 import type { UseLiveDataResult } from '../../../src/hooks/useLiveData'
 import { useLiveData } from '../../../src/hooks/useLiveData'
-
-vi.mock('../../../src/hooks/useLiveData')
 
 const createMockClient = () => ({}) as Client
 
@@ -53,11 +52,8 @@ const createLiveDataResult = (overrides: Partial<LiveDataResult> = {}): LiveData
       isError: Boolean(overrides.isError),
       refetch: vi.fn(),
     } as LiveDataResult['queryResult'],
-    socketResult,
     refresh: overrides.refresh ?? vi.fn(),
     ...overrides,
-    socketResult,
-    hasData: hasDataOverride,
   }
 }
 

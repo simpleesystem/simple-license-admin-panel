@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
-import type { Client } from '@simple-license/react-sdk'
+import type { Client, ServerStatusResponse, UseHealthWebSocketResult } from '@simple-license/react-sdk'
 import { useHealthWebSocket, useServerStatus } from '@simple-license/react-sdk'
 
 import {
@@ -66,29 +66,34 @@ const formatHealthState = (value: 'healthy' | 'unhealthy' | undefined) => {
   return UI_VALUE_PLACEHOLDER
 }
 
-const formatDatabaseState = (activeConnections: number | undefined) => {
-  if (typeof activeConnections !== 'number') {
-    return undefined
+const formatDatabaseState = (activeConnections: number | string | null | undefined) => {
+  if (typeof activeConnections === 'number') {
+    if (activeConnections > 0) {
+      return UI_SYSTEM_STATUS_VALUE_DATABASE_CONNECTED
+    }
+    return UI_SYSTEM_STATUS_VALUE_DATABASE_UNAVAILABLE
   }
-  if (activeConnections > 0) {
-    return UI_SYSTEM_STATUS_VALUE_DATABASE_CONNECTED
+  if (typeof activeConnections === 'string') {
+    return activeConnections
   }
-  return UI_SYSTEM_STATUS_VALUE_DATABASE_UNAVAILABLE
+  return undefined
 }
 
 export function SystemStatusPanel({ client, title = UI_SYSTEM_STATUS_TITLE }: SystemStatusPanelProps) {
+  const serverStatusQuery = useServerStatus(client, { retry: false })
+  const healthSocket = useHealthWebSocket(client)
   const {
     queryData: statusData,
     liveData: livePayload,
-    socketResult: healthSocket,
+    socketResult: healthSocketResult,
     isLoading,
     isError,
     refresh,
-  } = useLiveData({
-    query: () => useServerStatus(client, { retry: false }),
-    socket: () => useHealthWebSocket(client),
+  } = useLiveData<ServerStatusResponse, UseHealthWebSocketResult, ServerStatusResponse>({
+    query: () => serverStatusQuery,
+    socket: () => healthSocket,
     selectQueryData: (data) => data,
-    selectSocketData: (socket) => socket.healthData,
+    selectSocketData: () => undefined,
   })
   const dateFormatter = useMemo(
     () => new Intl.DateTimeFormat(UI_DATE_FORMAT_LOCALE, UI_DATE_TIME_FORMAT_OPTIONS),
@@ -100,11 +105,11 @@ export function SystemStatusPanel({ client, title = UI_SYSTEM_STATUS_TITLE }: Sy
       return undefined
     }
     return {
-      status: livePayload.error ? 'unhealthy' : 'healthy',
-      timestamp: healthSocket.healthMessage?.timestamp ?? null,
-      database: formatDatabaseState(livePayload.database?.active_connections),
+      status: livePayload.status,
+      timestamp: livePayload.timestamp ?? null,
+      database: formatDatabaseState(livePayload.checks?.database),
     }
-  }, [healthSocket.healthMessage, livePayload])
+  }, [livePayload])
 
   const summaryItems = useMemo<UiKeyValueItem[]>(() => {
     const items: UiKeyValueItem[] = []
@@ -168,8 +173,8 @@ export function SystemStatusPanel({ client, title = UI_SYSTEM_STATUS_TITLE }: Sy
   }
 
   const liveStatusDescriptor = getLiveStatusDescriptor(
-    healthSocket.connectionInfo.state,
-    Boolean(healthSocket.error)
+    healthSocketResult.connectionInfo.state,
+    Boolean(healthSocketResult.error)
   )
 
   return (

@@ -33,24 +33,23 @@ export type UseLiveDataResult<QueryData, SocketResult, Result> = {
 export function useLiveData<QueryData, SocketResult extends RequestHealthCapable, Result = QueryData>(
   config: UseLiveDataConfig<QueryData, SocketResult, Result>,
 ): UseLiveDataResult<QueryData, SocketResult, Result> {
-  const queryResult = config.query()
-  const socketResult = config.socket()
+  const { query, socket, selectQueryData, selectSocketData, merge } = config
+  const queryResult = query()
+  const socketResult = socket()
 
   const queryData = useMemo(() => {
-    if (config.selectQueryData) {
-      return config.selectQueryData(queryResult.data)
+    if (selectQueryData) {
+      return selectQueryData(queryResult.data)
     }
     return queryResult.data as unknown as Result | undefined
-  }, [config.selectQueryData, queryResult.data])
+  }, [selectQueryData, queryResult.data])
 
   const liveData = useMemo(() => {
-    if (config.selectSocketData) {
-      return config.selectSocketData(socketResult)
+    if (selectSocketData) {
+      return selectSocketData(socketResult)
     }
     return undefined
-  }, [config.selectSocketData, socketResult])
-
-  const { merge } = config
+  }, [selectSocketData, socketResult])
 
   const data = useMemo(() => {
     if (merge) {

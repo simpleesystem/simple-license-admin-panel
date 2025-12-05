@@ -7,7 +7,7 @@ import {
   UI_LICENSE_FREEZE_FORM_PENDING_LABEL,
   UI_LICENSE_FREEZE_FORM_SUBMIT_LABEL,
 } from '../constants'
-import { canUpdateLicense, isLicenseOwnedByUser } from '../app/auth/permissions'
+import { canUpdateLicense } from '../../app/auth/permissions'
 import { createLicenseFreezeBlueprint } from '../formBuilder/factories'
 import { FormModalWithMutation } from '../formBuilder/mutationBridge'
 
@@ -34,13 +34,12 @@ export function LicenseFreezeFormFlow({
   onSuccess,
   ...modalProps
 }: LicenseFreezeFormFlowProps) {
+  const mutation = adaptMutation(useFreezeLicense(client))
   const allowFreeze = canUpdateLicense(currentUser ?? null, { vendorId: licenseVendorId })
 
   if (!allowFreeze) {
     return null
   }
-
-  const mutation = adaptMutation(useFreezeLicense(client))
 
   const mutationAdapter: MutationAdapter<FreezeLicenseRequest> = {
     mutateAsync: async (values) => {

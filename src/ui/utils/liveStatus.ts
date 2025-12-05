@@ -15,10 +15,11 @@ import {
   UI_LIVE_STATUS_DISCONNECTED,
   UI_LIVE_STATUS_ERROR,
 } from '../constants'
+import type { UiBadgeVariant } from '../types'
 
 export type LiveStatusDescriptor = {
   text: string
-  variant: string
+  variant: UiBadgeVariant
 }
 
 export const getLiveStatusDescriptor = (state: WebSocketState, hasError: boolean): LiveStatusDescriptor => {

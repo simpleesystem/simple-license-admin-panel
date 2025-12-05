@@ -60,7 +60,9 @@ const ROLE_PERMISSION_MATRIX: Record<AdminRole, Permissions> = {
 
 const DEFAULT_PERMISSIONS = createPermissionSet()
 
-export const derivePermissionsFromUser = (user: Pick<User, 'role' | 'passwordResetRequired'> | null | undefined): Permissions => {
+export const derivePermissionsFromUser = (
+  user: Pick<User, 'role' | 'passwordResetRequired' | 'vendorId'> | null | undefined,
+): Permissions => {
   if (user?.passwordResetRequired) {
     return createPermissionSet({ changePassword: true })
   }

@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
-import type { Client } from '@simple-license/react-sdk'
-import { useHealthWebSocket, useSystemStats } from '@simple-license/react-sdk'
+import type { Client, SystemStatsResponse } from '@simple-license/react-sdk'
+import { useHealthWebSocket, useSystemStats, type UseHealthWebSocketResult } from '@simple-license/react-sdk'
 
 import {
   UI_ANALYTICS_STATS_DESCRIPTION,
@@ -45,15 +45,16 @@ const formatNumber = (value: number | undefined) => {
 }
 
 export function AnalyticsStatsPanel({ client, title = UI_ANALYTICS_STATS_TITLE }: AnalyticsStatsPanelProps) {
+  const statsQuery = useSystemStats(client, { retry: false })
+  const healthSocket = useHealthWebSocket(client)
   const {
     data: statsSource,
     isLoading,
     isError,
-    socketResult: healthSocket,
     refresh,
-  } = useLiveData({
-    query: () => useSystemStats(client, { retry: false }),
-    socket: () => useHealthWebSocket(client),
+  } = useLiveData<SystemStatsResponse, UseHealthWebSocketResult, SystemStatsResponse['stats']>({
+    query: () => statsQuery,
+    socket: () => healthSocket,
     selectQueryData: (data) => data?.stats,
     selectSocketData: (socket) => socket.healthData?.stats,
   })

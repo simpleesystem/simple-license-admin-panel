@@ -3,7 +3,6 @@ import { useState } from 'react'
 import Button from 'react-bootstrap/Button'
 
 import {
-  UI_LICENSE_BUTTON_CREATE,
   UI_LICENSE_BUTTON_EDIT,
   UI_LICENSE_FORM_SUBMIT_CREATE,
   UI_LICENSE_FORM_SUBMIT_UPDATE,
@@ -14,7 +13,7 @@ import {
   canViewLicenses,
   isLicenseOwnedByUser,
   isVendorScopedUser,
-} from '../app/auth/permissions'
+} from '../../app/auth/permissions'
 import type { UiSelectOption } from '../types'
 import { Stack } from '../layout/Stack'
 import { LicenseFormFlow } from './LicenseFormFlow'

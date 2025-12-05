@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
-import type { Client } from '@simple-license/react-sdk'
-import { useHealthMetrics, useHealthWebSocket } from '@simple-license/react-sdk'
+import type { Client, HealthMetricsResponse } from '@simple-license/react-sdk'
+import { useHealthMetrics, useHealthWebSocket, type UseHealthWebSocketResult } from '@simple-license/react-sdk'
 
 import {
   UI_HEALTH_METRICS_DESCRIPTION,
@@ -51,32 +51,18 @@ const formatNumber = (value: number | null | undefined, formatter: Intl.NumberFo
 }
 
 export function HealthMetricsPanel({ client, title = UI_HEALTH_METRICS_TITLE }: HealthMetricsPanelProps) {
+  const healthMetricsQuery = useHealthMetrics(client, { retry: false })
+  const healthSocket = useHealthWebSocket(client)
   const {
     data: metricsSource,
-    socketResult: healthSocket,
+    socketResult: healthSocketResult,
     isLoading,
     isError,
     refresh,
-  } = useLiveData({
-    query: () => useHealthMetrics(client, { retry: false }),
-    socket: () => useHealthWebSocket(client),
+  } = useLiveData<HealthMetricsResponse, UseHealthWebSocketResult, HealthMetricsResponse['metrics']>({
+    query: () => healthMetricsQuery,
+    socket: () => healthSocket,
     selectQueryData: (data) => data?.metrics,
-    selectSocketData: (socket) => socket.healthData?.system,
-    merge: ({ liveData, queryData }) => {
-      if (!liveData) {
-        return queryData
-      }
-      return {
-        uptime: liveData.uptime ?? queryData?.uptime ?? null,
-        memory: {
-          rss: queryData?.memory.rss ?? liveData.memory.heap_total ?? null,
-          heapTotal: liveData.memory.heap_total ?? queryData?.memory.heapTotal ?? null,
-          heapUsed: liveData.memory.heap_used ?? queryData?.memory.heapUsed ?? null,
-          external: queryData?.memory.external ?? null,
-        },
-        cpu: queryData?.cpu,
-      }
-    },
   })
   const numberFormatter = useMemo(() => new Intl.NumberFormat(), [])
 
@@ -153,8 +139,8 @@ export function HealthMetricsPanel({ client, title = UI_HEALTH_METRICS_TITLE }: 
   }
 
   const liveStatusDescriptor = getLiveStatusDescriptor(
-    healthSocket.connectionInfo.state,
-    Boolean(healthSocket.error)
+    healthSocketResult.connectionInfo.state,
+    Boolean(healthSocketResult.error)
   )
 
   return (

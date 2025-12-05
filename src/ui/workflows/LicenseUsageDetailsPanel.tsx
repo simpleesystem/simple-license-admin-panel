@@ -30,7 +30,7 @@ import {
   UI_TEXT_ALIGN_END,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
-import { canViewLicenses, isVendorScopedUser } from '../app/auth/permissions'
+import { canViewLicenses, isVendorScopedUser } from '../../app/auth/permissions'
 import { DataTable } from '../data/DataTable'
 import { InlineAlert } from '../feedback/InlineAlert'
 import { Stack } from '../layout/Stack'

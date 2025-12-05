@@ -1,0 +1,101 @@
+import { faker } from '@faker-js/faker'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
+import { describe, expect, test, vi } from 'vitest'
+
+import { TenantQuotaPanel } from '../../../../src/ui/workflows/TenantQuotaPanel'
+import { renderWithProviders } from '../../utils'
+
+const useQuotaUsageMock = vi.hoisted(() => vi.fn())
+const useQuotaConfigMock = vi.hoisted(() => vi.fn())
+const useUpdateQuotaMock = vi.hoisted(() => vi.fn())
+
+vi.mock('@simple-license/react-sdk', async () => {
+  const actual = await vi.importActual<typeof import('@simple-license/react-sdk')>('@simple-license/react-sdk')
+  return {
+    ...actual,
+    useQuotaUsage: useQuotaUsageMock,
+    useQuotaConfig: useQuotaConfigMock,
+    useUpdateQuota: useUpdateQuotaMock,
+  }
+})
+
+const mockMutation = () => ({
+  mutateAsync: vi.fn(async () => ({})),
+  isPending: false,
+})
+
+describe('TenantQuotaPanel integration', () => {
+  test('renders quotas, opens edit modal, and refreshes on success', async () => {
+    const tenantId = faker.string.uuid()
+    const onUpdated = vi.fn()
+    const usageRefetch = vi.fn()
+    const configRefetch = vi.fn()
+    useQuotaUsageMock.mockReturnValue({
+      data: {
+        usage: {
+          products_count: 2,
+          max_products: 5,
+          activations_count: 10,
+          max_activations_total: 20,
+          max_activations_per_product: 3,
+        },
+      },
+      isLoading: false,
+      isError: false,
+      refetch: usageRefetch,
+    })
+    useQuotaConfigMock.mockReturnValue({
+      data: { config: { max_products: 5, max_activations_total: 20 } },
+      isLoading: false,
+      isError: false,
+      refetch: configRefetch,
+    })
+    useUpdateQuotaMock.mockReturnValue(mockMutation())
+
+    renderWithProviders(<TenantQuotaPanel client={{} as never} tenantId={tenantId} onUpdated={onUpdated} />)
+
+    expect(screen.getByText(/Quota Limits/i)).toBeInTheDocument()
+    expect(screen.getByText(/Products \(used \/ max\)/i)).toBeInTheDocument()
+    expect(screen.getByText('2 / 5')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText(/Edit Quotas/i))
+    fireEvent.click(screen.getByRole('button', { name: /Save quotas/i }))
+
+    await waitFor(() => {
+      expect(usageRefetch).toHaveBeenCalled()
+      expect(configRefetch).toHaveBeenCalled()
+      expect(onUpdated).toHaveBeenCalled()
+    })
+  })
+
+  test('shows loading then error state', () => {
+    useQuotaUsageMock
+      .mockReturnValueOnce({
+        data: undefined,
+        isLoading: true,
+        isError: false,
+        refetch: vi.fn(),
+      })
+      .mockReturnValueOnce({
+        data: undefined,
+        isLoading: false,
+        isError: true,
+        refetch: vi.fn(),
+      })
+
+    useQuotaConfigMock.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    })
+
+    const { rerender } = renderWithProviders(<TenantQuotaPanel client={{} as never} tenantId={faker.string.uuid()} />)
+
+    expect(screen.getByText(/Loading quota data/i)).toBeInTheDocument()
+
+    rerender(<TenantQuotaPanel client={{} as never} tenantId={faker.string.uuid()} />)
+    expect(screen.getByText(/Unable to load quotas/i)).toBeInTheDocument()
+  })
+})
+

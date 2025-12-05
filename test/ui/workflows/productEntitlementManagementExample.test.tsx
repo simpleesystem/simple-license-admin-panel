@@ -8,10 +8,7 @@ import {
   UI_ENTITLEMENT_FORM_SUBMIT_CREATE,
   UI_ENTITLEMENT_FORM_SUBMIT_UPDATE,
 } from '../../../src/ui/constants'
-import {
-  ProductEntitlementManagementExample,
-  type ProductEntitlementListItem,
-} from '../../../src/ui/workflows/ProductEntitlementManagementExample'
+import { ProductEntitlementManagementExample } from '../../../src/ui/workflows/ProductEntitlementManagementExample'
 import { buildEntitlement } from '../../factories/entitlementFactory'
 import { buildUser } from '../../factories/userFactory'
 import { buildText } from '../../ui/factories/uiFactories'

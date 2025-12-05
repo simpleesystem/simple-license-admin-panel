@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import type { Client } from '@simple-license/react-sdk'
 import { WS_STATE_DISCONNECTED } from '@simple-license/react-sdk'
 import { describe, expect, test, vi } from 'vitest'
+vi.mock('../../../src/hooks/useLiveData')
 
 import {
   UI_HEALTH_METRICS_EMPTY_BODY,
@@ -15,8 +16,6 @@ import {
 import { HealthMetricsPanel } from '../../../src/ui/workflows/HealthMetricsPanel'
 import type { UseLiveDataResult } from '../../../src/hooks/useLiveData'
 import { useLiveData } from '../../../src/hooks/useLiveData'
-
-vi.mock('../../../src/hooks/useLiveData')
 
 const createMockClient = () => ({}) as Client
 
@@ -65,7 +64,6 @@ const createLiveDataResult = (overrides: Partial<LiveDataResult> = {}): LiveData
     socketResult,
     refresh: overrides.refresh ?? vi.fn(),
     ...overrides,
-    socketResult,
     hasData: hasDataOverride,
   }
 }

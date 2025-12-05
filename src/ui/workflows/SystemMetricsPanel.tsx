@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
-import type { Client, HealthUpdatePayload, MetricsResponse, MetricObject, MetricValue } from '@simple-license/react-sdk'
+import type { Client, MetricsResponse, MetricObject, MetricValue, UseHealthWebSocketResult } from '@simple-license/react-sdk'
 import { useHealthWebSocket, useSystemMetrics } from '@simple-license/react-sdk'
 
 import {
@@ -73,56 +73,6 @@ type MetricsSection = {
   items: UiKeyValueItem[]
 }
 
-const createLiveMetricsResponse = (
-  payload: HealthUpdatePayload | undefined,
-  timestamp?: string
-): MetricsResponse | undefined => {
-  if (!payload) {
-    return undefined
-  }
-
-  return {
-    timestamp: timestamp ?? new Date().toISOString(),
-    application: {
-      version: UI_VALUE_PLACEHOLDER,
-      environment: UI_VALUE_PLACEHOLDER,
-    },
-    system: {
-      uptime: payload.system?.uptime ?? 0,
-      memory: {
-        rss: payload.system?.memory.heap_total ?? 0,
-        heapTotal: payload.system?.memory.heap_total ?? 0,
-        heapUsed: payload.system?.memory.heap_used ?? 0,
-        external: 0,
-      },
-      cpu: {
-        user: 0,
-        system: 0,
-      },
-    },
-    database: payload.database
-      ? {
-          activeConnections: payload.database.active_connections ?? 0,
-        }
-      : undefined,
-    cache: undefined,
-    security: payload.security
-      ? {
-          failedLoginsLastHour: payload.security.failed_logins_last_hour ?? 0,
-        }
-      : undefined,
-    tenants: payload.licenses
-      ? {
-          totalLicenses: payload.licenses.total ?? 0,
-          activeLicenses: payload.licenses.active ?? 0,
-          expiredLicenses: payload.licenses.expired ?? 0,
-          demoLicenses: payload.licenses.demo_mode ?? 0,
-          recentLicenses: payload.licenses.recent ?? 0,
-        }
-      : undefined,
-  }
-}
-
 const formatTimestamp = (value: string | null | undefined, formatter: Intl.DateTimeFormat) => {
   if (!value) {
     return UI_VALUE_PLACEHOLDER
@@ -168,53 +118,20 @@ const buildMetricItems = (
 }
 
 export function SystemMetricsPanel({ client, title = UI_SYSTEM_METRICS_TITLE }: SystemMetricsPanelProps) {
+  const systemMetricsQuery = useSystemMetrics(client, { retry: false })
+  const healthSocket = useHealthWebSocket(client)
   const {
     data: metricsSource,
-    socketResult: healthSocket,
+    socketResult: healthSocketResult,
     isLoading,
     isError,
     refresh,
-  } = useLiveData({
-    query: () => useSystemMetrics(client, { retry: false }),
-    socket: () => useHealthWebSocket(client),
+  } = useLiveData<MetricsResponse, UseHealthWebSocketResult, MetricsResponse>({
+    query: () => systemMetricsQuery,
+    socket: () => healthSocket,
     selectQueryData: (data) => data,
-    selectSocketData: (socket) => socket.healthData,
-    merge: ({ liveData, queryData, socketResult }) => {
-      const liveMetrics = createLiveMetricsResponse(liveData, socketResult.healthMessage?.timestamp)
-      if (!queryData) {
-        return liveMetrics
-      }
-      if (!liveMetrics) {
-        return queryData
-      }
-      return {
-        ...queryData,
-        timestamp: liveMetrics.timestamp ?? queryData.timestamp,
-        system: {
-          ...queryData.system,
-          uptime: liveMetrics.system.uptime ?? queryData.system.uptime,
-          memory: {
-            ...queryData.system.memory,
-            rss: liveMetrics.system.memory.rss ?? queryData.system.memory.rss,
-            heapTotal: liveMetrics.system.memory.heapTotal ?? queryData.system.memory.heapTotal,
-            heapUsed: liveMetrics.system.memory.heapUsed ?? queryData.system.memory.heapUsed,
-          },
-        },
-        database: {
-          ...queryData.database,
-          ...liveMetrics.database,
-        },
-        cache: queryData.cache,
-        security: {
-          ...queryData.security,
-          ...liveMetrics.security,
-        },
-        tenants: {
-          ...queryData.tenants,
-          ...liveMetrics.tenants,
-        },
-      }
-    },
+    selectSocketData: () => undefined,
+    merge: ({ queryData }) => queryData,
   })
   const numberFormatter = useMemo(() => new Intl.NumberFormat(), [])
   const dateFormatter = useMemo(
@@ -389,8 +306,8 @@ export function SystemMetricsPanel({ client, title = UI_SYSTEM_METRICS_TITLE }: 
   }
 
   const liveStatusDescriptor = getLiveStatusDescriptor(
-    healthSocket.connectionInfo.state,
-    Boolean(healthSocket.error)
+    healthSocketResult.connectionInfo.state,
+    Boolean(healthSocketResult.error)
   )
 
   return (

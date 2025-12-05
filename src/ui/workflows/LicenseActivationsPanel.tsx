@@ -37,7 +37,7 @@ import {
   canViewActivations,
   isActivationOwnedByUser,
   isVendorScopedUser,
-} from '../app/auth/permissions'
+} from '../../app/auth/permissions'
 import { DataTable } from '../data/DataTable'
 import { InlineAlert } from '../feedback/InlineAlert'
 import { Stack } from '../layout/Stack'

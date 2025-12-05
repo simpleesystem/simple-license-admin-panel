@@ -15,7 +15,7 @@ import { ActionMenu } from '../data/ActionMenu'
 import type { UiCommonProps } from '../types'
 import { createCrudActions } from '../actions/mutationActions'
 import { adaptMutation } from '../actions/mutationAdapter'
-import { canDeleteLicense, canUpdateLicense } from '../app/auth/permissions'
+import { canDeleteLicense, canUpdateLicense } from '../../app/auth/permissions'
 
 type LicenseRowActionsProps = UiCommonProps & {
   client: Client
@@ -37,16 +37,15 @@ export function LicenseRowActions({
   buttonLabel,
   ...rest
 }: LicenseRowActionsProps) {
+  const revokeMutation = adaptMutation(useRevokeLicense(client))
+  const suspendMutation = adaptMutation(useSuspendLicense(client))
+  const resumeMutation = adaptMutation(useResumeLicense(client))
   const allowDelete = canDeleteLicense(currentUser ?? null)
   const allowUpdate = canUpdateLicense(currentUser ?? null, { vendorId: licenseVendorId })
 
   if (!allowDelete && !allowUpdate) {
     return null
   }
-
-  const revokeMutation = adaptMutation(useRevokeLicense(client))
-  const suspendMutation = adaptMutation(useSuspendLicense(client))
-  const resumeMutation = adaptMutation(useResumeLicense(client))
 
   const actions = createCrudActions<string>('License', {
     ...(allowDelete && {

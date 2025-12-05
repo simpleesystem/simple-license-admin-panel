@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, beforeEach, test, vi } from 'vitest'
 
 import {
@@ -72,6 +72,7 @@ describe('ProductRowActions', () => {
     fireEvent.click(screen.getByText(UI_PRODUCT_ACTION_SUSPEND))
     expect(suspendMutation.mutateAsync).toHaveBeenCalledWith(product.id)
 
+    cleanup()
     render(
       <ProductRowActions
         client={{} as never}

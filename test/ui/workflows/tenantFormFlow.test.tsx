@@ -4,7 +4,6 @@ import { describe, expect, beforeEach, test, vi } from 'vitest'
 import { UI_TENANT_FORM_SUBMIT_CREATE, UI_TENANT_FORM_SUBMIT_UPDATE } from '../../../src/ui/constants'
 import { TenantFormFlow } from '../../../src/ui/workflows/TenantFormFlow'
 import { buildTenant } from '../../factories/tenantFactory'
-import { buildUser } from '../../factories/userFactory'
 import { buildText } from '../../ui/factories/uiFactories'
 
 const useCreateTenantMock = vi.hoisted(() => vi.fn())
