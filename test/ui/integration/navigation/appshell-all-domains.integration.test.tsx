@@ -15,10 +15,10 @@ import { LicenseManagementExample } from '../../../../src/ui/workflows/LicenseMa
 import { ProductManagementExample } from '../../../../src/ui/workflows/ProductManagementExample'
 import { TenantManagementExample } from '../../../../src/ui/workflows/TenantManagementExample'
 import { UserManagementExample } from '../../../../src/ui/workflows/UserManagementExample'
-import { buildLicense } from '../../factories/licenseFactory'
-import { buildProduct } from '../../factories/productFactory'
-import { buildTenant } from '../../factories/tenantFactory'
-import { buildUser } from '../../factories/userFactory'
+import { buildLicense } from '../../../factories/licenseFactory'
+import { buildProduct } from '../../../factories/productFactory'
+import { buildTenant } from '../../../factories/tenantFactory'
+import { buildUser } from '../../../factories/userFactory'
 import { renderWithProviders } from '../../utils'
 
 const useCreateUserMock = vi.hoisted(() => vi.fn())
@@ -70,9 +70,47 @@ vi.mock('@simple-license/react-sdk', async () => {
   }
 })
 
+vi.mock('../../../../src/ui/data/ActionMenu', () => ({
+  ActionMenu: ({ items }: { items: Array<{ id: string; label: string; onSelect: () => void; disabled?: boolean }> }) => (
+    <div>
+      {items.map((item) => (
+        <button key={item.id} onClick={item.onSelect} disabled={item.disabled}>
+          {item.label}
+        </button>
+      ))}
+    </div>
+  ),
+}))
+
 const mockMutation = () => ({
   mutateAsync: vi.fn(async () => ({})),
   isPending: false,
+})
+
+beforeEach(() => {
+  vi.clearAllMocks()
+  const vendorId = 'vendor-1'
+  const seededUser = buildUser({ vendorId })
+  useListUsersMock.mockReturnValue({ data: { users: [seededUser] }, isLoading: false, isError: false, refetch: vi.fn() })
+  const mutation = mockMutation()
+  useCreateUserMock.mockReturnValue(mutation)
+  useUpdateUserMock.mockReturnValue(mutation)
+  useDeleteUserMock.mockReturnValue(mutation)
+  useCreateTenantMock.mockReturnValue(mutation)
+  useUpdateTenantMock.mockReturnValue(mutation)
+  useDeleteTenantMock.mockReturnValue(mutation)
+  useSuspendTenantMock.mockReturnValue(mutation)
+  useResumeTenantMock.mockReturnValue(mutation)
+  useCreateProductMock.mockReturnValue(mutation)
+  useUpdateProductMock.mockReturnValue(mutation)
+  useDeleteProductMock.mockReturnValue(mutation)
+  useSuspendProductMock.mockReturnValue(mutation)
+  useResumeProductMock.mockReturnValue(mutation)
+  useCreateLicenseMock.mockReturnValue(mutation)
+  useUpdateLicenseMock.mockReturnValue(mutation)
+  useRevokeLicenseMock.mockReturnValue(mutation)
+  useSuspendLicenseMock.mockReturnValue(mutation)
+  useResumeLicenseMock.mockReturnValue(mutation)
 })
 
 const createNavItems = (onSelect: (id: string) => void) => [
@@ -93,20 +131,20 @@ const ScreenHost = ({
   const [active, setActive] = useState<'users' | 'tenants' | 'products' | 'licenses'>('users')
   const items = createNavItems(setActive)
 
-  const user = buildUser({ vendorId })
-  const tenant = buildTenant({ vendorId })
-  const product = buildProduct({ vendorId, status: 'ACTIVE' })
-  const license = buildLicense({ vendorId, status: 'ACTIVE' })
+  const user = role === 'VIEWER' ? null : buildUser({ vendorId })
+  const tenant = role === 'VIEWER' ? null : buildTenant({ vendorId })
+  const product = role === 'VIEWER' ? null : buildProduct({ vendorId, status: 'ACTIVE' })
+  const license = role === 'VIEWER' ? null : buildLicense({ vendorId, status: 'ACTIVE' })
 
   return (
     <AppShell sidebar={<SidebarNav items={items} />} topBar={null} currentUser={{ role, vendorId }}>
       {active === 'users' ? (
-        <UserManagementExample client={{} as never} users={[user]} currentUser={{ role, vendorId }} onRefresh={onRefresh} />
+        <UserManagementExample client={{} as never} users={user ? [user] : []} currentUser={{ role, vendorId }} onRefresh={onRefresh} />
       ) : null}
       {active === 'tenants' ? (
         <TenantManagementExample
           client={{} as never}
-          tenants={[tenant]}
+          tenants={tenant ? [tenant] : []}
           currentUser={{ role, vendorId }}
           onRefresh={onRefresh}
         />
@@ -114,7 +152,7 @@ const ScreenHost = ({
       {active === 'products' ? (
         <ProductManagementExample
           client={{} as never}
-          products={[product]}
+          products={product ? [product] : []}
           currentUser={{ role, vendorId }}
           onRefresh={onRefresh}
         />
@@ -122,9 +160,9 @@ const ScreenHost = ({
       {active === 'licenses' ? (
         <LicenseManagementExample
           client={{} as never}
-          licenseId={license.id}
-          licenseVendorId={license.vendorId}
-          licenseStatus={license.status}
+          licenseId={license?.id}
+          licenseVendorId={license?.vendorId}
+          licenseStatus={license?.status}
           tierOptions={[]}
           productOptions={[]}
           currentUser={{ role, vendorId }}

@@ -5,6 +5,7 @@ import { describe, expect, test, vi } from 'vitest'
 
 import {
   UI_LICENSE_BUTTON_EDIT,
+  UI_LICENSE_ACTION_DELETE,
   UI_PRODUCT_BUTTON_CREATE,
   UI_PRODUCT_BUTTON_EDIT,
 } from '../../../../src/ui/constants'
@@ -12,8 +13,8 @@ import { AppShell } from '../../../../src/ui/layout/AppShell'
 import { SidebarNav } from '../../../../src/ui/navigation/SidebarNav'
 import { LicenseManagementExample } from '../../../../src/ui/workflows/LicenseManagementExample'
 import { ProductManagementExample } from '../../../../src/ui/workflows/ProductManagementExample'
-import { buildLicense } from '../../factories/licenseFactory'
-import { buildProduct } from '../../factories/productFactory'
+import { buildLicense } from '../../../factories/licenseFactory'
+import { buildProduct } from '../../../factories/productFactory'
 import { renderWithProviders } from '../../utils'
 
 const useCreateProductMock = vi.hoisted(() => vi.fn())

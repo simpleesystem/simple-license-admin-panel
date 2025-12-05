@@ -3,6 +3,8 @@ import { render } from '@testing-library/react'
 import type { ReactElement } from 'react'
 
 import { ApiContext } from '../../../src/api/apiContext'
+import { AuthProvider } from '../../../src/app/auth/AuthProvider'
+import { AppProviders } from '../../../src/app/AppProviders'
 
 type RenderWithProvidersOptions = {
   client?: unknown
@@ -23,7 +25,11 @@ export const renderWithProviders = (ui: ReactElement, options?: RenderWithProvid
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <ApiContext.Provider value={apiClient}>{ui}</ApiContext.Provider>
+      <ApiContext.Provider value={apiClient}>
+        <AppProviders>
+          <AuthProvider>{ui}</AuthProvider>
+        </AppProviders>
+      </ApiContext.Provider>
     </QueryClientProvider>,
   )
 }

@@ -24,7 +24,7 @@ export const useFormMutation = <TFieldValues extends FieldValues, TData = unknow
         throw error
       }
     },
-    [mutation, onError, onSuccess],
+    [mutation, onError, onSuccess]
   )
 
   return {
@@ -32,5 +32,3 @@ export const useFormMutation = <TFieldValues extends FieldValues, TData = unknow
     isPending: mutation.isPending,
   }
 }
-
-

@@ -271,7 +271,8 @@ export const UI_CLASS_SUMMARY_CARD = 'p-3 border rounded bg-body'
 export const UI_CLASS_SUMMARY_VALUE = 'h4 mb-0'
 export const UI_ARIA_LABEL_SUMMARY_LIST = 'Summary cards'
 export const UI_ANALYTICS_STATS_TITLE = 'System Health Overview' as const
-export const UI_ANALYTICS_STATS_DESCRIPTION = 'Blended live and historical counts across licenses and customers.' as const
+export const UI_ANALYTICS_STATS_DESCRIPTION =
+  'Blended live and historical counts across licenses and customers.' as const
 export const UI_ANALYTICS_STATS_REFRESH_LABEL = 'Refresh analytics' as const
 export const UI_ANALYTICS_STATS_LOADING_TITLE = 'Loading analytics overview' as const
 export const UI_ANALYTICS_STATS_LOADING_BODY = 'Fetching the latest licensing indicators…' as const
@@ -287,6 +288,14 @@ export const UI_SUMMARY_ID_ANALYTICS_STATS_ACTIVE = 'analytics-stats-active' as 
 export const UI_SUMMARY_ID_ANALYTICS_STATS_EXPIRED = 'analytics-stats-expired' as const
 export const UI_SUMMARY_ID_ANALYTICS_STATS_CUSTOMERS = 'analytics-stats-customers' as const
 export const UI_SUMMARY_ID_ANALYTICS_STATS_ACTIVATIONS = 'analytics-stats-activations' as const
+export const UI_USAGE_TRENDS_TITLE = 'Usage Trends' as const
+export const UI_USAGE_TRENDS_LOADING_TITLE = 'Loading usage trends' as const
+export const UI_USAGE_TRENDS_LOADING_BODY = 'Please wait while we load the latest trend data…' as const
+export const UI_USAGE_TRENDS_ERROR_TITLE = 'Unable to load usage trends' as const
+export const UI_USAGE_TRENDS_ERROR_BODY = 'Try again later or verify the analytics service health.' as const
+export const UI_USAGE_TRENDS_EMPTY_TITLE = 'No usage trends yet' as const
+export const UI_USAGE_TRENDS_EMPTY_BODY = 'Usage reports will appear here once data is ingested.' as const
+export const UI_USAGE_TRENDS_EMPTY_STATE = 'No trends recorded.' as const
 export const UI_ANALYTICS_SUMMARY_TITLE = 'Usage Summaries' as const
 export const UI_ANALYTICS_SUMMARY_DESCRIPTION =
   'Review aggregated activations, validations, and concurrency by time period.' as const
@@ -483,7 +492,8 @@ export const UI_SUMMARY_ID_SYSTEM_METRICS_APPLICATION_ENVIRONMENT = 'system-metr
 export const UI_SUMMARY_ID_SYSTEM_METRICS_APPLICATION_TIMESTAMP = 'system-metrics-application-timestamp' as const
 export const UI_SUMMARY_ID_SYSTEM_METRICS_RUNTIME_UPTIME = 'system-metrics-runtime-uptime' as const
 export const UI_SUMMARY_ID_SYSTEM_METRICS_RUNTIME_MEMORY_RSS = 'system-metrics-runtime-memory-rss' as const
-export const UI_SUMMARY_ID_SYSTEM_METRICS_RUNTIME_MEMORY_HEAP_TOTAL = 'system-metrics-runtime-memory-heap-total' as const
+export const UI_SUMMARY_ID_SYSTEM_METRICS_RUNTIME_MEMORY_HEAP_TOTAL =
+  'system-metrics-runtime-memory-heap-total' as const
 export const UI_SUMMARY_ID_SYSTEM_METRICS_RUNTIME_MEMORY_HEAP_USED = 'system-metrics-runtime-memory-heap-used' as const
 export const UI_SUMMARY_ID_SYSTEM_METRICS_RUNTIME_MEMORY_EXTERNAL = 'system-metrics-runtime-memory-external' as const
 export const UI_SUMMARY_ID_SYSTEM_METRICS_RUNTIME_CPU_USER = 'system-metrics-runtime-cpu-user' as const
@@ -813,8 +823,7 @@ export const UI_HEADER_ACTION_CHANGE_PASSWORD = 'Change password / email'
 export const UI_HEADER_ACTION_SIGN_OUT = 'Sign out'
 export const UI_HEADER_MODAL_TITLE_CHANGE_PASSWORD = 'Secure your account'
 export const UI_CHANGE_PASSWORD_HEADING = 'Update your credentials' as const
-export const UI_CHANGE_PASSWORD_DESCRIPTION =
-  'Update your password or email to keep your account secure.' as const
+export const UI_CHANGE_PASSWORD_DESCRIPTION = 'Update your password or email to keep your account secure.' as const
 export const UI_CHANGE_PASSWORD_SECTION_TITLE = 'Security update' as const
 export const UI_CHANGE_PASSWORD_SECTION_DESCRIPTION =
   'Provide the fields you want to update. You can change your password, email, or both.' as const
@@ -828,8 +837,7 @@ export const UI_CHANGE_PASSWORD_ERROR_TITLE = 'Update failed' as const
 export const UI_CHANGE_PASSWORD_ERROR_GENERIC = 'Unable to update credentials. Please try again.' as const
 export const UI_CHANGE_PASSWORD_ERROR_PASSWORDS_MATCH = 'Passwords must match' as const
 export const UI_CHANGE_PASSWORD_ERROR_CONFIRM_REQUIRED = 'Please confirm your password' as const
-export const UI_CHANGE_PASSWORD_ERROR_REQUIRED =
-  'Provide a new password, an email, or both to continue.' as const
+export const UI_CHANGE_PASSWORD_ERROR_REQUIRED = 'Provide a new password, an email, or both to continue.' as const
 export const UI_CHANGE_PASSWORD_ERROR_EMAIL_INVALID = 'Enter a valid email address.' as const
 export const UI_CHANGE_PASSWORD_VALIDATION_CURRENT_PASSWORD = 'Current password' as const
 export const UI_CHANGE_PASSWORD_VALIDATION_NEW_PASSWORD = 'New password' as const

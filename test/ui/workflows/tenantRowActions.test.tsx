@@ -84,7 +84,7 @@ describe('TenantRowActions', () => {
     useResumeTenantMock.mockReturnValue(resumeMutation)
     const vendorId = buildTenant().vendorId
     const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId })
-    const tenant = buildTenant({ vendorId })
+    const tenant = buildTenant({ vendorId, status: 'ACTIVE' })
 
     render(
       <TenantRowActions

@@ -1,11 +1,10 @@
-import { render, screen } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { screen } from '@testing-library/react'
 import { faker } from '@faker-js/faker'
 import type { Client, UsageSummaryResponse } from '@simple-license/react-sdk'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
-import { ApiContext } from '../../../src/api/apiContext'
 import { UsageSummaryPanel } from '../../../src/ui/workflows/UsageSummaryPanel'
+import { renderWithProviders } from '../utils/renderWithProviders'
 
 const useUsageSummariesMock = vi.hoisted(() => vi.fn())
 
@@ -25,22 +24,6 @@ const createMockClient = () => {
       })),
     },
   } as unknown as Client
-}
-
-const renderWithProviders = (ui: React.ReactElement, client: Client) => {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
-    },
-  })
-
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <ApiContext.Provider value={{ client }}>{ui}</ApiContext.Provider>
-    </QueryClientProvider>,
-  )
 }
 
 const buildSummary = (): UsageSummaryResponse['summaries'][number] => ({
@@ -75,14 +58,14 @@ describe('UsageSummaryPanel', () => {
       isError: false,
     })
 
-    renderWithProviders(<UsageSummaryPanel client={client} />, client)
+    renderWithProviders(<UsageSummaryPanel client={client} />, { client })
 
     const dateFormatter = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
     const expectedPeriod = `${dateFormatter.format(new Date(summary.periodStart))} – ${dateFormatter.format(
       new Date(summary.periodEnd),
     )}`
 
-    expect(screen.getByText('Usage Summaries')).toBeInTheDocument()
+    expect(screen.getByText(/Usage Summaries/i)).toBeInTheDocument()
     expect(screen.getByText(expectedPeriod)).toBeInTheDocument()
     expect(screen.getByText(summary.totalActivations.toLocaleString())).toBeInTheDocument()
   })
@@ -95,7 +78,7 @@ describe('UsageSummaryPanel', () => {
       isError: false,
     })
 
-    renderWithProviders(<UsageSummaryPanel client={client} />, client)
+    renderWithProviders(<UsageSummaryPanel client={client} />, { client })
 
     expect(screen.getByText('Loading usage summaries')).toBeInTheDocument()
     expect(screen.getByText('Fetching the latest usage metrics…')).toBeInTheDocument()
@@ -109,7 +92,7 @@ describe('UsageSummaryPanel', () => {
       isError: true,
     })
 
-    renderWithProviders(<UsageSummaryPanel client={client} />, client)
+    renderWithProviders(<UsageSummaryPanel client={client} />, { client })
 
     expect(screen.getByText('Unable to load usage summaries')).toBeInTheDocument()
     expect(screen.getByText('Please try again after refreshing the page.')).toBeInTheDocument()

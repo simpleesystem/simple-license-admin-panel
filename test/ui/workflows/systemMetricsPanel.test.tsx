@@ -1,10 +1,24 @@
-import { render, screen } from '@testing-library/react'
+import { faker } from '@faker-js/faker'
 import type { Client, MetricValue, MetricsResponse } from '@simple-license/react-sdk'
 import { WS_STATE_DISCONNECTED } from '@simple-license/react-sdk'
-import { faker } from '@faker-js/faker'
+import { render, screen } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
+
+const useSystemMetricsMock = vi.hoisted(() => vi.fn())
+const useHealthWebSocketMock = vi.hoisted(() => vi.fn())
+
+vi.mock('@simple-license/react-sdk', async () => {
+  const actual = await vi.importActual<typeof import('@simple-license/react-sdk')>('@simple-license/react-sdk')
+  return {
+    ...actual,
+    useSystemMetrics: useSystemMetricsMock,
+    useHealthWebSocket: useHealthWebSocketMock,
+  }
+})
 vi.mock('../../../src/hooks/useLiveData')
 
+import type { UseLiveDataResult } from '../../../src/hooks/useLiveData'
+import { useLiveData } from '../../../src/hooks/useLiveData'
 import {
   UI_SYSTEM_METRICS_EMPTY_BODY,
   UI_SYSTEM_METRICS_EMPTY_TITLE,
@@ -18,26 +32,41 @@ import {
   UI_SYSTEM_METRICS_TITLE,
 } from '../../../src/ui/constants'
 import { SystemMetricsPanel } from '../../../src/ui/workflows/SystemMetricsPanel'
-import type { UseLiveDataResult } from '../../../src/hooks/useLiveData'
-import { useLiveData } from '../../../src/hooks/useLiveData'
 
 const createMockClient = () => ({}) as Client
 
-type LiveDataResult = UseLiveDataResult<MetricsResponse | undefined, ReturnType<typeof createSocketResult>, MetricsResponse | undefined>
+type LiveDataResult = UseLiveDataResult<
+  MetricsResponse | undefined,
+  ReturnType<typeof createSocketResult>,
+  MetricsResponse | undefined
+>
 type SocketResult = LiveDataResult['socketResult']
 
 const createSocketResult = (overrides: Partial<SocketResult> = {}): SocketResult => ({
   connectionInfo: { state: WS_STATE_DISCONNECTED, connectedAt: undefined, disconnectedAt: undefined },
+  connected: false,
+  lastMessage: undefined,
   error: undefined,
   requestHealth: vi.fn(),
+  send: vi.fn(),
+  sendPing: vi.fn(),
+  disconnect: vi.fn(),
+  reconnect: vi.fn(),
   healthMessage: undefined,
+  healthData: undefined,
   ...overrides,
 })
 
 const createLiveDataResult = (overrides: Partial<LiveDataResult> = {}): LiveDataResult => {
   const socketResult = overrides.socketResult ?? createSocketResult()
   const data = overrides.data
-  const hasDataOverride = overrides.hasData ?? Boolean(data)
+  const hasDataOverride =
+    overrides.hasData ??
+    Boolean(
+      (data !== undefined && data !== null) ||
+        (overrides.queryData !== undefined && overrides.queryData !== null) ||
+        (overrides.liveData !== undefined && overrides.liveData !== null)
+    )
 
   return {
     data,
@@ -53,16 +82,59 @@ const createLiveDataResult = (overrides: Partial<LiveDataResult> = {}): LiveData
       refetch: vi.fn(),
     } as LiveDataResult['queryResult'],
     refresh: overrides.refresh ?? vi.fn(),
+    socketResult,
     ...overrides,
   }
 }
 
 describe('SystemMetricsPanel', () => {
   const useLiveDataMock = vi.mocked(useLiveData)
+  beforeEach(() => {
+    useSystemMetricsMock.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    })
+    useHealthWebSocketMock.mockReturnValue(createSocketResult())
+  })
 
   test('renders application and runtime sections', () => {
     const client = createMockClient()
     const cacheNodes = ['cache-a', 'cache-b']
+    const metricsData: MetricsResponse = {
+      timestamp: new Date().toISOString(),
+      application: {
+        version: faker.system.semver(),
+        environment: faker.helpers.arrayElement(['development', 'production']),
+      },
+      system: {
+        uptime: 3600,
+        memory: {
+          rss: 2048,
+          heapTotal: 1024,
+          heapUsed: 512,
+          external: 256,
+        },
+        cpu: {
+          user: 30,
+          system: 15,
+        },
+      },
+      database: { nodes: cacheNodes.length },
+      cache: {
+        nodes: cacheNodes.length,
+      },
+      security: undefined,
+      tenants: undefined,
+    }
+    useSystemMetricsMock.mockReturnValue({
+      data: metricsData,
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    })
+    useHealthWebSocketMock.mockReturnValue(createSocketResult())
     useLiveDataMock.mockReturnValueOnce(
       createLiveDataResult({
         data: {
@@ -99,7 +171,7 @@ describe('SystemMetricsPanel', () => {
             archived: null,
           },
         },
-      }),
+      })
     )
 
     render(<SystemMetricsPanel client={client} />)
@@ -122,7 +194,7 @@ describe('SystemMetricsPanel', () => {
         data: undefined,
         isLoading: true,
         hasData: false,
-      }),
+      })
     )
 
     render(<SystemMetricsPanel client={client} />)
@@ -138,7 +210,7 @@ describe('SystemMetricsPanel', () => {
         data: undefined,
         isError: true,
         hasData: false,
-      }),
+      })
     )
 
     render(<SystemMetricsPanel client={client} />)
@@ -153,7 +225,7 @@ describe('SystemMetricsPanel', () => {
       createLiveDataResult({
         data: undefined,
         hasData: false,
-      }),
+      })
     )
 
     render(<SystemMetricsPanel client={client} />)
@@ -162,4 +234,3 @@ describe('SystemMetricsPanel', () => {
     expect(screen.getByText(UI_SYSTEM_METRICS_EMPTY_BODY)).toBeInTheDocument()
   })
 })
-

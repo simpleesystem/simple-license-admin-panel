@@ -1,11 +1,13 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { useState } from 'react'
-import { describe, expect, test, vi } from 'vitest'
+import '@testing-library/jest-dom'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import {
   UI_LICENSE_BUTTON_EDIT,
   UI_PRODUCT_BUTTON_CREATE,
   UI_PRODUCT_BUTTON_EDIT,
+  UI_PRODUCT_FORM_SUBMIT_CREATE,
   UI_PRODUCT_TIER_BUTTON_CREATE,
 } from '../../../../src/ui/constants'
 import { AppShell } from '../../../../src/ui/layout/AppShell'
@@ -16,6 +18,7 @@ import { ProductTierManagementExample } from '../../../../src/ui/workflows/Produ
 import { buildLicense } from '../../../factories/licenseFactory'
 import { buildProduct } from '../../../factories/productFactory'
 import { buildProductTier } from '../../../factories/productTierFactory'
+import { buildUser } from '../../../factories/userFactory'
 import { renderWithProviders } from '../../utils'
 
 const useCreateProductMock = vi.hoisted(() => vi.fn())
@@ -66,9 +69,10 @@ const createNavItems = (onSelect: (id: 'products' | 'tiers' | 'licenses') => voi
 const ScreenHost = ({ vendorId }: { vendorId: string }) => {
   const [active, setActive] = useState<'products' | 'tiers' | 'licenses'>('products')
   const items = createNavItems(setActive)
-  const product = buildProduct({ vendorId, status: 'ACTIVE' })
-  const tier = buildProductTier({ vendorId, productId: product.id })
-  const license = buildLicense({ vendorId, status: 'ACTIVE' })
+  const product = buildProduct({ vendorId, isActive: true })
+  const tier = buildProductTier({ productId: product.id, isActive: true })
+  const license = buildLicense({ productId: product.id, productSlug: product.slug, status: 'ACTIVE' })
+  const currentUser = buildUser({ role: 'SUPERUSER', vendorId })
 
   return (
     <AppShell sidebar={<SidebarNav items={items} />} topBar={null}>
@@ -76,7 +80,7 @@ const ScreenHost = ({ vendorId }: { vendorId: string }) => {
         <ProductManagementExample
           client={{} as never}
           products={[product]}
-          currentUser={{ role: 'SUPERUSER', vendorId }}
+          currentUser={currentUser}
           onRefresh={vi.fn()}
         />
       ) : null}
@@ -85,7 +89,7 @@ const ScreenHost = ({ vendorId }: { vendorId: string }) => {
           client={{} as never}
           productId={product.id}
           tiers={[tier]}
-          currentUser={{ role: 'SUPERUSER', vendorId }}
+          currentUser={currentUser}
           onRefresh={vi.fn()}
         />
       ) : null}
@@ -93,11 +97,11 @@ const ScreenHost = ({ vendorId }: { vendorId: string }) => {
         <LicenseManagementExample
           client={{} as never}
           licenseId={license.id}
-          licenseVendorId={license.vendorId}
+          licenseVendorId={product.vendorId ?? null}
           licenseStatus={license.status}
           tierOptions={[]}
           productOptions={[]}
-          currentUser={{ role: 'SUPERUSER', vendorId }}
+          currentUser={currentUser}
           onRefresh={vi.fn()}
         />
       ) : null}
@@ -125,12 +129,18 @@ describe('Mutation to navigation refetch smoke', () => {
 
   test('after product mutation, subsequent navs still show edit actions (implying fresh data)', async () => {
     const vendorId = 'vendor-1'
+    const createProductMutation = mockMutation()
+    useCreateProductMock.mockReturnValue(createProductMutation)
     renderWithProviders(<ScreenHost vendorId={vendorId} />)
 
     // Products first
     fireEvent.click(screen.getByText(UI_PRODUCT_BUTTON_CREATE))
+    const newProduct = buildProduct({ vendorId })
+    fireEvent.change(screen.getByLabelText(/name/i), { target: { value: newProduct.name } })
+    fireEvent.change(screen.getByLabelText(/slug/i), { target: { value: newProduct.slug } })
+    fireEvent.click(screen.getByRole('button', { name: UI_PRODUCT_FORM_SUBMIT_CREATE }))
     await waitFor(() => {
-      expect(useCreateProductMock().mutateAsync).toHaveBeenCalled()
+      expect(createProductMutation.mutateAsync).toHaveBeenCalled()
     })
 
     // Navigate to tiers

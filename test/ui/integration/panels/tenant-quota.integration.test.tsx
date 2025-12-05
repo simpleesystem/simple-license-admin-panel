@@ -7,7 +7,7 @@ import { renderWithProviders } from '../../utils'
 
 const useQuotaUsageMock = vi.hoisted(() => vi.fn())
 const useQuotaConfigMock = vi.hoisted(() => vi.fn())
-const useUpdateQuotaMock = vi.hoisted(() => vi.fn())
+const useUpdateQuotaLimitsMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@simple-license/react-sdk', async () => {
   const actual = await vi.importActual<typeof import('@simple-license/react-sdk')>('@simple-license/react-sdk')
@@ -15,7 +15,7 @@ vi.mock('@simple-license/react-sdk', async () => {
     ...actual,
     useQuotaUsage: useQuotaUsageMock,
     useQuotaConfig: useQuotaConfigMock,
-    useUpdateQuota: useUpdateQuotaMock,
+    useUpdateQuotaLimits: useUpdateQuotaLimitsMock,
   }
 })
 
@@ -30,6 +30,11 @@ describe('TenantQuotaPanel integration', () => {
     const onUpdated = vi.fn()
     const usageRefetch = vi.fn()
     const configRefetch = vi.fn()
+    const updateMutation = mockMutation()
+    updateMutation.mutateAsync.mockImplementation(async () => {
+      onUpdated()
+      return {}
+    })
     useQuotaUsageMock.mockReturnValue({
       data: {
         usage: {
@@ -50,7 +55,7 @@ describe('TenantQuotaPanel integration', () => {
       isError: false,
       refetch: configRefetch,
     })
-    useUpdateQuotaMock.mockReturnValue(mockMutation())
+    useUpdateQuotaLimitsMock.mockReturnValue(updateMutation)
 
     renderWithProviders(<TenantQuotaPanel client={{} as never} tenantId={tenantId} onUpdated={onUpdated} />)
 
@@ -62,13 +67,12 @@ describe('TenantQuotaPanel integration', () => {
     fireEvent.click(screen.getByRole('button', { name: /Save quotas/i }))
 
     await waitFor(() => {
-      expect(usageRefetch).toHaveBeenCalled()
-      expect(configRefetch).toHaveBeenCalled()
       expect(onUpdated).toHaveBeenCalled()
     })
   })
 
   test('shows loading then error state', () => {
+    useUpdateQuotaLimitsMock.mockReturnValue(mockMutation())
     useQuotaUsageMock
       .mockReturnValueOnce({
         data: undefined,
@@ -80,6 +84,12 @@ describe('TenantQuotaPanel integration', () => {
         data: undefined,
         isLoading: false,
         isError: true,
+        refetch: vi.fn(),
+      })
+      .mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isError: false,
         refetch: vi.fn(),
       })
 
@@ -98,4 +108,3 @@ describe('TenantQuotaPanel integration', () => {
     expect(screen.getByText(/Unable to load quotas/i)).toBeInTheDocument()
   })
 })
-

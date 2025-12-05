@@ -24,10 +24,14 @@ vi.mock('@simple-license/react-sdk', async () => {
 })
 
 vi.mock('../../../src/ui/data/ActionMenu', () => ({
-  ActionMenu: ({ items }: { items: Array<{ id: string; label: string; onSelect: () => void }> }) => (
+  ActionMenu: ({
+    items,
+  }: {
+    items: Array<{ id: string; label: string; disabled?: boolean; onSelect: () => void }>
+  }) => (
     <div>
       {items.map((item) => (
-        <button key={item.id} onClick={item.onSelect}>
+        <button key={item.id} onClick={item.onSelect} disabled={item.disabled}>
           {item.label}
         </button>
       ))}
@@ -43,6 +47,9 @@ const mockMutation = () => ({
 describe('LicenseRowActions', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    useRevokeLicenseMock.mockReturnValue(mockMutation())
+    useSuspendLicenseMock.mockReturnValue(mockMutation())
+    useResumeLicenseMock.mockReturnValue(mockMutation())
   })
 
   test('renders action buttons and executes revoke mutation', async () => {

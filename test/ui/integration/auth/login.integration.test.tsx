@@ -58,9 +58,7 @@ describe('LoginCard integration', () => {
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'wrong' } })
     fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
-    await waitFor(() => {
-      expect(screen.getByText(/unable to sign in/i)).toBeInTheDocument()
-    })
+    expect(await screen.findByText(/We could not verify those credentials/i)).toBeInTheDocument()
   })
 })
 

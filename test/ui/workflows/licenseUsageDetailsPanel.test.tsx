@@ -1,17 +1,17 @@
-import { render, screen } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { faker } from '@faker-js/faker'
 import type { Client, LicenseUsageDetailsResponse } from '@simple-license/react-sdk'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { ApiContext } from '../../../src/api/apiContext'
 import {
+  UI_ANALYTICS_COLUMN_ACTIVATIONS,
   UI_ANALYTICS_LICENSE_DETAILS_ERROR_BODY,
   UI_ANALYTICS_LICENSE_DETAILS_ERROR_TITLE,
   UI_ANALYTICS_LICENSE_DETAILS_LOADING_BODY,
   UI_ANALYTICS_LICENSE_DETAILS_LOADING_TITLE,
   UI_ANALYTICS_LICENSE_DETAILS_TITLE,
-  UI_ANALYTICS_COLUMN_ACTIVATIONS,
 } from '../../../src/ui/constants'
 import { LicenseUsageDetailsPanel } from '../../../src/ui/workflows/LicenseUsageDetailsPanel'
 
@@ -39,7 +39,7 @@ const renderWithProviders = (ui: React.ReactElement, client: Client) => {
   return render(
     <QueryClientProvider client={queryClient}>
       <ApiContext.Provider value={{ client }}>{ui}</ApiContext.Provider>
-    </QueryClientProvider>,
+    </QueryClientProvider>
   )
 }
 
@@ -62,7 +62,7 @@ describe('LicenseUsageDetailsPanel', () => {
     vi.clearAllMocks()
   })
 
-  test('renders license usage data when available', () => {
+  test('renders license usage data when available', async () => {
     const client = createMockClient()
     const summary = buildSummary()
     const licenseKey = faker.string.alphanumeric({ length: 12 })
@@ -83,12 +83,12 @@ describe('LicenseUsageDetailsPanel', () => {
         licenseVendorId={faker.string.uuid()}
         currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() }}
       />,
-      client,
+      client
     )
 
-    expect(screen.getByText(UI_ANALYTICS_LICENSE_DETAILS_TITLE)).toBeInTheDocument()
+    expect(await screen.findByText(UI_ANALYTICS_LICENSE_DETAILS_TITLE)).toBeInTheDocument()
     expect(screen.getByText(UI_ANALYTICS_COLUMN_ACTIVATIONS)).toBeInTheDocument()
-    expect(screen.getByText(summary.totalActivations.toLocaleString())).toBeInTheDocument()
+    expect(await screen.findByText(summary.totalActivations.toLocaleString())).toBeInTheDocument()
   })
 
   test('renders loading state', () => {
@@ -106,7 +106,7 @@ describe('LicenseUsageDetailsPanel', () => {
         licenseVendorId={faker.string.uuid()}
         currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() }}
       />,
-      client,
+      client
     )
 
     expect(screen.getByText(UI_ANALYTICS_LICENSE_DETAILS_LOADING_TITLE)).toBeInTheDocument()
@@ -128,7 +128,7 @@ describe('LicenseUsageDetailsPanel', () => {
         licenseVendorId={faker.string.uuid()}
         currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() }}
       />,
-      client,
+      client
     )
 
     expect(screen.getByText(UI_ANALYTICS_LICENSE_DETAILS_ERROR_TITLE)).toBeInTheDocument()
@@ -154,10 +154,9 @@ describe('LicenseUsageDetailsPanel', () => {
         licenseVendorId={faker.string.uuid()}
         currentUser={{ role: 'VENDOR_MANAGER', vendorId: faker.string.uuid() }}
       />,
-      client,
+      client
     )
 
     expect(screen.getByText(UI_ANALYTICS_LICENSE_DETAILS_ERROR_TITLE)).toBeInTheDocument()
   })
 })
-

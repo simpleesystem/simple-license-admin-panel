@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import type { Client } from '@simple-license/react-sdk'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import {
@@ -44,10 +44,10 @@ describe('LicenseFreezeFormFlow', () => {
         licenseId={license.id}
         licenseVendorId={license.vendorId}
         currentUser={{ role: 'SUPERUSER', vendorId: license.vendorId }}
-        show
+        show={true}
         onClose={vi.fn()}
         onSuccess={onSuccess}
-      />,
+      />
     )
 
     fireEvent.click(screen.getByRole('button', { name: UI_LICENSE_FREEZE_FORM_SUBMIT_LABEL }))
@@ -72,9 +72,9 @@ describe('LicenseFreezeFormFlow', () => {
         licenseId={license.id}
         licenseVendorId={license.vendorId}
         currentUser={{ role: 'SUPERUSER', vendorId: license.vendorId }}
-        show
+        show={true}
         onClose={vi.fn()}
-      />,
+      />
     )
 
     fireEvent.click(screen.getByLabelText(UI_LICENSE_FREEZE_LABEL_ENTITLEMENTS))
@@ -83,10 +83,27 @@ describe('LicenseFreezeFormFlow', () => {
 
     await waitFor(() => {
       expect(mutation.mutateAsync).toHaveBeenCalledWith({
-        id: 'license-456',
+        id: license.id,
         data: { freeze_entitlements: false, freeze_tier: false },
       })
     })
   })
-})
 
+  test('returns null when user lacks permission to freeze', () => {
+    const license = buildLicense({ status: 'ACTIVE' })
+    useFreezeLicenseMock.mockReturnValue(createMutation())
+
+    const { container } = render(
+      <LicenseFreezeFormFlow
+        client={createClient()}
+        licenseId={license.id}
+        licenseVendorId={license.vendorId}
+        currentUser={{ role: 'VENDOR_VIEWER', vendorId: 'different-vendor' }}
+        show={true}
+        onClose={vi.fn()}
+      />
+    )
+
+    expect(container.firstChild).toBeNull()
+  })
+})

@@ -3,8 +3,8 @@ import { fireEvent, render, waitFor } from '@testing-library/react'
 import { describe, expect, beforeEach, test, vi } from 'vitest'
 
 import { UI_LICENSE_FORM_SUBMIT_CREATE, UI_LICENSE_FORM_SUBMIT_UPDATE } from '../../../src/ui/constants'
-import { LicenseFormFlow } from '../../../src/ui/workflows/LicenseFormFlow'
 import type { UiSelectOption } from '../../../src/ui/types'
+import { LicenseFormFlow } from '../../../src/ui/workflows/LicenseFormFlow'
 
 const useCreateLicenseMock = vi.hoisted(() => vi.fn())
 const useUpdateLicenseMock = vi.hoisted(() => vi.fn())
@@ -49,12 +49,12 @@ describe('LicenseFormFlow', () => {
       <LicenseFormFlow
         client={{} as never}
         mode="create"
-        show
+        show={true}
         onClose={onClose}
         submitLabel={UI_LICENSE_FORM_SUBMIT_CREATE}
         tierOptions={tierOptions}
         productOptions={productOptions}
-      />,
+      />
     )
 
     fireEvent.click(getByRole('button', { name: UI_LICENSE_FORM_SUBMIT_CREATE }))
@@ -75,12 +75,12 @@ describe('LicenseFormFlow', () => {
       <LicenseFormFlow
         client={{} as never}
         mode="update"
-        show
+        show={true}
         licenseId="license-1"
         onClose={vi.fn()}
         submitLabel={UI_LICENSE_FORM_SUBMIT_UPDATE}
         tierOptions={tierOptions}
-      />,
+      />
     )
 
     fireEvent.click(getByRole('button', { name: UI_LICENSE_FORM_SUBMIT_UPDATE }))
@@ -92,6 +92,58 @@ describe('LicenseFormFlow', () => {
       })
     })
   })
+
+  test('uses default labels and triggers onCompleted for create', async () => {
+    const createMutation = mockMutation()
+    const updateMutation = mockMutation()
+    useCreateLicenseMock.mockReturnValue(createMutation)
+    useUpdateLicenseMock.mockReturnValue(updateMutation)
+    const onCompleted = vi.fn()
+    const onClose = vi.fn()
+
+    const { getByRole } = render(
+      <LicenseFormFlow
+        client={{} as never}
+        mode="create"
+        show={true}
+        onClose={onClose}
+        onCompleted={onCompleted}
+        tierOptions={tierOptions}
+        productOptions={productOptions}
+      />
+    )
+
+    fireEvent.click(getByRole('button', { name: UI_LICENSE_FORM_SUBMIT_CREATE }))
+
+    await waitFor(() => expect(createMutation.mutateAsync).toHaveBeenCalled())
+    expect(onCompleted).toHaveBeenCalled()
+    expect(onClose).toHaveBeenCalled()
+  })
+
+  test('uses default labels and triggers onCompleted for update', async () => {
+    const createMutation = mockMutation()
+    const updateMutation = mockMutation()
+    useCreateLicenseMock.mockReturnValue(createMutation)
+    useUpdateLicenseMock.mockReturnValue(updateMutation)
+    const onCompleted = vi.fn()
+    const onClose = vi.fn()
+
+    const { getByRole } = render(
+      <LicenseFormFlow
+        client={{} as never}
+        mode="update"
+        show={true}
+        licenseId="license-2"
+        onClose={onClose}
+        onCompleted={onCompleted}
+        tierOptions={tierOptions}
+      />
+    )
+
+    fireEvent.click(getByRole('button', { name: UI_LICENSE_FORM_SUBMIT_UPDATE }))
+
+    await waitFor(() => expect(updateMutation.mutateAsync).toHaveBeenCalled())
+    expect(onCompleted).toHaveBeenCalled()
+    expect(onClose).toHaveBeenCalled()
+  })
 })
-
-

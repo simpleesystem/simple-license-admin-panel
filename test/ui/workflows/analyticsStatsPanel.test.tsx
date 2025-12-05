@@ -18,6 +18,17 @@ import {
 import { AnalyticsStatsPanel } from '../../../src/ui/workflows/AnalyticsStatsPanel'
 import type { UseLiveDataResult } from '../../../src/hooks/useLiveData'
 import { useLiveData } from '../../../src/hooks/useLiveData'
+const useSystemStatsMock = vi.hoisted(() => vi.fn())
+const useHealthWebSocketMock = vi.hoisted(() => vi.fn())
+
+vi.mock('@simple-license/react-sdk', async () => {
+  const actual = await vi.importActual<typeof import('@simple-license/react-sdk')>('@simple-license/react-sdk')
+  return {
+    ...actual,
+    useSystemStats: useSystemStatsMock,
+    useHealthWebSocket: useHealthWebSocketMock,
+  }
+})
 
 vi.mock('../../../src/hooks/useLiveData')
 
@@ -32,8 +43,16 @@ const createStats = () => ({
 
 const createSocketResultBase = () => ({
   connectionInfo: { state: WS_STATE_DISCONNECTED, connectedAt: undefined, disconnectedAt: undefined },
+  connected: false,
+  lastMessage: undefined,
   error: undefined,
   requestHealth: vi.fn(),
+  send: vi.fn(),
+  sendPing: vi.fn(),
+  disconnect: vi.fn(),
+  reconnect: vi.fn(),
+  healthMessage: undefined,
+  healthData: undefined,
 })
 
 type LiveDataResult = UseLiveDataResult<unknown, ReturnType<typeof createSocketResultBase>, ReturnType<typeof createStats>['stats']>
@@ -83,6 +102,13 @@ describe('AnalyticsStatsPanel', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    useSystemStatsMock.mockReturnValue({
+      data: createStats(),
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    })
+    useHealthWebSocketMock.mockReturnValue(createSocketResult({ connectionInfo: { state: WS_STATE_CONNECTED } }))
     useLiveDataMock.mockReturnValue(
       createLiveDataResult({
         data: createStats().stats,

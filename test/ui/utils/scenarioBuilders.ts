@@ -1,10 +1,10 @@
 import { faker } from '@faker-js/faker'
 
-import { buildActivation } from '../factories/activationFactory'
-import { buildEntitlement } from '../factories/entitlementFactory'
-import { buildLicense } from '../factories/licenseFactory'
-import { buildProduct } from '../factories/productFactory'
-import { buildProductTier } from '../factories/productTierFactory'
+import { buildActivation } from '../../factories/activationFactory'
+import { buildEntitlement } from '../../factories/entitlementFactory'
+import { buildLicense } from '../../factories/licenseFactory'
+import { buildProduct } from '../../factories/productFactory'
+import { buildProductTier } from '../../factories/productTierFactory'
 
 export type VendorScopedIds = {
   vendorId: string

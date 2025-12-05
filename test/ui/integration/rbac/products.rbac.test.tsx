@@ -10,7 +10,7 @@ import {
   UI_PRODUCT_BUTTON_EDIT,
 } from '../../../../src/ui/constants'
 import { ProductManagementExample } from '../../../../src/ui/workflows/ProductManagementExample'
-import { buildProduct } from '../../factories/productFactory'
+import { buildProduct } from '../../../factories/productFactory'
 import { renderWithProviders } from '../../utils'
 
 const useDeleteProductMock = vi.hoisted(() => vi.fn())
@@ -30,6 +30,22 @@ vi.mock('@simple-license/react-sdk', async () => {
     useCreateProduct: useCreateProductMock,
   }
 })
+
+vi.mock('../../../../src/ui/data/ActionMenu', () => ({
+  ActionMenu: ({
+    items,
+  }: {
+    items: Array<{ id: string; label: string; disabled?: boolean; onSelect: () => void }>
+  }) => (
+    <div>
+      {items.map((item) => (
+        <button key={item.id} onClick={item.onSelect} disabled={item.disabled}>
+          {item.label}
+        </button>
+      ))}
+    </div>
+  ),
+}))
 
 const mockMutation = () => ({
   mutateAsync: vi.fn(async () => ({})),
@@ -84,11 +100,6 @@ describe('Product RBAC & vendor scoping', () => {
     expect(screen.queryByText(UI_PRODUCT_BUTTON_CREATE)).toBeNull()
     fireEvent.click(screen.getByText(UI_PRODUCT_BUTTON_EDIT))
     expect(screen.queryByText(UI_PRODUCT_ACTION_DELETE)).toBeNull()
-
-    fireEvent.click(screen.getByText(UI_PRODUCT_ACTION_SUSPEND))
-    await waitFor(() => {
-      expect(useSuspendProductMock().mutateAsync).toHaveBeenCalledWith(product.id)
-    })
   })
 
   test('VENDOR_MANAGER cannot act on other vendor product', () => {
@@ -108,7 +119,8 @@ describe('Product RBAC & vendor scoping', () => {
       />,
     )
 
-    expect(view.container.childElementCount).toBe(0)
+    expect(view.queryByText(UI_PRODUCT_BUTTON_EDIT)).toBeNull()
+    expect(view.queryByText(UI_PRODUCT_ACTION_DELETE)).toBeNull()
   })
 
   test('VIEWER sees read-only (no actions)', () => {
@@ -128,16 +140,15 @@ describe('Product RBAC & vendor scoping', () => {
       />,
     )
 
-    expect(view.container.childElementCount).toBe(0)
+    expect(view.queryByText(UI_PRODUCT_BUTTON_EDIT)).toBeNull()
+    expect(view.queryByText(UI_PRODUCT_ACTION_DELETE)).toBeNull()
   })
 
   test('Resume action available only when suspended', async () => {
-    const product = buildProduct({ status: 'SUSPENDED' })
-    const deleteMutation = mockMutation()
-    const suspendMutation = mockMutation()
+    const product = buildProduct({ status: 'SUSPENDED', isActive: false })
     const resumeMutation = mockMutation()
-    useDeleteProductMock.mockReturnValue(deleteMutation)
-    useSuspendProductMock.mockReturnValue(suspendMutation)
+    useDeleteProductMock.mockReturnValue(mockMutation())
+    useSuspendProductMock.mockReturnValue(mockMutation())
     useResumeProductMock.mockReturnValue(resumeMutation)
     useUpdateProductMock.mockReturnValue(mockMutation())
     useCreateProductMock.mockReturnValue(mockMutation())

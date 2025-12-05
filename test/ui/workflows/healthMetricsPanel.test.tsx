@@ -2,6 +2,17 @@ import { render, screen } from '@testing-library/react'
 import type { Client } from '@simple-license/react-sdk'
 import { WS_STATE_DISCONNECTED } from '@simple-license/react-sdk'
 import { describe, expect, test, vi } from 'vitest'
+const useHealthMetricsMock = vi.hoisted(() => vi.fn())
+const useHealthWebSocketMock = vi.hoisted(() => vi.fn())
+
+vi.mock('@simple-license/react-sdk', async () => {
+  const actual = await vi.importActual<typeof import('@simple-license/react-sdk')>('@simple-license/react-sdk')
+  return {
+    ...actual,
+    useHealthMetrics: useHealthMetricsMock,
+    useHealthWebSocket: useHealthWebSocketMock,
+  }
+})
 vi.mock('../../../src/hooks/useLiveData')
 
 import {
@@ -38,15 +49,31 @@ type SocketResult = LiveDataResult['socketResult']
 
 const createSocketResult = (overrides: Partial<SocketResult> = {}): SocketResult => ({
   connectionInfo: { state: WS_STATE_DISCONNECTED, connectedAt: undefined, disconnectedAt: undefined },
+  connected: false,
+  lastMessage: undefined,
   error: undefined,
   requestHealth: vi.fn(),
+  send: vi.fn(),
+  sendPing: vi.fn(),
+  disconnect: vi.fn(),
+  reconnect: vi.fn(),
+  healthMessage: undefined,
+  healthData: undefined,
   ...overrides,
 })
 
 const createLiveDataResult = (overrides: Partial<LiveDataResult> = {}): LiveDataResult => {
   const socketResult = overrides.socketResult ?? createSocketResult()
   const data = overrides.data
-  const hasDataOverride = overrides.hasData ?? Boolean(data)
+  const queryData = overrides.queryData
+  const liveData = overrides.liveData
+  const hasDataOverride =
+    overrides.hasData ??
+    Boolean(
+      (data !== undefined && data !== null) ||
+        (queryData !== undefined && queryData !== null) ||
+        (liveData !== undefined && liveData !== null),
+    )
 
   return {
     data,
@@ -69,6 +96,15 @@ const createLiveDataResult = (overrides: Partial<LiveDataResult> = {}): LiveData
 
 describe('HealthMetricsPanel', () => {
   const useLiveDataMock = vi.mocked(useLiveData)
+  beforeEach(() => {
+    useHealthMetricsMock.mockReturnValue({
+      data: { metrics: { uptime: 0, memory: { rss: 0, heapTotal: 0, heapUsed: 0, external: 0 }, cpu: { user: 0, system: 0 } } },
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    })
+    useHealthWebSocketMock.mockReturnValue(createSocketResult())
+  })
 
   test('renders health metrics summary', () => {
     const client = createMockClient()

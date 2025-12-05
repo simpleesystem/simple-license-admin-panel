@@ -1,5 +1,5 @@
 import { fireEvent, render, waitFor } from '@testing-library/react'
-import { describe, expect, beforeEach, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { UI_USER_FORM_SUBMIT_CREATE, UI_USER_FORM_SUBMIT_UPDATE } from '../../../src/ui/constants'
 import { UserFormFlow } from '../../../src/ui/workflows/UserFormFlow'
@@ -40,11 +40,11 @@ describe('UserFormFlow', () => {
       <UserFormFlow
         client={{} as never}
         mode="create"
-        show
+        show={true}
         onClose={vi.fn()}
         submitLabel={UI_USER_FORM_SUBMIT_CREATE}
         onCompleted={vi.fn()}
-      />,
+      />
     )
 
     fireEvent.click(getByRole('button', { name: UI_USER_FORM_SUBMIT_CREATE }))
@@ -63,15 +63,30 @@ describe('UserFormFlow', () => {
       <UserFormFlow
         client={{} as never}
         mode="create"
-        show
+        show={true}
         onClose={onClose}
         submitLabel={UI_USER_FORM_SUBMIT_CREATE}
         onCompleted={vi.fn()}
-      />,
+      />
     )
 
     fireEvent.click(getByRole('button', { name: UI_USER_FORM_SUBMIT_CREATE }))
 
+    await waitFor(() => expect(onClose).toHaveBeenCalled())
+  })
+
+  test('uses default submit label when none provided (create)', async () => {
+    const createMutation = mockMutation()
+    const updateMutation = mockMutation()
+    useCreateUserMock.mockReturnValue(createMutation)
+    useUpdateUserMock.mockReturnValue(updateMutation)
+    const onClose = vi.fn()
+
+    const { getByRole } = render(
+      <UserFormFlow client={{} as never} mode="create" show={true} onClose={onClose} onCompleted={vi.fn()} />
+    )
+
+    fireEvent.click(getByRole('button', { name: UI_USER_FORM_SUBMIT_CREATE }))
     await waitFor(() => expect(onClose).toHaveBeenCalled())
   })
 
@@ -86,16 +101,38 @@ describe('UserFormFlow', () => {
       <UserFormFlow
         client={{} as never}
         mode="create"
-        show
+        show={true}
         onClose={vi.fn()}
         submitLabel={UI_USER_FORM_SUBMIT_CREATE}
         onCompleted={onCompleted}
-      />,
+      />
     )
 
     fireEvent.click(getByRole('button', { name: UI_USER_FORM_SUBMIT_CREATE }))
 
     await waitFor(() => expect(onCompleted).toHaveBeenCalled())
+  })
+
+  test('uses default submit label when none provided (update)', async () => {
+    const createMutation = mockMutation()
+    const updateMutation = mockMutation()
+    useCreateUserMock.mockReturnValue(createMutation)
+    useUpdateUserMock.mockReturnValue(updateMutation)
+    const user = buildUser()
+
+    const { getByRole } = render(
+      <UserFormFlow
+        client={{} as never}
+        mode="update"
+        show={true}
+        onClose={vi.fn()}
+        userId={user.id}
+        onCompleted={vi.fn()}
+      />
+    )
+
+    fireEvent.click(getByRole('button', { name: UI_USER_FORM_SUBMIT_UPDATE }))
+    await waitFor(() => expect(updateMutation.mutateAsync).toHaveBeenCalled())
   })
 
   test('submits update mutation with provided user id', async () => {
@@ -109,12 +146,12 @@ describe('UserFormFlow', () => {
       <UserFormFlow
         client={{} as never}
         mode="update"
-        show
+        show={true}
         onClose={() => {}}
         submitLabel={UI_USER_FORM_SUBMIT_UPDATE}
         userId={user.id}
         onCompleted={vi.fn()}
-      />,
+      />
     )
 
     fireEvent.click(getByRole('button', { name: UI_USER_FORM_SUBMIT_UPDATE }))
@@ -123,7 +160,7 @@ describe('UserFormFlow', () => {
       expect(updateMutation.mutateAsync).toHaveBeenCalledWith({
         id: user.id,
         data: expect.any(Object),
-      }),
+      })
     )
   })
 
@@ -139,12 +176,12 @@ describe('UserFormFlow', () => {
       <UserFormFlow
         client={{} as never}
         mode="update"
-        show
+        show={true}
         onClose={() => {}}
         submitLabel={UI_USER_FORM_SUBMIT_UPDATE}
         userId={user.id}
         onCompleted={onCompleted}
-      />,
+      />
     )
 
     fireEvent.click(getByRole('button', { name: UI_USER_FORM_SUBMIT_UPDATE }))
@@ -169,11 +206,11 @@ describe('UserFormFlow', () => {
       <UserFormFlow
         client={{} as never}
         mode="create"
-        show
+        show={true}
         onClose={vi.fn()}
         submitLabel={UI_USER_FORM_SUBMIT_CREATE}
         onCompleted={onCompleted}
-      />,
+      />
     )
 
     fireEvent.click(getByRole('button', { name: UI_USER_FORM_SUBMIT_CREATE }))
@@ -202,11 +239,11 @@ describe('UserFormFlow', () => {
       <UserFormFlow
         client={{} as never}
         mode="create"
-        show
+        show={true}
         onClose={onClose}
         submitLabel={UI_USER_FORM_SUBMIT_CREATE}
         onCompleted={vi.fn()}
-      />,
+      />
     )
 
     fireEvent.click(getByRole('button', { name: UI_USER_FORM_SUBMIT_CREATE }))
@@ -218,5 +255,3 @@ describe('UserFormFlow', () => {
     expect(onClose).not.toHaveBeenCalled()
   })
 })
-
-

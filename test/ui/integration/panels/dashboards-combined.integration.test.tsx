@@ -4,10 +4,14 @@ import { describe, expect, test, vi } from 'vitest'
 
 import {
   UI_ANALYTICS_ALERT_THRESHOLDS_LOADING_TITLE,
+  UI_ANALYTICS_ALERT_THRESHOLDS_TITLE,
   UI_ANALYTICS_LICENSE_DETAILS_LOADING_TITLE,
+  UI_ANALYTICS_LICENSE_DETAILS_TITLE,
   UI_ANALYTICS_STATS_LOADING_TITLE,
+  UI_ANALYTICS_STATS_TITLE,
   UI_AUDIT_LOGS_LOADING_TITLE,
   UI_LICENSE_ACTIVATIONS_LOADING_TITLE,
+  UI_LICENSE_ACTIVATIONS_TITLE,
   UI_USAGE_TRENDS_LOADING_TITLE,
 } from '../../../../src/ui/constants'
 import { AlertThresholdsPanel } from '../../../../src/ui/workflows/AlertThresholdsPanel'
@@ -15,6 +19,7 @@ import { AnalyticsStatsPanel } from '../../../../src/ui/workflows/AnalyticsStats
 import { AuditLogsPanel } from '../../../../src/ui/workflows/AuditLogsPanel'
 import { LicenseActivationsPanel } from '../../../../src/ui/workflows/LicenseActivationsPanel'
 import { LicenseUsageDetailsPanel } from '../../../../src/ui/workflows/LicenseUsageDetailsPanel'
+import { TenantQuotaPanel } from '../../../../src/ui/workflows/TenantQuotaPanel'
 import { UsageTrendsPanel } from '../../../../src/ui/workflows/UsageTrendsPanel'
 import { renderWithProviders } from '../../utils'
 
@@ -26,6 +31,10 @@ const useAuditLogsMock = vi.hoisted(() => vi.fn())
 const useAlertThresholdsMock = vi.hoisted(() => vi.fn())
 const useUpdateAlertThresholdsMock = vi.hoisted(() => vi.fn())
 const useUsageTrendsMock = vi.hoisted(() => vi.fn())
+const useQuotaUsageMock = vi.hoisted(() => vi.fn())
+const useQuotaConfigMock = vi.hoisted(() => vi.fn())
+const useUpdateQuotaMock = vi.hoisted(() => vi.fn())
+const useUpdateQuotaLimitsMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@simple-license/react-sdk', async () => {
   const actual = await vi.importActual<typeof import('@simple-license/react-sdk')>('@simple-license/react-sdk')
@@ -39,6 +48,10 @@ vi.mock('@simple-license/react-sdk', async () => {
     useAlertThresholds: useAlertThresholdsMock,
     useUpdateAlertThresholds: useUpdateAlertThresholdsMock,
     useUsageTrends: useUsageTrendsMock,
+    useQuotaUsage: useQuotaUsageMock,
+    useQuotaConfig: useQuotaConfigMock,
+    useUpdateQuota: useUpdateQuotaMock,
+    useUpdateQuotaLimits: useUpdateQuotaLimitsMock,
   }
 })
 
@@ -87,15 +100,49 @@ const happyMocks = () => {
   })
   useUpdateAlertThresholdsMock.mockReturnValue(mockMutation())
   useUsageTrendsMock.mockReturnValue({
-    data: { items: [{ id: faker.string.uuid(), label: 'Metric', value: 1 }] },
+    data: {
+      trends: [{ period: '2024-01', totalActivations: 1, totalValidations: 1, totalUsageReports: 1 }],
+      periodStart: '2024-01-01',
+      periodEnd: '2024-01-31',
+    },
     isLoading: false,
     isError: false,
   })
+  useQuotaUsageMock.mockReturnValue({
+    data: {
+      usage: {
+        products_count: 1,
+        max_products: 5,
+        activations_count: 2,
+        max_activations_total: 10,
+        max_activations_per_product: 3,
+      },
+    },
+    isLoading: false,
+    isError: false,
+    refetch: vi.fn(),
+  })
+  useQuotaConfigMock.mockReturnValue({
+    data: { config: { max_products: 5, max_activations_total: 10 } },
+    isLoading: false,
+    isError: false,
+    refetch: vi.fn(),
+  })
+  useUpdateQuotaMock.mockReturnValue(mockMutation())
+  useUpdateQuotaLimitsMock.mockReturnValue(mockMutation())
 }
 
+const TenantQuotaPanelShim = () => <TenantQuotaPanel client={{} as never} tenantId="tenant-1" />
+
 describe('Combined dashboards render', () => {
-  test('happy path renders all panels together', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  test('happy path renders all panels together', async () => {
     happyMocks()
+    const currentUser = { role: 'SUPERUSER', vendorId: faker.string.uuid() }
+    const licenseVendorId = currentUser.vendorId
     renderWithProviders(
       <>
         <AnalyticsStatsPanel client={{} as never} />
@@ -103,27 +150,43 @@ describe('Combined dashboards render', () => {
         <AuditLogsPanel client={{} as never} />
         <AlertThresholdsPanel client={{} as never} />
         <TenantQuotaPanelShim />
-        <LicenseActivationsPanel client={{} as never} licenseId="lic-1" />
-        <LicenseUsageDetailsPanel client={{} as never} licenseKey="LIC-123" licenseVendorId={faker.string.uuid()} />
-      </>,
+        <LicenseActivationsPanel client={{} as never} licenseId="lic-1" currentUser={currentUser} />
+        <LicenseUsageDetailsPanel
+          client={{} as never}
+          licenseKey="LIC-123"
+          licenseVendorId={licenseVendorId}
+          currentUser={currentUser}
+        />
+      </>
     )
 
-    expect(screen.getByText(/Analytics Stats/i)).toBeInTheDocument()
-    expect(screen.getByText(/Usage Trends/i)).toBeInTheDocument()
-    expect(screen.getByText(/Audit Logs/i)).toBeInTheDocument()
-    expect(screen.getByText(/Alert Thresholds/i)).toBeInTheDocument()
-    expect(screen.getByText(/License Activations/i)).toBeInTheDocument()
-    expect(screen.getByText(/License Usage Details/i)).toBeInTheDocument()
+    expect(await screen.findByText(UI_ANALYTICS_STATS_TITLE)).toBeInTheDocument()
+    expect(await screen.findAllByText(/Usage Trends/i)).toHaveLength(1)
+    expect(await screen.findAllByText(/Audit Logs/i)).toHaveLength(1)
+    expect(await screen.findByRole('heading', { name: UI_ANALYTICS_ALERT_THRESHOLDS_TITLE })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: UI_LICENSE_ACTIVATIONS_TITLE })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: UI_ANALYTICS_LICENSE_DETAILS_TITLE })).toBeInTheDocument()
   })
 
-  test('loading then error states across panels', () => {
+  test('loading then error states across panels', async () => {
+    const currentUser = { role: 'SUPERUSER', vendorId: faker.string.uuid() }
+    const licenseVendorId = currentUser.vendorId
     useSystemStatsMock.mockReturnValue({ data: undefined, isLoading: true, isError: false, refetch: vi.fn() })
-    useHealthWebSocketMock.mockReturnValue({ connectionInfo: { state: 'connecting' }, error: null, requestHealth: vi.fn() })
+    useHealthWebSocketMock.mockReturnValue({
+      connectionInfo: { state: 'connecting' },
+      error: null,
+      requestHealth: vi.fn(),
+    })
     useLicenseActivationsMock.mockReturnValue({ data: undefined, isLoading: true, isError: false })
     useLicenseUsageDetailsMock.mockReturnValue({ data: undefined, isLoading: true, isError: false })
     useAuditLogsMock.mockReturnValue({ data: undefined, isLoading: true, isError: false, refetch: vi.fn() })
     useAlertThresholdsMock.mockReturnValue({ data: undefined, isLoading: true, isError: false, refetch: vi.fn() })
+    useUpdateAlertThresholdsMock.mockReturnValue(mockMutation())
     useUsageTrendsMock.mockReturnValue({ data: undefined, isLoading: true, isError: false })
+    useQuotaUsageMock.mockReturnValue({ data: undefined, isLoading: true, isError: false, refetch: vi.fn() })
+    useQuotaConfigMock.mockReturnValue({ data: undefined, isLoading: true, isError: false, refetch: vi.fn() })
+    useUpdateQuotaMock.mockReturnValue(mockMutation())
+    useUpdateQuotaLimitsMock.mockReturnValue(mockMutation())
 
     const { rerender } = renderWithProviders(
       <>
@@ -132,17 +195,22 @@ describe('Combined dashboards render', () => {
         <AuditLogsPanel client={{} as never} />
         <AlertThresholdsPanel client={{} as never} />
         <TenantQuotaPanelShim />
-        <LicenseActivationsPanel client={{} as never} licenseId="lic-1" />
-        <LicenseUsageDetailsPanel client={{} as never} licenseKey="LIC-123" licenseVendorId={faker.string.uuid()} />
-      </>,
+        <LicenseActivationsPanel client={{} as never} licenseId="lic-1" currentUser={currentUser} />
+        <LicenseUsageDetailsPanel
+          client={{} as never}
+          licenseKey="LIC-123"
+          licenseVendorId={licenseVendorId}
+          currentUser={currentUser}
+        />
+      </>
     )
 
-    expect(screen.getByText(UI_ANALYTICS_STATS_LOADING_TITLE)).toBeInTheDocument()
-    expect(screen.getByText(UI_USAGE_TRENDS_LOADING_TITLE)).toBeInTheDocument()
-    expect(screen.getByText(UI_AUDIT_LOGS_LOADING_TITLE)).toBeInTheDocument()
-    expect(screen.getByText(UI_ANALYTICS_ALERT_THRESHOLDS_LOADING_TITLE)).toBeInTheDocument()
-    expect(screen.getByText(UI_LICENSE_ACTIVATIONS_LOADING_TITLE)).toBeInTheDocument()
-    expect(screen.getByText(UI_ANALYTICS_LICENSE_DETAILS_LOADING_TITLE)).toBeInTheDocument()
+    expect(await screen.findByText(UI_ANALYTICS_STATS_LOADING_TITLE)).toBeInTheDocument()
+    expect(await screen.findByText(UI_USAGE_TRENDS_LOADING_TITLE)).toBeInTheDocument()
+    expect(await screen.findByText(UI_AUDIT_LOGS_LOADING_TITLE)).toBeInTheDocument()
+    expect(await screen.findByText(UI_ANALYTICS_ALERT_THRESHOLDS_LOADING_TITLE)).toBeInTheDocument()
+    expect(await screen.findByText(UI_LICENSE_ACTIVATIONS_LOADING_TITLE)).toBeInTheDocument()
+    expect(await screen.findByText(UI_ANALYTICS_LICENSE_DETAILS_LOADING_TITLE)).toBeInTheDocument()
 
     useSystemStatsMock.mockReturnValue({ data: undefined, isLoading: false, isError: true, refetch: vi.fn() })
     useLicenseActivationsMock.mockReturnValue({ data: undefined, isLoading: false, isError: true })
@@ -158,9 +226,14 @@ describe('Combined dashboards render', () => {
         <AuditLogsPanel client={{} as never} />
         <AlertThresholdsPanel client={{} as never} />
         <TenantQuotaPanelShim />
-        <LicenseActivationsPanel client={{} as never} licenseId="lic-1" />
-        <LicenseUsageDetailsPanel client={{} as never} licenseKey="LIC-123" licenseVendorId={faker.string.uuid()} />
-      </>,
+        <LicenseActivationsPanel client={{} as never} licenseId="lic-1" currentUser={currentUser} />
+        <LicenseUsageDetailsPanel
+          client={{} as never}
+          licenseKey="LIC-123"
+          licenseVendorId={licenseVendorId}
+          currentUser={currentUser}
+        />
+      </>
     )
 
     expect(screen.getAllByText(/unable to load/i).length).toBeGreaterThan(0)
@@ -180,4 +253,3 @@ vi.mock('../../../../src/ui/workflows/TenantQuotaPanel', async () => {
     ),
   }
 })
-

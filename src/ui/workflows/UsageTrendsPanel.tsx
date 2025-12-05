@@ -1,11 +1,6 @@
-import { useMemo } from 'react'
 import type { Client } from '@simple-license/react-sdk'
 import { useUsageTrends } from '@simple-license/react-sdk'
-
-import { DataTable } from '../data/DataTable'
-import type { UiDataTableColumn } from '../types'
-import { InlineAlert } from '../feedback/InlineAlert'
-import { Stack } from '../layout/Stack'
+import { useMemo } from 'react'
 import {
   UI_ANALYTICS_COLUMN_ACTIVATIONS,
   UI_ANALYTICS_COLUMN_PERIOD,
@@ -15,7 +10,19 @@ import {
   UI_COLUMN_ID_ANALYTICS_PERIOD,
   UI_COLUMN_ID_ANALYTICS_USAGE_REPORTS,
   UI_COLUMN_ID_ANALYTICS_VALIDATIONS,
+  UI_USAGE_TRENDS_EMPTY_BODY,
+  UI_USAGE_TRENDS_EMPTY_STATE,
+  UI_USAGE_TRENDS_EMPTY_TITLE,
+  UI_USAGE_TRENDS_ERROR_BODY,
+  UI_USAGE_TRENDS_ERROR_TITLE,
+  UI_USAGE_TRENDS_LOADING_BODY,
+  UI_USAGE_TRENDS_LOADING_TITLE,
+  UI_USAGE_TRENDS_TITLE,
 } from '../constants'
+import { DataTable } from '../data/DataTable'
+import { InlineAlert } from '../feedback/InlineAlert'
+import { Stack } from '../layout/Stack'
+import type { UiDataTableColumn } from '../types'
 
 type UsageTrendsPanelProps = {
   client: Client
@@ -30,7 +37,7 @@ type TrendRow = {
   totalUsageReports: number
 }
 
-export function UsageTrendsPanel({ client, title = 'Usage Trends' }: UsageTrendsPanelProps) {
+export function UsageTrendsPanel({ client, title = UI_USAGE_TRENDS_TITLE }: UsageTrendsPanelProps) {
   const trendsQuery = useUsageTrends(client, { retry: false })
 
   const rows = useMemo<readonly TrendRow[]>(() => {
@@ -68,7 +75,7 @@ export function UsageTrendsPanel({ client, title = 'Usage Trends' }: UsageTrends
         cell: (row) => row.totalUsageReports.toLocaleString(),
       },
     ],
-    [],
+    []
   )
 
   const isEmpty = rows.length === 0
@@ -83,27 +90,20 @@ export function UsageTrendsPanel({ client, title = 'Usage Trends' }: UsageTrends
       </div>
 
       {trendsQuery.isLoading ? (
-        <InlineAlert variant="info" title="Loading usage trends">
-          Please wait while we load the latest trend data…
+        <InlineAlert variant="info" title={UI_USAGE_TRENDS_LOADING_TITLE}>
+          {UI_USAGE_TRENDS_LOADING_BODY}
         </InlineAlert>
       ) : trendsQuery.isError ? (
-        <InlineAlert variant="danger" title="Unable to load usage trends">
-          Try again later or verify the analytics service health.
+        <InlineAlert variant="danger" title={UI_USAGE_TRENDS_ERROR_TITLE}>
+          {UI_USAGE_TRENDS_ERROR_BODY}
         </InlineAlert>
       ) : isEmpty ? (
-        <InlineAlert variant="warning" title="No usage trends yet">
-          Usage reports will appear here once data is ingested.
+        <InlineAlert variant="warning" title={UI_USAGE_TRENDS_EMPTY_TITLE}>
+          {UI_USAGE_TRENDS_EMPTY_BODY}
         </InlineAlert>
       ) : (
-        <DataTable
-          data={rows}
-          columns={columns}
-          rowKey={(row) => row.id}
-          emptyState="No trends recorded."
-        />
+        <DataTable data={rows} columns={columns} rowKey={(row) => row.id} emptyState={UI_USAGE_TRENDS_EMPTY_STATE} />
       )}
     </Stack>
   )
 }
-
-

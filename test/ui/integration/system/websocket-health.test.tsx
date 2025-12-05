@@ -6,12 +6,14 @@ import { UI_SYSTEM_STATUS_TITLE } from '../../../../src/ui/constants'
 import { SystemStatusPanel } from '../../../../src/ui/workflows/SystemStatusPanel'
 
 const useHealthWebSocketMock = vi.hoisted(() => vi.fn())
+const useServerStatusMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@simple-license/react-sdk', async () => {
   const actual = await vi.importActual<typeof import('@simple-license/react-sdk')>('@simple-license/react-sdk')
   return {
     ...actual,
     useHealthWebSocket: useHealthWebSocketMock,
+    useServerStatus: useServerStatusMock,
   }
 })
 
@@ -20,16 +22,49 @@ describe('SystemStatusPanel websocket integration', () => {
     const client = {} as never
     const vendorId = faker.string.uuid()
 
+    const baseSocket = {
+      connected: false,
+      connectionInfo: { state: 'disconnected' as const },
+      lastMessage: undefined,
+      error: null,
+      requestHealth: vi.fn(),
+      send: vi.fn(),
+      sendPing: vi.fn(),
+      disconnect: vi.fn(),
+      reconnect: vi.fn(),
+      healthMessage: undefined,
+      healthData: undefined,
+    }
+
+    useServerStatusMock
+      .mockReturnValueOnce({
+        data: undefined,
+        isLoading: false,
+        isError: true,
+        refetch: vi.fn(),
+      })
+      .mockReturnValueOnce({
+        data: {
+          status: 'healthy',
+          timestamp: new Date().toISOString(),
+          checks: { database: 1 },
+        },
+        isLoading: false,
+        isError: false,
+        refetch: vi.fn(),
+      })
+
     useHealthWebSocketMock
       .mockReturnValueOnce({
-        status: 'error',
-        lastMessage: null,
+        ...baseSocket,
+        connectionInfo: { state: 'error' as const },
         error: new Error('ws-down'),
       })
       .mockReturnValueOnce({
-        status: 'open',
-        lastMessage: { status: 'ok' },
-        error: null,
+        ...baseSocket,
+        connectionInfo: { state: 'open' as const },
+        connected: true,
+        healthData: { stats: { active_licenses: 1, expired_licenses: 0, total_customers: 1, total_activations: 1 } },
       })
 
     const { rerender } = render(
@@ -38,13 +73,13 @@ describe('SystemStatusPanel websocket integration', () => {
 
     await waitFor(() => {
       expect(screen.getByText(UI_SYSTEM_STATUS_TITLE)).toBeInTheDocument()
+      expect(screen.getByText(/Unable to load system status/i)).toBeInTheDocument()
     })
-    expect(screen.getByText(/error/i)).toBeInTheDocument()
 
     rerender(<SystemStatusPanel client={client} currentUser={{ role: 'SUPERUSER', vendorId }} onRefresh={vi.fn()} />)
 
     await waitFor(() => {
-      expect(screen.queryByText(/error/i)).toBeNull()
+      expect(screen.queryByText(/Unable to load system status/i)).toBeNull()
     })
   })
 })

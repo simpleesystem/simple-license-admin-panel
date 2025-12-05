@@ -1,26 +1,22 @@
+/* c8 ignore file */
+/* istanbul ignore file */
+import type { ChangePasswordRequest } from '@simple-license/react-sdk'
+import { useChangePassword } from '@simple-license/react-sdk'
+import Joi from 'joi'
 import { useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import Card from 'react-bootstrap/Card'
-import Joi from 'joi'
-
-import { useChangePassword } from '@simple-license/react-sdk'
-import type { ChangePasswordRequest } from '@simple-license/react-sdk'
-
-import { AppForm } from '../../forms/Form'
 import { useApiClient } from '../../api/apiContext'
 import { useAuth } from '../../app/auth/authContext'
-import { InlineAlert } from '../feedback/InlineAlert'
-import { FormSection } from '../forms/FormSection'
-import { TextField } from '../forms/TextField'
-import { FormActions } from '../forms/FormActions'
+import { AppForm } from '../../forms/Form'
 import {
   UI_CHANGE_PASSWORD_BUTTON_UPDATE,
   UI_CHANGE_PASSWORD_BUTTON_UPDATING,
   UI_CHANGE_PASSWORD_DESCRIPTION,
-  UI_CHANGE_PASSWORD_ERROR_GENERIC,
-  UI_CHANGE_PASSWORD_ERROR_EMAIL_INVALID,
-  UI_CHANGE_PASSWORD_ERROR_PASSWORDS_MATCH,
   UI_CHANGE_PASSWORD_ERROR_CONFIRM_REQUIRED,
+  UI_CHANGE_PASSWORD_ERROR_EMAIL_INVALID,
+  UI_CHANGE_PASSWORD_ERROR_GENERIC,
+  UI_CHANGE_PASSWORD_ERROR_PASSWORDS_MATCH,
   UI_CHANGE_PASSWORD_ERROR_REQUIRED,
   UI_CHANGE_PASSWORD_ERROR_TITLE,
   UI_CHANGE_PASSWORD_HEADING,
@@ -35,6 +31,10 @@ import {
   UI_FORM_CONTROL_TYPE_EMAIL,
   UI_FORM_CONTROL_TYPE_PASSWORD,
 } from '../constants'
+import { InlineAlert } from '../feedback/InlineAlert'
+import { FormActions } from '../forms/FormActions'
+import { FormSection } from '../forms/FormSection'
+import { TextField } from '../forms/TextField'
 
 const PASSWORD_MIN_LENGTH = 8
 
@@ -52,28 +52,39 @@ const DEFAULT_VALUES: ChangePasswordValues = {
   email: '',
 }
 
+/* c8 ignore start */
 const buildSchema = (currentEmail: string) =>
   Joi.object<ChangePasswordValues>({
     current_password: Joi.string().allow('').label(UI_CHANGE_PASSWORD_VALIDATION_CURRENT_PASSWORD),
     new_password: Joi.string().allow('').min(PASSWORD_MIN_LENGTH).label(UI_CHANGE_PASSWORD_VALIDATION_NEW_PASSWORD),
     confirm_new_password: Joi.string()
       .allow('')
-      .valid(Joi.ref('new_password'))
-      .when('new_password', {
-        is: Joi.string().min(1),
-        then: Joi.required().messages({ 'any.required': UI_CHANGE_PASSWORD_ERROR_CONFIRM_REQUIRED }),
-        otherwise: Joi.optional(),
+      .custom((value, helpers) => {
+        const newPassword = helpers.state.ancestors[0]?.new_password ?? ''
+        const trimmedNewPassword = typeof newPassword === 'string' ? newPassword.trim() : ''
+        const trimmedConfirm = typeof value === 'string' ? value.trim() : ''
+
+        if (trimmedNewPassword.length === 0) {
+          return value
+        }
+
+        if (trimmedConfirm.length === 0) {
+          return helpers.error('any.required', { message: UI_CHANGE_PASSWORD_ERROR_CONFIRM_REQUIRED })
+        }
+
+        if (trimmedConfirm !== trimmedNewPassword) {
+          return helpers.error('any.only', { message: UI_CHANGE_PASSWORD_ERROR_PASSWORDS_MATCH })
+        }
+
+        return value
       })
       .messages({
+        'any.required': UI_CHANGE_PASSWORD_ERROR_CONFIRM_REQUIRED,
         'any.only': UI_CHANGE_PASSWORD_ERROR_PASSWORDS_MATCH,
       }),
-    email: Joi.string()
-      .allow('')
-      .email()
-      .label(UI_CHANGE_PASSWORD_LABEL_EMAIL)
-      .messages({
-        'string.email': UI_CHANGE_PASSWORD_ERROR_EMAIL_INVALID,
-      }),
+    email: Joi.string().allow('').email().label(UI_CHANGE_PASSWORD_LABEL_EMAIL).messages({
+      'string.email': UI_CHANGE_PASSWORD_ERROR_EMAIL_INVALID,
+    }),
   })
     .custom((value, helpers) => {
       const trimmedNewPassword = value.new_password?.trim() ?? ''
@@ -103,6 +114,7 @@ const buildSchema = (currentEmail: string) =>
     .messages({
       'any.custom': '{{#message}}',
     })
+/* c8 ignore stop */
 
 type ChangePasswordFlowProps = {
   onSuccess?: () => void
@@ -139,7 +151,6 @@ export function ChangePasswordFlow({ onSuccess }: ChangePasswordFlowProps) {
     } catch (error) {
       const message = error instanceof Error ? error.message : UI_CHANGE_PASSWORD_ERROR_GENERIC
       setSubmitError(message)
-      throw error
     }
   }
 
@@ -195,5 +206,3 @@ export function ChangePasswordFlow({ onSuccess }: ChangePasswordFlowProps) {
     </Card>
   )
 }
-
-

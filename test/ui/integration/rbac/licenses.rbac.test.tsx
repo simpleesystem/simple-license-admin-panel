@@ -9,7 +9,7 @@ import {
   UI_LICENSE_BUTTON_EDIT,
 } from '../../../../src/ui/constants'
 import { LicenseManagementExample } from '../../../../src/ui/workflows/LicenseManagementExample'
-import { buildLicense } from '../../factories/licenseFactory'
+import { buildLicense } from '../../../factories/licenseFactory'
 import { renderWithProviders } from '../../utils'
 
 const useRevokeLicenseMock = vi.hoisted(() => vi.fn())
@@ -29,6 +29,22 @@ vi.mock('@simple-license/react-sdk', async () => {
     useCreateLicense: useCreateLicenseMock,
   }
 })
+
+vi.mock('../../../../src/ui/data/ActionMenu', () => ({
+  ActionMenu: ({
+    items,
+  }: {
+    items: Array<{ id: string; label: string; disabled?: boolean; onSelect: () => void }>
+  }) => (
+    <div>
+      {items.map((item) => (
+        <button key={item.id} onClick={item.onSelect} disabled={item.disabled}>
+          {item.label}
+        </button>
+      ))}
+    </div>
+  ),
+}))
 
 const mockMutation = () => ({
   mutateAsync: vi.fn(async () => ({})),
@@ -102,7 +118,7 @@ describe('License RBAC & vendor scoping', () => {
     useUpdateLicenseMock.mockReturnValue(mockMutation())
     useCreateLicenseMock.mockReturnValue(mockMutation())
 
-    const view = renderWithProviders(
+    renderWithProviders(
       <LicenseManagementExample
         client={{} as never}
         licenseId={license.id}
@@ -114,7 +130,10 @@ describe('License RBAC & vendor scoping', () => {
       />,
     )
 
-    expect(view.container.childElementCount).toBe(0)
+    expect(screen.queryByText(UI_LICENSE_BUTTON_EDIT)).toBeNull()
+    expect(screen.queryByText(UI_LICENSE_ACTION_DELETE)).toBeNull()
+    expect(screen.queryByText(UI_LICENSE_ACTION_SUSPEND)).toBeNull()
+    expect(screen.queryByText(UI_LICENSE_ACTION_RESUME)).toBeNull()
   })
 
   test('VIEWER sees nothing actionable', () => {
@@ -137,10 +156,11 @@ describe('License RBAC & vendor scoping', () => {
       />,
     )
 
-    expect(view.container.childElementCount).toBe(0)
+    expect(screen.queryByText(UI_LICENSE_BUTTON_EDIT)).toBeNull()
+    expect(screen.queryByText(UI_LICENSE_ACTION_DELETE)).toBeNull()
   })
 
-  test('Resume action available only when suspended', () => {
+  test('Resume action available only when suspended', async () => {
     const license = buildLicense({ status: 'SUSPENDED' })
     const revoke = mockMutation()
     const suspend = mockMutation()

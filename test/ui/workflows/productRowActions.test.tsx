@@ -66,10 +66,10 @@ describe('ProductRowActions', () => {
       />,
     )
 
-    fireEvent.click(screen.getByText(UI_PRODUCT_ACTION_DELETE))
+    fireEvent.click(screen.getByRole('button', { name: UI_PRODUCT_ACTION_DELETE }))
     expect(deleteMutation.mutateAsync).toHaveBeenCalledWith(product.id)
 
-    fireEvent.click(screen.getByText(UI_PRODUCT_ACTION_SUSPEND))
+    fireEvent.click(screen.getByRole('button', { name: UI_PRODUCT_ACTION_SUSPEND }))
     expect(suspendMutation.mutateAsync).toHaveBeenCalledWith(product.id)
 
     cleanup()
@@ -82,7 +82,7 @@ describe('ProductRowActions', () => {
         vendorId={product.vendorId}
       />,
     )
-    fireEvent.click(screen.getByText(UI_PRODUCT_ACTION_RESUME))
+    fireEvent.click(screen.getByRole('button', { name: UI_PRODUCT_ACTION_RESUME }))
     expect(resumeMutation.mutateAsync).toHaveBeenCalledWith(product.id)
   })
 

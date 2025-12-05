@@ -30,6 +30,11 @@ const mockMutation = () => ({
 })
 
 describe('AlertThresholdsPanel integration', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    useUpdateAlertThresholdsMock.mockReturnValue(mockMutation())
+  })
+
   test('renders thresholds and updates on submit', async () => {
     const refetch = vi.fn()
     const onUpdated = vi.fn()
@@ -46,8 +51,8 @@ describe('AlertThresholdsPanel integration', () => {
 
     renderWithProviders(<AlertThresholdsPanel client={{} as never} onUpdated={onUpdated} />)
 
-    expect(screen.getByText('10')).toBeInTheDocument()
-    expect(screen.getByText('5')).toBeInTheDocument()
+    expect(screen.getAllByText('10').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('5').length).toBeGreaterThan(0)
 
     fireEvent.click(screen.getByText(/Edit Alert Thresholds/i))
     fireEvent.click(screen.getByRole('button', { name: UI_ALERT_THRESHOLD_FORM_SUBMIT_LABEL }))

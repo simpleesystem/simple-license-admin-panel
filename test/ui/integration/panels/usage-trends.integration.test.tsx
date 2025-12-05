@@ -1,8 +1,15 @@
-import { faker } from '@faker-js/faker'
 import { screen } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
 
-import { UI_USAGE_TRENDS_EMPTY_STATE, UI_USAGE_TRENDS_ERROR_BODY, UI_USAGE_TRENDS_ERROR_TITLE, UI_USAGE_TRENDS_LOADING_BODY, UI_USAGE_TRENDS_LOADING_TITLE, UI_USAGE_TRENDS_TITLE } from '../../../../src/ui/constants'
+import {
+  UI_USAGE_TRENDS_EMPTY_BODY,
+  UI_USAGE_TRENDS_EMPTY_TITLE,
+  UI_USAGE_TRENDS_ERROR_BODY,
+  UI_USAGE_TRENDS_ERROR_TITLE,
+  UI_USAGE_TRENDS_LOADING_BODY,
+  UI_USAGE_TRENDS_LOADING_TITLE,
+  UI_USAGE_TRENDS_TITLE,
+} from '../../../../src/ui/constants'
 import { UsageTrendsPanel } from '../../../../src/ui/workflows/UsageTrendsPanel'
 import { renderWithProviders } from '../../utils'
 
@@ -17,16 +24,28 @@ vi.mock('@simple-license/react-sdk', async () => {
 })
 
 describe('UsageTrendsPanel integration', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    useUsageTrendsMock.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+    })
+  })
+
   test('renders trend data', () => {
     useUsageTrendsMock.mockReturnValue({
       data: {
-        items: [
+        trends: [
           {
-            id: faker.string.uuid(),
-            label: 'Metric A',
-            value: 10,
+            period: '2024-01',
+            totalActivations: 10,
+            totalValidations: 5,
+            totalUsageReports: 2,
           },
         ],
+        periodStart: '2024-01-01',
+        periodEnd: '2024-01-31',
       },
       isLoading: false,
       isError: false,
@@ -35,26 +54,14 @@ describe('UsageTrendsPanel integration', () => {
     renderWithProviders(<UsageTrendsPanel client={{} as never} />)
 
     expect(screen.getByText(UI_USAGE_TRENDS_TITLE)).toBeInTheDocument()
-    expect(screen.getByText('Metric A')).toBeInTheDocument()
+    expect(screen.getByText('2024-01')).toBeInTheDocument()
   })
 
   test('shows loading, empty, and error states', () => {
     useUsageTrendsMock
-      .mockReturnValueOnce({
-        data: undefined,
-        isLoading: true,
-        isError: false,
-      })
-      .mockReturnValueOnce({
-        data: { items: [] },
-        isLoading: false,
-        isError: false,
-      })
-      .mockReturnValueOnce({
-        data: undefined,
-        isLoading: false,
-        isError: true,
-      })
+      .mockReturnValueOnce({ data: undefined, isLoading: true, isError: false })
+      .mockReturnValueOnce({ data: { trends: [] }, isLoading: false, isError: false })
+      .mockReturnValueOnce({ data: undefined, isLoading: false, isError: true })
 
     const { rerender } = renderWithProviders(<UsageTrendsPanel client={{} as never} />)
 
@@ -62,11 +69,11 @@ describe('UsageTrendsPanel integration', () => {
     expect(screen.getByText(UI_USAGE_TRENDS_LOADING_BODY)).toBeInTheDocument()
 
     rerender(<UsageTrendsPanel client={{} as never} />)
-    expect(screen.getByText(UI_USAGE_TRENDS_EMPTY_STATE)).toBeInTheDocument()
+    expect(screen.getByText(UI_USAGE_TRENDS_EMPTY_TITLE)).toBeInTheDocument()
+    expect(screen.getByText(UI_USAGE_TRENDS_EMPTY_BODY)).toBeInTheDocument()
 
     rerender(<UsageTrendsPanel client={{} as never} />)
     expect(screen.getByText(UI_USAGE_TRENDS_ERROR_TITLE)).toBeInTheDocument()
     expect(screen.getByText(UI_USAGE_TRENDS_ERROR_BODY)).toBeInTheDocument()
   })
 })
-

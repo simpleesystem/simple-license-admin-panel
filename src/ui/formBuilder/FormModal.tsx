@@ -1,10 +1,9 @@
-import type { FieldValues } from 'react-hook-form'
 import type { ReactNode } from 'react'
-
-import type { ModalDialogProps } from '../types'
+import type { FieldValues } from 'react-hook-form'
 import { ModalDialog } from '../overlay/ModalDialog'
-import { DynamicForm } from './DynamicForm'
+import type { ModalDialogProps } from '../types'
 import type { FormBlueprint } from './blueprint'
+import { DynamicForm } from './DynamicForm'
 
 export type FormModalProps<TFieldValues extends FieldValues> = Omit<
   ModalDialogProps,
@@ -34,9 +33,13 @@ export function FormModal<TFieldValues extends FieldValues>({
   ...modalProps
 }: FormModalProps<TFieldValues>) {
   const handleSubmit = async (values: TFieldValues) => {
-    await onSubmit(values)
-    if (closeOnSubmit) {
-      onClose()
+    try {
+      await onSubmit(values)
+      if (closeOnSubmit) {
+        onClose()
+      }
+    } catch (_error) {
+      // Error already surfaced via mutation handler; keep modal open.
     }
   }
 
@@ -61,5 +64,3 @@ export function FormModal<TFieldValues extends FieldValues>({
     />
   )
 }
-
-
