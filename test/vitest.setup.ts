@@ -11,7 +11,17 @@ if (!mutableEnv[ENV_VAR_API_BASE_URL]) {
   mutableEnv[ENV_VAR_API_BASE_URL] = 'http://localhost:4000'
 }
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }))
+beforeAll(() =>
+  server.listen({
+    onUnhandledRequest: (req) => {
+      const isWebSocket = req.url.protocol === 'ws:' || req.url.protocol === 'wss:'
+      if (isWebSocket && req.url.pathname === '/ws/health') {
+        return
+      }
+      console.warn(`Unhandled ${req.method} ${req.url.href}`)
+    },
+  })
+)
 afterEach(() => server.resetHandlers(...handlers))
 afterAll(() => server.close())
 
@@ -36,4 +46,3 @@ if (typeof window !== 'undefined' && !window.matchMedia) {
  */
 
 import '@testing-library/jest-dom'
-

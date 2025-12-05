@@ -1,3 +1,27 @@
+import { expect, test } from 'vitest'
+
+import { composeClassNames } from '../../../src/ui/utils/classNames'
+import { buildText } from '../../ui/factories/uiFactories'
+
+describe('composeClassNames', () => {
+  test('deduplicates tokens and trims whitespace', () => {
+    const tokenA = buildText()
+    const tokenB = buildText()
+
+    const result = composeClassNames(tokenA, ` ${tokenA} `, `${tokenA}   ${tokenB}`, null, false, undefined)
+
+    expect(result).toBe(`${tokenA} ${tokenB}`)
+  })
+
+  test('filters empty tokens after trimming', () => {
+    const token = buildText()
+
+    const result = composeClassNames('   ', `  ${token}  `, '', '\n\t', false)
+
+    expect(result).toBe(token)
+  })
+})
+
 import { faker } from '@faker-js/faker'
 import { describe, expect, test } from 'vitest'
 
@@ -30,5 +54,3 @@ describe('composeClassNames', () => {
     expect(result).toBe(`${duplicate} ${unique}`)
   })
 })
-
-

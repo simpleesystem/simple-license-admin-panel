@@ -212,6 +212,29 @@ describe('ProductEntitlementManagementExample', () => {
     expect(getByText(UI_ENTITLEMENT_EMPTY_STATE_MESSAGE)).toBeInTheDocument()
   })
 
+  test('viewer cannot see entitlements and sees empty state', () => {
+    const createMutation = mockMutation()
+    const updateMutation = mockMutation()
+    useCreateEntitlementMock.mockReturnValue(createMutation)
+    useUpdateEntitlementMock.mockReturnValue(updateMutation)
+    const entitlement = buildEntitlement()
+    const viewer = buildUser({ role: 'VIEWER', vendorId: null })
+
+    const { getByText, queryByText } = render(
+      <ProductEntitlementManagementExample
+        client={{} as never}
+        productId={buildText()}
+        entitlements={[entitlement]}
+        currentUser={viewer}
+      />
+    )
+
+    expect(queryByText(entitlement.key)).toBeNull()
+    expect(getByText(UI_ENTITLEMENT_EMPTY_STATE_MESSAGE)).toBeInTheDocument()
+    expect(queryByText(UI_ENTITLEMENT_BUTTON_CREATE)).toBeNull()
+    expect(queryByText(UI_ENTITLEMENT_BUTTON_EDIT)).toBeNull()
+  })
+
   test('vendor-scoped user sees only own entitlements in view-only mode', async () => {
     const createMutation = mockMutation()
     const updateMutation = mockMutation()

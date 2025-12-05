@@ -17,8 +17,14 @@ describe('TopNavBar branch coverage', () => {
   test('renders without brand and retains layout classes', () => {
     render(<TopNavBar navigation={<span>OnlyNav</span>} actions={<span>OnlyAction</span>} />)
 
-    const gaps = document.querySelectorAll(`.${UI_CLASS_INLINE_GAP}`)
-    expect(gaps.length).toBe(2)
+    const navWrapper = screen.getByText('OnlyNav').parentElement as HTMLElement
+    const actionsWrapper = screen.getByText('OnlyAction').parentElement as HTMLElement
+    const tokens = UI_CLASS_INLINE_GAP.split(' ')
+
+    tokens.forEach((token) => {
+      expect(navWrapper.classList.contains(token)).toBe(true)
+      expect(actionsWrapper.classList.contains(token)).toBe(true)
+    })
     expect(screen.queryByText('Brand')).toBeNull()
   })
 })

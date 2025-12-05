@@ -263,4 +263,22 @@ describe('ProductTierManagementExample', () => {
     expect(queryByText(UI_PRODUCT_TIER_BUTTON_CREATE)).toBeNull()
     expect(queryByText(UI_PRODUCT_TIER_BUTTON_EDIT)).toBeNull()
   })
+
+  test('viewer cannot see tiers and shows empty state', () => {
+    const createMutation = mockMutation()
+    const updateMutation = mockMutation()
+    useCreateProductTierMock.mockReturnValue(createMutation)
+    useUpdateProductTierMock.mockReturnValue(updateMutation)
+    const tier = buildProductTier()
+    const viewer = buildUser({ role: 'VIEWER', vendorId: null })
+
+    const { getByText, queryByText } = render(
+      <ProductTierManagementExample client={{} as never} productId={buildText()} tiers={[tier]} currentUser={viewer} />
+    )
+
+    expect(queryByText(tier.tierName)).toBeNull()
+    expect(getByText(UI_PRODUCT_TIER_EMPTY_STATE_MESSAGE)).toBeInTheDocument()
+    expect(queryByText(UI_PRODUCT_TIER_BUTTON_CREATE)).toBeNull()
+    expect(queryByText(UI_PRODUCT_TIER_BUTTON_EDIT)).toBeNull()
+  })
 })

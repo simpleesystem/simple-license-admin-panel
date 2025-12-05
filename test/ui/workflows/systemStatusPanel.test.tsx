@@ -341,6 +341,24 @@ describe('SystemStatusPanel', () => {
     expect(screen.getByText(UI_SYSTEM_STATUS_EMPTY_BODY)).toBeInTheDocument()
   })
 
+  test('renders empty state when hasData true but no summary fields', () => {
+    useLiveDataMock.mockReturnValueOnce(
+      createLiveDataResult({
+        data: undefined,
+        queryData: undefined,
+        liveData: {},
+        hasData: true,
+        isLoading: false,
+        isError: false,
+      })
+    )
+
+    render(<SystemStatusPanel client={createMockClient()} />)
+
+    expect(screen.getByText(UI_SYSTEM_STATUS_EMPTY_TITLE)).toBeInTheDocument()
+    expect(screen.getByText(UI_SYSTEM_STATUS_EMPTY_BODY)).toBeInTheDocument()
+  })
+
   test('formats numeric database connections from live payload as connected', () => {
     const client = createMockClient()
     useLiveDataMock.mockReturnValueOnce(

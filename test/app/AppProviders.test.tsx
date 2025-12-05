@@ -1,12 +1,14 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import { useEffect } from 'react'
-
+import { vi } from 'vitest'
+import { AppProviders } from '../../src/app/AppProviders'
 import {
   APP_BRAND_NAME,
-  I18N_KEY_APP_ERROR_TITLE,
   I18N_KEY_APP_BRAND,
+  I18N_KEY_APP_ERROR_TITLE,
   I18N_KEY_APP_TAGLINE,
   I18N_KEY_DASHBOARD_HEADING,
+  NOTIFICATION_EVENT_TOAST,
   NOTIFICATION_VARIANT_ERROR,
   NOTIFICATION_VARIANT_INFO,
   NOTIFICATION_VARIANT_SUCCESS,
@@ -15,10 +17,8 @@ import {
   STORAGE_KEY_AUTH_TOKEN,
   STORAGE_KEY_AUTH_USER,
 } from '../../src/app/constants'
-import { AppProviders } from '../../src/app/AppProviders'
 import { i18nResources } from '../../src/app/i18n/resources'
 import { useNotificationBus } from '../../src/notifications/busContext'
-import { NOTIFICATION_EVENT_TOAST } from '../../src/app/constants'
 
 const DASHBOARD_HEADING = i18nResources.common[I18N_KEY_DASHBOARD_HEADING]
 const ERROR_TITLE_TEXT = i18nResources.common[I18N_KEY_APP_ERROR_TITLE]
@@ -37,10 +37,7 @@ const STORED_USER = JSON.stringify({
 type NotificationTesterProps = {
   titleKey?: string
   descriptionKey?: string
-  variant?:
-    | typeof NOTIFICATION_VARIANT_INFO
-    | typeof NOTIFICATION_VARIANT_SUCCESS
-    | typeof NOTIFICATION_VARIANT_WARNING
+  variant?: typeof NOTIFICATION_VARIANT_INFO | typeof NOTIFICATION_VARIANT_SUCCESS | typeof NOTIFICATION_VARIANT_WARNING
 }
 
 const NotificationTester = ({
@@ -73,9 +70,24 @@ const simulateLogin = () => {
 }
 
 describe('AppProviders', () => {
+  const originalConsoleError = console.error
+
+  beforeAll(() => {
+    vi.spyOn(console, 'error').mockImplementation((...args) => {
+      if (args.some((arg) => typeof arg === 'string' && arg.includes(TEST_ERROR_TOKEN))) {
+        return
+      }
+      originalConsoleError(...args)
+    })
+  })
+
   beforeEach(() => {
     window.localStorage.clear()
     simulateLogin()
+  })
+
+  afterAll(() => {
+    console.error = originalConsoleError
   })
 
   it('renders the dashboard heading by default', async () => {
@@ -88,7 +100,7 @@ describe('AppProviders', () => {
     render(
       <AppProviders>
         <ErrorThrower />
-      </AppProviders>,
+      </AppProviders>
     )
 
     await screen.findByText(ERROR_TITLE_TEXT)
@@ -98,7 +110,7 @@ describe('AppProviders', () => {
     render(
       <AppProviders>
         <NotificationTester />
-      </AppProviders>,
+      </AppProviders>
     )
 
     await waitFor(() => {
@@ -110,7 +122,7 @@ describe('AppProviders', () => {
     render(
       <AppProviders>
         <NotificationTester titleKey={I18N_KEY_APP_TAGLINE} variant={NOTIFICATION_VARIANT_SUCCESS} />
-      </AppProviders>,
+      </AppProviders>
     )
 
     await waitFor(() => {
@@ -126,11 +138,11 @@ describe('AppProviders', () => {
           descriptionKey={I18N_KEY_APP_TAGLINE}
           variant={NOTIFICATION_VARIANT_WARNING}
         />
-      </AppProviders>,
+      </AppProviders>
     )
 
     expect(
-      await screen.findByText((content) => typeof content === 'string' && content.includes(TAGLINE_TEXT)),
+      await screen.findByText((content) => typeof content === 'string' && content.includes(TAGLINE_TEXT))
     ).toBeInTheDocument()
   })
 
@@ -138,7 +150,7 @@ describe('AppProviders', () => {
     render(
       <AppProviders>
         <NotificationTester variant={NOTIFICATION_VARIANT_ERROR} />
-      </AppProviders>,
+      </AppProviders>
     )
 
     await waitFor(() => {
@@ -146,4 +158,3 @@ describe('AppProviders', () => {
     })
   })
 })
-
