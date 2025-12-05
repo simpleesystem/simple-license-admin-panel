@@ -64,7 +64,6 @@ const createLiveDataResult = (overrides: Partial<LiveDataResult> = {}): LiveData
     socketResult,
     refresh: overrides.refresh ?? vi.fn(),
     ...overrides,
-    hasData: hasDataOverride,
   }
 }
 
