@@ -31,7 +31,7 @@ export function UsersRouteComponent() {
       return list
     }
     return list.filter((user) => user.vendorId === currentUser?.vendorId)
-  }, [currentUser, data?.data])
+  }, [currentUser, data])
 
   const canView = canViewUsers(currentUser)
 

@@ -38,7 +38,7 @@ export function FormModal<TFieldValues extends FieldValues>({
       if (closeOnSubmit) {
         onClose()
       }
-    } catch (_error) {
+    } catch {
       // Error already surfaced via mutation handler; keep modal open.
     }
   }

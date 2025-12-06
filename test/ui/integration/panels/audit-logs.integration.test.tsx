@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import { fireEvent, screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
 
 import {

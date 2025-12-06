@@ -5,7 +5,6 @@ import { describe, expect, test, vi } from 'vitest'
 import {
   UI_PRODUCT_ACTION_DELETE,
   UI_PRODUCT_ACTION_RESUME,
-  UI_PRODUCT_ACTION_SUSPEND,
   UI_PRODUCT_BUTTON_CREATE,
   UI_PRODUCT_BUTTON_EDIT,
 } from '../../../../src/ui/constants'
@@ -110,7 +109,7 @@ describe('Product RBAC & vendor scoping', () => {
     useUpdateProductMock.mockReturnValue(mockMutation())
     useCreateProductMock.mockReturnValue(mockMutation())
 
-    const view = renderWithProviders(
+    renderWithProviders(
       <ProductManagementExample
         client={{} as never}
         products={[product]}

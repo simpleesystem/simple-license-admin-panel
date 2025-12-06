@@ -8,7 +8,6 @@ import { renderWithProviders } from '../ui/utils'
 import { AnalyticsRouteComponent } from '../../src/routes/analytics/AnalyticsRoute'
 import { AuditRouteComponent } from '../../src/routes/audit/AuditRoute'
 import { SectionPlaceholder } from '../../src/routes/common/SectionPlaceholder'
-import { HealthRouteComponent } from '../../src/routes/health/HealthRoute'
 import { LicensesRouteComponent } from '../../src/routes/licenses/LicensesRoute'
 import { ProductsRouteComponent } from '../../src/routes/products/ProductsRoute'
 import { TenantsRouteComponent } from '../../src/routes/tenants/TenantsRoute'
@@ -17,7 +16,6 @@ import {
   UI_PAGE_PLACEHOLDER_TITLE,
   UI_PAGE_TITLE_ANALYTICS,
   UI_PAGE_TITLE_AUDIT,
-  UI_PAGE_TITLE_HEALTH,
   UI_PAGE_TITLE_LICENSES,
   UI_PAGE_TITLE_PRODUCTS,
   UI_PAGE_TITLE_TENANTS,

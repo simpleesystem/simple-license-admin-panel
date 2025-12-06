@@ -6,7 +6,6 @@ import {
   UI_HEALTH_METRICS_TITLE,
   UI_SYSTEM_METRICS_TITLE,
   UI_SYSTEM_STATUS_TITLE,
-  UI_SYSTEM_STATUS_VALUE_HEALTHY,
 } from '../../../../src/ui/constants'
 import { renderWithProviders } from '../../utils'
 

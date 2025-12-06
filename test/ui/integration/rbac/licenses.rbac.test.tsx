@@ -144,7 +144,7 @@ describe('License RBAC & vendor scoping', () => {
     useUpdateLicenseMock.mockReturnValue(mockMutation())
     useCreateLicenseMock.mockReturnValue(mockMutation())
 
-    const view = renderWithProviders(
+    renderWithProviders(
       <LicenseManagementExample
         client={{} as never}
         licenseId={license.id}
