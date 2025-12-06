@@ -61,7 +61,6 @@ describe('TenantBackupPanel', () => {
           backupName: 'nightly',
           backupType: 'database',
           tenantId: 'tenant-123',
-          backup: '',
           backupMetadata: {},
           backupNotes: null,
           createdAt: '2023-01-01T00:00:00.000Z',

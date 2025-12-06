@@ -1,10 +1,13 @@
 import { faker } from '@faker-js/faker'
 import type { License, LicenseStatus, Product, ProductTier } from '@simple-license/react-sdk'
 
+export type TestLicense = License & { vendorId?: string | null }
+export type TestProductTier = ProductTier & { vendorId?: string | null }
+
 const randomStatus = (): LicenseStatus =>
   faker.helpers.arrayElement<LicenseStatus>(['ACTIVE', 'EXPIRED', 'REVOKED', 'SUSPENDED', 'INACTIVE'])
 
-export const buildLicense = (overrides: Partial<License> = {}): License => ({
+export const buildLicense = (overrides: Partial<TestLicense> = {}): TestLicense => ({
   id: faker.string.uuid(),
   licenseKey: faker.string.alphanumeric({ casing: 'upper', length: 12 }),
   customerId: faker.string.uuid(),
@@ -18,7 +21,7 @@ export const buildLicense = (overrides: Partial<License> = {}): License => ({
   createdAt: faker.date.past(),
   productId: faker.string.uuid(),
   productSlug: faker.lorem.slug(),
-  vendorId: faker.string.uuid(),
+  vendorId: faker.helpers.maybe(() => faker.string.uuid(), { probability: 0.3 }) ?? null,
   ...overrides,
 })
 
@@ -34,7 +37,7 @@ export const buildProduct = (overrides: Partial<Product> = {}): Product => ({
   ...overrides,
 })
 
-export const buildProductTier = (overrides: Partial<ProductTier> = {}): ProductTier => ({
+export const buildProductTier = (overrides: Partial<TestProductTier> = {}): TestProductTier => ({
   id: faker.string.uuid(),
   productId: faker.string.uuid(),
   tierCode: faker.helpers.arrayElement(['FREE', 'STARTER', 'PROFESSIONAL']),
@@ -44,6 +47,7 @@ export const buildProductTier = (overrides: Partial<ProductTier> = {}): ProductT
   maxActivations: faker.number.int({ min: 1, max: 100 }),
   doesNotExpire: faker.datatype.boolean(),
   licenseTermDays: faker.number.int({ min: 7, max: 365 }),
+  vendorId: faker.helpers.maybe(() => faker.string.uuid(), { probability: 0.3 }) ?? null,
   createdAt: faker.date.past(),
   updatedAt: faker.date.recent(),
   ...overrides,

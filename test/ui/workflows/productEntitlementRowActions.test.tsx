@@ -54,9 +54,9 @@ describe('ProductEntitlementRowActions', () => {
         entitlement={{
           id: entitlement.id,
           key: entitlement.key,
-          valueType: entitlement.value_type,
-          defaultValue: entitlement.default_value,
-          usageLimit: entitlement.usage_limit,
+          valueType: entitlement.valueType,
+          defaultValue: entitlement.defaultValue,
+          usageLimit: entitlement.usageLimit,
           vendorId: entitlement.vendorId,
         }}
         onEdit={onEdit}
@@ -83,9 +83,9 @@ describe('ProductEntitlementRowActions', () => {
         entitlement={{
           id: entitlement.id,
           key: entitlement.key,
-          valueType: entitlement.value_type,
-          defaultValue: entitlement.default_value,
-          usageLimit: entitlement.usage_limit,
+          valueType: entitlement.valueType,
+          defaultValue: entitlement.defaultValue,
+          usageLimit: entitlement.usageLimit,
           vendorId: entitlement.vendorId,
         }}
         onEdit={vi.fn()}
@@ -110,9 +110,9 @@ describe('ProductEntitlementRowActions', () => {
         entitlement={{
           id: entitlement.id,
           key: entitlement.key,
-          valueType: entitlement.value_type,
-          defaultValue: entitlement.default_value,
-          usageLimit: entitlement.usage_limit,
+          valueType: entitlement.valueType,
+          defaultValue: entitlement.defaultValue,
+          usageLimit: entitlement.usageLimit,
           vendorId: entitlement.vendorId,
         }}
         onEdit={vi.fn()}
@@ -135,9 +135,9 @@ describe('ProductEntitlementRowActions', () => {
         entitlement={{
           id: entitlement.id,
           key: entitlement.key,
-          valueType: entitlement.value_type,
-          defaultValue: entitlement.default_value,
-          usageLimit: entitlement.usage_limit,
+          valueType: entitlement.valueType,
+          defaultValue: entitlement.defaultValue,
+          usageLimit: entitlement.usageLimit,
           vendorId: entitlement.vendorId,
         }}
         onEdit={vi.fn()}

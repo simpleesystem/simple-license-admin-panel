@@ -66,9 +66,9 @@ describe('LicenseRowActions', () => {
       <LicenseRowActions
         client={{} as never}
         licenseId={license.id}
-        licenseVendorId={license.vendorId}
+        licenseVendorId={license.vendorId ?? null}
         licenseStatus={license.status}
-        currentUser={{ role: 'SUPERUSER', vendorId: license.vendorId }}
+        currentUser={{ role: 'SUPERUSER', vendorId: license.vendorId ?? null }}
       />,
     )
 
@@ -90,9 +90,9 @@ describe('LicenseRowActions', () => {
       <LicenseRowActions
         client={{} as never}
         licenseId={license.id}
-        licenseVendorId={license.vendorId}
+        licenseVendorId={license.vendorId ?? null}
         licenseStatus={license.status}
-        currentUser={{ role: 'SUPERUSER', vendorId: license.vendorId }}
+        currentUser={{ role: 'SUPERUSER', vendorId: license.vendorId ?? null }}
       />,
     )
 

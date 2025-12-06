@@ -14,11 +14,12 @@ if (!mutableEnv[ENV_VAR_API_BASE_URL]) {
 beforeAll(() =>
   server.listen({
     onUnhandledRequest: (req) => {
-      const isWebSocket = req.url.protocol === 'ws:' || req.url.protocol === 'wss:'
-      if (isWebSocket && req.url.pathname === '/ws/health') {
+      const url = new URL(req.url.toString())
+      const isWebSocket = url.protocol === 'ws:' || url.protocol === 'wss:'
+      if (isWebSocket && url.pathname === '/ws/health') {
         return
       }
-      console.warn(`Unhandled ${req.method} ${req.url.href}`)
+      console.warn(`Unhandled ${req.method} ${url.href}`)
     },
   })
 )

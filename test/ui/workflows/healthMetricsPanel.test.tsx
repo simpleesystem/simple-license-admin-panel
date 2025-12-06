@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import type { Client } from '@simple-license/react-sdk'
-import { WS_STATE_DISCONNECTED } from '@simple-license/react-sdk'
+import { WS_STATE_CONNECTED, WS_STATE_DISCONNECTED } from '@simple-license/react-sdk'
 import { describe, expect, test, vi } from 'vitest'
 const useHealthMetricsMock = vi.hoisted(() => vi.fn())
 const useHealthWebSocketMock = vi.hoisted(() => vi.fn())
@@ -44,11 +44,24 @@ type MetricsSource = {
   }
 }
 
-type LiveDataResult = UseLiveDataResult<unknown, ReturnType<typeof createSocketResult>, MetricsSource | undefined>
-type SocketResult = LiveDataResult['socketResult']
+type SocketResult = {
+  connectionInfo: { state: typeof WS_STATE_CONNECTED | typeof WS_STATE_DISCONNECTED; connectedAt?: string; disconnectedAt?: string }
+  connected: boolean
+  lastMessage?: unknown
+  error?: unknown
+  requestHealth: ReturnType<typeof vi.fn>
+  send: ReturnType<typeof vi.fn>
+  sendPing: ReturnType<typeof vi.fn>
+  disconnect: ReturnType<typeof vi.fn>
+  reconnect: ReturnType<typeof vi.fn>
+  healthMessage?: unknown
+  healthData?: unknown
+}
+
+type LiveDataResult = UseLiveDataResult<unknown, SocketResult, MetricsSource | undefined>
 
 const createSocketResult = (overrides: Partial<SocketResult> = {}): SocketResult => ({
-  connectionInfo: { state: WS_STATE_DISCONNECTED, connectedAt: undefined, disconnectedAt: undefined },
+  connectionInfo: { state: WS_STATE_DISCONNECTED },
   connected: false,
   lastMessage: undefined,
   error: undefined,
@@ -87,7 +100,7 @@ const createLiveDataResult = (overrides: Partial<LiveDataResult> = {}): LiveData
       isLoading: Boolean(overrides.isLoading),
       isError: Boolean(overrides.isError),
       refetch: vi.fn(),
-    } as LiveDataResult['queryResult'],
+    } as unknown as LiveDataResult['queryResult'],
     socketResult,
     refresh: overrides.refresh ?? vi.fn(),
     ...overrides,

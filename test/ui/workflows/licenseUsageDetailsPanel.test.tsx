@@ -78,7 +78,6 @@ describe('LicenseUsageDetailsPanel', () => {
 
     renderWithProviders(
       <LicenseUsageDetailsPanel
-        client={client}
         licenseKey={licenseKey}
         licenseVendorId={faker.string.uuid()}
         currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() }}
@@ -101,7 +100,6 @@ describe('LicenseUsageDetailsPanel', () => {
 
     renderWithProviders(
       <LicenseUsageDetailsPanel
-        client={client}
         licenseKey={faker.string.alphanumeric({ length: 12 })}
         licenseVendorId={faker.string.uuid()}
         currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() }}
@@ -123,7 +121,6 @@ describe('LicenseUsageDetailsPanel', () => {
 
     renderWithProviders(
       <LicenseUsageDetailsPanel
-        client={client}
         licenseKey={faker.string.alphanumeric({ length: 12 })}
         licenseVendorId={faker.string.uuid()}
         currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() }}
@@ -149,7 +146,6 @@ describe('LicenseUsageDetailsPanel', () => {
 
     renderWithProviders(
       <LicenseUsageDetailsPanel
-        client={client}
         licenseKey={faker.string.alphanumeric({ length: 12 })}
         licenseVendorId={faker.string.uuid()}
         currentUser={{ role: 'VENDOR_MANAGER', vendorId: faker.string.uuid() }}
@@ -170,7 +166,6 @@ describe('LicenseUsageDetailsPanel', () => {
 
     renderWithProviders(
       <LicenseUsageDetailsPanel
-        client={client}
         licenseKey=""
         licenseVendorId={faker.string.uuid()}
         currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() }}

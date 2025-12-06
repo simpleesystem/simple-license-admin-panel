@@ -83,7 +83,14 @@ describe('UserFormFlow', () => {
     const onClose = vi.fn()
 
     const { getByRole } = render(
-      <UserFormFlow client={{} as never} mode="create" show={true} onClose={onClose} onCompleted={vi.fn()} />
+      <UserFormFlow
+        client={{} as never}
+        mode="create"
+        show={true}
+        onClose={onClose}
+        onCompleted={vi.fn()}
+        submitLabel={UI_USER_FORM_SUBMIT_CREATE}
+      />,
     )
 
     fireEvent.click(getByRole('button', { name: UI_USER_FORM_SUBMIT_CREATE }))
@@ -128,6 +135,7 @@ describe('UserFormFlow', () => {
         onClose={vi.fn()}
         userId={user.id}
         onCompleted={vi.fn()}
+        submitLabel={UI_USER_FORM_SUBMIT_UPDATE}
       />
     )
 

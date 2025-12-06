@@ -36,12 +36,8 @@ import { SystemMetricsPanel } from '../../../src/ui/workflows/SystemMetricsPanel
 
 const createMockClient = () => ({}) as Client
 
-type LiveDataResult = UseLiveDataResult<
-  MetricsResponse | undefined,
-  ReturnType<typeof createSocketResult>,
-  MetricsResponse | undefined
->
-type SocketResult = LiveDataResult['socketResult']
+type SocketResult = ReturnType<typeof createSocketResult>
+type LiveDataResult = UseLiveDataResult<MetricsResponse | undefined, SocketResult, MetricsResponse | undefined>
 
 const createSocketResult = (overrides: Partial<SocketResult> = {}): SocketResult => ({
   connectionInfo: { state: WS_STATE_DISCONNECTED, connectedAt: undefined, disconnectedAt: undefined },
@@ -81,7 +77,7 @@ const createLiveDataResult = (overrides: Partial<LiveDataResult> = {}): LiveData
       isLoading: Boolean(overrides.isLoading),
       isError: Boolean(overrides.isError),
       refetch: vi.fn(),
-    } as LiveDataResult['queryResult'],
+    } as unknown as LiveDataResult['queryResult'],
     refresh: overrides.refresh ?? vi.fn(),
     socketResult,
     ...overrides,
@@ -128,7 +124,7 @@ describe('SystemMetricsPanel', () => {
       },
       security: undefined,
       tenants: undefined,
-    }
+    } as unknown as MetricsResponse
     useSystemMetricsMock.mockReturnValue({
       data: metricsData,
       isLoading: false,
@@ -171,7 +167,7 @@ describe('SystemMetricsPanel', () => {
             active: 5,
             archived: null,
           },
-        },
+        } as unknown as MetricsResponse,
       })
     )
 

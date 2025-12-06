@@ -43,7 +43,7 @@ describe('LicenseFreezeFormFlow', () => {
         client={createClient()}
         licenseId={license.id}
         licenseVendorId={license.vendorId}
-        currentUser={{ role: 'SUPERUSER', vendorId: license.vendorId }}
+        currentUser={{ role: 'SUPERUSER', vendorId: license.vendorId ?? null }}
         show={true}
         onClose={vi.fn()}
         onSuccess={onSuccess}
@@ -98,7 +98,7 @@ describe('LicenseFreezeFormFlow', () => {
         client={createClient()}
         licenseId={license.id}
         licenseVendorId={license.vendorId}
-        currentUser={{ role: 'VENDOR_VIEWER', vendorId: 'different-vendor' }}
+        currentUser={{ role: 'SUPERUSER', vendorId: 'different-vendor' }}
         show={true}
         onClose={vi.fn()}
       />

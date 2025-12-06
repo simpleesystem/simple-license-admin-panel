@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import type { Client, ServerStatusResponse, WebSocketHealthData } from '@simple-license/react-sdk'
+import type { Client, ServerStatusResponse } from '@simple-license/react-sdk'
 import { WS_STATE_CONNECTED, WS_STATE_CONNECTING, WS_STATE_DISCONNECTED } from '@simple-license/react-sdk'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
@@ -41,12 +41,9 @@ vi.mock('../../../src/hooks/useLiveData')
 
 const createMockClient = () => ({}) as Client
 
-type LiveDataResult = UseLiveDataResult<
-  ServerStatusResponse | undefined,
-  ReturnType<typeof createSocketResult>,
-  WebSocketHealthData | undefined
->
-type SocketResult = LiveDataResult['socketResult']
+type SocketResult = ReturnType<typeof createSocketResult>
+type WebSocketHealthData = unknown
+type LiveDataResult = UseLiveDataResult<ServerStatusResponse | undefined, SocketResult, WebSocketHealthData | undefined>
 
 const createSocketResult = (overrides: Partial<SocketResult> = {}): SocketResult => ({
   connectionInfo: { state: WS_STATE_DISCONNECTED, connectedAt: undefined, disconnectedAt: undefined },

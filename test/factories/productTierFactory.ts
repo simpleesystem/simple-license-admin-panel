@@ -6,7 +6,6 @@ export const buildProductTier = (overrides?: Partial<ProductTier>): ProductTier 
   tierName: faker.commerce.productAdjective(),
   tierCode: faker.string.alphanumeric({ length: 6 }).toUpperCase(),
   description: faker.commerce.productDescription(),
-  vendorId: faker.string.uuid(),
   metadata: {},
   createdAt: faker.date.past().toISOString(),
   updatedAt: faker.date.recent().toISOString(),

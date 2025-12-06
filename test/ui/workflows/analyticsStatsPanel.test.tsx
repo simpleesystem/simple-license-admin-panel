@@ -41,7 +41,27 @@ const createStats = () => ({
   },
 })
 
-const createSocketResultBase = () => ({
+type SocketConnectionInfo = {
+  state: typeof WS_STATE_CONNECTED | typeof WS_STATE_DISCONNECTED
+  connectedAt?: string
+  disconnectedAt?: string
+}
+
+type SocketResult = {
+  connectionInfo: SocketConnectionInfo
+  connected: boolean
+  lastMessage: unknown
+  error: unknown
+  requestHealth: ReturnType<typeof vi.fn>
+  send: ReturnType<typeof vi.fn>
+  sendPing: ReturnType<typeof vi.fn>
+  disconnect: ReturnType<typeof vi.fn>
+  reconnect: ReturnType<typeof vi.fn>
+  healthMessage: unknown
+  healthData: unknown
+}
+
+const createSocketResultBase = (): SocketResult => ({
   connectionInfo: { state: WS_STATE_DISCONNECTED, connectedAt: undefined, disconnectedAt: undefined },
   connected: false,
   lastMessage: undefined,
@@ -55,13 +75,19 @@ const createSocketResultBase = () => ({
   healthData: undefined,
 })
 
-type LiveDataResult = UseLiveDataResult<unknown, ReturnType<typeof createSocketResultBase>, ReturnType<typeof createStats>['stats']>
-type SocketResult = LiveDataResult['socketResult']
+type LiveDataResult = UseLiveDataResult<unknown, SocketResult, ReturnType<typeof createStats>['stats']>
 
-const createSocketResult = (overrides: Partial<SocketResult> = {}): SocketResult => ({
-  ...createSocketResultBase(),
-  ...overrides,
-})
+const createSocketResult = (overrides: Partial<SocketResult> = {}): SocketResult => {
+  const base = createSocketResultBase()
+  return {
+    ...base,
+    ...overrides,
+    connectionInfo: {
+      ...base.connectionInfo,
+      ...overrides.connectionInfo,
+    },
+  }
+}
 
 const createLiveDataResult = (
   overrides: Partial<LiveDataResult> = {},
@@ -108,7 +134,7 @@ describe('AnalyticsStatsPanel', () => {
       isError: false,
       refetch: vi.fn(),
     })
-    useHealthWebSocketMock.mockReturnValue(createSocketResult({ connectionInfo: { state: WS_STATE_CONNECTED } }))
+    useHealthWebSocketMock.mockReturnValue(createSocketResult({ connectionInfo: { state: WS_STATE_CONNECTED }, connected: true }))
     useLiveDataMock.mockReturnValue(
       createLiveDataResult({
         data: createStats().stats,
@@ -166,6 +192,7 @@ describe('AnalyticsStatsPanel', () => {
     const refresh = vi.fn()
     const socketResult = createSocketResult({
       connectionInfo: { state: WS_STATE_CONNECTED, connectedAt: new Date().toISOString(), disconnectedAt: undefined },
+      connected: true,
     })
     useLiveDataMock.mockReturnValueOnce(
       createLiveDataResult({
@@ -202,6 +229,7 @@ describe('AnalyticsStatsPanel', () => {
       createLiveDataResult({
         socketResult: createSocketResult({
           connectionInfo: { state: WS_STATE_CONNECTED, connectedAt: new Date().toISOString(), disconnectedAt: undefined },
+          connected: true,
         }),
       }),
     )
