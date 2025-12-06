@@ -1,7 +1,19 @@
 import type { AdminRole } from '@simple-license/react-sdk'
 import type { QueryClient } from '@tanstack/react-query'
-import { createRouter, createRoute, createRootRouteWithContext, redirect } from '@tanstack/react-router'
-
+import { createRootRouteWithContext, createRoute, createRouter, redirect } from '@tanstack/react-router'
+import { AnalyticsRouteComponent } from '../routes/analytics/AnalyticsRoute'
+import { AuditRouteComponent } from '../routes/audit/AuditRoute'
+import { AuthRouteComponent } from '../routes/auth/AuthRoute'
+import { ChangePasswordRouteComponent } from '../routes/auth/ChangePasswordRoute'
+import { DashboardRouteComponent } from '../routes/dashboard/DashboardRoute'
+import { HealthRouteComponent } from '../routes/health/HealthRoute'
+import { LicensesRouteComponent } from '../routes/licenses/LicensesRoute'
+import { NotFoundRouteComponent } from '../routes/notFound/NotFoundRoute'
+import { ProductsRouteComponent } from '../routes/products/ProductsRoute'
+import { RootRouteComponent } from '../routes/root/RootRoute'
+import { TenantsRouteComponent } from '../routes/tenants/TenantsRoute'
+import { UsersRouteComponent } from '../routes/users/UsersRoute'
+import type { PermissionKey, Permissions } from './auth/permissions'
 import {
   ROUTE_PATH_ANALYTICS,
   ROUTE_PATH_AUDIT,
@@ -14,20 +26,8 @@ import {
   ROUTE_PATH_ROOT,
   ROUTE_PATH_TENANTS,
   ROUTE_PATH_USERS,
+  ROUTE_PATH_WILDCARD,
 } from './constants'
-import { AuthRouteComponent } from '../routes/auth/AuthRoute'
-import { ChangePasswordRouteComponent } from '../routes/auth/ChangePasswordRoute'
-import { AuditRouteComponent } from '../routes/audit/AuditRoute'
-import { AnalyticsRouteComponent } from '../routes/analytics/AnalyticsRoute'
-import { DashboardRouteComponent } from '../routes/dashboard/DashboardRoute'
-import { HealthRouteComponent } from '../routes/health/HealthRoute'
-import { LicensesRouteComponent } from '../routes/licenses/LicensesRoute'
-import { NotFoundRouteComponent } from '../routes/notFound/NotFoundRoute'
-import { RootRouteComponent } from '../routes/root/RootRoute'
-import { ProductsRouteComponent } from '../routes/products/ProductsRoute'
-import { TenantsRouteComponent } from '../routes/tenants/TenantsRoute'
-import { UsersRouteComponent } from '../routes/users/UsersRoute'
-import type { Permissions, PermissionKey } from './auth/permissions'
 
 export type AuthStateSnapshot = {
   isAuthenticated: boolean
@@ -44,7 +44,6 @@ export type RouterContext = {
 type RouterLocationLike = {
   href: string
 }
-
 
 const rootRoute = createRootRouteWithContext<RouterContext>()({
   component: RootRouteComponent,
@@ -146,6 +145,12 @@ const auditRoute = createRoute({
   component: AuditRouteComponent,
 })
 
+const notFoundRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: ROUTE_PATH_WILDCARD,
+  component: NotFoundRouteComponent,
+})
+
 const routeTree = rootRoute.addChildren([
   dashboardRoute,
   dashboardIndexRoute,
@@ -158,6 +163,7 @@ const routeTree = rootRoute.addChildren([
   analyticsRoute,
   healthRoute,
   auditRoute,
+  notFoundRoute,
 ])
 
 export const router = createRouter({
@@ -195,11 +201,7 @@ export const assertAuthenticated = (context: RouterContext, location: RouterLoca
   }
 }
 
-export const assertPermission = (
-  context: RouterContext,
-  location: RouterLocationLike,
-  permission: PermissionKey,
-) => {
+export const assertPermission = (context: RouterContext, location: RouterLocationLike, permission: PermissionKey) => {
   assertAuthenticated(context, location)
   if (!context.authState?.permissions[permission]) {
     throw redirect({ to: ROUTE_PATH_ROOT })
@@ -222,4 +224,3 @@ export const assertTenantAccess = (context: RouterContext, location: RouterLocat
     throw redirect({ to: ROUTE_PATH_ROOT })
   }
 }
-

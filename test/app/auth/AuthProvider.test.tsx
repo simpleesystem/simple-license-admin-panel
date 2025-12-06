@@ -4,7 +4,12 @@ import { beforeEach, vi } from 'vitest'
 
 import { AppProviders } from '../../../src/app/AppProviders'
 import { useAuth } from '../../../src/app/auth/authContext'
-import { STORAGE_KEY_AUTH_EXPIRY, STORAGE_KEY_AUTH_TOKEN, STORAGE_KEY_AUTH_USER } from '../../../src/app/constants'
+import {
+  AUTH_STATUS_IDLE,
+  STORAGE_KEY_AUTH_EXPIRY,
+  STORAGE_KEY_AUTH_TOKEN,
+  STORAGE_KEY_AUTH_USER,
+} from '../../../src/app/constants'
 import { buildUser } from '../../factories/userFactory'
 
 const mockClient = {
@@ -30,12 +35,14 @@ const TEXT_ANONYMOUS = 'anonymous' as const
 const TEST_ID_AUTH_STATUS = 'auth-status' as const
 const TEST_ID_AUTH_USER = 'auth-user' as const
 const REFRESH_BUTTON_ID = 'refresh-user' as const
+const TEST_ID_AUTH_STATUS_VALUE = 'auth-status-value' as const
+const LOGIN_ERROR_MESSAGE = 'login-failed' as const
 
 const AuthConsumer = () => {
-  const { login, logout, currentUser, isAuthenticated, refreshCurrentUser } = useAuth()
+  const { login, logout, currentUser, isAuthenticated, refreshCurrentUser, status } = useAuth()
 
   const handleLogin = useCallback(() => {
-    void login(TEST_USERNAME, TEST_PASSWORD)
+    void login(TEST_USERNAME, TEST_PASSWORD).catch(() => {})
   }, [login])
 
   const handleLogout = useCallback(() => {
@@ -59,6 +66,7 @@ const AuthConsumer = () => {
       </button>
       <div data-testid={TEST_ID_AUTH_STATUS}>{isAuthenticated ? TEXT_AUTHENTICATED : TEXT_ANONYMOUS}</div>
       <div data-testid={TEST_ID_AUTH_USER}>{currentUser?.username ?? ''}</div>
+      <div data-testid={TEST_ID_AUTH_STATUS_VALUE}>{status}</div>
     </div>
   )
 }
@@ -67,7 +75,7 @@ const renderAuthTree = () => {
   return render(
     <AppProviders>
       <AuthConsumer />
-    </AppProviders>,
+    </AppProviders>
   )
 }
 
@@ -184,7 +192,7 @@ describe('AuthProvider', () => {
         new StorageEvent('storage', {
           key: STORAGE_KEY_AUTH_USER,
           newValue: JSON.stringify(externalUser),
-        }),
+        })
       )
     })
 
@@ -192,5 +200,19 @@ describe('AuthProvider', () => {
       expect(screen.getByTestId(TEST_ID_AUTH_USER).textContent).toBe(externalUser.username)
     })
   })
-})
 
+  it('resets auth state when login fails', async () => {
+    const loginError = new Error(LOGIN_ERROR_MESSAGE)
+    mockClient.login.mockRejectedValueOnce(loginError)
+    renderAuthTree()
+
+    fireEvent.click(screen.getByText(BUTTON_LABEL_LOGIN))
+
+    await waitFor(() => {
+      expect(screen.getByTestId(TEST_ID_AUTH_STATUS).textContent).toBe(TEXT_ANONYMOUS)
+    })
+    expect(screen.getByTestId(TEST_ID_AUTH_STATUS_VALUE).textContent).toBe(AUTH_STATUS_IDLE)
+    expect(screen.getByTestId(TEST_ID_AUTH_USER).textContent).toBe('')
+    expect(mockClient.setToken).toHaveBeenCalledWith(null, null)
+  })
+})

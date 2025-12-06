@@ -1,7 +1,12 @@
 import type { Client, ProductTier, User } from '@simple-license/react-sdk'
-import Button from 'react-bootstrap/Button'
 import { useMemo, useState } from 'react'
-
+import Button from 'react-bootstrap/Button'
+import {
+  canCreateProductTier,
+  canUpdateProductTier,
+  canViewProductTiers,
+  isProductTierOwnedByUser,
+} from '../../app/auth/permissions'
 import {
   UI_BUTTON_VARIANT_GHOST,
   UI_BUTTON_VARIANT_PRIMARY,
@@ -20,13 +25,6 @@ import {
 } from '../constants'
 import { DataTable } from '../data/DataTable'
 import { Stack } from '../layout/Stack'
-import {
-  canCreateProductTier,
-  canUpdateProductTier,
-  canViewProductTiers,
-  isProductTierOwnedByUser,
-  isVendorScopedUser,
-} from '../../app/auth/permissions'
 import type { UiDataTableColumn } from '../types'
 import { ProductTierFormFlow } from './ProductTierFormFlow'
 import { ProductTierRowActions } from './ProductTierRowActions'
@@ -43,15 +41,23 @@ type ProductTierManagementExampleProps = {
   onRefresh?: () => void
 }
 
-export function ProductTierManagementExample({ client, productId, tiers, currentUser, onRefresh }: ProductTierManagementExampleProps) {
+export function ProductTierManagementExample({
+  client,
+  productId,
+  tiers,
+  currentUser,
+  onRefresh,
+}: ProductTierManagementExampleProps) {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingTier, setEditingTier] = useState<ProductTierListItem | null>(null)
 
-  const isVendorScoped = isVendorScopedUser(currentUser)
-  const visibleTiers = useMemo(
-    () => (isVendorScoped ? tiers.filter((tier) => isProductTierOwnedByUser(currentUser, tier)) : tiers),
-    [currentUser, isVendorScoped, tiers],
-  )
+  const visibleTiers = useMemo(() => {
+    const isSuperUser = currentUser?.role === 'SUPERUSER' || currentUser?.role === 'ADMIN'
+    if (!currentUser?.vendorId || isSuperUser) {
+      return tiers
+    }
+    return tiers.filter((tier) => isProductTierOwnedByUser(currentUser, tier))
+  }, [currentUser, tiers])
   const allowCreate = canCreateProductTier(currentUser)
   const canView = canViewProductTiers(currentUser)
 
@@ -92,7 +98,7 @@ export function ProductTierManagementExample({ client, productId, tiers, current
         },
       },
     ],
-    [client, currentUser, onRefresh],
+    [client, currentUser, onRefresh]
   )
 
   return (
@@ -128,7 +134,7 @@ export function ProductTierManagementExample({ client, productId, tiers, current
         <ProductTierFormFlow
           client={client}
           mode="update"
-          show
+          show={true}
           onClose={() => setEditingTier(null)}
           submitLabel={UI_PRODUCT_TIER_FORM_SUBMIT_UPDATE}
           tierId={editingTier.id}
@@ -142,5 +148,3 @@ export function ProductTierManagementExample({ client, productId, tiers, current
     </Stack>
   )
 }
-
-

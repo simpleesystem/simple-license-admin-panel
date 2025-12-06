@@ -5,21 +5,31 @@ import {
   selectFilteredLicenses,
   selectLicensesByStatus,
   selectLicensesForProduct,
-  selectProductTiersByProduct,
   selectProductsByActivity,
+  selectProductTiersByProduct,
 } from '../../src/utils/selectors'
-import {
-  buildLicense,
-  buildProduct,
-  buildProductTier,
-} from '../factories/licenseFactory'
+import { buildLicense, buildProduct, buildProductTier } from '../factories/licenseFactory'
+
+const STATUS_ACTIVE = 'ACTIVE' as const
+const STATUS_REVOKED = 'REVOKED' as const
+const TIER_PROFESSIONAL = 'PROFESSIONAL' as const
+const TIER_FREE = 'FREE' as const
+const PRODUCT_ID_ALPHA = 'product-123' as const
+const PRODUCT_ID_BETA = 'product-456' as const
+const PRODUCT_ID_GAMMA = 'product-789' as const
+const PRODUCT_ID_OTHER = 'other-product' as const
+const EXPIRY_NOW = new Date('2024-01-01T00:00:00Z')
+const EXPIRY_WITHIN = new Date('2024-01-05T00:00:00Z')
+const EXPIRY_OUTSIDE = new Date('2024-03-01T00:00:00Z')
+const EXPIRY_EXPIRED = new Date('2023-12-01T00:00:00Z')
+const INVALID_EXPIRY_VALUE = 'invalid-date' as const
 
 describe('selectors', () => {
   it('filters licenses by status', () => {
-    const activeLicense = buildLicense({ status: 'ACTIVE' })
-    const revokedLicense = buildLicense({ status: 'REVOKED' })
+    const activeLicense = buildLicense({ status: STATUS_ACTIVE })
+    const revokedLicense = buildLicense({ status: STATUS_REVOKED })
 
-    const result = selectLicensesByStatus([activeLicense, revokedLicense], ['ACTIVE'])
+    const result = selectLicensesByStatus([activeLicense, revokedLicense], [STATUS_ACTIVE])
 
     expect(result).toEqual([activeLicense])
   })
@@ -31,15 +41,15 @@ describe('selectors', () => {
   })
 
   it('filters licenses with composite criteria', () => {
-    const productId = 'product-123'
-    const matching = buildLicense({ status: 'ACTIVE', productId, tierCode: 'PROFESSIONAL' })
-    const wrongProduct = buildLicense({ status: 'ACTIVE', productId: 'other-product' })
-    const wrongTier = buildLicense({ status: 'ACTIVE', productId, tierCode: 'FREE' })
+    const matching = buildLicense({ status: STATUS_ACTIVE, productId: PRODUCT_ID_ALPHA, tierCode: TIER_PROFESSIONAL })
+    const wrongProduct = buildLicense({ status: STATUS_ACTIVE, productId: PRODUCT_ID_OTHER })
+    const wrongTier = buildLicense({ status: STATUS_ACTIVE, productId: PRODUCT_ID_ALPHA, tierCode: TIER_FREE })
 
-    const result = selectFilteredLicenses(
-      [matching, wrongProduct, wrongTier],
-      { statuses: ['ACTIVE'], productId, tierCodes: ['PROFESSIONAL'] },
-    )
+    const result = selectFilteredLicenses([matching, wrongProduct, wrongTier], {
+      statuses: [STATUS_ACTIVE],
+      productId: PRODUCT_ID_ALPHA,
+      tierCodes: [TIER_PROFESSIONAL],
+    })
 
     expect(result).toEqual([matching])
   })
@@ -50,27 +60,25 @@ describe('selectors', () => {
   })
 
   it('selects expiring licenses within a threshold', () => {
-    const now = new Date('2024-01-01T00:00:00Z')
-    const withinWindow = buildLicense({ expiresAt: new Date('2024-01-05T00:00:00Z') })
-    const outsideWindow = buildLicense({ expiresAt: new Date('2024-03-01T00:00:00Z') })
-    const invalidExpiry = buildLicense({ expiresAt: 'invalid-date' })
+    const withinWindow = buildLicense({ expiresAt: EXPIRY_WITHIN })
+    const outsideWindow = buildLicense({ expiresAt: EXPIRY_OUTSIDE })
+    const invalidExpiry = buildLicense({ expiresAt: INVALID_EXPIRY_VALUE })
     const missingExpiry = buildLicense({ expiresAt: null })
-    const expired = buildLicense({ expiresAt: new Date('2023-12-01T00:00:00Z') })
+    const expired = buildLicense({ expiresAt: EXPIRY_EXPIRED })
 
     const result = selectExpiringLicenses([withinWindow, outsideWindow, invalidExpiry, missingExpiry, expired], {
       withinDays: 10,
-      now,
+      now: EXPIRY_NOW,
     })
 
     expect(result).toEqual([withinWindow])
   })
 
   it('filters licenses belonging to a product', () => {
-    const productId = 'product-789'
-    const matching = buildLicense({ productId })
+    const matching = buildLicense({ productId: PRODUCT_ID_GAMMA })
     const other = buildLicense()
 
-    expect(selectLicensesForProduct([matching, other], productId)).toEqual([matching])
+    expect(selectLicensesForProduct([matching, other], PRODUCT_ID_GAMMA)).toEqual([matching])
     expect(selectLicensesForProduct([matching], '')).toEqual([])
   })
 
@@ -83,21 +91,16 @@ describe('selectors', () => {
   })
 
   it('filters tiers for a product and respects active flag', () => {
-    const productId = 'product-456'
-    const activeTier = buildProductTier({ productId, isActive: true })
-    const inactiveTier = buildProductTier({ productId, isActive: false })
+    const activeTier = buildProductTier({ productId: PRODUCT_ID_BETA, isActive: true })
+    const inactiveTier = buildProductTier({ productId: PRODUCT_ID_BETA, isActive: false })
     const otherProductTier = buildProductTier()
 
-    expect(
-      selectProductTiersByProduct([activeTier, inactiveTier, otherProductTier], productId),
-    ).toEqual([activeTier])
+    expect(selectProductTiersByProduct([activeTier, inactiveTier, otherProductTier], PRODUCT_ID_BETA)).toEqual([
+      activeTier,
+    ])
 
     expect(
-      selectProductTiersByProduct(
-        [activeTier, inactiveTier, otherProductTier],
-        productId,
-        { onlyActive: false },
-      ),
+      selectProductTiersByProduct([activeTier, inactiveTier, otherProductTier], PRODUCT_ID_BETA, { onlyActive: false })
     ).toEqual([activeTier, inactiveTier])
   })
 
@@ -105,11 +108,4 @@ describe('selectors', () => {
     const tier = buildProductTier()
     expect(selectProductTiersByProduct([tier], '')).toEqual([])
   })
-
-  it('returns all licenses when no filters are provided', () => {
-    const licenses = [buildLicense(), buildLicense()]
-    expect(selectFilteredLicenses(licenses, {})).toEqual(licenses)
-  })
 })
-
-

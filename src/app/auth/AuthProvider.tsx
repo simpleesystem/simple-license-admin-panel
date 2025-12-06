@@ -1,18 +1,16 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import type { LoginResponse, Client as SimpleLicenseClient, User } from '@simple-license/react-sdk'
 import type { PropsWithChildren } from 'react'
-import type { LoginResponse, User } from '@simple-license/react-sdk'
-import { Client as SimpleLicenseClient } from '@simple-license/react-sdk'
-
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useApiClient } from '../../api/apiContext'
 import {
   AUTH_STATUS_IDLE,
   AUTH_STATUS_LOADING,
   STORAGE_KEY_AUTH_TOKEN,
   STORAGE_KEY_AUTH_USER,
 } from '../../app/constants'
-import { useApiClient } from '../../api/apiContext'
 import { AuthContext } from './authContext'
-import type { AuthStatus, AuthContextValue } from './types'
-import { persistAuth, persistAuthUser, readPersistedAuth, readPersistedUser, type PersistedAuth } from './persistedAuth'
+import { type PersistedAuth, persistAuth, persistAuthUser, readPersistedAuth, readPersistedUser } from './persistedAuth'
+import type { AuthContextValue, AuthStatus } from './types'
 
 const isBrowser = typeof window !== 'undefined'
 
@@ -38,6 +36,14 @@ export function AuthProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     setTokenOnClient(client, token, expiresAt)
   }, [client, token, expiresAt])
+
+  const resetAuthState = useCallback(() => {
+    persistAuth(null, null)
+    persistAuthUser(null)
+    setAuthState({ token: null, expiresAt: null })
+    setCurrentUser(null)
+    setStatus(AUTH_STATUS_IDLE)
+  }, [])
 
   const refreshCurrentUser = useCallback(async (): Promise<User | null> => {
     if (!token) {
@@ -75,25 +81,26 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const login = useCallback(
     async (username: string, password: string): Promise<LoginResponse> => {
       setStatus(AUTH_STATUS_LOADING)
-      const response = await client.login(username, password)
-      const expiresAt = Date.now() + response.expires_in * 1_000
-      persistAuth(response.token, expiresAt)
-      persistAuthUser(response.user)
-      setAuthState({ token: response.token, expiresAt })
-      setCurrentUser(response.user)
-      setStatus(AUTH_STATUS_IDLE)
-      return response
+      try {
+        const response = await client.login(username, password)
+        const expiresAt = Date.now() + response.expires_in * 1_000
+        persistAuth(response.token, expiresAt)
+        persistAuthUser(response.user)
+        setAuthState({ token: response.token, expiresAt })
+        setCurrentUser(response.user)
+        setStatus(AUTH_STATUS_IDLE)
+        return response
+      } catch (error) {
+        resetAuthState()
+        throw error
+      }
     },
-    [client],
+    [client, resetAuthState]
   )
 
   const logout = useCallback(() => {
-    persistAuth(null, null)
-    persistAuthUser(null)
-    setAuthState({ token: null, expiresAt: null })
-    setCurrentUser(null)
-    setStatus(AUTH_STATUS_IDLE)
-  }, [])
+    resetAuthState()
+  }, [resetAuthState])
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -133,10 +140,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
       logout,
       refreshCurrentUser,
     }),
-    [token, currentUser, status, login, logout, refreshCurrentUser],
+    [token, currentUser, status, login, logout, refreshCurrentUser]
   )
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
 }
-
-

@@ -1,36 +1,36 @@
 import 'bootstrap/dist/css/bootstrap.min.css'
 
-import { useEffect, useMemo } from 'react'
-import type { PropsWithChildren } from 'react'
-import { QueryClientProvider } from '@tanstack/react-query'
 import type { QueryClient } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider } from '@tanstack/react-router'
+import type { PropsWithChildren } from 'react'
+import { useEffect, useMemo, useMemo as useRenderMemo } from 'react'
 
 import { ApiProvider } from '../api/ApiProvider'
 import { AppErrorBoundary } from '../errors/AppErrorBoundary'
-import { ToastProvider } from '../notifications/ToastProvider'
 import { NotificationBusProvider } from '../notifications/bus'
 import { useNotificationBus } from '../notifications/busContext'
-import { AuthProvider } from './auth/AuthProvider'
-import { useAuth } from './auth/authContext'
-import { AuthorizationProvider } from './auth/AuthorizationProvider'
-import { PasswordResetGate } from './auth/PasswordResetGate'
-import { usePermissions } from './auth/useAuthorization'
-import { SessionManager } from './auth/SessionManager'
-import { AppConfigProvider, useAppConfig, useFeatureFlag } from './config'
-import { createAppQueryClient } from './queryClient'
-import { enableQueryCachePersistence } from './query/persistence'
-import { registerQueryErrorNotifier } from './query/errorNotifier'
-import { router } from './router'
-import { AppStateProvider } from './state/appState'
-import { I18nProvider } from './i18n/I18nProvider'
-import { NOTIFICATION_EVENT_TOAST } from './constants'
-import { createAppLogger } from './logging/logger'
-import { LoggerContext } from './logging/loggerContext'
+import { ToastProvider } from '../notifications/ToastProvider'
 import { createTrackingClient } from './analytics/tracking'
 import { TrackingContext } from './analytics/trackingContext'
+import { AuthorizationProvider } from './auth/AuthorizationProvider'
+import { AuthProvider } from './auth/AuthProvider'
+import { useAuth } from './auth/authContext'
+import { PasswordResetGate } from './auth/PasswordResetGate'
+import { SessionManager } from './auth/SessionManager'
+import { usePermissions } from './auth/useAuthorization'
+import { AppConfigProvider, useAppConfig, useFeatureFlag } from './config'
+import { NOTIFICATION_EVENT_TOAST } from './constants'
+import { I18nProvider } from './i18n/I18nProvider'
+import { createAppLogger } from './logging/logger'
+import { LoggerContext } from './logging/loggerContext'
+import { registerQueryErrorNotifier } from './query/errorNotifier'
 import { createQueryEventBus } from './query/events'
+import { enableQueryCachePersistence } from './query/persistence'
 import { QueryErrorObserver } from './query/QueryErrorObserver'
+import { createAppQueryClient } from './queryClient'
+import { router } from './router'
+import { AppStateProvider } from './state/appState'
 
 type AppProvidersProps = PropsWithChildren
 
@@ -92,17 +92,24 @@ function RouterContextBridge({ queryClient }: { queryClient: QueryClient }) {
   const { isAuthenticated, currentUser } = useAuth()
   const permissions = usePermissions()
 
-  router.update({
-    context: {
-      queryClient,
-      authState: {
-        isAuthenticated,
-        permissions,
-        currentUserRole: currentUser?.role,
-        currentUserVendorId: currentUser?.vendorId ?? null,
+  const authState = useMemo(
+    () => ({
+      isAuthenticated,
+      permissions,
+      currentUserRole: currentUser?.role,
+      currentUserVendorId: currentUser?.vendorId ?? null,
+    }),
+    [currentUser?.role, currentUser?.vendorId, isAuthenticated, permissions]
+  )
+
+  useRenderMemo(() => {
+    router.update({
+      context: {
+        queryClient,
+        authState,
       },
-    },
-  })
+    })
+  }, [authState, queryClient])
 
   return null
 }
@@ -118,4 +125,3 @@ function QueryErrorNotifierBridge() {
 
   return null
 }
-

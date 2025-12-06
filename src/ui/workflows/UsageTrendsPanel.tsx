@@ -42,7 +42,7 @@ export function UsageTrendsPanel({ client, title = UI_USAGE_TRENDS_TITLE }: Usag
 
   const rows = useMemo<readonly TrendRow[]>(() => {
     return (
-      trendsQuery.data?.trends.map((trend) => ({
+      trendsQuery.data?.trends?.map((trend) => ({
         id: trend.period,
         period: trend.period,
         totalActivations: trend.totalActivations,

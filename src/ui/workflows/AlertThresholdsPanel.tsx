@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
 import type { Client } from '@simple-license/react-sdk'
 import { useAlertThresholds } from '@simple-license/react-sdk'
+import { useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
 
 import {
@@ -28,9 +28,9 @@ import {
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { SummaryList } from '../data/SummaryList'
-import type { UiSummaryCardItem } from '../types'
 import { InlineAlert } from '../feedback/InlineAlert'
 import { Stack } from '../layout/Stack'
+import type { UiSummaryCardItem } from '../types'
 import { AlertThresholdsFormFlow } from './AlertThresholdsFormFlow'
 
 type AlertThresholdsPanelProps = {
@@ -46,12 +46,17 @@ const formatValue = (value?: number | null) => {
   return value.toLocaleString()
 }
 
-export function AlertThresholdsPanel({ client, title = UI_ANALYTICS_ALERT_THRESHOLDS_TITLE, onUpdated }: AlertThresholdsPanelProps) {
+export function AlertThresholdsPanel({
+  client,
+  title = UI_ANALYTICS_ALERT_THRESHOLDS_TITLE,
+  onUpdated,
+}: AlertThresholdsPanelProps) {
   const [showModal, setShowModal] = useState(false)
   const thresholdsQuery = useAlertThresholds(client, { retry: false })
 
   const summaryItems = useMemo<UiSummaryCardItem[]>(() => {
-    if (!thresholdsQuery.data) {
+    const thresholds = thresholdsQuery.data
+    if (!thresholds?.high || !thresholds?.medium) {
       return []
     }
 
@@ -59,32 +64,32 @@ export function AlertThresholdsPanel({ client, title = UI_ANALYTICS_ALERT_THRESH
       {
         id: UI_ALERT_THRESHOLD_SUMMARY_ID_HIGH_ACTIVATIONS,
         label: UI_ALERT_THRESHOLD_LABEL_HIGH_ACTIVATIONS,
-        value: formatValue(thresholdsQuery.data.high.activations),
+        value: formatValue(thresholds.high.activations),
       },
       {
         id: UI_ALERT_THRESHOLD_SUMMARY_ID_HIGH_VALIDATIONS,
         label: UI_ALERT_THRESHOLD_LABEL_HIGH_VALIDATIONS,
-        value: formatValue(thresholdsQuery.data.high.validations),
+        value: formatValue(thresholds.high.validations),
       },
       {
         id: UI_ALERT_THRESHOLD_SUMMARY_ID_HIGH_CONCURRENCY,
         label: UI_ALERT_THRESHOLD_LABEL_HIGH_CONCURRENCY,
-        value: formatValue(thresholdsQuery.data.high.concurrency),
+        value: formatValue(thresholds.high.concurrency),
       },
       {
         id: UI_ALERT_THRESHOLD_SUMMARY_ID_MEDIUM_ACTIVATIONS,
         label: UI_ALERT_THRESHOLD_LABEL_MEDIUM_ACTIVATIONS,
-        value: formatValue(thresholdsQuery.data.medium.activations),
+        value: formatValue(thresholds.medium.activations),
       },
       {
         id: UI_ALERT_THRESHOLD_SUMMARY_ID_MEDIUM_VALIDATIONS,
         label: UI_ALERT_THRESHOLD_LABEL_MEDIUM_VALIDATIONS,
-        value: formatValue(thresholdsQuery.data.medium.validations),
+        value: formatValue(thresholds.medium.validations),
       },
       {
         id: UI_ALERT_THRESHOLD_SUMMARY_ID_MEDIUM_CONCURRENCY,
         label: UI_ALERT_THRESHOLD_LABEL_MEDIUM_CONCURRENCY,
-        value: formatValue(thresholdsQuery.data.medium.concurrency),
+        value: formatValue(thresholds.medium.concurrency),
       },
     ]
   }, [thresholdsQuery.data])
@@ -145,4 +150,3 @@ export function AlertThresholdsPanel({ client, title = UI_ANALYTICS_ALERT_THRESH
     </Stack>
   )
 }
-
