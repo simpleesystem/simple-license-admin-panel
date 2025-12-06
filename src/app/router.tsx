@@ -6,6 +6,7 @@ import {
   ROUTE_PATH_ANALYTICS,
   ROUTE_PATH_AUDIT,
   ROUTE_PATH_AUTH,
+  ROUTE_PATH_CHANGE_PASSWORD,
   ROUTE_PATH_DASHBOARD,
   ROUTE_PATH_HEALTH,
   ROUTE_PATH_LICENSES,
@@ -15,6 +16,7 @@ import {
   ROUTE_PATH_USERS,
 } from './constants'
 import { AuthRouteComponent } from '../routes/auth/AuthRoute'
+import { ChangePasswordRouteComponent } from '../routes/auth/ChangePasswordRoute'
 import { AuditRouteComponent } from '../routes/audit/AuditRoute'
 import { AnalyticsRouteComponent } from '../routes/analytics/AnalyticsRoute'
 import { DashboardRouteComponent } from '../routes/dashboard/DashboardRoute'
@@ -70,6 +72,15 @@ const authRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: ROUTE_PATH_AUTH,
   component: AuthRouteComponent,
+})
+
+const changePasswordRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: ROUTE_PATH_CHANGE_PASSWORD,
+  beforeLoad: ({ context, location }) => {
+    assertAuthenticated(context, location)
+  },
+  component: ChangePasswordRouteComponent,
 })
 
 const licensesRoute = createRoute({
@@ -139,6 +150,7 @@ const routeTree = rootRoute.addChildren([
   dashboardRoute,
   dashboardIndexRoute,
   authRoute,
+  changePasswordRoute,
   licensesRoute,
   productsRoute,
   tenantsRoute,

@@ -99,6 +99,7 @@ export function ProductManagementExample({ client, products, currentUser, onRefr
                 isActive={row.isActive}
                 onCompleted={onRefresh}
                 currentUser={currentUser ?? null}
+                vendorId={row.vendorId ?? null}
               />
             </Stack>
           )

@@ -33,10 +33,6 @@ type RouteCase = {
 }
 
 const ROUTE_CASES: RouteCase[] = [
-  { label: 'licenses', Component: LicensesRouteComponent, title: UI_PAGE_TITLE_LICENSES },
-  { label: 'products', Component: ProductsRouteComponent, title: UI_PAGE_TITLE_PRODUCTS },
-  { label: 'tenants', Component: TenantsRouteComponent, title: UI_PAGE_TITLE_TENANTS },
-  { label: 'users', Component: UsersRouteComponent, title: UI_PAGE_TITLE_USERS },
   { label: 'analytics', Component: AnalyticsRouteComponent, title: UI_PAGE_TITLE_ANALYTICS },
   { label: 'audit', Component: AuditRouteComponent, title: UI_PAGE_TITLE_AUDIT },
 ]
@@ -64,6 +60,36 @@ describe('placeholder routes', () => {
       expect(await screen.findByText(title)).toBeInTheDocument()
       expect(await screen.findByText(UI_PAGE_PLACEHOLDER_TITLE)).toBeInTheDocument()
     })
+  })
+
+  test('renders users route content', async () => {
+    renderWithProviders(<UsersRouteComponent />)
+    expect(await screen.findByText(UI_PAGE_TITLE_USERS)).toBeInTheDocument()
+    expect(screen.queryByText(UI_PAGE_PLACEHOLDER_TITLE)).toBeNull()
+  })
+
+  test('renders tenants route content', async () => {
+    renderWithProviders(<TenantsRouteComponent />)
+    expect(await screen.findByText(UI_PAGE_TITLE_TENANTS)).toBeInTheDocument()
+    expect(screen.queryByText(UI_PAGE_PLACEHOLDER_TITLE)).toBeNull()
+  })
+
+  test('renders products route content', async () => {
+    renderWithProviders(<ProductsRouteComponent />)
+    expect(await screen.findByText(UI_PAGE_TITLE_PRODUCTS)).toBeInTheDocument()
+    expect(screen.queryByText(UI_PAGE_PLACEHOLDER_TITLE)).toBeNull()
+  })
+
+  test('renders licenses route content', async () => {
+    renderWithProviders(<LicensesRouteComponent />)
+    expect(await screen.findByText(UI_PAGE_TITLE_LICENSES)).toBeInTheDocument()
+    expect(screen.queryByText(UI_PAGE_PLACEHOLDER_TITLE)).toBeNull()
+  })
+
+  test('renders products route content', async () => {
+    renderWithProviders(<ProductsRouteComponent />)
+    expect(await screen.findByText(UI_PAGE_TITLE_PRODUCTS)).toBeInTheDocument()
+    expect(screen.queryByText(UI_PAGE_PLACEHOLDER_TITLE)).toBeNull()
   })
 
   test('SectionPlaceholder renders custom body', () => {

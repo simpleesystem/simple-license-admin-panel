@@ -5,6 +5,7 @@ import { describe, expect, beforeEach, test, vi } from 'vitest'
 import {
   UI_LICENSE_ACTION_DELETE,
   UI_LICENSE_ACTION_SUSPEND,
+  UI_LICENSE_ACTION_RESUME,
 } from '../../../src/ui/constants'
 import { LicenseRowActions } from '../../../src/ui/workflows/LicenseRowActions'
 import { buildLicense } from '../../factories/licenseFactory'
@@ -98,6 +99,30 @@ describe('LicenseRowActions', () => {
     fireEvent.click(screen.getByText(UI_LICENSE_ACTION_SUSPEND))
 
     expect(suspendMutation.mutateAsync).toHaveBeenCalledWith(license.id)
+  })
+
+  test('allows resume action when license is suspended', () => {
+    const license = buildLicense({ status: 'SUSPENDED' })
+    const deleteMutation = mockMutation()
+    const suspendMutation = mockMutation()
+    const resumeMutation = mockMutation()
+    useRevokeLicenseMock.mockReturnValue(deleteMutation)
+    useSuspendLicenseMock.mockReturnValue(suspendMutation)
+    useResumeLicenseMock.mockReturnValue(resumeMutation)
+
+    render(
+      <LicenseRowActions
+        client={{} as never}
+        licenseId={license.id}
+        licenseVendorId={license.vendorId}
+        licenseStatus={license.status}
+        currentUser={{ role: 'SUPERUSER', vendorId: license.vendorId }}
+      />,
+    )
+
+    fireEvent.click(screen.getByText(UI_LICENSE_ACTION_RESUME))
+
+    expect(resumeMutation.mutateAsync).toHaveBeenCalledWith(license.id)
   })
 
   test('hides delete action for vendor manager while allowing updates', () => {

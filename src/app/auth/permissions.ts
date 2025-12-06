@@ -227,6 +227,42 @@ export const isEntitlementOwnedByUser = (
   return entitlement.vendorId === user.vendorId
 }
 
+export const isUserOwnedByUser = (user: Pick<User, 'vendorId'> | null | undefined, target: { vendorId?: string | null }) => {
+  if (!user?.vendorId) {
+    return false
+  }
+  return target.vendorId === user.vendorId
+}
+
+export const canCreateUser = (user: Pick<User, 'role'> | null | undefined): boolean => {
+  return user?.role === 'SUPERUSER' || user?.role === 'ADMIN'
+}
+
+export const canUpdateUser = (user: Pick<User, 'role' | 'vendorId'> | null | undefined, target: { vendorId?: string | null }) => {
+  if (canCreateUser(user)) {
+    return true
+  }
+  if (!user) {
+    return false
+  }
+  if (user.role === 'VENDOR_MANAGER') {
+    return isUserOwnedByUser(user, target)
+  }
+  return false
+}
+
+export const canDeleteUser = (user: Pick<User, 'role' | 'vendorId'> | null | undefined, target: { vendorId?: string | null }) => {
+  return canUpdateUser(user, target)
+}
+
+export const canViewUsers = (user: Pick<User, 'role' | 'vendorId'> | null | undefined): boolean => {
+  const permissions = derivePermissionsFromUser(user)
+  if (hasPermission(permissions, 'manageUsers')) {
+    return true
+  }
+  return isVendorScopedUser(user)
+}
+
 export const canCreateEntitlement = (user: Pick<User, 'role'> | null | undefined): boolean => {
   return user?.role === 'SUPERUSER' || user?.role === 'ADMIN'
 }

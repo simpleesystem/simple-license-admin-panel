@@ -22,6 +22,7 @@ import {
   UI_USER_FORM_SUBMIT_UPDATE,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
+import { canCreateUser, canDeleteUser, canUpdateUser } from '../../app/auth/permissions'
 import { DataTable } from '../data/DataTable'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn } from '../types'
@@ -33,12 +34,14 @@ export type UserListItem = Pick<User, 'id' | 'username' | 'email' | 'role' | 've
 type UserManagementExampleProps = {
   client: Client
   users: readonly UserListItem[]
+  currentUser?: Pick<User, 'role' | 'vendorId'>
   onRefresh?: () => void
 }
 
-export function UserManagementExample({ client, users, onRefresh }: UserManagementExampleProps) {
+export function UserManagementExample({ client, users, currentUser, onRefresh }: UserManagementExampleProps) {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingUser, setEditingUser] = useState<UserListItem | null>(null)
+  const canCreate = useMemo(() => canCreateUser(currentUser), [currentUser])
 
   const columns: UiDataTableColumn<UserListItem>[] = useMemo(
     () => [
@@ -67,29 +70,36 @@ export function UserManagementExample({ client, users, onRefresh }: UserManageme
         header: UI_USER_COLUMN_HEADER_ACTIONS,
         cell: (row) => (
           <Stack direction="row" gap="small">
-            <Button variant={UI_BUTTON_VARIANT_GHOST} onClick={() => setEditingUser(row)}>
-              {UI_USER_BUTTON_EDIT}
-            </Button>
+            {canUpdateUser(currentUser, row) ? (
+              <Button variant={UI_BUTTON_VARIANT_GHOST} onClick={() => setEditingUser(row)}>
+                {UI_USER_BUTTON_EDIT}
+              </Button>
+            ) : null}
             <UserRowActions
               client={client}
               user={row}
               onEdit={(selected) => setEditingUser(selected)}
               onCompleted={onRefresh}
+              allowUpdate={canUpdateUser(currentUser, row)}
+              allowDelete={canDeleteUser(currentUser, row)}
             />
+            {!canUpdateUser(currentUser, row) && !canDeleteUser(currentUser, row) ? UI_VALUE_PLACEHOLDER : null}
           </Stack>
         ),
       },
     ],
-    [client, onRefresh],
+    [client, currentUser, onRefresh],
   )
 
   return (
     <Stack direction="column" gap="medium">
-      <Stack direction="row" gap="small">
-        <Button variant={UI_BUTTON_VARIANT_PRIMARY} onClick={() => setShowCreateModal(true)}>
-          {UI_USER_BUTTON_CREATE}
-        </Button>
-      </Stack>
+      {canCreate ? (
+        <Stack direction="row" gap="small">
+          <Button variant={UI_BUTTON_VARIANT_PRIMARY} onClick={() => setShowCreateModal(true)}>
+            {UI_USER_BUTTON_CREATE}
+          </Button>
+        </Stack>
+      ) : null}
 
       <DataTable
         data={users}

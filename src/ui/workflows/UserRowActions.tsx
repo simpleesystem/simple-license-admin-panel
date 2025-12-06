@@ -19,34 +19,53 @@ type UserRowActionsProps = UiCommonProps & {
   onEdit: (user: User) => void
   onCompleted?: () => void
   buttonLabel?: ReactNode
+  allowUpdate?: boolean
+  allowDelete?: boolean
 }
 
-export function UserRowActions({ client, user, onEdit, onCompleted, buttonLabel, ...rest }: UserRowActionsProps) {
+export function UserRowActions({
+  client,
+  user,
+  onEdit,
+  onCompleted,
+  buttonLabel,
+  allowUpdate = true,
+  allowDelete = true,
+  ...rest
+}: UserRowActionsProps) {
   const deleteMutation = adaptMutation(useDeleteUser(client))
 
   const actions = createCrudActions<string, unknown, User>(UI_ENTITY_USER, {
-    update: {
-      label: UI_USER_ACTION_EDIT,
-      buildPayload: () => user,
-      mutation: {
-        mutateAsync: async () => user,
-        isPending: false,
-      },
-      onSuccess: () => onEdit(user),
-    },
-    delete: {
-      label: UI_USER_ACTION_DELETE,
-      buildPayload: () => user.id,
-      mutation: {
-        mutateAsync: async (payload) => {
-          const result = await deleteMutation.mutateAsync(payload)
-          onCompleted?.()
-          return result
-        },
-        isPending: deleteMutation.isPending,
-      },
-    },
+    update: allowUpdate
+      ? {
+          label: UI_USER_ACTION_EDIT,
+          buildPayload: () => user,
+          mutation: {
+            mutateAsync: async () => user,
+            isPending: false,
+          },
+          onSuccess: () => onEdit(user),
+        }
+      : undefined,
+    delete: allowDelete
+      ? {
+          label: UI_USER_ACTION_DELETE,
+          buildPayload: () => user.id,
+          mutation: {
+            mutateAsync: async (payload) => {
+              const result = await deleteMutation.mutateAsync(payload)
+              onCompleted?.()
+              return result
+            },
+            isPending: deleteMutation.isPending,
+          },
+        }
+      : undefined,
   })
+
+  if (actions.length === 0) {
+    return null
+  }
 
   return (
     <ActionMenu

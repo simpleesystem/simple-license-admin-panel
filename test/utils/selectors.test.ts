@@ -54,8 +54,10 @@ describe('selectors', () => {
     const withinWindow = buildLicense({ expiresAt: new Date('2024-01-05T00:00:00Z') })
     const outsideWindow = buildLicense({ expiresAt: new Date('2024-03-01T00:00:00Z') })
     const invalidExpiry = buildLicense({ expiresAt: 'invalid-date' })
+    const missingExpiry = buildLicense({ expiresAt: null })
+    const expired = buildLicense({ expiresAt: new Date('2023-12-01T00:00:00Z') })
 
-    const result = selectExpiringLicenses([withinWindow, outsideWindow, invalidExpiry], {
+    const result = selectExpiringLicenses([withinWindow, outsideWindow, invalidExpiry, missingExpiry, expired], {
       withinDays: 10,
       now,
     })

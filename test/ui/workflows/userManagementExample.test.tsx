@@ -66,7 +66,7 @@ describe('UserManagementExample', () => {
     const users = [buildUser()]
 
     const { getByText, getByRole } = render(
-      <UserManagementExample client={{} as never} users={users} onRefresh={vi.fn()} />,
+      <UserManagementExample client={{} as never} users={users} onRefresh={vi.fn()} currentUser={buildUser({ role: 'SUPERUSER' })} />,
     )
 
     fireEvent.click(getByText(UI_USER_BUTTON_CREATE))
@@ -84,7 +84,7 @@ describe('UserManagementExample', () => {
     const users = [buildUser()]
 
     const { getByText, getByRole } = render(
-      <UserManagementExample client={{} as never} users={users} onRefresh={onRefresh} />,
+      <UserManagementExample client={{} as never} users={users} onRefresh={onRefresh} currentUser={buildUser({ role: 'SUPERUSER' })} />,
     )
 
     fireEvent.click(getByText(UI_USER_BUTTON_CREATE))
@@ -101,7 +101,7 @@ describe('UserManagementExample', () => {
     const user = buildUser()
 
     const { getByText, getByRole } = render(
-      <UserManagementExample client={{} as never} users={[user]} onRefresh={vi.fn()} />,
+      <UserManagementExample client={{} as never} users={[user]} onRefresh={vi.fn()} currentUser={buildUser({ role: 'SUPERUSER' })} />,
     )
 
     fireEvent.click(getByText(UI_USER_BUTTON_EDIT))
@@ -124,7 +124,7 @@ describe('UserManagementExample', () => {
     const user = buildUser()
 
     const { getByText, getByRole } = render(
-      <UserManagementExample client={{} as never} users={[user]} onRefresh={onRefresh} />,
+      <UserManagementExample client={{} as never} users={[user]} onRefresh={onRefresh} currentUser={buildUser({ role: 'SUPERUSER' })} />,
     )
 
     fireEvent.click(getByText(UI_USER_BUTTON_EDIT))
@@ -165,7 +165,7 @@ describe('UserManagementExample', () => {
     const user = buildUser()
 
     const { getByText, getByRole } = render(
-      <UserManagementExample client={{} as never} users={[user]} onRefresh={onRefresh} />,
+      <UserManagementExample client={{} as never} users={[user]} onRefresh={onRefresh} currentUser={buildUser({ role: 'SUPERUSER' })} />,
     )
 
     fireEvent.click(getByText(UI_USER_BUTTON_CREATE))
