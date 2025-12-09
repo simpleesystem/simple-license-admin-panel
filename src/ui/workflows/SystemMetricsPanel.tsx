@@ -88,12 +88,93 @@ const formatTimestamp = (value: string | null | undefined, formatter: Intl.DateT
   return formatter.format(new Date(value))
 }
 
+const toNumber = (value: unknown): number | undefined => {
+  if (typeof value === 'number' && !Number.isNaN(value)) {
+    return value
+  }
+  if (typeof value === 'string') {
+    const parsed = Number(value)
+    if (!Number.isNaN(parsed)) {
+      return parsed
+    }
+  }
+  return undefined
+}
+
+const formatConnectionPool = (candidate: unknown, numberFormatter: Intl.NumberFormat): string | undefined => {
+  if (!candidate || typeof candidate !== 'object') {
+    return undefined
+  }
+
+  const pool =
+    (candidate as { connection_pool?: unknown }).connection_pool ??
+    (candidate as { connectionPool?: unknown }).connectionPool ??
+    candidate
+
+  if (typeof pool !== 'object' || pool === null) {
+    return undefined
+  }
+
+  const poolRecord = pool as {
+    total_connections?: unknown
+    totalConnections?: unknown
+    idle_connections?: unknown
+    idleConnections?: unknown
+    waiting_requests?: unknown
+    waitingRequests?: unknown
+  }
+
+  const total = toNumber(poolRecord.total_connections ?? poolRecord.totalConnections)
+  const idle = toNumber(poolRecord.idle_connections ?? poolRecord.idleConnections)
+  const waiting = toNumber(poolRecord.waiting_requests ?? poolRecord.waitingRequests)
+
+  const parts: string[] = []
+  if (total !== undefined) {
+    parts.push(`Total connections: ${numberFormatter.format(total)}`)
+  }
+  if (idle !== undefined) {
+    parts.push(`Idle connections: ${numberFormatter.format(idle)}`)
+  }
+  if (waiting !== undefined) {
+    parts.push(`Waiting requests: ${numberFormatter.format(waiting)}`)
+  }
+
+  if (parts.length === 0) {
+    return undefined
+  }
+
+  return parts.join(' | ')
+}
+
 const formatMetricValue = (
+  key: string,
   value: MetricValue | MetricObject | undefined,
   numberFormatter: Intl.NumberFormat
 ): string => {
   if (value === null || value === undefined) {
     return UI_VALUE_PLACEHOLDER
+  }
+
+  if (typeof value === 'string') {
+    if (key === 'connection_pool' || key === 'connectionPool') {
+      try {
+        const parsed = JSON.parse(value) as unknown
+        const formatted = formatConnectionPool(parsed, numberFormatter)
+        if (formatted) {
+          return formatted
+        }
+      } catch {
+        // ignore parse errors and fall back to raw string
+      }
+    }
+    return value
+  }
+
+  if (key === 'connection_pool' || key === 'connectionPool') {
+    const formatted = formatConnectionPool(value, numberFormatter)
+    if (formatted) {
+      return formatted
+    }
   }
 
   if (Array.isArray(value)) {
@@ -104,11 +185,18 @@ const formatMetricValue = (
     return JSON.stringify(value)
   }
 
-  if (typeof value === 'number') {
-    return numberFormatter.format(value)
-  }
+  return numberFormatter.format(value)
+}
 
-  return String(value)
+const formatMetricLabel = (key: string): string => {
+  if (!key) {
+    return UI_VALUE_PLACEHOLDER
+  }
+  return key
+    .split('_')
+    .filter((segment) => segment.length > 0)
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .join(' ')
 }
 
 const buildMetricItems = (
@@ -123,8 +211,8 @@ const buildMetricItems = (
 
   return Object.entries(values).map(([key, value]) => ({
     id: `${prefix}${key}`,
-    label: `${labelPrefix}${key}`,
-    value: formatMetricValue(value, numberFormatter),
+    label: `${labelPrefix}${formatMetricLabel(key)}`,
+    value: formatMetricValue(key, value, numberFormatter),
   }))
 }
 

@@ -1,25 +1,29 @@
 import { persistAuth, persistAuthUser } from '../auth/persistedAuth'
 import type { PersistedAuthUser } from '../auth/persistedAuth'
 import {
-  DEV_PERSONA_SUPERUSER,
   DEV_PERSONA_SUPPORT,
+  DEV_PERSONA_SUPPORT_EXPIRY_HOURS,
+  DEV_PERSONA_SUPPORT_FALLBACK,
+  DEV_PERSONA_SUPERUSER,
+  DEV_PERSONA_SUPERUSER_EXPIRY_HOURS,
+  DEV_PERSONA_SUPERUSER_FALLBACK,
   DEV_PERSONA_VIEWER,
-  DEV_PERSONA_SUPERUSER_TOKEN,
-  DEV_PERSONA_SUPPORT_TOKEN,
-  DEV_PERSONA_VIEWER_TOKEN,
-  DEV_PERSONA_SUPERUSER_ID,
-  DEV_PERSONA_SUPPORT_ID,
-  DEV_PERSONA_VIEWER_ID,
-  DEV_PERSONA_SUPERUSER_USERNAME,
-  DEV_PERSONA_SUPPORT_USERNAME,
-  DEV_PERSONA_VIEWER_USERNAME,
-  DEV_PERSONA_SUPERUSER_EMAIL,
-  DEV_PERSONA_SUPPORT_EMAIL,
-  DEV_PERSONA_VIEWER_EMAIL,
-  STORAGE_KEY_AUTH_TOKEN,
-  STORAGE_KEY_AUTH_USER,
-  STORAGE_KEY_AUTH_EXPIRY,
-} from '../constants'
+  DEV_PERSONA_VIEWER_EXPIRY_HOURS,
+  DEV_PERSONA_VIEWER_FALLBACK,
+  ENV_VAR_DEV_PERSONA_SUPPORT_EMAIL,
+  ENV_VAR_DEV_PERSONA_SUPPORT_ID,
+  ENV_VAR_DEV_PERSONA_SUPPORT_TOKEN,
+  ENV_VAR_DEV_PERSONA_SUPPORT_USERNAME,
+  ENV_VAR_DEV_PERSONA_SUPERUSER_EMAIL,
+  ENV_VAR_DEV_PERSONA_SUPERUSER_ID,
+  ENV_VAR_DEV_PERSONA_SUPERUSER_TOKEN,
+  ENV_VAR_DEV_PERSONA_SUPERUSER_USERNAME,
+  ENV_VAR_DEV_PERSONA_VIEWER_EMAIL,
+  ENV_VAR_DEV_PERSONA_VIEWER_ID,
+  ENV_VAR_DEV_PERSONA_VIEWER_TOKEN,
+  ENV_VAR_DEV_PERSONA_VIEWER_USERNAME,
+} from './constants'
+import { STORAGE_KEY_AUTH_EXPIRY, STORAGE_KEY_AUTH_TOKEN, STORAGE_KEY_AUTH_USER } from '../constants'
 
 export type DevPersonaKey =
   | typeof DEV_PERSONA_SUPERUSER
@@ -32,40 +36,127 @@ type DevPersona = {
   user: PersistedAuthUser
 }
 
-const DEV_PERSONAS: Record<DevPersonaKey, DevPersona> = {
+type EnvRecord = Record<string, string | undefined>
+
+type PersonaEnvConfig = {
+  tokenKey: string
+  idKey: string
+  usernameKey: string
+  emailKey: string
+  role: PersistedAuthUser['role']
+  expiresInHours: number
+}
+
+const PERSONA_ENV_CONFIG: Record<DevPersonaKey, PersonaEnvConfig> = {
   [DEV_PERSONA_SUPERUSER]: {
-    token: DEV_PERSONA_SUPERUSER_TOKEN,
-    expiresInHours: 12,
-    user: {
-      id: DEV_PERSONA_SUPERUSER_ID,
-      username: DEV_PERSONA_SUPERUSER_USERNAME,
-      email: DEV_PERSONA_SUPERUSER_EMAIL,
+    tokenKey: ENV_VAR_DEV_PERSONA_SUPERUSER_TOKEN,
+    idKey: ENV_VAR_DEV_PERSONA_SUPERUSER_ID,
+    usernameKey: ENV_VAR_DEV_PERSONA_SUPERUSER_USERNAME,
+    emailKey: ENV_VAR_DEV_PERSONA_SUPERUSER_EMAIL,
       role: 'SUPERUSER',
-    },
+    expiresInHours: DEV_PERSONA_SUPERUSER_EXPIRY_HOURS,
   },
   [DEV_PERSONA_SUPPORT]: {
-    token: DEV_PERSONA_SUPPORT_TOKEN,
-    expiresInHours: 8,
-    user: {
-      id: DEV_PERSONA_SUPPORT_ID,
-      username: DEV_PERSONA_SUPPORT_USERNAME,
-      email: DEV_PERSONA_SUPPORT_EMAIL,
+    tokenKey: ENV_VAR_DEV_PERSONA_SUPPORT_TOKEN,
+    idKey: ENV_VAR_DEV_PERSONA_SUPPORT_ID,
+    usernameKey: ENV_VAR_DEV_PERSONA_SUPPORT_USERNAME,
+    emailKey: ENV_VAR_DEV_PERSONA_SUPPORT_EMAIL,
       role: 'ADMIN',
-    },
+    expiresInHours: DEV_PERSONA_SUPPORT_EXPIRY_HOURS,
   },
   [DEV_PERSONA_VIEWER]: {
-    token: DEV_PERSONA_VIEWER_TOKEN,
-    expiresInHours: 24,
-    user: {
-      id: DEV_PERSONA_VIEWER_ID,
-      username: DEV_PERSONA_VIEWER_USERNAME,
-      email: DEV_PERSONA_VIEWER_EMAIL,
+    tokenKey: ENV_VAR_DEV_PERSONA_VIEWER_TOKEN,
+    idKey: ENV_VAR_DEV_PERSONA_VIEWER_ID,
+    usernameKey: ENV_VAR_DEV_PERSONA_VIEWER_USERNAME,
+    emailKey: ENV_VAR_DEV_PERSONA_VIEWER_EMAIL,
       role: 'VIEWER',
-    },
+    expiresInHours: DEV_PERSONA_VIEWER_EXPIRY_HOURS,
   },
 }
 
 const isDevEnvironment = (mode: string = import.meta.env.MODE): boolean => mode !== 'production'
+
+const readEnvValue = (env: EnvRecord, key: string): string | null => {
+  const value = env[key]
+  if (!value) {
+    return null
+  }
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : null
+}
+
+const buildPersona = (env: EnvRecord, config: PersonaEnvConfig): DevPersona | null => {
+  const token = readEnvValue(env, config.tokenKey)
+  const id = readEnvValue(env, config.idKey)
+  const username = readEnvValue(env, config.usernameKey)
+  const email = readEnvValue(env, config.emailKey)
+
+  const hasEnvConfig = Boolean(token && id && username && email)
+
+  if (!hasEnvConfig && isDevEnvironment(env.MODE)) {
+    if (config.role === 'SUPERUSER') {
+      return {
+        token: DEV_PERSONA_SUPERUSER_FALLBACK.token,
+        expiresInHours: config.expiresInHours,
+        user: {
+          id: DEV_PERSONA_SUPERUSER_FALLBACK.id,
+          username: DEV_PERSONA_SUPERUSER_FALLBACK.username,
+          email: DEV_PERSONA_SUPERUSER_FALLBACK.email,
+          role: config.role,
+        },
+      }
+    }
+    if (config.role === 'ADMIN') {
+      return {
+        token: DEV_PERSONA_SUPPORT_FALLBACK.token,
+        expiresInHours: config.expiresInHours,
+        user: {
+          id: DEV_PERSONA_SUPPORT_FALLBACK.id,
+          username: DEV_PERSONA_SUPPORT_FALLBACK.username,
+          email: DEV_PERSONA_SUPPORT_FALLBACK.email,
+          role: config.role,
+        },
+      }
+    }
+    if (config.role === 'VIEWER') {
+      return {
+        token: DEV_PERSONA_VIEWER_FALLBACK.token,
+        expiresInHours: config.expiresInHours,
+        user: {
+          id: DEV_PERSONA_VIEWER_FALLBACK.id,
+          username: DEV_PERSONA_VIEWER_FALLBACK.username,
+          email: DEV_PERSONA_VIEWER_FALLBACK.email,
+          role: config.role,
+        },
+      }
+    }
+  }
+
+  if (!token || !id || !username || !email) {
+    return null
+  }
+
+  return {
+    token,
+    expiresInHours: config.expiresInHours,
+    user: {
+      id,
+      username,
+      email,
+      role: config.role,
+    },
+  }
+}
+
+const buildDevPersonas = (env: EnvRecord): Partial<Record<DevPersonaKey, DevPersona>> => {
+  return Object.entries(PERSONA_ENV_CONFIG).reduce<Partial<Record<DevPersonaKey, DevPersona>>>((acc, [key, config]) => {
+    const persona = buildPersona(env, config)
+    if (persona) {
+      acc[key as DevPersonaKey] = persona
+    }
+    return acc
+  }, {})
+}
 
 export const DEV_PERSONA_KEYS: DevPersonaKey[] = [
   DEV_PERSONA_SUPERUSER,
@@ -73,11 +164,15 @@ export const DEV_PERSONA_KEYS: DevPersonaKey[] = [
   DEV_PERSONA_VIEWER,
 ]
 
-export const applyDevPersona = (persona: DevPersonaKey, mode?: string): void => {
+export const applyDevPersona = (
+  persona: DevPersonaKey,
+  mode?: string,
+  env: EnvRecord = import.meta.env as EnvRecord,
+): void => {
   if (!isDevEnvironment(mode)) {
     return
   }
-  const definition = DEV_PERSONAS[persona]
+  const definition = buildDevPersonas(env)[persona]
   if (!definition) {
     return
   }

@@ -1,8 +1,8 @@
 import type { User } from '@simple-license/react-sdk'
-
 import {
   ROUTE_PATH_ANALYTICS,
   ROUTE_PATH_AUDIT,
+  ROUTE_PATH_CHANGE_PASSWORD,
   ROUTE_PATH_DASHBOARD,
   ROUTE_PATH_HEALTH,
   ROUTE_PATH_LICENSES,
@@ -10,10 +10,10 @@ import {
   ROUTE_PATH_TENANTS,
   ROUTE_PATH_USERS,
 } from '../constants'
-import type { PermissionKey, Permissions } from '../auth/permissions'
 import {
   UI_NAV_ID_ANALYTICS,
   UI_NAV_ID_AUDIT,
+  UI_NAV_ID_CHANGE_PASSWORD,
   UI_NAV_ID_DASHBOARD,
   UI_NAV_ID_HEALTH,
   UI_NAV_ID_LICENSES,
@@ -22,13 +22,15 @@ import {
   UI_NAV_ID_USERS,
   UI_NAV_LABEL_ANALYTICS,
   UI_NAV_LABEL_AUDIT,
+  UI_NAV_LABEL_CHANGE_PASSWORD,
   UI_NAV_LABEL_DASHBOARD,
   UI_NAV_LABEL_HEALTH,
   UI_NAV_LABEL_LICENSES,
   UI_NAV_LABEL_PRODUCTS,
   UI_NAV_LABEL_TENANTS,
   UI_NAV_LABEL_USERS,
-} from '../../ui/constants'
+} from '../../ui/navigation/navConstants'
+import type { PermissionKey, Permissions } from '../auth/permissions'
 import { isSystemAdminUser, isVendorScopedUser } from '../auth/userUtils'
 
 type NavMatchStrategy = 'exact' | 'startsWith'
@@ -51,46 +53,59 @@ const NAV_DEFINITIONS: readonly NavDefinition[] = [
     matchStrategy: 'startsWith',
   },
   {
+    id: UI_NAV_ID_CHANGE_PASSWORD,
+    label: UI_NAV_LABEL_CHANGE_PASSWORD,
+    href: ROUTE_PATH_CHANGE_PASSWORD,
+    predicate: (context) => context.permissions.changePassword,
+  },
+  {
     id: UI_NAV_ID_LICENSES,
     label: UI_NAV_LABEL_LICENSES,
     href: ROUTE_PATH_LICENSES,
     permission: 'manageLicenses',
+    matchStrategy: 'startsWith',
   },
   {
     id: UI_NAV_ID_PRODUCTS,
     label: UI_NAV_LABEL_PRODUCTS,
     href: ROUTE_PATH_PRODUCTS,
     permission: 'manageProducts',
+    matchStrategy: 'startsWith',
   },
   {
     id: UI_NAV_ID_TENANTS,
     label: UI_NAV_LABEL_TENANTS,
     href: ROUTE_PATH_TENANTS,
     predicate: (context) => context.permissions.manageTenants || isVendorScopedUser(context.currentUser),
+    matchStrategy: 'startsWith',
   },
   {
     id: UI_NAV_ID_USERS,
     label: UI_NAV_LABEL_USERS,
     href: ROUTE_PATH_USERS,
     permission: 'manageUsers',
+    matchStrategy: 'startsWith',
   },
   {
     id: UI_NAV_ID_ANALYTICS,
     label: UI_NAV_LABEL_ANALYTICS,
     href: ROUTE_PATH_ANALYTICS,
     permission: 'viewAnalytics',
+    matchStrategy: 'startsWith',
   },
   {
     id: UI_NAV_ID_HEALTH,
     label: UI_NAV_LABEL_HEALTH,
     href: ROUTE_PATH_HEALTH,
     predicate: (context) => isSystemAdminUser(context.currentUser),
+    matchStrategy: 'startsWith',
   },
   {
     id: UI_NAV_ID_AUDIT,
     label: UI_NAV_LABEL_AUDIT,
     href: ROUTE_PATH_AUDIT,
     predicate: (context) => isSystemAdminUser(context.currentUser),
+    matchStrategy: 'startsWith',
   },
 ]
 
@@ -135,4 +150,3 @@ const matchesPath = (definition: NavDefinition, currentPath: string): boolean =>
   }
   return currentPath === definition.href
 }
-

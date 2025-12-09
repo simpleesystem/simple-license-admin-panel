@@ -160,15 +160,33 @@ export interface CheckUpdateResponse {
 
 export interface LoginResponseData {
   token: string
-  token_type: string
-  expires_in: number
+  token_type?: string
+  tokenType?: string
+  expires_in?: number
+  expiresIn?: number
+  must_change_password?: boolean
+  mustChangePassword?: boolean
   user: User
 }
 
 export interface LoginResponse {
   token: string
-  token_type: string
-  expires_in: number
+  token_type?: string
+  tokenType?: string
+  expires_in?: number
+  expiresIn?: number
+  must_change_password?: boolean
+  mustChangePassword?: boolean
+  user: User
+}
+
+export interface ChangePasswordRequest {
+  current_password?: string
+  new_password?: string
+  email?: string
+}
+
+export interface GetCurrentUserResponse {
   user: User
 }
 

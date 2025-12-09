@@ -32,6 +32,10 @@ describe('router configuration', () => {
     window.localStorage.clear()
   })
 
+  it('initializes router context with a concrete query client', () => {
+    expect(router.options.context.queryClient).toBeDefined()
+  })
+
   it('renders the not found route for unknown paths', async () => {
     simulateLogin()
     render(<AppProviders />)

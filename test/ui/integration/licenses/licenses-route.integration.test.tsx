@@ -1,11 +1,11 @@
-import { screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
 
 import { LicensesRouteComponent } from '../../../../src/routes/licenses/LicensesRoute'
 import { UI_LICENSE_STATUS_ERROR_TITLE } from '../../../../src/ui/constants'
-import { renderWithProviders } from '../../utils'
 import { buildLicense } from '../../../factories/licenseFactory'
 import { buildUser } from '../../../factories/userFactory'
+import { renderWithProviders } from '../../utils'
 
 const useAdminLicensesMock = vi.hoisted(() => vi.fn())
 
@@ -74,6 +74,18 @@ describe('LicensesRouteComponent', () => {
     })
   })
 
+  test('invokes refetch when retrying after error', async () => {
+    authUser = buildUser({ role: 'SUPERUSER', vendorId: null })
+    const refetch = vi.fn()
+    useAdminLicensesMock.mockReturnValue({ data: undefined, isLoading: false, isError: true, refetch })
+
+    renderWithProviders(<LicensesRouteComponent />)
+
+    fireEvent.click(await screen.findByRole('button', { name: /Retry/i }))
+
+    expect(refetch).toHaveBeenCalled()
+  })
+
   test('shows loading state', () => {
     authUser = buildUser({ role: 'SUPERUSER', vendorId: null })
     useAdminLicensesMock.mockReturnValue({ data: undefined, isLoading: true, isError: false, refetch: vi.fn() })
@@ -92,5 +104,19 @@ describe('LicensesRouteComponent', () => {
 
     expect(screen.queryByText('blocked@example.com')).toBeNull()
   })
-})
 
+  test('renders licenses when payload is nested under data key', async () => {
+    authUser = buildUser({ role: 'SUPERUSER', vendorId: null })
+    const licenses = [buildLicense({ customerEmail: 'nested@example.com', status: 'ACTIVE' })]
+    useAdminLicensesMock.mockReturnValue({
+      data: { data: licenses },
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    })
+
+    renderWithProviders(<LicensesRouteComponent />)
+
+    expect(await screen.findByText('nested@example.com')).toBeInTheDocument()
+  })
+})

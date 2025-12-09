@@ -121,8 +121,9 @@ describe('ProductTierManagementExample', () => {
     useCreateProductTierMock.mockReturnValue(createMutation)
     useUpdateProductTierMock.mockReturnValue(updateMutation)
     const onRefresh = vi.fn()
-    const tier = buildProductTier()
-    const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId: tier.vendorId ?? buildText() })
+    const vendorId = buildText()
+    const tier = buildProductTier({ vendorId })
+    const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId })
 
     const { queryByText, getByText, getByRole } = render(
       <ProductTierManagementExample

@@ -1,12 +1,31 @@
+import { ApiException } from '@simple-license/react-sdk'
+import { expect, it } from 'vitest'
+
+import { handleQueryError } from '../../../src/app/query/errorHandling'
+
+describe('handleQueryError', () => {
+  it('returns null for auth 401 errors (AUTHENTICATION_ERROR)', () => {
+    const error = new ApiException('Invalid credentials', 'AUTHENTICATION_ERROR', { status: 401 })
+    const result = handleQueryError(error)
+    expect(result).toBeNull()
+  })
+
+  it('returns null for auth errors with INVALID_CREDENTIALS code', () => {
+    const error = new ApiException('Invalid credentials', 'INVALID_CREDENTIALS', { status: 401 })
+    const result = handleQueryError(error)
+    expect(result).toBeNull()
+  })
+
+  it('returns payload for non-auth errors', () => {
+    const error = new ApiException('Other error', 'SOME_ERROR', { status: 500 })
+    const result = handleQueryError(error)
+    expect(result).not.toBeNull()
+  })
+})
 import { ApiException, NetworkException } from '@simple-license/react-sdk'
 import { describe, expect, it } from 'vitest'
-
-import {
-  handleQueryError,
-  isNetworkError,
-  shouldRetryRequest,
-} from '../../../src/app/query/errorHandling'
 import { I18N_KEY_APP_ERROR_MESSAGE, I18N_KEY_APP_ERROR_TITLE } from '../../../src/app/constants'
+import { handleQueryError, isNetworkError, shouldRetryRequest } from '../../../src/app/query/errorHandling'
 
 describe('handleQueryError', () => {
   it('maps ApiException instances with mapApiException', () => {
@@ -63,5 +82,3 @@ describe('shouldRetryRequest', () => {
     expect(shouldRetryRequest(1, new Error('flaky again'))).toBe(false)
   })
 })
-
-

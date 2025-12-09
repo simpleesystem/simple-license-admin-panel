@@ -1,18 +1,9 @@
+import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
-import { Link, useRouterState } from '@tanstack/react-router'
-
-import { APP_BRAND_NAME, APP_BRAND_TAGLINE } from '../constants'
-import { useAuth } from '../auth/authContext'
-import { usePermissions } from '../auth/useAuthorization'
-import { buildPrimaryNavigation } from '../navigation/primaryNav'
-import type { PrimaryNavItem } from '../navigation/primaryNav'
 import { ChangePasswordFlow } from '../../ui/auth/ChangePasswordFlow'
-import { TopNavBar } from '../../ui/navigation/TopNavBar'
-import { ModalDialog } from '../../ui/overlay/ModalDialog'
 import {
   UI_ARIA_LABEL_PRIMARY_NAV,
-  UI_ARIA_LABEL_USER_ACTIONS,
   UI_CLASS_HEADER_ACTIONS,
   UI_CLASS_HEADER_NAV_LINK,
   UI_CLASS_HEADER_NAV_LIST,
@@ -20,21 +11,32 @@ import {
   UI_HEADER_ACTION_SIGN_OUT,
   UI_HEADER_MODAL_TITLE_CHANGE_PASSWORD,
   UI_HEADER_USER_GREETING,
-  UI_NAV_LABEL_DASHBOARD,
   UI_TEST_ID_HEADER,
   UI_TEST_ID_HEADER_ACTIONS,
   UI_TEST_ID_HEADER_NAV,
 } from '../../ui/constants'
+import { UI_NAV_LABEL_DASHBOARD } from '../../ui/navigation/navConstants'
+import { TopNavBar } from '../../ui/navigation/TopNavBar'
+import { ModalDialog } from '../../ui/overlay/ModalDialog'
+import { useAuth } from '../auth/authContext'
+import { usePermissions } from '../auth/useAuthorization'
 import { isApiUser } from '../auth/userUtils'
+import { APP_BRAND_NAME, APP_BRAND_TAGLINE } from '../constants'
+import type { PrimaryNavItem } from '../navigation/primaryNav'
+import { buildPrimaryNavigation } from '../navigation/primaryNav'
 
 export function PersistentHeader() {
   const { currentUser, isAuthenticated, logout } = useAuth()
   const permissions = usePermissions()
   const routerState = useRouterState({ select: (state) => state.location })
   const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const navigate = useNavigate()
+
+  const isPasswordResetGateActive = currentUser?.passwordResetRequired ?? false
+  const headerShouldRenderActions = isAuthenticated || isPasswordResetGateActive
 
   const navItems = useMemo(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || isPasswordResetGateActive) {
       return []
     }
     return buildPrimaryNavigation({
@@ -42,9 +44,9 @@ export function PersistentHeader() {
       currentUser,
       currentPath: routerState.pathname,
     })
-  }, [currentUser, isAuthenticated, permissions, routerState.pathname])
+  }, [currentUser, isAuthenticated, permissions, routerState.pathname, isPasswordResetGateActive])
 
-  const showChangePasswordAction = isAuthenticated && !isApiUser(currentUser)
+  const showChangePasswordAction = isAuthenticated && !isPasswordResetGateActive && !isApiUser(currentUser)
 
   const handleChangePasswordSuccess = () => {
     setShowPasswordModal(false)
@@ -52,6 +54,7 @@ export function PersistentHeader() {
 
   const handleLogout = () => {
     logout()
+    navigate({ to: '/auth', replace: true })
   }
 
   return (
@@ -66,10 +69,12 @@ export function PersistentHeader() {
         }
         navigation={renderNavigation(navItems)}
         actions={
-          isAuthenticated
+          headerShouldRenderActions
             ? renderUserActions({
-                userLabel: currentUser?.email ?? currentUser?.username ?? UI_NAV_LABEL_DASHBOARD,
-                showChangePasswordAction,
+                userLabel: isPasswordResetGateActive
+                  ? UI_HEADER_MODAL_TITLE_CHANGE_PASSWORD
+                  : (currentUser?.email ?? currentUser?.username ?? UI_NAV_LABEL_DASHBOARD),
+                showChangePasswordAction: !isPasswordResetGateActive && showChangePasswordAction,
                 onChangePassword: () => setShowPasswordModal(true),
                 onLogout: handleLogout,
               })
@@ -120,18 +125,9 @@ type UserActionsProps = {
   onLogout: () => void
 }
 
-const renderUserActions = ({
-  userLabel,
-  showChangePasswordAction,
-  onChangePassword,
-  onLogout,
-}: UserActionsProps) => {
+const renderUserActions = ({ userLabel, showChangePasswordAction, onChangePassword, onLogout }: UserActionsProps) => {
   return (
-    <div
-      className={UI_CLASS_HEADER_ACTIONS}
-      aria-label={UI_ARIA_LABEL_USER_ACTIONS}
-      data-testid={UI_TEST_ID_HEADER_ACTIONS}
-    >
+    <div className={UI_CLASS_HEADER_ACTIONS} data-testid={UI_TEST_ID_HEADER_ACTIONS}>
       <div className="text-end me-2">
         <small className="text-muted">{UI_HEADER_USER_GREETING}</small>
         <div>{userLabel}</div>
@@ -147,4 +143,3 @@ const renderUserActions = ({
     </div>
   )
 }
-

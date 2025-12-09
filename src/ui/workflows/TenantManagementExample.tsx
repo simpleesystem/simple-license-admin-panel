@@ -19,6 +19,8 @@ import {
   UI_TENANT_FORM_SUBMIT_CREATE,
   UI_TENANT_FORM_SUBMIT_UPDATE,
   UI_VALUE_PLACEHOLDER,
+  UI_DATE_FORMAT_LOCALE,
+  UI_DATE_FORMAT_OPTIONS,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
 import { Stack } from '../layout/Stack'
@@ -34,6 +36,17 @@ type TenantManagementExampleProps = {
   tenants: readonly TenantListItem[]
   currentUser?: User | null
   onRefresh?: () => void
+}
+
+export const formatTenantCreatedAt = (createdAt: TenantListItem['createdAt'] | undefined): string => {
+  if (!createdAt) {
+    return UI_VALUE_PLACEHOLDER
+  }
+  const parsedDate = new Date(createdAt)
+  if (Number.isNaN(parsedDate.getTime())) {
+    return UI_VALUE_PLACEHOLDER
+  }
+  return new Intl.DateTimeFormat(UI_DATE_FORMAT_LOCALE, UI_DATE_FORMAT_OPTIONS).format(parsedDate)
 }
 
 export function TenantManagementExample({ client, tenants, currentUser, onRefresh }: TenantManagementExampleProps) {
@@ -61,7 +74,7 @@ export function TenantManagementExample({ client, tenants, currentUser, onRefres
       {
         id: UI_TENANT_COLUMN_ID_CREATED,
         header: UI_TENANT_COLUMN_HEADER_CREATED,
-        cell: (row) => new Date(row.createdAt).toLocaleDateString(),
+        cell: (row) => formatTenantCreatedAt(row.createdAt),
       },
       {
         id: UI_TENANT_COLUMN_ID_ACTIONS,

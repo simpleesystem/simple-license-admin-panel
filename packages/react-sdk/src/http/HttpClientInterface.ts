@@ -21,6 +21,7 @@ export interface HttpResponse<T = Record<string, never>> {
   status: number
   statusText: string
   headers: Record<string, string>
+  durationMs?: number
 }
 
 export interface HttpRequestConfig {

@@ -5,6 +5,7 @@
 import {
   ERROR_CODE_ACTIVATION_LIMIT_EXCEEDED,
   ERROR_CODE_AUTHENTICATION_ERROR,
+  ERROR_CODE_CLIENT_CONFIGURATION,
   ERROR_CODE_LICENSE_EXPIRED,
   ERROR_CODE_LICENSE_NOT_FOUND,
   ERROR_CODE_NETWORK_ERROR,
@@ -81,5 +82,12 @@ export class AuthenticationException extends ApiException {
   constructor(message?: string, errorDetails?: ErrorDetails) {
     super(message ?? 'Authentication failed', ERROR_CODE_AUTHENTICATION_ERROR, errorDetails)
     this.name = 'AuthenticationException'
+  }
+}
+
+export class ClientConfigurationException extends ApiException {
+  constructor(message?: string, errorDetails?: ErrorDetails) {
+    super(message ?? 'Client configuration error', ERROR_CODE_CLIENT_CONFIGURATION, errorDetails)
+    this.name = 'ClientConfigurationException'
   }
 }

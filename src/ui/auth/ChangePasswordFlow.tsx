@@ -3,11 +3,14 @@
 import type { ChangePasswordRequest } from '@simple-license/react-sdk'
 import { useChangePassword } from '@simple-license/react-sdk'
 import Joi from 'joi'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
 import Card from 'react-bootstrap/Card'
 import { useApiClient } from '../../api/apiContext'
 import { useAuth } from '../../app/auth/authContext'
+import { useLogger } from '../../app/logging/loggerContext'
+import { raiseErrorFromUnknown } from '../../app/state/dispatchers'
+import { useAppStore } from '../../app/state/store'
 import { AppForm } from '../../forms/Form'
 import {
   UI_CHANGE_PASSWORD_BUTTON_UPDATE,
@@ -15,10 +18,8 @@ import {
   UI_CHANGE_PASSWORD_DESCRIPTION,
   UI_CHANGE_PASSWORD_ERROR_CONFIRM_REQUIRED,
   UI_CHANGE_PASSWORD_ERROR_EMAIL_INVALID,
-  UI_CHANGE_PASSWORD_ERROR_GENERIC,
   UI_CHANGE_PASSWORD_ERROR_PASSWORDS_MATCH,
   UI_CHANGE_PASSWORD_ERROR_REQUIRED,
-  UI_CHANGE_PASSWORD_ERROR_TITLE,
   UI_CHANGE_PASSWORD_HEADING,
   UI_CHANGE_PASSWORD_LABEL_CONFIRM_PASSWORD,
   UI_CHANGE_PASSWORD_LABEL_CURRENT_PASSWORD,
@@ -31,7 +32,6 @@ import {
   UI_FORM_CONTROL_TYPE_EMAIL,
   UI_FORM_CONTROL_TYPE_PASSWORD,
 } from '../constants'
-import { InlineAlert } from '../feedback/InlineAlert'
 import { FormActions } from '../forms/FormActions'
 import { FormSection } from '../forms/FormSection'
 import { TextField } from '../forms/TextField'
@@ -122,10 +122,11 @@ type ChangePasswordFlowProps = {
 
 export function ChangePasswordFlow({ onSuccess }: ChangePasswordFlowProps) {
   const client = useApiClient()
-  const { currentUser } = useAuth()
+  const { currentUser, refreshCurrentUser } = useAuth()
+  const dispatch = useAppStore((state) => state.dispatch)
+  const logger = useLogger()
   const mutation = useChangePassword(client)
   const schema = useMemo(() => buildSchema(currentUser?.email ?? ''), [currentUser?.email])
-  const [submitError, setSubmitError] = useState<string | null>(null)
   const defaultValues = useMemo<ChangePasswordValues>(() => {
     return {
       ...DEFAULT_VALUES,
@@ -135,10 +136,14 @@ export function ChangePasswordFlow({ onSuccess }: ChangePasswordFlowProps) {
 
   const handleSubmit = async (values: ChangePasswordValues) => {
     try {
-      setSubmitError(null)
+      dispatch({ type: 'loading/set', scope: 'auth', isLoading: true })
       const payload: ChangePasswordRequest = {}
       const trimmedEmail = values.email?.trim()
       const wantsPasswordChange = Boolean(values.new_password && values.new_password.length > 0)
+      logger.debug('change-password:submit:start', {
+        wantsPasswordChange,
+        emailChanged: Boolean(trimmedEmail && trimmedEmail !== currentUser?.email),
+      })
       if (wantsPasswordChange) {
         payload.current_password = values.current_password
         payload.new_password = values.new_password
@@ -147,10 +152,28 @@ export function ChangePasswordFlow({ onSuccess }: ChangePasswordFlowProps) {
         payload.email = trimmedEmail
       }
       await mutation.mutateAsync(payload)
+      await refreshCurrentUser()
       onSuccess?.()
+      logger.info('change-password:submit:success', {
+        emailUpdated: Boolean(trimmedEmail && trimmedEmail !== currentUser?.email),
+        passwordUpdated: wantsPasswordChange,
+      })
     } catch (error) {
-      const message = error instanceof Error ? error.message : UI_CHANGE_PASSWORD_ERROR_GENERIC
-      setSubmitError(message)
+      const appError = raiseErrorFromUnknown({
+        error,
+        dispatch,
+        scope: 'auth',
+      })
+      logger.error(error, {
+        stage: 'change-password:submit:error',
+        code: appError.code,
+        type: appError.type,
+        status: appError.status,
+        requestId: appError.requestId,
+        scope: appError.scope,
+      })
+    } finally {
+      dispatch({ type: 'loading/set', scope: 'auth', isLoading: false })
     }
   }
 
@@ -159,14 +182,6 @@ export function ChangePasswordFlow({ onSuccess }: ChangePasswordFlowProps) {
       <Card.Body>
         <h1 className="h4 mb-3">{UI_CHANGE_PASSWORD_HEADING}</h1>
         <p className="text-muted mb-4">{UI_CHANGE_PASSWORD_DESCRIPTION}</p>
-
-        {submitError ? (
-          <div className="mb-3">
-            <InlineAlert variant="danger" title={UI_CHANGE_PASSWORD_ERROR_TITLE}>
-              {submitError}
-            </InlineAlert>
-          </div>
-        ) : null}
 
         <AppForm<ChangePasswordValues> schema={schema} defaultValues={defaultValues} onSubmit={handleSubmit}>
           <FormSection title={UI_CHANGE_PASSWORD_SECTION_TITLE} description={UI_CHANGE_PASSWORD_SECTION_DESCRIPTION}>

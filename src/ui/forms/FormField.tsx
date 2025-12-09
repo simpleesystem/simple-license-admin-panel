@@ -35,6 +35,7 @@ export function FormField({
   const controlId = htmlFor ?? fallbackControlId
   const shouldApplyLabelFor = Boolean(htmlFor) || isRenderFunction
   const labelFor = shouldApplyLabelFor ? controlId : undefined
+  const labelId = `${controlId}-label`
   const hintId = hint ? `${controlId}-hint` : undefined
   const errorId = error ? `${controlId}-error` : undefined
   const describedBy = [hintId, errorId].filter(Boolean).join(' ') || undefined
@@ -48,8 +49,12 @@ export function FormField({
 
   return (
     <VisibilityGate ability={ability} permissionKey={permissionKey} permissionFallback={permissionFallback}>
-      <div className={composeClassNames(UI_CLASS_FORM_FIELD, className)} data-testid={testId ?? UI_TEST_ID_FORM_FIELD}>
+      <fieldset
+        className={composeClassNames(UI_CLASS_FORM_FIELD, className)}
+        data-testid={testId ?? UI_TEST_ID_FORM_FIELD}
+      >
         <label
+          id={labelId}
           htmlFor={labelFor}
           className={composeClassNames(
             UI_CLASS_FORM_FIELD_LABEL,
@@ -64,21 +69,34 @@ export function FormField({
             </span>
           ) : null}
         </label>
-        <div>{renderedChildren}</div>
-        {hint ? (
-          <p className={UI_CLASS_FORM_FIELD_HINT} id={hintId}>
-            {hint}
-          </p>
-        ) : null}
-        {error ? (
-          <p className={UI_CLASS_FORM_FIELD_ERROR} role="alert" id={errorId}>
-            {error}
-          </p>
-        ) : null}
-      </div>
+        <div className="position-relative pb-4" aria-live="polite">
+          {renderedChildren}
+          {error ? (
+            <div
+              className={composeClassNames(
+                UI_CLASS_FORM_FIELD_ERROR,
+                UI_CLASS_MARGIN_RESET,
+                'position-absolute start-0 bottom-0'
+              )}
+              role="alert"
+              id={errorId}
+            >
+              {error}
+            </div>
+          ) : hint ? (
+            <div
+              className={composeClassNames(
+                UI_CLASS_FORM_FIELD_HINT,
+                UI_CLASS_MARGIN_RESET,
+                'position-absolute start-0 bottom-0'
+              )}
+              id={hintId}
+            >
+              {hint}
+            </div>
+          ) : null}
+        </div>
+      </fieldset>
     </VisibilityGate>
   )
 }
-
-
-

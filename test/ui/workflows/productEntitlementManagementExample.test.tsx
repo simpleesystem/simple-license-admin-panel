@@ -119,8 +119,9 @@ describe('ProductEntitlementManagementExample', () => {
     useCreateEntitlementMock.mockReturnValue(createMutation)
     useUpdateEntitlementMock.mockReturnValue(updateMutation)
     const onRefresh = vi.fn()
-    const entitlement = buildEntitlement()
-    const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId: entitlement.vendorId ?? buildText() })
+    const vendorId = buildText()
+    const entitlement = buildEntitlement({ vendorId })
+    const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId })
 
     const { queryByText, getByText, getByRole } = render(
       <ProductEntitlementManagementExample
@@ -151,8 +152,9 @@ describe('ProductEntitlementManagementExample', () => {
     const updateMutation = mockMutation()
     useCreateEntitlementMock.mockReturnValue(createMutation)
     useUpdateEntitlementMock.mockReturnValue(updateMutation)
-    const entitlement = buildEntitlement()
-    const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId: `${entitlement.vendorId}-other` })
+    const vendorId = buildText()
+    const entitlement = buildEntitlement({ vendorId })
+    const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId: `${vendorId}-other` })
 
     const { queryByText } = render(
       <ProductEntitlementManagementExample
@@ -240,9 +242,10 @@ describe('ProductEntitlementManagementExample', () => {
     const updateMutation = mockMutation()
     useCreateEntitlementMock.mockReturnValue(createMutation)
     useUpdateEntitlementMock.mockReturnValue(updateMutation)
-    const ownEntitlement = buildEntitlement()
-    const otherEntitlement = buildEntitlement({ vendorId: `${ownEntitlement.vendorId}-other` })
-    const vendorUser = buildUser({ role: 'VENDOR_ADMIN', vendorId: ownEntitlement.vendorId ?? buildText() })
+    const vendorId = buildText()
+    const ownEntitlement = buildEntitlement({ vendorId })
+    const otherEntitlement = buildEntitlement({ vendorId: `${vendorId}-other` })
+    const vendorUser = buildUser({ role: 'VENDOR_ADMIN', vendorId })
 
     const { getByText, queryByText } = render(
       <ProductEntitlementManagementExample

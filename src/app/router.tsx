@@ -13,7 +13,7 @@ import { ProductsRouteComponent } from '../routes/products/ProductsRoute'
 import { RootRouteComponent } from '../routes/root/RootRoute'
 import { TenantsRouteComponent } from '../routes/tenants/TenantsRoute'
 import { UsersRouteComponent } from '../routes/users/UsersRoute'
-import type { PermissionKey, Permissions } from './auth/permissions'
+import { derivePermissionsFromUser, type PermissionKey, type Permissions } from './auth/permissions'
 import {
   ROUTE_PATH_ANALYTICS,
   ROUTE_PATH_AUDIT,
@@ -28,6 +28,7 @@ import {
   ROUTE_PATH_USERS,
   ROUTE_PATH_WILDCARD,
 } from './constants'
+import { createAppQueryClient } from './queryClient'
 
 export type AuthStateSnapshot = {
   isAuthenticated: boolean
@@ -39,6 +40,7 @@ export type AuthStateSnapshot = {
 export type RouterContext = {
   queryClient: QueryClient
   authState?: AuthStateSnapshot
+  firstAllowedRoute?: string
 }
 
 type RouterLocationLike = {
@@ -78,6 +80,9 @@ const changePasswordRoute = createRoute({
   path: ROUTE_PATH_CHANGE_PASSWORD,
   beforeLoad: ({ context, location }) => {
     assertAuthenticated(context, location)
+    if (!context.authState?.permissions.changePassword) {
+      throw redirect({ to: context.firstAllowedRoute ?? ROUTE_PATH_ROOT })
+    }
   },
   component: ChangePasswordRouteComponent,
 })
@@ -166,11 +171,23 @@ const routeTree = rootRoute.addChildren([
   notFoundRoute,
 ])
 
+export const createDefaultAuthState = (): AuthStateSnapshot => ({
+  isAuthenticated: false,
+  permissions: derivePermissionsFromUser(null),
+  currentUserRole: undefined,
+  currentUserVendorId: null,
+})
+
+export const createRouterContext = (overrides?: Partial<RouterContext>): RouterContext => ({
+  queryClient: createAppQueryClient(),
+  authState: createDefaultAuthState(),
+  firstAllowedRoute: ROUTE_PATH_AUTH,
+  ...overrides,
+})
+
 export const router = createRouter({
   routeTree,
-  context: {
-    queryClient: undefined as unknown as QueryClient,
-  },
+  context: createRouterContext(),
   defaultNotFoundComponent: NotFoundRouteComponent,
 })
 
@@ -204,7 +221,7 @@ export const assertAuthenticated = (context: RouterContext, location: RouterLoca
 export const assertPermission = (context: RouterContext, location: RouterLocationLike, permission: PermissionKey) => {
   assertAuthenticated(context, location)
   if (!context.authState?.permissions[permission]) {
-    throw redirect({ to: ROUTE_PATH_ROOT })
+    throw redirect({ to: context.firstAllowedRoute ?? ROUTE_PATH_ROOT })
   }
 }
 
@@ -212,7 +229,7 @@ export const assertSystemAccess = (context: RouterContext, location: RouterLocat
   assertAuthenticated(context, location)
   const role = context.authState?.currentUserRole
   if (role !== 'SUPERUSER' && role !== 'ADMIN') {
-    throw redirect({ to: ROUTE_PATH_ROOT })
+    throw redirect({ to: context.firstAllowedRoute ?? ROUTE_PATH_ROOT })
   }
 }
 
@@ -221,6 +238,34 @@ export const assertTenantAccess = (context: RouterContext, location: RouterLocat
   const canManageTenants = context.authState?.permissions.manageTenants
   const hasVendorScope = Boolean(context.authState?.currentUserVendorId)
   if (!canManageTenants && !hasVendorScope) {
-    throw redirect({ to: ROUTE_PATH_ROOT })
+    throw redirect({ to: context.firstAllowedRoute ?? ROUTE_PATH_ROOT })
   }
+}
+
+export const computeFirstAllowedRoute = (authState: AuthStateSnapshot | undefined): string => {
+  if (!authState?.isAuthenticated) {
+    return ROUTE_PATH_AUTH
+  }
+  if (authState.permissions.changePassword) {
+    return ROUTE_PATH_CHANGE_PASSWORD
+  }
+  if (authState.permissions.viewDashboard) {
+    return ROUTE_PATH_DASHBOARD
+  }
+  if (authState.permissions.manageLicenses) {
+    return ROUTE_PATH_LICENSES
+  }
+  if (authState.permissions.manageProducts) {
+    return ROUTE_PATH_PRODUCTS
+  }
+  if (authState.permissions.manageTenants) {
+    return ROUTE_PATH_TENANTS
+  }
+  if (authState.permissions.manageUsers) {
+    return ROUTE_PATH_USERS
+  }
+  if (authState.permissions.viewAnalytics) {
+    return ROUTE_PATH_ANALYTICS
+  }
+  return ROUTE_PATH_ROOT
 }

@@ -68,7 +68,11 @@ export const ENV_VAR_SENTRY_DSN = 'VITE_SENTRY_DSN' as const
 export const ENV_VAR_FEATURE_DEV_TOOLS = 'VITE_FEATURE_DEV_TOOLS' as const
 export const ENV_VAR_FEATURE_QUERY_CACHE_PERSISTENCE = 'VITE_FEATURE_QUERY_CACHE_PERSISTENCE' as const
 export const ENV_VAR_FEATURE_EXPERIMENTAL_FILTERS = 'VITE_FEATURE_EXPERIMENTAL_FILTERS' as const
-export const API_DEFAULT_BASE_URL = 'http://localhost:4000' as const
+export const ENV_VAR_HTTP_TIMEOUT_MS = 'VITE_HTTP_TIMEOUT_MS' as const
+export const ENV_VAR_HTTP_RETRY_ATTEMPTS = 'VITE_HTTP_RETRY_ATTEMPTS' as const
+export const ENV_VAR_HTTP_RETRY_DELAY_MS = 'VITE_HTTP_RETRY_DELAY_MS' as const
+export const ENV_VAR_WS_PATH = 'VITE_WS_PATH' as const
+export const ENV_VAR_AUTH_FORGOT_PASSWORD_URL = 'VITE_AUTH_FORGOT_PASSWORD_URL' as const
 
 export const STORAGE_KEY_AUTH_TOKEN = 'simple-license-admin-auth-token' as const
 export const STORAGE_KEY_AUTH_REFRESH_TOKEN = 'simple-license-admin-auth-refresh-token' as const
@@ -77,7 +81,6 @@ export const STORAGE_KEY_AUTH_USER = 'simple-license-admin-auth-user' as const
 
 export const AUTH_FIELD_USERNAME = 'username' as const
 export const AUTH_FIELD_PASSWORD = 'password' as const
-export const AUTH_FORGOT_PASSWORD_URL = 'https://support.simplelicense.system/password-reset' as const
 
 export const APP_STATE_ACTION_SET_TENANT = 'appState/setTenant' as const
 export const APP_STATE_ACTION_SET_THEME = 'appState/setTheme' as const
@@ -87,6 +90,11 @@ export const APP_THEME_LIGHT = 'light' as const
 export const APP_THEME_DARK = 'dark' as const
 export const APP_AVAILABLE_THEMES = [APP_THEME_LIGHT, APP_THEME_DARK] as const
 export const APP_THEME_DEFAULT = APP_THEME_LIGHT
+
+export const APP_HTTP_TIMEOUT_MS = 30_000 as const
+export const APP_HTTP_RETRY_ATTEMPTS = 3 as const
+export const APP_HTTP_RETRY_DELAY_MS = 1_000 as const
+export const APP_WS_HEALTH_PATH = '/ws/health' as const
 
 export const NOTIFICATION_EVENT_TOAST = 'notification:toast' as const
 export const NOTIFICATION_TOAST_DURATION_MS = 4_000 as const
@@ -117,6 +125,7 @@ export const ROUTER_CONTEXT_KEY_QUERY_CLIENT = 'queryClient' as const
 export const AUTH_ERROR_MESSAGE_KEY = 'auth.error.invalidCredentials' as const
 export const AUTH_STATUS_IDLE = 'auth/status/idle' as const
 export const AUTH_STATUS_LOADING = 'auth/status/loading' as const
+export const AUTH_TOKEN_EXPIRY_SKEW_MS = 30_000 as const
 
 export type SupportedLanguage = (typeof APP_SUPPORTED_LANGUAGES)[number]
 
@@ -129,6 +138,22 @@ export const ERROR_MESSAGE_LOGGER_CONTEXT_UNAVAILABLE = 'Logger context is unava
 export const ERROR_MESSAGE_TRACKING_CONTEXT_UNAVAILABLE = 'Tracking context is unavailable' as const
 export const ERROR_MESSAGE_ABILITY_CONTEXT_UNAVAILABLE = 'Ability context is unavailable' as const
 
+export const APP_ERROR_TYPE_NETWORK = 'network' as const
+export const APP_ERROR_TYPE_AUTH = 'auth' as const
+export const APP_ERROR_TYPE_VALIDATION = 'validation' as const
+export const APP_ERROR_TYPE_RATE_LIMIT = 'rate_limit' as const
+export const APP_ERROR_TYPE_NOT_FOUND = 'not_found' as const
+export const APP_ERROR_TYPE_SERVER = 'server' as const
+export const APP_ERROR_TYPE_CLIENT = 'client' as const
+export const APP_ERROR_TYPE_UNEXPECTED = 'unexpected' as const
+
+export const APP_ERROR_CODE_UNEXPECTED = 'UNEXPECTED_ERROR' as const
+export const APP_ERROR_MESSAGE_UNEXPECTED = 'Unexpected error encountered' as const
+export const APP_ERROR_MESSAGE_NON_ERROR_THROWABLE = 'Non-error throwable received' as const
+export const APP_ERROR_MESSAGE_CLIENT_CONFIGURATION = 'Client configuration error' as const
+export const APP_ERROR_MESSAGE_MISSING_RESPONSE = 'No response received from server' as const
+export const APP_ERROR_MESSAGE_REQUEST_FAILED = 'Request failed' as const
+
 export const I18N_KEY_DEV_TOOLBAR_HEADING = 'dev.toolbar.heading' as const
 export const I18N_KEY_DEV_TOOLBAR_RESET = 'dev.toolbar.reset' as const
 export const I18N_KEY_DEV_PERSONA_SUPERUSER = 'dev.persona.superuser' as const
@@ -136,26 +161,6 @@ export const I18N_KEY_DEV_PERSONA_SUPPORT = 'dev.persona.support' as const
 export const I18N_KEY_DEV_PERSONA_VIEWER = 'dev.persona.viewer' as const
 
 export const TEST_ID_DEV_TOOLBAR = 'dev-toolbar' as const
-
-export const DEV_PERSONA_SUPERUSER = 'dev.persona.superuser' as const
-export const DEV_PERSONA_SUPPORT = 'dev.persona.support' as const
-export const DEV_PERSONA_VIEWER = 'dev.persona.viewer' as const
-
-export const DEV_PERSONA_SUPERUSER_TOKEN = 'dev-token-superuser' as const
-export const DEV_PERSONA_SUPPORT_TOKEN = 'dev-token-support' as const
-export const DEV_PERSONA_VIEWER_TOKEN = 'dev-token-viewer' as const
-
-export const DEV_PERSONA_SUPERUSER_ID = 'dev-superuser-id' as const
-export const DEV_PERSONA_SUPPORT_ID = 'dev-support-id' as const
-export const DEV_PERSONA_VIEWER_ID = 'dev-viewer-id' as const
-
-export const DEV_PERSONA_SUPERUSER_USERNAME = 'dev.superuser' as const
-export const DEV_PERSONA_SUPPORT_USERNAME = 'dev.support' as const
-export const DEV_PERSONA_VIEWER_USERNAME = 'dev.viewer' as const
-
-export const DEV_PERSONA_SUPERUSER_EMAIL = 'superuser@example.dev' as const
-export const DEV_PERSONA_SUPPORT_EMAIL = 'support@example.dev' as const
-export const DEV_PERSONA_VIEWER_EMAIL = 'viewer@example.dev' as const
 
 export const ABILITY_ACTION_VIEW = 'view' as const
 export const ABILITY_ACTION_MANAGE = 'manage' as const
@@ -180,5 +185,3 @@ export const LIST_SORT_DIRECTION_ASC = 'asc' as const
 export const LIST_SORT_DIRECTION_DESC = 'desc' as const
 
 export const LICENSE_EXPIRY_WARNING_DAYS = 30 as const
-
-

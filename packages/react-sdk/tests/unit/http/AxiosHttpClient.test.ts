@@ -8,7 +8,7 @@ import {
   HTTP_NOT_FOUND,
   HTTP_OK,
 } from '@/constants'
-import { NetworkException } from '@/exceptions/ApiException'
+import { ApiException, ClientConfigurationException, NetworkException } from '@/exceptions/ApiException'
 import { AxiosHttpClient } from '@/http/AxiosHttpClient'
 
 // Mock axios
@@ -102,7 +102,7 @@ describe('AxiosHttpClient', () => {
       expect(axiosInstance.get).toHaveBeenCalledWith('/test', config)
     })
 
-    it('should throw NetworkException on error', async () => {
+    it('should throw ApiException on error response', async () => {
       const axiosError = {
         isAxiosError: true,
         response: {
@@ -117,7 +117,7 @@ describe('AxiosHttpClient', () => {
 
       vi.mocked(axiosInstance.get).mockRejectedValue(axiosError)
 
-      await expect(httpClient.get('/test')).rejects.toThrow(NetworkException)
+      await expect(httpClient.get('/test')).rejects.toThrow(ApiException)
     })
 
     it('should throw NetworkException on network error without response', async () => {
@@ -152,7 +152,7 @@ describe('AxiosHttpClient', () => {
       expect(result.data).toEqual(responseData)
     })
 
-    it('should throw NetworkException on error', async () => {
+    it('should throw ApiException on error response', async () => {
       const axiosError = {
         isAxiosError: true,
         response: {
@@ -167,7 +167,7 @@ describe('AxiosHttpClient', () => {
 
       vi.mocked(axiosInstance.post).mockRejectedValue(axiosError)
 
-      await expect(httpClient.post('/test', {})).rejects.toThrow(NetworkException)
+      await expect(httpClient.post('/test', {})).rejects.toThrow(ApiException)
     })
   })
 
@@ -768,6 +768,20 @@ describe('AxiosHttpClient', () => {
       await httpClient.delete('/test', config)
 
       expect(axiosInstance.delete).toHaveBeenCalledWith('/test', expect.any(Object))
+    })
+  })
+
+  describe('transformError', () => {
+    it('should throw ClientConfigurationException when neither response nor request is present', async () => {
+      const axiosError = {
+        isAxiosError: true,
+        message: 'Config failure',
+        code: 'ERR_SETUP',
+      } as unknown as AxiosError
+
+      await expect(() => (httpClient as unknown as { transformError: (e: AxiosError) => ApiException }).transformError(axiosError)).toThrow(
+        ClientConfigurationException
+      )
     })
   })
 })

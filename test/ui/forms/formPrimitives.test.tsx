@@ -1,36 +1,36 @@
 import { faker } from '@faker-js/faker'
-import { act, fireEvent, render } from '@testing-library/react'
-import { describe, expect, test } from 'vitest'
-
-import { CheckboxField } from '../../../src/ui/forms/CheckboxField'
-import { DateField } from '../../../src/ui/forms/DateField'
-import { FormField } from '../../../src/ui/forms/FormField'
-import { FormRow } from '../../../src/ui/forms/FormRow'
-import { FormSection } from '../../../src/ui/forms/FormSection'
-import { SwitchField } from '../../../src/ui/forms/SwitchField'
-import { TextField } from '../../../src/ui/forms/TextField'
-import { SelectField } from '../../../src/ui/forms/SelectField'
-import { TextareaField } from '../../../src/ui/forms/TextareaField'
-import { FormActions } from '../../../src/ui/forms/FormActions'
+import { act, fireEvent, render, waitFor } from '@testing-library/react'
+import { FormProvider, useForm } from 'react-hook-form'
+import { describe, expect, test, vi } from 'vitest'
 import {
+  UI_CLASS_FORM_ACTIONS,
   UI_CLASS_FORM_FIELD_HINT,
   UI_CLASS_FORM_FIELD_LABEL,
   UI_CLASS_FORM_LABEL_HORIZONTAL,
   UI_CLASS_FORM_ROW,
-  UI_CLASS_FORM_SECTION,
   UI_CLASS_FORM_ROW_COLUMNS_MAP,
-  UI_CLASS_FORM_ACTIONS,
+  UI_CLASS_FORM_SECTION,
   UI_FORM_ROW_COLUMNS_TWO,
   UI_FORM_SELECT_PLACEHOLDER_VALUE,
   UI_TEST_ID_FORM_ACTIONS,
 } from '../../../src/ui/constants'
+import { CheckboxField } from '../../../src/ui/forms/CheckboxField'
+import { DateField } from '../../../src/ui/forms/DateField'
+import { FormActions } from '../../../src/ui/forms/FormActions'
+import { FormField } from '../../../src/ui/forms/FormField'
+import { FormRow } from '../../../src/ui/forms/FormRow'
+import { FormSection } from '../../../src/ui/forms/FormSection'
+import { SelectField } from '../../../src/ui/forms/SelectField'
+import { SwitchField } from '../../../src/ui/forms/SwitchField'
+import { TextareaField } from '../../../src/ui/forms/TextareaField'
+import { TextField } from '../../../src/ui/forms/TextField'
 import { renderWithForm } from '../../ui/utils/renderWithForm'
 
 describe('Form primitives', () => {
   test('FormField renders label with required marker when flagged', () => {
     const label = faker.lorem.words(2)
     const { getByText } = render(
-      <FormField label={label} required htmlFor="field">
+      <FormField label={label} required={true} htmlFor="field">
         <input id="field" />
       </FormField>
     )
@@ -118,10 +118,9 @@ describe('Form primitives', () => {
 
   test('CheckboxField updates checked state through form context', () => {
     const label = faker.lorem.word()
-    const { getByLabelText } = renderWithForm(
-      <CheckboxField name="flag" label={label} />,
-      { defaultValues: { flag: false } }
-    )
+    const { getByLabelText } = renderWithForm(<CheckboxField name="flag" label={label} />, {
+      defaultValues: { flag: false },
+    })
 
     const control = getByLabelText(label) as HTMLInputElement
     fireEvent.click(control)
@@ -131,10 +130,9 @@ describe('Form primitives', () => {
 
   test('SwitchField renders switch type inputs', () => {
     const label = faker.lorem.word()
-    const { getByLabelText } = renderWithForm(
-      <SwitchField name="flag" label={label} />,
-      { defaultValues: { flag: false } }
-    )
+    const { getByLabelText } = renderWithForm(<SwitchField name="flag" label={label} />, {
+      defaultValues: { flag: false },
+    })
 
     const control = getByLabelText(label) as HTMLInputElement
 
@@ -143,10 +141,9 @@ describe('Form primitives', () => {
 
   test('DateField applies min attribute when provided', () => {
     const minDate = '2025-01-01'
-    const { getByLabelText } = renderWithForm(
-      <DateField name="due" label="due date" min={minDate} />,
-      { defaultValues: { due: '' } }
-    )
+    const { getByLabelText } = renderWithForm(<DateField name="due" label="due date" min={minDate} />, {
+      defaultValues: { due: '' },
+    })
 
     const control = getByLabelText('due date') as HTMLInputElement
 
@@ -155,19 +152,17 @@ describe('Form primitives', () => {
 
   test('CheckboxField renders description text for helper copy', () => {
     const description = faker.lorem.words(2)
-    const { getByText } = renderWithForm(
-      <CheckboxField name="flag" label="Flag" description={description} />,
-      { defaultValues: { flag: false } }
-    )
+    const { getByText } = renderWithForm(<CheckboxField name="flag" label="Flag" description={description} />, {
+      defaultValues: { flag: false },
+    })
 
     expect(getByText(description)).toBeInTheDocument()
   })
 
   test('CheckboxField displays validation errors from form state', () => {
-    const { getByLabelText, getByRole, form } = renderWithForm(
-      <CheckboxField name="flag" label="Flag" />,
-      { defaultValues: { flag: false } }
-    )
+    const { getByLabelText, getByRole, form } = renderWithForm(<CheckboxField name="flag" label="Flag" />, {
+      defaultValues: { flag: false },
+    })
 
     act(() => {
       form.setError('flag', { type: 'manual', message: 'Required selection' })
@@ -199,35 +194,31 @@ describe('Form primitives', () => {
 
   test('DateField renders description helper text', () => {
     const description = faker.lorem.words(3)
-    const { getByText } = renderWithForm(
-      <DateField name="due" label="Due date" description={description} />,
-      { defaultValues: { due: '' } }
-    )
+    const { getByText } = renderWithForm(<DateField name="due" label="Due date" description={description} />, {
+      defaultValues: { due: '' },
+    })
 
     expect(getByText(description)).toBeInTheDocument()
   })
 
   test('DateField applies placeholder only for string values', () => {
-    const { getByLabelText } = renderWithForm(
-      <DateField name="start" label="Start" placeholder="Select start" />,
-      { defaultValues: { start: '' } }
-    )
+    const { getByLabelText } = renderWithForm(<DateField name="start" label="Start" placeholder="Select start" />, {
+      defaultValues: { start: '' },
+    })
 
     expect((getByLabelText('Start') as HTMLInputElement).placeholder).toBe('Select start')
 
-    const secondRender = renderWithForm(
-      <DateField name="end" label="End" placeholder={<span>node</span>} />,
-      { defaultValues: { end: '' } }
-    )
+    const secondRender = renderWithForm(<DateField name="end" label="End" placeholder={<span>node</span>} />, {
+      defaultValues: { end: '' },
+    })
 
     expect((secondRender.getByLabelText('End') as HTMLInputElement).placeholder).toBe('')
   })
 
   test('DateField surfaces validation errors from form context', () => {
-    const { getByLabelText, getByRole, form } = renderWithForm(
-      <DateField name="due" label="Due" />,
-      { defaultValues: { due: '' } }
-    )
+    const { getByLabelText, getByRole, form } = renderWithForm(<DateField name="due" label="Due" />, {
+      defaultValues: { due: '' },
+    })
 
     act(() => {
       form.setError('due', { type: 'manual', message: 'Date required' })
@@ -260,10 +251,9 @@ describe('Form primitives', () => {
   test('TextField updates state through form context', () => {
     const label = faker.lorem.word()
     const nextValue = faker.lorem.words(2)
-    const { getByLabelText } = renderWithForm(
-      <TextField name="title" label={label} />,
-      { defaultValues: { title: '' } }
-    )
+    const { getByLabelText } = renderWithForm(<TextField name="title" label={label} />, {
+      defaultValues: { title: '' },
+    })
 
     const control = getByLabelText(label) as HTMLInputElement
     fireEvent.change(control, { target: { value: nextValue } })
@@ -289,10 +279,9 @@ describe('Form primitives', () => {
       { value: faker.string.uuid(), label: faker.lorem.word() },
       { value: faker.string.uuid(), label: faker.lorem.word() },
     ] as const
-    const { getByLabelText } = renderWithForm(
-      <SelectField name="status" label="Status" options={options} />,
-      { defaultValues: { status: options[0].value } }
-    )
+    const { getByLabelText } = renderWithForm(<SelectField name="status" label="Status" options={options} />, {
+      defaultValues: { status: options[0].value },
+    })
 
     const control = getByLabelText('Status') as HTMLSelectElement
     expect(control.options).toHaveLength(options.length)
@@ -339,10 +328,9 @@ describe('Form primitives', () => {
   })
 
   test('TextField surfaces validation errors from form context', () => {
-    const { getByLabelText, getByRole, form } = renderWithForm(
-      <TextField name="title" label="Title" />,
-      { defaultValues: { title: '' } }
-    )
+    const { getByLabelText, getByRole, form } = renderWithForm(<TextField name="title" label="Title" />, {
+      defaultValues: { title: '' },
+    })
 
     act(() => {
       form.setError('title', { type: 'manual', message: 'Title required' })
@@ -350,6 +338,54 @@ describe('Form primitives', () => {
     fireEvent.blur(getByLabelText('Title'))
 
     expect(getByRole('alert')).toHaveTextContent('Title required')
+  })
+
+  test('TextField falls back to empty error message when validation message is missing', async () => {
+    const { getByLabelText, form } = renderWithForm(<TextField name="title" label="Title" />, {
+      defaultValues: { title: '' },
+    })
+
+    const control = getByLabelText('Title') as HTMLInputElement
+
+    act(() => {
+      form.setError('title', { type: 'manual', message: undefined as unknown as string })
+    })
+
+    fireEvent.blur(control)
+
+    await waitFor(() => {
+      expect(control).toHaveClass('is-invalid')
+    })
+  })
+
+  test('TextField triggers linked fields when validateNames is provided', async () => {
+    const triggerSpy = vi.fn().mockResolvedValue(true)
+
+    const Wrapper = () => {
+      const methods = useForm<{ username: string; password: string }>({
+        defaultValues: { username: '', password: '' },
+      })
+      const methodsWithSpy = {
+        ...methods,
+        trigger: triggerSpy as typeof methods.trigger,
+      }
+
+      return (
+        <FormProvider {...methodsWithSpy}>
+          <TextField name="username" label="Username" />
+          <TextField name="password" label="Password" validateNames={['username']} />
+        </FormProvider>
+      )
+    }
+
+    const { getByLabelText } = render(<Wrapper />)
+
+    const passwordInput = getByLabelText('Password') as HTMLInputElement
+    fireEvent.change(passwordInput, { target: { value: 'secret' } })
+
+    await waitFor(() => {
+      expect(triggerSpy).toHaveBeenCalledWith(['password', 'username'], { shouldFocus: false })
+    })
   })
 
   test('TextField composes aria-describedby with helper and error content', () => {
@@ -372,10 +408,9 @@ describe('Form primitives', () => {
   })
 
   test('TextareaField updates value and respects row count', () => {
-    const { getByLabelText } = renderWithForm(
-      <TextareaField name="notes" label="Notes" rows={5} />,
-      { defaultValues: { notes: '' } }
-    )
+    const { getByLabelText } = renderWithForm(<TextareaField name="notes" label="Notes" rows={5} />, {
+      defaultValues: { notes: '' },
+    })
 
     const control = getByLabelText('Notes') as HTMLTextAreaElement
     fireEvent.change(control, { target: { value: 'hello world' } })
@@ -416,5 +451,3 @@ describe('Form primitives', () => {
     expect(container.className).toContain('justify-content-between')
   })
 })
-
-

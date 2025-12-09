@@ -1,29 +1,34 @@
+import { ApiException } from '@simple-license/react-sdk'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import mitt from 'mitt'
 import { describe, expect, test, vi } from 'vitest'
-
-import { LoginCard } from '@/app/auth/LoginCard'
 import { AuthContext } from '@/app/auth/authContext'
-import type { AuthContextValue } from '@/app/auth/types'
 import { AuthorizationContext } from '@/app/auth/authorizationContext'
-import { buildPermissions } from '../../factories/permissionFactory'
+import { LoginCard } from '@/app/auth/LoginCard'
+import type { AuthContextValue } from '@/app/auth/types'
 import {
+  APP_CONFIG,
   AUTH_STATUS_IDLE,
   I18N_KEY_AUTH_FORGOT_LINK,
   I18N_KEY_AUTH_SUBMIT,
   I18N_KEY_FORM_PASSWORD_LABEL,
+  I18N_KEY_FORM_PASSWORD_REQUIRED,
   I18N_KEY_FORM_USERNAME_LABEL,
+  I18N_KEY_FORM_USERNAME_REQUIRED,
   NOTIFICATION_EVENT_TOAST,
 } from '@/app/constants'
-import { NotificationBusContext } from '@/notifications/busContext'
-import type { NotificationEventMap } from '@/notifications/types'
+import { AppConfigProvider } from '@/app/config'
 import { I18nProvider } from '@/app/i18n/I18nProvider'
 import { i18nResources } from '@/app/i18n/resources'
-import { ApiException } from '@simple-license/react-sdk'
+import { NotificationBusContext } from '@/notifications/busContext'
+import type { NotificationEventMap } from '@/notifications/types'
+import { buildPermissions } from '../../factories/permissionFactory'
 
 const SUBMIT_LABEL = i18nResources.common[I18N_KEY_AUTH_SUBMIT]
 const USERNAME_LABEL = i18nResources.common[I18N_KEY_FORM_USERNAME_LABEL]
+const USERNAME_REQUIRED = i18nResources.common[I18N_KEY_FORM_USERNAME_REQUIRED]
 const PASSWORD_LABEL = i18nResources.common[I18N_KEY_FORM_PASSWORD_LABEL]
+const PASSWORD_REQUIRED = i18nResources.common[I18N_KEY_FORM_PASSWORD_REQUIRED]
 const FORGOT_LABEL = i18nResources.common[I18N_KEY_AUTH_FORGOT_LINK]
 
 describe('LoginCard', () => {
@@ -77,8 +82,36 @@ describe('LoginCard', () => {
     await waitFor(() => {
       expect(toastSpy).toHaveBeenCalledWith(
         NOTIFICATION_EVENT_TOAST,
-        expect.objectContaining({ titleKey: 'INVALID_CREDENTIALS' }),
+        expect.objectContaining({ titleKey: 'INVALID_CREDENTIALS' })
       )
+    })
+  })
+
+  test('disables submit until both fields are filled and validates username when only password is typed', async () => {
+    renderLoginCard()
+
+    const submitButton = getSubmitButton()
+    expect(submitButton).toBeDisabled()
+
+    fireEvent.change(getPasswordInput(), { target: { value: 'secret' } })
+
+    await waitFor(() => {
+      expect(screen.getByText(USERNAME_REQUIRED)).toBeInTheDocument()
+    })
+    expect(submitButton).toBeDisabled()
+
+    fireEvent.change(getUsernameInput(), { target: { value: 'ops@example.com' } })
+
+    await waitFor(() => {
+      expect(screen.queryByText(USERNAME_REQUIRED)).toBeNull()
+      expect(submitButton).not.toBeDisabled()
+    })
+
+    fireEvent.change(getPasswordInput(), { target: { value: '' } })
+
+    await waitFor(() => {
+      expect(screen.getByText(PASSWORD_REQUIRED)).toBeInTheDocument()
+      expect(submitButton).toBeDisabled()
     })
   })
 })
@@ -111,17 +144,19 @@ const renderLoginCard = ({ authOverrides, toastSpy }: RenderOptions = {}) => {
 
   return render(
     <I18nProvider>
-      <NotificationBusContext.Provider value={bus}>
-        <AuthorizationContext.Provider value={buildPermissions()}>
-          <AuthContext.Provider value={authValue}>
-            <LoginCard />
-          </AuthContext.Provider>
-        </AuthorizationContext.Provider>
-      </NotificationBusContext.Provider>
-    </I18nProvider>,
+      <AppConfigProvider value={{ ...APP_CONFIG, authForgotPasswordUrl: 'https://example.com/forgot' }}>
+        <NotificationBusContext.Provider value={bus}>
+          <AuthorizationContext.Provider value={buildPermissions()}>
+            <AuthContext.Provider value={authValue}>
+              <LoginCard />
+            </AuthContext.Provider>
+          </AuthorizationContext.Provider>
+        </NotificationBusContext.Provider>
+      </AppConfigProvider>
+    </I18nProvider>
   )
 }
 
 const getUsernameInput = () => screen.getByLabelText(USERNAME_LABEL, { exact: false })
 const getPasswordInput = () => screen.getByLabelText(PASSWORD_LABEL, { exact: false })
-
+const getSubmitButton = () => screen.getByRole('button', { name: SUBMIT_LABEL })

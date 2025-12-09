@@ -149,12 +149,20 @@ export const ERROR_CODE_AUTHENTICATION_ERROR = 'AUTHENTICATION_ERROR'
 export const ERROR_CODE_VENDOR_SCOPING_VIOLATION = 'VENDOR_SCOPING_VIOLATION'
 export const ERROR_CODE_MISSING_VENDOR_ID = 'MISSING_VENDOR_ID'
 export const ERROR_CODE_NETWORK_ERROR = 'NETWORK_ERROR'
+export const ERROR_CODE_CLIENT_CONFIGURATION = 'CLIENT_CONFIGURATION_ERROR'
+export const ERROR_MESSAGE_CLIENT_CONFIGURATION = 'Client configuration error'
+export const ERROR_MESSAGE_NO_RESPONSE = 'No response received'
+export const ERROR_MESSAGE_NETWORK_NO_RESPONSE = 'Network error - request sent but no response'
+export const ERROR_MESSAGE_REQUEST_FAILED = 'Request failed'
+export const ERROR_MESSAGE_RETRY_EXHAUSTED = 'Retry attempts exhausted'
 
 // HTTP Headers
 export const HEADER_AUTHORIZATION = 'Authorization'
 export const HEADER_CONTENT_TYPE = 'Content-Type'
 export const HEADER_ACCEPT = 'Accept'
 export const HEADER_BEARER_PREFIX = 'Bearer '
+export const HEADER_REQUEST_ID = 'X-Request-Id'
+export const HEADER_CORRELATION_ID = 'X-Correlation-Id'
 
 // Content Types
 export const CONTENT_TYPE_JSON = 'application/json'

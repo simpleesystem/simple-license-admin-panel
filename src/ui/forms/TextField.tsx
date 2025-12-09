@@ -1,11 +1,11 @@
 import Form from 'react-bootstrap/Form'
-import { useFormContext } from 'react-hook-form'
-import type { FieldValues } from 'react-hook-form'
+import type { FieldValues, Path } from 'react-hook-form'
+import { useController, useFormContext } from 'react-hook-form'
 
 import { UI_FORM_CONTROL_TYPE_TEXT } from '../constants'
 import type { TextFieldProps } from '../types'
-import { FormField } from './FormField'
 import { VisibilityGate } from '../utils/PermissionGate'
+import { FormField } from './FormField'
 
 export function TextField<TFieldValues extends FieldValues>({
   name,
@@ -21,13 +21,25 @@ export function TextField<TFieldValues extends FieldValues>({
   ability,
   permissionKey,
   permissionFallback,
+  validateNames,
 }: TextFieldProps<TFieldValues>) {
+  const { control, trigger } = useFormContext<TFieldValues>()
   const {
-    register,
-    formState: { errors },
-  } = useFormContext<TFieldValues>()
-  const fieldError = errors[name]
-  const errorMessage = fieldError ? String(fieldError?.message ?? '') : undefined
+    field,
+    fieldState: { error },
+  } = useController({ name, control })
+  const errorMessage = error ? String(error?.message ?? '') : undefined
+  const namesToValidate: readonly Path<TFieldValues>[] = validateNames ? [name, ...validateNames] : [name]
+
+  const handleChange: React.ChangeEventHandler<HTMLInputElement> = (event) => {
+    field.onChange(event)
+    void trigger(namesToValidate, { shouldFocus: false })
+  }
+
+  const handleBlur: React.FocusEventHandler<HTMLInputElement> = () => {
+    field.onBlur()
+    void trigger(namesToValidate, { shouldFocus: false })
+  }
 
   return (
     <VisibilityGate ability={ability} permissionKey={permissionKey} permissionFallback={permissionFallback}>
@@ -46,14 +58,16 @@ export function TextField<TFieldValues extends FieldValues>({
             placeholder={placeholder}
             autoComplete={autoComplete}
             disabled={disabled}
-            isInvalid={Boolean(fieldError)}
+            isInvalid={Boolean(error)}
             aria-describedby={describedBy}
-            {...register(name)}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            value={field.value ?? ''}
+            name={field.name}
+            ref={field.ref}
           />
         )}
       </FormField>
     </VisibilityGate>
   )
 }
-
-

@@ -1,19 +1,21 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 import * as persistedAuth from '@/app/auth/persistedAuth'
+import { STORAGE_KEY_AUTH_TOKEN, STORAGE_KEY_AUTH_USER, STORAGE_KEY_AUTH_EXPIRY } from '@/app/constants'
+import {
+  DEV_PERSONA_SUPERUSER,
+  ENV_VAR_DEV_PERSONA_SUPERUSER_EMAIL,
+  ENV_VAR_DEV_PERSONA_SUPERUSER_ID,
+  ENV_VAR_DEV_PERSONA_SUPERUSER_TOKEN,
+  ENV_VAR_DEV_PERSONA_SUPERUSER_USERNAME,
+} from '@/app/dev/constants'
 import {
   applyDevPersona,
   clearDevPersona,
   canUseDevTools,
   DEV_PERSONA_KEYS,
+  type DevPersonaKey,
 } from '@/app/dev/devScenarios'
-import type { DevPersonaKey } from '@/app/dev/devScenarios'
-import {
-  DEV_PERSONA_SUPERUSER,
-  STORAGE_KEY_AUTH_TOKEN,
-  STORAGE_KEY_AUTH_USER,
-  STORAGE_KEY_AUTH_EXPIRY,
-} from '@/app/constants'
 
 describe('devScenarios', () => {
   beforeEach(() => {
@@ -21,14 +23,31 @@ describe('devScenarios', () => {
     vi.restoreAllMocks()
   })
 
-  it('persists auth artifacts for a selected persona', () => {
+  const personaEnv = {
+    [ENV_VAR_DEV_PERSONA_SUPERUSER_TOKEN]: 'token-superuser',
+    [ENV_VAR_DEV_PERSONA_SUPERUSER_ID]: 'user-superuser',
+    [ENV_VAR_DEV_PERSONA_SUPERUSER_USERNAME]: 'dev.superuser',
+    [ENV_VAR_DEV_PERSONA_SUPERUSER_EMAIL]: 'superuser@example.dev',
+  }
+
+  it('persists auth artifacts for a selected persona when configured in env', () => {
     const persistAuthSpy = vi.spyOn(persistedAuth, 'persistAuth')
     const persistAuthUserSpy = vi.spyOn(persistedAuth, 'persistAuthUser')
 
-    applyDevPersona(DEV_PERSONA_SUPERUSER)
+    applyDevPersona(DEV_PERSONA_SUPERUSER, 'development', personaEnv)
 
     expect(persistAuthSpy).toHaveBeenCalledTimes(1)
     expect(persistAuthUserSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not persist persona data when required env values are missing', () => {
+    const persistAuthSpy = vi.spyOn(persistedAuth, 'persistAuth')
+    const persistAuthUserSpy = vi.spyOn(persistedAuth, 'persistAuthUser')
+
+    applyDevPersona(DEV_PERSONA_SUPERUSER, 'development', {})
+
+    expect(persistAuthSpy).not.toHaveBeenCalled()
+    expect(persistAuthUserSpy).not.toHaveBeenCalled()
   })
 
   it('does not persist persona data outside dev environments', () => {

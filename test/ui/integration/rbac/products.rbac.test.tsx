@@ -66,7 +66,7 @@ describe('Product RBAC & vendor scoping', () => {
         products={[product]}
         currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() }}
         onRefresh={vi.fn()}
-      />,
+      />
     )
 
     fireEvent.click(screen.getByText(UI_PRODUCT_BUTTON_CREATE))
@@ -93,7 +93,7 @@ describe('Product RBAC & vendor scoping', () => {
         products={[product]}
         currentUser={{ role: 'VENDOR_MANAGER', vendorId }}
         onRefresh={vi.fn()}
-      />,
+      />
     )
 
     expect(screen.queryByText(UI_PRODUCT_BUTTON_CREATE)).toBeNull()
@@ -109,13 +109,13 @@ describe('Product RBAC & vendor scoping', () => {
     useUpdateProductMock.mockReturnValue(mockMutation())
     useCreateProductMock.mockReturnValue(mockMutation())
 
-    renderWithProviders(
+    const view = renderWithProviders(
       <ProductManagementExample
         client={{} as never}
         products={[product]}
         currentUser={{ role: 'VENDOR_MANAGER', vendorId: faker.string.uuid() }}
         onRefresh={vi.fn()}
-      />,
+      />
     )
 
     expect(view.queryByText(UI_PRODUCT_BUTTON_EDIT)).toBeNull()
@@ -136,7 +136,7 @@ describe('Product RBAC & vendor scoping', () => {
         products={[product]}
         currentUser={{ role: 'VIEWER', vendorId: product.vendorId }}
         onRefresh={vi.fn()}
-      />,
+      />
     )
 
     expect(view.queryByText(UI_PRODUCT_BUTTON_EDIT)).toBeNull()
@@ -158,7 +158,7 @@ describe('Product RBAC & vendor scoping', () => {
         products={[product]}
         currentUser={{ role: 'SUPERUSER', vendorId: product.vendorId }}
         onRefresh={vi.fn()}
-      />,
+      />
     )
 
     fireEvent.click(screen.getByText(UI_PRODUCT_ACTION_RESUME))
@@ -167,4 +167,3 @@ describe('Product RBAC & vendor scoping', () => {
     })
   })
 })
-

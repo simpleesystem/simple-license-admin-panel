@@ -11,11 +11,9 @@ import {
   UI_HEADER_ACTION_CHANGE_PASSWORD,
   UI_HEADER_ACTION_SIGN_OUT,
   UI_HEADER_MODAL_TITLE_CHANGE_PASSWORD,
-  UI_NAV_LABEL_HEALTH,
-  UI_NAV_LABEL_TENANTS,
-  UI_NAV_LABEL_USERS,
   UI_TEST_ID_MODAL_DIALOG,
 } from '../../../src/ui/constants'
+import { UI_NAV_LABEL_HEALTH, UI_NAV_LABEL_TENANTS, UI_NAV_LABEL_USERS } from '../../../src/ui/navigation/navConstants'
 import { buildUser } from '../../factories/userFactory'
 import { buildPermissions } from '../../factories/permissionFactory'
 

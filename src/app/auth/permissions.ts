@@ -29,7 +29,7 @@ const ALL_PERMISSIONS = createPermissionSet(
   PERMISSION_KEYS.reduce<Partial<Permissions>>((acc, key) => {
     acc[key] = true
     return acc
-  }, {}),
+  }, {})
 )
 
 const ROLE_PERMISSION_MATRIX: Record<AdminRole, Permissions> = {
@@ -61,7 +61,7 @@ const ROLE_PERMISSION_MATRIX: Record<AdminRole, Permissions> = {
 const DEFAULT_PERMISSIONS = createPermissionSet()
 
 export const derivePermissionsFromUser = (
-  user: Pick<User, 'role' | 'passwordResetRequired' | 'vendorId'> | null | undefined,
+  user: Pick<User, 'role' | 'passwordResetRequired' | 'vendorId'> | null | undefined
 ): Permissions => {
   if (user?.passwordResetRequired) {
     return createPermissionSet({ changePassword: true })
@@ -93,7 +93,7 @@ export const isVendorScopedUser = (user: Pick<User, 'role' | 'vendorId'> | null 
 
 export const isTenantOwnedByUser = (
   user: Pick<User, 'vendorId'> | null | undefined,
-  tenant: { vendorId?: string | null },
+  tenant: { vendorId?: string | null }
 ): boolean => {
   if (!user?.vendorId) {
     return false
@@ -111,7 +111,7 @@ export const canDeleteTenant = (user: Pick<User, 'role'> | null | undefined): bo
 
 export const canUpdateTenant = (
   user: Pick<User, 'role' | 'vendorId'> | null | undefined,
-  tenant: { vendorId?: string | null },
+  tenant: { vendorId?: string | null }
 ): boolean => {
   if (canCreateTenant(user)) {
     return true
@@ -135,7 +135,7 @@ export const canViewTenants = (user: Pick<User, 'role' | 'vendorId'> | null | un
 
 export const isProductOwnedByUser = (
   user: Pick<User, 'vendorId'> | null | undefined,
-  product: { vendorId?: string | null },
+  product: { vendorId?: string | null }
 ): boolean => {
   if (!user?.vendorId) {
     return false
@@ -153,7 +153,7 @@ export const canDeleteProduct = (user: Pick<User, 'role'> | null | undefined): b
 
 export const canUpdateProduct = (
   user: Pick<User, 'role' | 'vendorId'> | null | undefined,
-  product: { vendorId?: string | null },
+  product: { vendorId?: string | null }
 ): boolean => {
   if (canCreateProduct(user)) {
     return true
@@ -177,7 +177,7 @@ export const canViewProducts = (user: Pick<User, 'role' | 'vendorId'> | null | u
 
 export const isProductTierOwnedByUser = (
   user: Pick<User, 'vendorId'> | null | undefined,
-  tier: { vendorId?: string | null },
+  tier: { vendorId?: string | null }
 ): boolean => {
   if (!user?.vendorId) {
     return false
@@ -195,7 +195,7 @@ export const canDeleteProductTier = (user: Pick<User, 'role'> | null | undefined
 
 export const canUpdateProductTier = (
   user: Pick<User, 'role' | 'vendorId'> | null | undefined,
-  tier: { vendorId?: string | null },
+  tier: { vendorId?: string | null }
 ): boolean => {
   if (canCreateProductTier(user)) {
     return true
@@ -219,7 +219,7 @@ export const canViewProductTiers = (user: Pick<User, 'role' | 'vendorId'> | null
 
 export const isEntitlementOwnedByUser = (
   user: Pick<User, 'vendorId'> | null | undefined,
-  entitlement: { vendorId?: string | null },
+  entitlement: { vendorId?: string | null }
 ): boolean => {
   if (!user?.vendorId) {
     return false
@@ -227,7 +227,10 @@ export const isEntitlementOwnedByUser = (
   return entitlement.vendorId === user.vendorId
 }
 
-export const isUserOwnedByUser = (user: Pick<User, 'vendorId'> | null | undefined, target: { vendorId?: string | null }) => {
+export const isUserOwnedByUser = (
+  user: Pick<User, 'vendorId'> | null | undefined,
+  target: { vendorId?: string | null }
+) => {
   if (!user?.vendorId) {
     return false
   }
@@ -238,7 +241,10 @@ export const canCreateUser = (user: Pick<User, 'role'> | null | undefined): bool
   return user?.role === 'SUPERUSER' || user?.role === 'ADMIN'
 }
 
-export const canUpdateUser = (user: Pick<User, 'role' | 'vendorId'> | null | undefined, target: { vendorId?: string | null }) => {
+export const canUpdateUser = (
+  user: Pick<User, 'role' | 'vendorId'> | null | undefined,
+  target: { vendorId?: string | null }
+) => {
   if (canCreateUser(user)) {
     return true
   }
@@ -251,7 +257,10 @@ export const canUpdateUser = (user: Pick<User, 'role' | 'vendorId'> | null | und
   return false
 }
 
-export const canDeleteUser = (user: Pick<User, 'role' | 'vendorId'> | null | undefined, target: { vendorId?: string | null }) => {
+export const canDeleteUser = (
+  user: Pick<User, 'role' | 'vendorId'> | null | undefined,
+  target: { vendorId?: string | null }
+) => {
   return canUpdateUser(user, target)
 }
 
@@ -273,7 +282,7 @@ export const canDeleteEntitlement = (user: Pick<User, 'role'> | null | undefined
 
 export const canUpdateEntitlement = (
   user: Pick<User, 'role' | 'vendorId'> | null | undefined,
-  entitlement: { vendorId?: string | null },
+  entitlement: { vendorId?: string | null }
 ): boolean => {
   if (canCreateEntitlement(user)) {
     return true
@@ -297,7 +306,7 @@ export const canViewEntitlements = (user: Pick<User, 'role' | 'vendorId'> | null
 
 export const isLicenseOwnedByUser = (
   user: Pick<User, 'vendorId'> | null | undefined,
-  license: { vendorId?: string | null },
+  license: { vendorId?: string | null }
 ): boolean => {
   if (!user?.vendorId) {
     return false
@@ -315,7 +324,7 @@ export const canDeleteLicense = (user: Pick<User, 'role'> | null | undefined): b
 
 export const canUpdateLicense = (
   user: Pick<User, 'role' | 'vendorId'> | null | undefined,
-  license: { vendorId?: string | null },
+  license: { vendorId?: string | null }
 ): boolean => {
   if (canCreateLicense(user)) {
     return true
@@ -339,7 +348,7 @@ export const canViewLicenses = (user: Pick<User, 'role' | 'vendorId'> | null | u
 
 export const isActivationOwnedByUser = (
   user: Pick<User, 'vendorId'> | null | undefined,
-  activation: { vendorId?: string | null },
+  activation: { vendorId?: string | null }
 ): boolean => {
   if (!user?.vendorId) {
     return false
@@ -350,4 +359,3 @@ export const isActivationOwnedByUser = (
 export const canViewActivations = (user: Pick<User, 'role' | 'vendorId'> | null | undefined): boolean => {
   return canViewLicenses(user)
 }
-

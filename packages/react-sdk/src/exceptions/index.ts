@@ -4,6 +4,7 @@
 export {
   ActivationLimitExceededException,
   ApiException,
+  ClientConfigurationException,
   AuthenticationException,
   LicenseExpiredException,
   LicenseNotFoundException,

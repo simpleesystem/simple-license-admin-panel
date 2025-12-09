@@ -28,10 +28,15 @@ import {
   UI_SYSTEM_STATUS_REFRESH_LABEL,
   UI_SYSTEM_STATUS_TITLE,
   UI_SYSTEM_STATUS_VALUE_DATABASE_CONNECTED,
+  UI_SYSTEM_STATUS_VALUE_DATABASE_POOL_IDLE,
+  UI_SYSTEM_STATUS_VALUE_DATABASE_POOL_PREFIX,
+  UI_SYSTEM_STATUS_VALUE_DATABASE_POOL_TOTAL,
+  UI_SYSTEM_STATUS_VALUE_DATABASE_POOL_WAITING,
   UI_SYSTEM_STATUS_VALUE_DATABASE_UNAVAILABLE,
   UI_SYSTEM_STATUS_VALUE_HEALTHY,
   UI_SYSTEM_STATUS_VALUE_UNHEALTHY,
   UI_VALUE_PLACEHOLDER,
+  UI_VALUE_SEPARATOR,
 } from '../constants'
 import { SummaryList } from '../data/SummaryList'
 import { InlineAlert } from '../feedback/InlineAlert'
@@ -84,6 +89,165 @@ const formatDatabaseState = (activeConnections: number | string | null | undefin
   return undefined
 }
 
+const defaultNumberFormatter = new Intl.NumberFormat()
+
+const normalizeHealthSummary = (value: unknown): string | undefined => {
+  if (!value) {
+    return undefined
+  }
+
+  const resolveState = (raw: string | undefined): 'healthy' | 'unhealthy' | undefined => {
+    if (!raw) {
+      return undefined
+    }
+    const lowered = raw.toLowerCase()
+    if (lowered === 'healthy' || lowered === 'pass' || lowered === 'ok') {
+      return 'healthy'
+    }
+    if (lowered === 'unhealthy' || lowered === 'fail' || lowered === 'error') {
+      return 'unhealthy'
+    }
+    return undefined
+  }
+
+  const resolveComposite = (status?: string, message?: string) => {
+    const parts = [status, message].filter(Boolean)
+    return parts.length > 0 ? parts.join(' - ') : undefined
+  }
+
+  if (typeof value === 'string') {
+    const normalized = resolveState(value)
+    if (normalized) {
+      return formatHealthState(normalized)
+    }
+    return value
+  }
+
+  if (typeof value === 'object') {
+    const status =
+      typeof (value as { status?: unknown }).status === 'string' ? (value as { status?: string }).status : undefined
+    const message =
+      typeof (value as { message?: unknown }).message === 'string' ? (value as { message?: string }).message : undefined
+    const normalized = resolveState(status)
+    if (normalized) {
+      const base = formatHealthState(normalized)
+      return message ? `${base} (${message})` : base
+    }
+    const composite = resolveComposite(status, message)
+    if (composite) {
+      return composite
+    }
+    try {
+      return JSON.stringify(value)
+    } catch {
+      return UI_VALUE_PLACEHOLDER
+    }
+  }
+
+  return String(value)
+}
+
+const toNumber = (value: unknown): number | undefined => {
+  if (typeof value === 'number' && !Number.isNaN(value)) {
+    return value
+  }
+  if (typeof value === 'string') {
+    const parsed = Number(value)
+    if (!Number.isNaN(parsed)) {
+      return parsed
+    }
+  }
+  return undefined
+}
+
+const formatConnectionPool = (candidate: unknown): string | undefined => {
+  if (!candidate || typeof candidate !== 'object') {
+    return undefined
+  }
+
+  const pool =
+    (candidate as { connection_pool?: unknown }).connection_pool ??
+    (candidate as { connectionPool?: unknown }).connectionPool ??
+    candidate
+
+  if (typeof pool !== 'object' || pool === null) {
+    return undefined
+  }
+
+  const poolRecord = pool as {
+    total_connections?: unknown
+    totalConnections?: unknown
+    idle_connections?: unknown
+    idleConnections?: unknown
+    waiting_requests?: unknown
+    waitingRequests?: unknown
+  }
+
+  const total = toNumber(poolRecord.total_connections ?? poolRecord.totalConnections)
+  const idle = toNumber(poolRecord.idle_connections ?? poolRecord.idleConnections)
+  const waiting = toNumber(poolRecord.waiting_requests ?? poolRecord.waitingRequests)
+
+  const segments: string[] = []
+  if (total !== undefined) {
+    segments.push(`${UI_SYSTEM_STATUS_VALUE_DATABASE_POOL_TOTAL}: ${defaultNumberFormatter.format(total)}`)
+  }
+  if (idle !== undefined) {
+    segments.push(`${UI_SYSTEM_STATUS_VALUE_DATABASE_POOL_IDLE}: ${defaultNumberFormatter.format(idle)}`)
+  }
+  if (waiting !== undefined) {
+    segments.push(`${UI_SYSTEM_STATUS_VALUE_DATABASE_POOL_WAITING}: ${defaultNumberFormatter.format(waiting)}`)
+  }
+
+  if (segments.length === 0) {
+    return undefined
+  }
+
+  return `${UI_SYSTEM_STATUS_VALUE_DATABASE_POOL_PREFIX}: ${segments.join(UI_VALUE_SEPARATOR)}`
+}
+
+const normalizeDatabaseSummary = (value: unknown): string | undefined => {
+  if (value === null || value === undefined) {
+    return undefined
+  }
+
+  if (typeof value === 'number') {
+    return formatDatabaseState(value) ?? UI_VALUE_PLACEHOLDER
+  }
+
+  if (typeof value === 'string') {
+    return formatDatabaseState(value) ?? normalizeHealthSummary(value) ?? value
+  }
+
+  if (typeof value === 'object') {
+    const status =
+      typeof (value as { status?: unknown }).status === 'string' ? (value as { status?: string }).status : undefined
+    const message =
+      typeof (value as { message?: unknown }).message === 'string' ? (value as { message?: string }).message : undefined
+    const normalizedStatus = normalizeHealthSummary(status)
+    const poolSummary = formatConnectionPool(value)
+    if (poolSummary && normalizedStatus) {
+      return `${normalizedStatus}${UI_VALUE_SEPARATOR}${poolSummary}`
+    }
+    if (poolSummary) {
+      return poolSummary
+    }
+    if (normalizedStatus) {
+      return message ? `${normalizedStatus} (${message})` : normalizedStatus
+    }
+    const composite = [status, message].filter(Boolean).join(' - ')
+    if (composite) {
+      return composite
+    }
+    try {
+      return JSON.stringify(value)
+    } catch {
+      return UI_VALUE_PLACEHOLDER
+    }
+  }
+
+  return UI_VALUE_PLACEHOLDER
+}
+
 export function SystemStatusPanel({ client, title = UI_SYSTEM_STATUS_TITLE }: SystemStatusPanelProps) {
   const serverStatusQuery = useServerStatus(client, { retry: false })
   const healthSocket = useHealthWebSocket(client)
@@ -115,15 +279,15 @@ export function SystemStatusPanel({ client, title = UI_SYSTEM_STATUS_TITLE }: Sy
 
   const summaryItems = useMemo<UiKeyValueItem[]>(() => {
     const items: UiKeyValueItem[] = []
-    const statusValue = liveStatus?.status ?? statusData?.status
+    const statusValue = normalizeHealthSummary(liveStatus?.status ?? statusData?.status)
     const timestampValue = liveStatus?.timestamp ?? statusData?.timestamp
-    const databaseValue = liveStatus?.database ?? statusData?.checks?.database
+    const databaseValue = normalizeDatabaseSummary(liveStatus?.database ?? statusData?.checks?.database)
 
     if (statusValue) {
       items.push({
         id: UI_SUMMARY_ID_SYSTEM_STATUS_STATE,
         label: UI_SYSTEM_STATUS_LABEL_STATUS,
-        value: formatHealthState(statusValue),
+        value: statusValue,
       })
     }
 

@@ -1,10 +1,8 @@
+import { faker } from '@faker-js/faker'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { describe, expect, beforeEach, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
-import {
-  UI_PRODUCT_TIER_ACTION_DELETE,
-  UI_PRODUCT_TIER_ACTION_EDIT,
-} from '../../../src/ui/constants'
+import { UI_PRODUCT_TIER_ACTION_DELETE, UI_PRODUCT_TIER_ACTION_EDIT } from '../../../src/ui/constants'
 import { ProductTierRowActions } from '../../../src/ui/workflows/ProductTierRowActions'
 import { buildProductTier } from '../../factories/productTierFactory'
 import { buildUser } from '../../factories/userFactory'
@@ -20,7 +18,11 @@ vi.mock('@simple-license/react-sdk', async () => {
 })
 
 vi.mock('../../../src/ui/data/ActionMenu', () => ({
-  ActionMenu: ({ items }: { items: Array<{ id: string; label: string; disabled?: boolean; onSelect: () => void }> }) => (
+  ActionMenu: ({
+    items,
+  }: {
+    items: Array<{ id: string; label: string; disabled?: boolean; onSelect: () => void }>
+  }) => (
     <div>
       {items.map((item) => (
         <button key={item.id} onClick={item.onSelect} disabled={item.disabled}>
@@ -55,7 +57,7 @@ describe('ProductTierRowActions', () => {
         onEdit={onEdit}
         currentUser={superuser}
         vendorId={tier.vendorId}
-      />,
+      />
     )
 
     fireEvent.click(screen.getByText(UI_PRODUCT_TIER_ACTION_EDIT))
@@ -68,8 +70,9 @@ describe('ProductTierRowActions', () => {
   test('vendor manager can edit own tier but not delete', async () => {
     const deleteMutation = mockMutation()
     useDeleteProductTierMock.mockReturnValue(deleteMutation)
-    const tier = buildProductTier()
-    const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId: tier.vendorId ?? undefined })
+    const vendorId = faker.string.uuid()
+    const tier = buildProductTier({ vendorId })
+    const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId })
 
     render(
       <ProductTierRowActions
@@ -78,7 +81,7 @@ describe('ProductTierRowActions', () => {
         onEdit={vi.fn()}
         currentUser={vendorManager}
         vendorId={tier.vendorId}
-      />,
+      />
     )
 
     expect(screen.queryByText(UI_PRODUCT_TIER_ACTION_DELETE)).toBeNull()
@@ -99,11 +102,9 @@ describe('ProductTierRowActions', () => {
         onEdit={vi.fn()}
         currentUser={vendorManager}
         vendorId={tier.vendorId}
-      />,
+      />
     )
 
     expect(container).toBeEmptyDOMElement()
   })
 })
-
-

@@ -1,35 +1,27 @@
-import { useMemo, useState } from 'react'
-import { Card, Button } from 'react-bootstrap'
 import Joi from 'joi'
+import { useMemo, useState } from 'react'
+import { Button, Card } from 'react-bootstrap'
+import { useFormContext, useWatch } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { ApiException } from '@simple-license/react-sdk'
-
 import { AppForm } from '../../forms/Form'
+import { UI_AUTH_CARD_MIN_HEIGHT, UI_STACK_GAP_MEDIUM } from '../../ui/constants'
 import { TextField } from '../../ui/forms/TextField'
-import { FormActions } from '../../ui/forms/FormActions'
 import { Stack } from '../../ui/layout/Stack'
-import { UI_STACK_GAP_MEDIUM } from '../../ui/constants'
-import { InlineAlert } from '../../ui/feedback/InlineAlert'
 import {
   AUTH_FIELD_PASSWORD,
   AUTH_FIELD_USERNAME,
-  AUTH_FORGOT_PASSWORD_URL,
   I18N_KEY_AUTH_FORGOT_LINK,
-  I18N_KEY_AUTH_GENERIC_ERROR,
-  I18N_KEY_AUTH_HEADING,
   I18N_KEY_AUTH_SUBMIT,
-  I18N_KEY_AUTH_SUBTITLE,
   I18N_KEY_FORM_PASSWORD_LABEL,
   I18N_KEY_FORM_PASSWORD_REQUIRED,
   I18N_KEY_FORM_USERNAME_LABEL,
   I18N_KEY_FORM_USERNAME_REQUIRED,
-  NOTIFICATION_EVENT_TOAST,
 } from '../constants'
+import { useLogger } from '../logging/loggerContext'
+import { raiseErrorFromUnknown } from '../state/dispatchers'
+import { useAppStore } from '../state/store'
 import { useAuth } from './authContext'
-import { useNotificationBus } from '../../notifications/busContext'
-import { mapApiException, mapErrorToNotification } from '../../errors/mappers'
-import type { ToastNotificationPayload } from '../../notifications/constants'
-import type { NotificationBus } from '../../notifications/types'
+import { useAppConfig } from '../config'
 
 type LoginFormValues = {
   [AUTH_FIELD_USERNAME]: string
@@ -41,9 +33,7 @@ const DEFAULT_VALUES: LoginFormValues = {
   [AUTH_FIELD_PASSWORD]: '',
 }
 
-const buildSchema = (
-  t: ReturnType<typeof useTranslation>['t'],
-): Joi.ObjectSchema<LoginFormValues> =>
+const buildSchema = (t: ReturnType<typeof useTranslation>['t']): Joi.ObjectSchema<LoginFormValues> =>
   Joi.object<LoginFormValues>({
     [AUTH_FIELD_USERNAME]: Joi.string()
       .trim()
@@ -60,51 +50,63 @@ const buildSchema = (
       }),
   })
 
-export function LoginCard() {
+type LoginCardProps = {
+  redirectTo?: string
+}
+
+export function LoginCard({ redirectTo }: LoginCardProps) {
   const { t } = useTranslation()
   const { login } = useAuth()
-  const notificationBus = useNotificationBus()
+  const dispatch = useAppStore((state) => state.dispatch)
+  const logger = useLogger()
+  const { authForgotPasswordUrl = null } = useAppConfig()
   const schema = useMemo(() => buildSchema(t), [t])
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitError, setSubmitError] = useState<string | null>(null)
+  const submitLabel = t(I18N_KEY_AUTH_SUBMIT)
+  const forgotLabel = t(I18N_KEY_AUTH_FORGOT_LINK)
 
   const handleSubmit = async (values: LoginFormValues) => {
     try {
-      setSubmitError(null)
       setIsSubmitting(true)
+      dispatch({ type: 'loading/set', scope: 'auth', isLoading: true })
+      logger.debug('auth:login:submit', { redirectTo: redirectTo ?? '/' })
       await login(values[AUTH_FIELD_USERNAME], values[AUTH_FIELD_PASSWORD])
+      dispatch({
+        type: 'nav/intent',
+        payload: { to: redirectTo ?? '/', replace: true },
+      })
+      logger.info('auth:login:dispatched-nav', { to: redirectTo ?? '/' })
     } catch (error) {
-      const fallbackMessage = t(I18N_KEY_AUTH_GENERIC_ERROR)
-      const message = error instanceof Error && error.message ? error.message : fallbackMessage
-      setSubmitError(message)
-      emitToast(notificationBus, error)
+      const appError = raiseErrorFromUnknown({
+        error,
+        dispatch,
+        scope: 'auth',
+      })
+      logger.error(error, {
+        stage: 'auth:login:submit:error',
+        code: appError.code,
+        type: appError.type,
+        status: appError.status,
+        requestId: appError.requestId,
+        scope: appError.scope,
+      })
     } finally {
       setIsSubmitting(false)
+      dispatch({ type: 'loading/set', scope: 'auth', isLoading: false })
     }
   }
 
   return (
-    <Card className="shadow-sm">
-      <Card.Body className="d-flex flex-column gap-4">
-        <div className="d-flex flex-column gap-1">
-          <h1 className="h4 mb-0">{t(I18N_KEY_AUTH_HEADING)}</h1>
-          <p className="text-muted mb-0">{t(I18N_KEY_AUTH_SUBTITLE)}</p>
-        </div>
-
-        {submitError ? (
-          <InlineAlert variant="danger" title={t(I18N_KEY_AUTH_GENERIC_ERROR)}>
-            {submitError}
-          </InlineAlert>
-        ) : null}
-
+    <Card className="shadow-sm w-100">
+      <Card.Body className="d-flex flex-column gap-4 p-4 p-md-5 h-100" style={{ minHeight: UI_AUTH_CARD_MIN_HEIGHT }}>
         <AppForm<LoginFormValues> schema={schema} defaultValues={DEFAULT_VALUES} onSubmit={handleSubmit}>
-          <Stack direction="column" gap={UI_STACK_GAP_MEDIUM}>
+          <Stack direction="column" gap={UI_STACK_GAP_MEDIUM} className="w-100">
             <TextField<LoginFormValues>
               name={AUTH_FIELD_USERNAME}
               label={t(I18N_KEY_FORM_USERNAME_LABEL)}
               autoComplete="username"
               disabled={isSubmitting}
-              required
+              required={true}
             />
             <TextField<LoginFormValues>
               name={AUTH_FIELD_PASSWORD}
@@ -112,22 +114,15 @@ export function LoginCard() {
               type="password"
               autoComplete="current-password"
               disabled={isSubmitting}
-              required
+              required={true}
+              validateNames={[AUTH_FIELD_USERNAME]}
             />
-            <FormActions align="between">
-              <Button variant="primary" type="submit" disabled={isSubmitting}>
-                {isSubmitting ? `${t(I18N_KEY_AUTH_SUBMIT)}…` : t(I18N_KEY_AUTH_SUBMIT)}
-              </Button>
-              <Button
-                variant="link"
-                className="text-decoration-none"
-                href={AUTH_FORGOT_PASSWORD_URL}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {t(I18N_KEY_AUTH_FORGOT_LINK)}
-              </Button>
-            </FormActions>
+            <LoginFormActions
+              isSubmitting={isSubmitting}
+              submitLabel={submitLabel}
+              forgotLabel={forgotLabel}
+              forgotPasswordUrl={authForgotPasswordUrl}
+            />
           </Stack>
         </AppForm>
       </Card.Body>
@@ -135,9 +130,41 @@ export function LoginCard() {
   )
 }
 
-const emitToast = (bus: NotificationBus, error: unknown) => {
-  const payload: ToastNotificationPayload =
-    error instanceof ApiException ? mapApiException(error) : mapErrorToNotification()
-  bus.emit(NOTIFICATION_EVENT_TOAST, payload)
+type LoginFormActionsProps = {
+  isSubmitting: boolean
+  submitLabel: string
+  forgotLabel: string
+  forgotPasswordUrl: string | null
 }
 
+function LoginFormActions({ isSubmitting, submitLabel, forgotLabel, forgotPasswordUrl }: LoginFormActionsProps) {
+  const { control } = useFormContext<LoginFormValues>()
+  const [username, password] = useWatch({
+    control,
+    name: [AUTH_FIELD_USERNAME, AUTH_FIELD_PASSWORD],
+  })
+  const trimmedUsername = (username ?? '').trim()
+  const trimmedPassword = (password ?? '').trim()
+  const isSubmitDisabled = isSubmitting || trimmedUsername.length === 0 || trimmedPassword.length === 0
+
+  return (
+    <div className="d-flex flex-column gap-3">
+      <Button variant="primary" type="submit" disabled={isSubmitDisabled} className="w-100">
+        {isSubmitting ? `${submitLabel}…` : submitLabel}
+      </Button>
+      {forgotPasswordUrl ? (
+        <div className="text-center">
+          <Button
+            variant="link"
+            className="text-decoration-none p-0"
+            href={forgotPasswordUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {forgotLabel}
+          </Button>
+        </div>
+      ) : null}
+    </div>
+  )
+}

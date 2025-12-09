@@ -1,15 +1,27 @@
-import { createContext, useContext } from 'react'
+import { createContext, useContext, useMemo } from 'react'
 
-import { ERROR_MESSAGE_NOTIFICATION_CONTEXT_UNAVAILABLE } from '../app/constants'
 import type { NotificationBus } from './types'
+
+const createNoopBus = (): NotificationBus => ({
+  all: undefined as never,
+  on: () => {},
+  off: () => {},
+  emit: () => {},
+})
+
+const fallbackBus = createNoopBus()
 
 export const NotificationBusContext = createContext<NotificationBus | null>(null)
 
 export const useNotificationBus = (): NotificationBus => {
   const context = useContext(NotificationBusContext)
   if (!context) {
-    throw new Error(ERROR_MESSAGE_NOTIFICATION_CONTEXT_UNAVAILABLE)
+    return fallbackBus
   }
   return context
 }
 
+export const NotificationBusProvider = ({ bus, children }: { bus?: NotificationBus; children: React.ReactNode }) => {
+  const value = useMemo(() => bus ?? fallbackBus, [bus])
+  return <NotificationBusContext.Provider value={value}>{children}</NotificationBusContext.Provider>
+}

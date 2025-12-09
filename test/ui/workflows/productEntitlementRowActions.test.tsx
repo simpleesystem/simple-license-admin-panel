@@ -1,10 +1,8 @@
+import { faker } from '@faker-js/faker'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
-import {
-  UI_ENTITLEMENT_ACTION_DELETE,
-  UI_ENTITLEMENT_ACTION_EDIT,
-} from '../../../src/ui/constants'
+import { UI_ENTITLEMENT_ACTION_DELETE, UI_ENTITLEMENT_ACTION_EDIT } from '../../../src/ui/constants'
 import { ProductEntitlementRowActions } from '../../../src/ui/workflows/ProductEntitlementRowActions'
 import { buildEntitlement } from '../../factories/entitlementFactory'
 import { buildUser } from '../../factories/userFactory'
@@ -20,7 +18,11 @@ vi.mock('@simple-license/react-sdk', async () => {
 })
 
 vi.mock('../../../src/ui/data/ActionMenu', () => ({
-  ActionMenu: ({ items }: { items: Array<{ id: string; label: string; disabled?: boolean; onSelect: () => void }> }) => (
+  ActionMenu: ({
+    items,
+  }: {
+    items: Array<{ id: string; label: string; disabled?: boolean; onSelect: () => void }>
+  }) => (
     <div>
       {items.map((item) => (
         <button key={item.id} onClick={item.onSelect} disabled={item.disabled}>
@@ -61,7 +63,7 @@ describe('ProductEntitlementRowActions', () => {
         }}
         onEdit={onEdit}
         currentUser={superuser}
-      />,
+      />
     )
 
     fireEvent.click(screen.getByText(UI_ENTITLEMENT_ACTION_EDIT))
@@ -74,8 +76,9 @@ describe('ProductEntitlementRowActions', () => {
   test('vendor manager can edit own entitlement but not delete', async () => {
     const deleteMutation = mockMutation()
     useDeleteEntitlementMock.mockReturnValue(deleteMutation)
-    const entitlement = buildEntitlement()
-    const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId: entitlement.vendorId ?? undefined })
+    const vendorId = faker.string.uuid()
+    const entitlement = buildEntitlement({ vendorId })
+    const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId })
 
     render(
       <ProductEntitlementRowActions
@@ -90,7 +93,7 @@ describe('ProductEntitlementRowActions', () => {
         }}
         onEdit={vi.fn()}
         currentUser={vendorManager}
-      />,
+      />
     )
 
     expect(screen.queryByText(UI_ENTITLEMENT_ACTION_DELETE)).toBeNull()
@@ -117,7 +120,7 @@ describe('ProductEntitlementRowActions', () => {
         }}
         onEdit={vi.fn()}
         currentUser={vendorManager}
-      />,
+      />
     )
 
     expect(container).toBeEmptyDOMElement()
@@ -142,11 +145,9 @@ describe('ProductEntitlementRowActions', () => {
         }}
         onEdit={vi.fn()}
         currentUser={viewer}
-      />,
+      />
     )
 
     expect(container).toBeEmptyDOMElement()
   })
 })
-
-

@@ -1,3 +1,4 @@
+import { ApiException, ERROR_CODE_MUST_CHANGE_PASSWORD } from '@simple-license/react-sdk'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { useCallback } from 'react'
 import { beforeEach, vi } from 'vitest'
@@ -214,5 +215,92 @@ describe('AuthProvider', () => {
     expect(screen.getByTestId(TEST_ID_AUTH_STATUS_VALUE).textContent).toBe(AUTH_STATUS_IDLE)
     expect(screen.getByTestId(TEST_ID_AUTH_USER).textContent).toBe('')
     expect(mockClient.setToken).toHaveBeenCalledWith(null, null)
+  })
+
+  it('retains the authenticated user when refresh returns no payload', async () => {
+    mockClient.getCurrentUser.mockResolvedValueOnce({})
+
+    renderAuthTree()
+
+    fireEvent.click(screen.getByText(BUTTON_LABEL_LOGIN))
+
+    await waitFor(() => {
+      expect(mockClient.getCurrentUser).toHaveBeenCalled()
+    })
+    await waitFor(() => {
+      expect(screen.getByTestId(TEST_ID_AUTH_STATUS).textContent).toBe(TEXT_AUTHENTICATED)
+      expect(screen.getByTestId(TEST_ID_AUTH_USER).textContent).toBe(TEST_USERNAME)
+    })
+  })
+
+  it('shows change password flow when password reset is required', async () => {
+    const user = buildUser({ username: TEST_USERNAME, passwordResetRequired: true })
+    mockClient.login.mockResolvedValueOnce({
+      token: 'reset-token',
+      token_type: 'Bearer',
+      expires_in: 3600,
+      must_change_password: true,
+      user,
+    })
+    mockClient.getCurrentUser.mockResolvedValueOnce({ user })
+
+    renderAuthTree()
+
+    fireEvent.click(screen.getByText(BUTTON_LABEL_LOGIN))
+
+    await waitFor(() => {
+      expect(screen.getByText('Update your credentials')).toBeInTheDocument()
+    })
+    expect(screen.getByTestId(TEST_ID_AUTH_STATUS).textContent).toBe(TEXT_ANONYMOUS)
+  })
+
+  it('shows change password flow when /me responds with must change password', async () => {
+    const user = buildUser({ username: TEST_USERNAME, passwordResetRequired: false })
+    mockClient.login.mockResolvedValueOnce({
+      token: 'reset-token',
+      token_type: 'Bearer',
+      expires_in: 3600,
+      user,
+    })
+    mockClient.getCurrentUser.mockRejectedValueOnce(
+      new ApiException('Password change required', ERROR_CODE_MUST_CHANGE_PASSWORD, {
+        code: ERROR_CODE_MUST_CHANGE_PASSWORD,
+        status: 403,
+      })
+    )
+
+    renderAuthTree()
+
+    fireEvent.click(screen.getByText(BUTTON_LABEL_LOGIN))
+
+    await waitFor(() => {
+      expect(screen.getByText('Update your credentials')).toBeInTheDocument()
+    })
+    expect(screen.getByTestId(TEST_ID_AUTH_STATUS).textContent).toBe(TEXT_ANONYMOUS)
+  })
+
+  it('shows change password flow when /me returns 403 authorization error message', async () => {
+    const user = buildUser({ username: TEST_USERNAME, passwordResetRequired: false })
+    mockClient.login.mockResolvedValueOnce({
+      token: 'reset-token',
+      token_type: 'Bearer',
+      expires_in: 3600,
+      user,
+    })
+    mockClient.getCurrentUser.mockRejectedValueOnce(
+      new ApiException('Password change required', 'AUTHORIZATION_ERROR', {
+        code: 'AUTHORIZATION_ERROR',
+        status: 403,
+      })
+    )
+
+    renderAuthTree()
+
+    fireEvent.click(screen.getByText(BUTTON_LABEL_LOGIN))
+
+    await waitFor(() => {
+      expect(screen.getByText('Update your credentials')).toBeInTheDocument()
+    })
+    expect(screen.getByTestId(TEST_ID_AUTH_STATUS).textContent).toBe(TEXT_ANONYMOUS)
   })
 })

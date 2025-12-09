@@ -107,7 +107,6 @@ import type {
   FreezeLicenseRequest,
   FreezeLicenseResponse,
   GetAuditLogsResponse,
-  GetCurrentUserResponse,
   GetEntitlementResponse,
   GetLicenseActivationsResponse,
   GetLicenseResponse,
@@ -154,7 +153,9 @@ import type {
   ValidateLicenseRequest,
   ValidateLicenseResponse,
   ValidationError,
+  ChangePasswordRequest,
 } from './types/api'
+import type { User } from './types/license'
 
 const CLIENT_DEFAULT_WS_PATH = '/ws/health' as const
 
@@ -211,23 +212,48 @@ export class Client {
     }
 
     const token = loginData.token
-    const expiresIn = loginData.expires_in || 0
+    const expiresInSeconds = loginData.expiresIn ?? loginData.expires_in ?? 0
+    const tokenType = loginData.tokenType ?? loginData.token_type ?? 'Bearer'
+    const normalizedUser = this.normalizeUser(loginData.user)
+    const mustChangePassword =
+      loginData.mustChangePassword ??
+      loginData.must_change_password ??
+      normalizedUser.passwordResetRequired ??
+      false
 
     if (!token || typeof token !== 'string') {
       throw new AuthenticationException('Invalid or missing token in login response')
     }
 
-    this.setToken(token, Date.now() + expiresIn * 1000)
+    this.setToken(token, Date.now() + expiresInSeconds * 1000)
     if (this.httpClient instanceof AxiosHttpClient) {
       this.httpClient.setAuthToken(token)
     }
 
     return {
       token,
-      token_type: loginData.token_type || 'Bearer',
-      expires_in: expiresIn,
-      user: loginData.user || ({} as LoginResponse['user']),
+      token_type: tokenType,
+      tokenType,
+      expires_in: expiresInSeconds,
+      expiresIn: expiresInSeconds,
+      must_change_password: mustChangePassword,
+      mustChangePassword,
+      user: normalizedUser,
     }
+  }
+
+  async getCurrentUser(): Promise<{ user: User }> {
+    const response = await this.httpClient.get<ApiResponse<{ user: User }>>(API_ENDPOINT_ADMIN_USERS_ME)
+    const parsed = this.handleApiResponse<{ user: User }>(response.data)
+    return { user: this.normalizeUser(parsed.user) }
+  }
+
+  async changePassword(request: ChangePasswordRequest): Promise<{ success: boolean }> {
+    const response = await this.httpClient.patch<ApiResponse<{ success: boolean }>>(
+      API_ENDPOINT_ADMIN_USERS_ME_PASSWORD,
+      request
+    )
+    return this.handleApiResponse<{ success: boolean }>(response.data, { success: true })
   }
 
   setToken(token: string | null, expiresAt?: number | null): void {
@@ -255,6 +281,17 @@ export class Client {
   }
 
   getWebSocketUrl(path: string = CLIENT_DEFAULT_WS_PATH): string {
+    // Allow callers to pass full ws/wss URLs directly.
+    if (path.startsWith('ws://') || path.startsWith('wss://')) {
+      return path
+    }
+    // Support callers passing an http(s) URL to be converted to ws(s).
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      const httpUrl = new URL(path)
+      const protocol = httpUrl.protocol === 'https:' ? 'wss:' : 'ws:'
+      return `${protocol}//${httpUrl.host}${httpUrl.pathname}${httpUrl.search}`
+    }
+
     const url = new URL(this.baseUrl)
     const protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
     const normalizedPath = path.startsWith('/') ? path : `/${path}`
@@ -898,10 +935,10 @@ export class Client {
     return Object.keys(details).length > 0 ? details : undefined
   }
 
-  private handleApiResponse<T>(response: unknown): T {
+  private handleApiResponse<T>(response: unknown, defaultData?: T): T {
     const parsed = this.parseResponse(response)
 
-    if (!parsed.success || !parsed.data) {
+    if (!parsed.success) {
       const errorDetails = parsed.error ? this.parseErrorDetails(parsed.error.details) : undefined
       const errorCode = parsed.error?.code || 'UNKNOWN_ERROR'
       const errorMessage = parsed.error?.message || 'API request failed'
@@ -909,9 +946,17 @@ export class Client {
       this.handleError(errorCode, errorMessage, errorDetails)
     }
 
-    // Type assertion is safe here because we validated parsed.success and parsed.data above
-    // If data doesn't match T, that's a runtime error we need to catch
-    return parsed.data as T
+    if (parsed.data) {
+      // Type assertion is safe here because we validated parsed.success and parsed.data above
+      // If data doesn't match T, that's a runtime error we need to catch
+      return parsed.data as T
+    }
+
+    if (defaultData !== undefined) {
+      return defaultData
+    }
+
+    throw new ApiException('API response missing data', 'INVALID_RESPONSE', this.parseErrorDetails(parsed.error?.details))
   }
 
   private handleError(errorCode: string, errorMessage: string, errorDetails?: ErrorDetails): never {
@@ -924,6 +969,20 @@ export class Client {
         throw new ActivationLimitExceededException(errorMessage, errorDetails)
       default:
         throw new ApiException(errorMessage, errorCode, errorDetails)
+    }
+  }
+
+  private normalizeUser(user: unknown): User {
+    if (typeof user !== 'object' || user === null) {
+      return {} as User
+    }
+    const typedUser = user as User
+    const passwordResetRequired =
+      typedUser.passwordResetRequired ?? (user as { password_reset_required?: boolean }).password_reset_required ?? false
+
+    return {
+      ...typedUser,
+      passwordResetRequired,
     }
   }
 }

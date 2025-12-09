@@ -108,7 +108,9 @@ describe('Client', () => {
           id: TEST_USER_ID,
           username: TEST_USERNAME,
           email: TEST_EMAIL,
+          password_reset_required: TEST_BOOLEAN_TRUE,
         },
+        must_change_password: TEST_BOOLEAN_TRUE,
       }
       const response = createHttpResponse(createSuccessResponse(loginData))
 
@@ -118,7 +120,34 @@ describe('Client', () => {
 
       expect(result.token).toBe(TEST_AUTH_TOKEN)
       expect(result.expires_in).toBe(TEST_AUTH_TOKEN_EXPIRES_IN)
+      expect(result.expiresIn).toBe(TEST_AUTH_TOKEN_EXPIRES_IN)
+      expect(result.mustChangePassword).toBe(TEST_BOOLEAN_TRUE)
+      expect(result.user.passwordResetRequired).toBe(TEST_BOOLEAN_TRUE)
       expect(client.getToken()).toBe(TEST_AUTH_TOKEN)
+    })
+
+    it('camelizes login response when fields are snake_case', async () => {
+      const loginData = {
+        token: TEST_AUTH_TOKEN,
+        token_type: 'Bearer',
+        expires_in: TEST_AUTH_TOKEN_EXPIRES_IN,
+        must_change_password: TEST_BOOLEAN_TRUE,
+        user: {
+          id: TEST_USER_ID,
+          username: TEST_USERNAME,
+          email: TEST_EMAIL,
+          password_reset_required: TEST_BOOLEAN_TRUE,
+        },
+      }
+      const response = createHttpResponse(createSuccessResponse(loginData))
+
+      vi.mocked(mockHttpClient.post).mockResolvedValue(response)
+
+      const result = await client.login(TEST_USERNAME, TEST_PASSWORD)
+
+      expect(result.expiresIn).toBe(TEST_AUTH_TOKEN_EXPIRES_IN)
+      expect(result.mustChangePassword).toBe(TEST_BOOLEAN_TRUE)
+      expect(result.user.passwordResetRequired).toBe(TEST_BOOLEAN_TRUE)
     })
 
     it('should throw AuthenticationException on login failure', async () => {
@@ -225,6 +254,25 @@ describe('Client', () => {
 
       // Should still clear token even without AxiosHttpClient
       expect(customClient.getToken()).toBeNull()
+    })
+
+    it('normalizes current user response with passwordResetRequired', async () => {
+      const response = createHttpResponse(
+        createSuccessResponse({
+          user: {
+            id: TEST_USER_ID,
+            username: TEST_USERNAME,
+            email: TEST_EMAIL,
+            password_reset_required: TEST_BOOLEAN_TRUE,
+          },
+        })
+      )
+
+      vi.mocked(mockHttpClient.get).mockResolvedValue(response)
+
+      const result = await client.getCurrentUser()
+
+      expect(result.user.passwordResetRequired).toBe(TEST_BOOLEAN_TRUE)
     })
   })
 

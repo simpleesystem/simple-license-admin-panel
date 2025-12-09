@@ -3,7 +3,7 @@ import type { FieldValues, Path } from 'react-hook-form'
 
 import type { AbilityAction, AbilitySubject } from '../app/abilities/abilityMap'
 import type { PermissionKey } from '../app/auth/permissions'
-import {
+import type {
   UI_ALERT_VARIANT_DANGER,
   UI_ALERT_VARIANT_INFO,
   UI_ALERT_VARIANT_SUCCESS,
@@ -62,8 +62,8 @@ import {
   UI_STACK_JUSTIFY_CENTER,
   UI_STACK_JUSTIFY_END,
   UI_STACK_JUSTIFY_START,
-  UI_TABLE_DENSITY_COMPACT,
   UI_TABLE_DENSITY_COMFORTABLE,
+  UI_TABLE_DENSITY_COMPACT,
   UI_TABLE_DENSITY_SPACIOUS,
   UI_TAG_VARIANT_INFO,
   UI_TAG_VARIANT_NEUTRAL,
@@ -76,10 +76,7 @@ import {
   UI_VISIBILITY_MODE_HIDE,
 } from './constants'
 
-export type UiTextAlign =
-  | typeof UI_TEXT_ALIGN_START
-  | typeof UI_TEXT_ALIGN_CENTER
-  | typeof UI_TEXT_ALIGN_END
+export type UiTextAlign = typeof UI_TEXT_ALIGN_START | typeof UI_TEXT_ALIGN_CENTER | typeof UI_TEXT_ALIGN_END
 
 export type UiStackDirection = typeof UI_STACK_DIRECTION_COLUMN | typeof UI_STACK_DIRECTION_ROW
 export type UiStackGap =
@@ -147,9 +144,7 @@ export type UiModalBackdrop =
   | typeof UI_MODAL_BACKDROP_ENABLED
   | typeof UI_MODAL_BACKDROP_DISABLED
 
-export type UiSidePanelPlacement =
-  | typeof UI_SIDE_PANEL_PLACEMENT_START
-  | typeof UI_SIDE_PANEL_PLACEMENT_END
+export type UiSidePanelPlacement = typeof UI_SIDE_PANEL_PLACEMENT_START | typeof UI_SIDE_PANEL_PLACEMENT_END
 
 export type UiButtonVariant =
   | typeof UI_BUTTON_VARIANT_PRIMARY
@@ -274,17 +269,21 @@ export type UiDataTableSelection<TData> = {
   onToggleAll?: (rows: readonly TData[]) => void
 }
 
-export type AppShellProps = PropsWithChildren<UiCommonProps & {
-  sidebar?: ReactNode
-  topBar?: ReactNode
-  bottomBar?: ReactNode
-  sidebarWidthClass?: string
-}>
+export type AppShellProps = PropsWithChildren<
+  UiCommonProps & {
+    sidebar?: ReactNode
+    topBar?: ReactNode
+    bottomBar?: ReactNode
+    sidebarWidthClass?: string
+  }
+>
 
-export type PageProps = PropsWithChildren<UiCommonProps & {
-  variant?: UiPageVariant
-  fullHeight?: boolean
-}>
+export type PageProps = PropsWithChildren<
+  UiCommonProps & {
+    variant?: UiPageVariant
+    fullHeight?: boolean
+  }
+>
 
 export type PageHeaderProps = UiCommonProps & {
   title: ReactNode
@@ -408,6 +407,7 @@ export type TextFieldProps<TFieldValues extends FieldValues> = UiCommonProps & {
   autoComplete?: string
   disabled?: boolean
   required?: boolean
+  validateNames?: readonly Path<TFieldValues>[]
 }
 
 export type SelectFieldProps<TFieldValues extends FieldValues> = UiCommonProps & {
@@ -556,5 +556,3 @@ export type SidePanelProps = PropsWithChildren<
     sizeClass?: string
   }
 >
-
-

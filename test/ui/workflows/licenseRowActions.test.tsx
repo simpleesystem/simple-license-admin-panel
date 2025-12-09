@@ -1,11 +1,11 @@
 import { faker } from '@faker-js/faker'
 import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, beforeEach, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import {
   UI_LICENSE_ACTION_DELETE,
-  UI_LICENSE_ACTION_SUSPEND,
   UI_LICENSE_ACTION_RESUME,
+  UI_LICENSE_ACTION_SUSPEND,
 } from '../../../src/ui/constants'
 import { LicenseRowActions } from '../../../src/ui/workflows/LicenseRowActions'
 import { buildLicense } from '../../factories/licenseFactory'
@@ -69,7 +69,7 @@ describe('LicenseRowActions', () => {
         licenseVendorId={license.vendorId ?? null}
         licenseStatus={license.status}
         currentUser={{ role: 'SUPERUSER', vendorId: license.vendorId ?? null }}
-      />,
+      />
     )
 
     fireEvent.click(screen.getByText(UI_LICENSE_ACTION_DELETE))
@@ -93,7 +93,7 @@ describe('LicenseRowActions', () => {
         licenseVendorId={license.vendorId ?? null}
         licenseStatus={license.status}
         currentUser={{ role: 'SUPERUSER', vendorId: license.vendorId ?? null }}
-      />,
+      />
     )
 
     fireEvent.click(screen.getByText(UI_LICENSE_ACTION_SUSPEND))
@@ -117,7 +117,7 @@ describe('LicenseRowActions', () => {
         licenseVendorId={license.vendorId}
         licenseStatus={license.status}
         currentUser={{ role: 'SUPERUSER', vendorId: license.vendorId }}
-      />,
+      />
     )
 
     fireEvent.click(screen.getByText(UI_LICENSE_ACTION_RESUME))
@@ -126,7 +126,8 @@ describe('LicenseRowActions', () => {
   })
 
   test('hides delete action for vendor manager while allowing updates', () => {
-    const license = buildLicense({ status: 'ACTIVE' })
+    const vendorId = faker.string.uuid()
+    const license = buildLicense({ status: 'ACTIVE', vendorId })
     const deleteMutation = mockMutation()
     const suspendMutation = mockMutation()
     const resumeMutation = mockMutation()
@@ -141,7 +142,7 @@ describe('LicenseRowActions', () => {
         licenseVendorId={license.vendorId}
         licenseStatus={license.status}
         currentUser={{ role: 'VENDOR_MANAGER', vendorId: license.vendorId }}
-      />,
+      />
     )
 
     expect(screen.queryByText(UI_LICENSE_ACTION_DELETE)).toBeNull()
@@ -157,11 +158,9 @@ describe('LicenseRowActions', () => {
         licenseVendorId={license.vendorId}
         licenseStatus={license.status}
         currentUser={{ role: 'VENDOR_MANAGER', vendorId: faker.string.uuid() }}
-      />,
+      />
     )
 
     expect(view.container.childElementCount).toBe(0)
   })
 })
-
-

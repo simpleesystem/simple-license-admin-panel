@@ -1,7 +1,6 @@
 import { ApiException, NetworkException } from '@simple-license/react-sdk'
-
-import type { ToastNotificationPayload } from '../../notifications/constants'
 import { mapApiException, mapErrorToNotification } from '../../errors/mappers'
+import type { ToastNotificationPayload } from '../../notifications/constants'
 
 const RETRYABLE_ERROR_CODES = new Set(['err_network', 'network_error', 'econnaborted'])
 const MAX_NETWORK_RETRIES = 2
@@ -39,8 +38,23 @@ export const isNetworkError = (error: unknown): boolean => {
   return false
 }
 
-export const handleQueryError = (error: unknown): ToastNotificationPayload => {
+export const handleQueryError = (error: unknown): ToastNotificationPayload | null => {
   if (isApiException(error)) {
+    const code = error.errorCode?.toUpperCase?.()
+    const status = error.errorDetails?.status
+
+    // Suppress toast for auth errors; handled inline by auth flows.
+    if (
+      status === 401 ||
+      status === 403 ||
+      code === 'AUTHENTICATION_ERROR' ||
+      code === 'INVALID_CREDENTIALS' ||
+      code === 'INVALID_TOKEN' ||
+      code === 'MISSING_TOKEN'
+    ) {
+      return null
+    }
+
     return mapApiException(error)
   }
   return mapErrorToNotification()
@@ -55,5 +69,3 @@ export const shouldRetryRequest = (failureCount: number, error: unknown): boolea
   }
   return failureCount < 1
 }
-
-
