@@ -6,10 +6,10 @@ import {
   APP_HTTP_TIMEOUT_MS,
   APP_WS_HEALTH_PATH,
   ENV_VAR_API_BASE_URL,
+  ENV_VAR_AUTH_FORGOT_PASSWORD_URL,
   ENV_VAR_FEATURE_DEV_TOOLS,
   ENV_VAR_FEATURE_EXPERIMENTAL_FILTERS,
   ENV_VAR_FEATURE_QUERY_CACHE_PERSISTENCE,
-  ENV_VAR_AUTH_FORGOT_PASSWORD_URL,
   ENV_VAR_HTTP_RETRY_ATTEMPTS,
   ENV_VAR_HTTP_RETRY_DELAY_MS,
   ENV_VAR_HTTP_TIMEOUT_MS,
@@ -98,6 +98,17 @@ const coercePositiveNumber = (value: string | undefined, fallback: number): numb
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
 }
 
+const buildDefaultWebSocketPath = (apiBaseUrl: string): string => {
+  try {
+    const parsed = new URL(apiBaseUrl)
+    const isSecure = parsed.protocol === 'https:'
+    const protocol = isSecure ? 'wss:' : 'ws:'
+    return `${protocol}//${parsed.host}${APP_WS_HEALTH_PATH}`
+  } catch {
+    return APP_WS_HEALTH_PATH
+  }
+}
+
 export const createAppConfig = (env: EnvRecord = import.meta.env as EnvRecord): AppConfig => {
   const parsed = envSchema.safeParse(env)
 
@@ -127,7 +138,7 @@ export const createAppConfig = (env: EnvRecord = import.meta.env as EnvRecord): 
   )
   const httpRetryDelayMs = coercePositiveNumber(env[ENV_VAR_HTTP_RETRY_DELAY_MS], APP_HTTP_RETRY_DELAY_MS)
   const wsEnv = env[ENV_VAR_WS_PATH]
-  const wsPath = wsEnv?.trim().length ? wsEnv.trim() : APP_WS_HEALTH_PATH
+  const wsPath = wsEnv?.trim().length ? wsEnv.trim() : buildDefaultWebSocketPath(apiBaseUrl)
 
   return {
     apiBaseUrl,

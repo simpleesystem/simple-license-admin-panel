@@ -1,16 +1,17 @@
+import type { Client, SystemStatsResponse } from '@simple-license/react-sdk'
+import { type UseHealthWebSocketResult, useHealthWebSocket, useSystemStats } from '@simple-license/react-sdk'
 import { useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
-import type { Client, SystemStatsResponse } from '@simple-license/react-sdk'
-import { useHealthWebSocket, useSystemStats, type UseHealthWebSocketResult } from '@simple-license/react-sdk'
-
+import { useAppConfig } from '../../app/config'
+import { useLiveData } from '../../hooks/useLiveData'
 import {
   UI_ANALYTICS_STATS_DESCRIPTION,
   UI_ANALYTICS_STATS_EMPTY_BODY,
   UI_ANALYTICS_STATS_EMPTY_TITLE,
   UI_ANALYTICS_STATS_ERROR_BODY,
   UI_ANALYTICS_STATS_ERROR_TITLE,
-  UI_ANALYTICS_STATS_LABEL_ACTIVE,
   UI_ANALYTICS_STATS_LABEL_ACTIVATIONS,
+  UI_ANALYTICS_STATS_LABEL_ACTIVE,
   UI_ANALYTICS_STATS_LABEL_CUSTOMERS,
   UI_ANALYTICS_STATS_LABEL_EXPIRED,
   UI_ANALYTICS_STATS_LOADING_BODY,
@@ -18,19 +19,18 @@ import {
   UI_ANALYTICS_STATS_REFRESH_LABEL,
   UI_ANALYTICS_STATS_TITLE,
   UI_STACK_GAP_SMALL,
-  UI_SUMMARY_ID_ANALYTICS_STATS_ACTIVE,
   UI_SUMMARY_ID_ANALYTICS_STATS_ACTIVATIONS,
+  UI_SUMMARY_ID_ANALYTICS_STATS_ACTIVE,
   UI_SUMMARY_ID_ANALYTICS_STATS_CUSTOMERS,
   UI_SUMMARY_ID_ANALYTICS_STATS_EXPIRED,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { SummaryList } from '../data/SummaryList'
-import type { UiSummaryCardItem } from '../types'
 import { InlineAlert } from '../feedback/InlineAlert'
 import { Stack } from '../layout/Stack'
+import type { UiSummaryCardItem } from '../types'
 import { BadgeText } from '../typography/BadgeText'
 import { getLiveStatusDescriptor } from '../utils/liveStatus'
-import { useLiveData } from '../../hooks/useLiveData'
 
 type AnalyticsStatsPanelProps = {
   client: Client
@@ -45,8 +45,9 @@ const formatNumber = (value: number | undefined) => {
 }
 
 export function AnalyticsStatsPanel({ client, title = UI_ANALYTICS_STATS_TITLE }: AnalyticsStatsPanelProps) {
+  const { wsPath } = useAppConfig()
   const statsQuery = useSystemStats(client, { retry: false })
-  const healthSocket = useHealthWebSocket(client)
+  const healthSocket = useHealthWebSocket(client, { path: wsPath })
   const {
     data: statsSource,
     isLoading,
@@ -92,10 +93,7 @@ export function AnalyticsStatsPanel({ client, title = UI_ANALYTICS_STATS_TITLE }
   const shouldShowError = isError && !statsSource
   const shouldShowEmpty = !shouldShowLoading && !shouldShowError && statItems.length === 0
 
-  const liveStatusDescriptor = getLiveStatusDescriptor(
-    healthSocket.connectionInfo.state,
-    Boolean(healthSocket.error)
-  )
+  const liveStatusDescriptor = getLiveStatusDescriptor(healthSocket.connectionInfo.state, Boolean(healthSocket.error))
 
   const renderContent = () => {
     if (shouldShowLoading) {

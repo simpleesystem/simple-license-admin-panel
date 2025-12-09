@@ -8,7 +8,7 @@ import { Server, WebSocket as MockSocket } from 'mock-socket'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { useHealthWebSocket } from '@/hooks/useHealthWebSocket'
-import { WS_MESSAGE_TYPE_HEALTH_UPDATE } from '@/types/websocket'
+import { WS_MESSAGE_TYPE_HEALTH_UPDATE, WS_MESSAGE_TYPE_REQUEST_HEALTH } from '@/types/websocket'
 import {
   TEST_BOOLEAN_FALSE,
   TEST_DATE_CREATED,
@@ -34,8 +34,12 @@ describe('useHealthWebSocket', () => {
     const server = createServer()
     try {
       let serverSocket: MockServerClient | null = null
+      const received: Array<Record<string, unknown>> = []
       server.on('connection', (socket) => {
         serverSocket = socket
+        socket.on('message', (data) => {
+          received.push(JSON.parse(data as string))
+        })
       })
 
       const client = createTestClient(TEST_WS_BASE_URL)
@@ -87,6 +91,12 @@ describe('useHealthWebSocket', () => {
       await waitFor(() => {
         expect(result.current.healthData?.system.uptime).toBe(TEST_NUMBER_TEN)
       })
+
+      expect(received).toEqual([
+        {
+          type: WS_MESSAGE_TYPE_REQUEST_HEALTH,
+        },
+      ])
 
       unmount()
     } finally {

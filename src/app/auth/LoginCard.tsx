@@ -153,17 +153,17 @@ function LoginFormActions({ isSubmitting, submitLabel, forgotLabel, forgotPasswo
         {isSubmitting ? `${submitLabel}…` : submitLabel}
       </Button>
       {forgotPasswordUrl ? (
-        <div className="text-center">
-          <Button
-            variant="link"
-            className="text-decoration-none p-0"
+      <div className="text-center">
+        <Button
+          variant="link"
+          className="text-decoration-none p-0"
             href={forgotPasswordUrl}
-            target="_blank"
-            rel="noreferrer"
-          >
-            {forgotLabel}
-          </Button>
-        </div>
+          target="_blank"
+          rel="noreferrer"
+        >
+          {forgotLabel}
+        </Button>
+      </div>
       ) : null}
     </div>
   )

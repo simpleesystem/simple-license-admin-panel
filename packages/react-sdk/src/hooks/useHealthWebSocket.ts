@@ -24,10 +24,11 @@ export function useHealthWebSocket(client: Client, options?: UseWebSocketOptions
   }, [webSocketResult.lastMessage])
 
   useEffect(() => {
-    if (webSocketResult.connected) {
-      webSocketResult.requestHealth()
+    if (!webSocketResult.connected) {
+      return
     }
-  }, [webSocketResult])
+    webSocketResult.requestHealth()
+  }, [webSocketResult.connected, webSocketResult.requestHealth])
 
   return {
     ...webSocketResult,

@@ -1,3 +1,18 @@
+import { describe, expect, it } from 'vitest'
+
+import { formatTenantCreatedAt } from '@/ui/workflows/TenantManagementExample'
+import { UI_VALUE_PLACEHOLDER } from '@/ui/constants'
+
+describe('formatTenantCreatedAt', () => {
+  it('returns the placeholder when the date is missing', () => {
+    expect(formatTenantCreatedAt(undefined)).toBe(UI_VALUE_PLACEHOLDER)
+  })
+
+  it('formats valid ISO date strings', () => {
+    const date = new Date('2023-01-02T00:00:00Z').toISOString()
+    expect(formatTenantCreatedAt(date)).toContain('2023')
+  })
+})
 import { fireEvent, render, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 

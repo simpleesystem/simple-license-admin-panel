@@ -1,8 +1,9 @@
+import type { Client, HealthMetricsResponse } from '@simple-license/react-sdk'
+import { type UseHealthWebSocketResult, useHealthMetrics, useHealthWebSocket } from '@simple-license/react-sdk'
 import { useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
-import type { Client, HealthMetricsResponse } from '@simple-license/react-sdk'
-import { useHealthMetrics, useHealthWebSocket, type UseHealthWebSocketResult } from '@simple-license/react-sdk'
-
+import { useAppConfig } from '../../app/config'
+import { useLiveData } from '../../hooks/useLiveData'
 import {
   UI_HEALTH_METRICS_DESCRIPTION,
   UI_HEALTH_METRICS_EMPTY_BODY,
@@ -31,12 +32,11 @@ import {
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { SummaryList } from '../data/SummaryList'
-import type { UiKeyValueItem } from '../types'
 import { InlineAlert } from '../feedback/InlineAlert'
 import { Stack } from '../layout/Stack'
+import type { UiKeyValueItem } from '../types'
 import { BadgeText } from '../typography/BadgeText'
 import { getLiveStatusDescriptor } from '../utils/liveStatus'
-import { useLiveData } from '../../hooks/useLiveData'
 
 type HealthMetricsPanelProps = {
   client: Client
@@ -51,8 +51,9 @@ const formatNumber = (value: number | null | undefined, formatter: Intl.NumberFo
 }
 
 export function HealthMetricsPanel({ client, title = UI_HEALTH_METRICS_TITLE }: HealthMetricsPanelProps) {
+  const { wsPath } = useAppConfig()
   const healthMetricsQuery = useHealthMetrics(client, { retry: false })
-  const healthSocket = useHealthWebSocket(client)
+  const healthSocket = useHealthWebSocket(client, { path: wsPath })
   const {
     data: metricsSource,
     socketResult: healthSocketResult,
@@ -162,4 +163,3 @@ export function HealthMetricsPanel({ client, title = UI_HEALTH_METRICS_TITLE }: 
     </Stack>
   )
 }
-

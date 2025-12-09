@@ -32,20 +32,28 @@ export function useWebSocket(client: Client, options?: UseWebSocketOptions): Use
   const [error, setError] = useState<Error | undefined>()
 
   const normalizedOptions = useMemo(() => {
-    const opts: WebSocketClientOptions = {}
-    if (!options) {
-      return opts
+    const { path, reconnect, reconnectAttempts, reconnectIntervalMs, webSocketFactory, onOpen, onClose, onError } =
+      options ?? {}
+    return {
+      ...(path !== undefined ? { path } : {}),
+      ...(reconnect !== undefined ? { reconnect } : {}),
+      ...(reconnectAttempts !== undefined ? { reconnectAttempts } : {}),
+      ...(reconnectIntervalMs !== undefined ? { reconnectIntervalMs } : {}),
+      ...(webSocketFactory !== undefined ? { webSocketFactory } : {}),
+      ...(onOpen !== undefined ? { onOpen } : {}),
+      ...(onClose !== undefined ? { onClose } : {}),
+      ...(onError !== undefined ? { onError } : {}),
     }
-    if (options.reconnect !== undefined) opts.reconnect = options.reconnect
-    if (options.reconnectAttempts !== undefined) opts.reconnectAttempts = options.reconnectAttempts
-    if (options.reconnectIntervalMs !== undefined) opts.reconnectIntervalMs = options.reconnectIntervalMs
-    if (options.path !== undefined) opts.path = options.path
-    if (options.webSocketFactory !== undefined) opts.webSocketFactory = options.webSocketFactory
-    if (options.onOpen !== undefined) opts.onOpen = options.onOpen
-    if (options.onClose !== undefined) opts.onClose = options.onClose
-    if (options.onError !== undefined) opts.onError = options.onError
-    return opts
-  }, [options])
+  }, [
+    options?.path,
+    options?.reconnect,
+    options?.reconnectAttempts,
+    options?.reconnectIntervalMs,
+    options?.webSocketFactory,
+    options?.onOpen,
+    options?.onClose,
+    options?.onError,
+  ])
 
   useEffect(() => {
     const wsClient = new WebSocketClient(client.getBaseUrl(), {
@@ -77,7 +85,17 @@ export function useWebSocket(client: Client, options?: UseWebSocketOptions): Use
       wsClient.disconnect()
       webSocketRef.current = null
     }
-  }, [client, normalizedOptions])
+  }, [
+    client,
+    normalizedOptions.path,
+    normalizedOptions.reconnect,
+    normalizedOptions.reconnectAttempts,
+    normalizedOptions.reconnectIntervalMs,
+    normalizedOptions.webSocketFactory,
+    normalizedOptions.onOpen,
+    normalizedOptions.onClose,
+    normalizedOptions.onError,
+  ])
 
   const send = useCallback((message: WebSocketOutboundMessage) => {
     return webSocketRef.current?.send(message) ?? false

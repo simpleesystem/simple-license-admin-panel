@@ -11,6 +11,7 @@ import type {
 import { useHealthWebSocket, useSystemMetrics } from '@simple-license/react-sdk'
 import { useCallback, useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
+import { useAppConfig } from '../../app/config'
 import { useLiveData } from '../../hooks/useLiveData'
 import {
   UI_DATE_FORMAT_LOCALE,
@@ -217,8 +218,9 @@ const buildMetricItems = (
 }
 
 export function SystemMetricsPanel({ client, title = UI_SYSTEM_METRICS_TITLE }: SystemMetricsPanelProps) {
+  const { wsPath } = useAppConfig()
   const systemMetricsQuery = useSystemMetrics(client, { retry: false })
-  const healthSocket = useHealthWebSocket(client)
+  const healthSocket = useHealthWebSocket(client, { path: wsPath })
   const {
     data: metricsSource,
     socketResult: healthSocketResult,

@@ -145,13 +145,13 @@ const renderLoginCard = ({ authOverrides, toastSpy }: RenderOptions = {}) => {
   return render(
     <I18nProvider>
       <AppConfigProvider value={{ ...APP_CONFIG, authForgotPasswordUrl: 'https://example.com/forgot' }}>
-        <NotificationBusContext.Provider value={bus}>
-          <AuthorizationContext.Provider value={buildPermissions()}>
-            <AuthContext.Provider value={authValue}>
-              <LoginCard />
-            </AuthContext.Provider>
-          </AuthorizationContext.Provider>
-        </NotificationBusContext.Provider>
+      <NotificationBusContext.Provider value={bus}>
+        <AuthorizationContext.Provider value={buildPermissions()}>
+          <AuthContext.Provider value={authValue}>
+            <LoginCard />
+          </AuthContext.Provider>
+        </AuthorizationContext.Provider>
+      </NotificationBusContext.Provider>
       </AppConfigProvider>
     </I18nProvider>
   )

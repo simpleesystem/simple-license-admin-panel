@@ -5,6 +5,7 @@ import type { Client, ServerStatusResponse, UseHealthWebSocketResult } from '@si
 import { useHealthWebSocket, useServerStatus } from '@simple-license/react-sdk'
 import { useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
+import { useAppConfig } from '../../app/config'
 import { useLiveData } from '../../hooks/useLiveData'
 import {
   UI_BADGE_VARIANT_SECONDARY,
@@ -249,8 +250,9 @@ const normalizeDatabaseSummary = (value: unknown): string | undefined => {
 }
 
 export function SystemStatusPanel({ client, title = UI_SYSTEM_STATUS_TITLE }: SystemStatusPanelProps) {
+  const { wsPath } = useAppConfig()
   const serverStatusQuery = useServerStatus(client, { retry: false })
-  const healthSocket = useHealthWebSocket(client)
+  const healthSocket = useHealthWebSocket(client, { path: wsPath })
   const {
     queryData: statusData,
     liveData: livePayload,

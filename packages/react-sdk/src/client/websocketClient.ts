@@ -23,6 +23,10 @@ import {
 const DEFAULT_WS_RECONNECT_INTERVAL_MS = 2_000
 const DEFAULT_WS_MAX_RECONNECT_ATTEMPTS = 10
 const DEFAULT_WS_PATH = '/ws/health'
+const WS_PROTOCOL_INSECURE = 'ws:'
+const WS_PROTOCOL_SECURE = 'wss:'
+const URL_PROTOCOL_HTTP = 'http:'
+const URL_PROTOCOL_HTTPS = 'https:'
 const WS_READY_STATE_DEFAULT_CONNECTING = 0
 const WS_READY_STATE_DEFAULT_OPEN = 1
 
@@ -149,12 +153,22 @@ export class WebSocketClient {
   }
 
   private buildWebSocketUrl(): string {
+    const rawPath = this.options.path ?? DEFAULT_WS_PATH
+
+    if (this.isWebSocketUrl(rawPath)) {
+      return rawPath
+    }
+
+    if (this.isHttpUrl(rawPath)) {
+      const parsed = new URL(rawPath)
+      const protocol = parsed.protocol === URL_PROTOCOL_HTTPS ? WS_PROTOCOL_SECURE : WS_PROTOCOL_INSECURE
+      return `${protocol}//${parsed.host}${parsed.pathname}${parsed.search}`
+    }
+
     const origin = new URL(this.baseOrigin)
-    const isSecure = origin.protocol === 'https:'
-    const normalizedPath = (this.options.path ?? DEFAULT_WS_PATH).startsWith('/')
-      ? (this.options.path ?? DEFAULT_WS_PATH)
-      : `/${this.options.path ?? DEFAULT_WS_PATH}`
-    const protocol = isSecure ? 'wss:' : 'ws:'
+    const isSecure = origin.protocol === URL_PROTOCOL_HTTPS
+    const normalizedPath = rawPath.startsWith('/') ? rawPath : `/${rawPath}`
+    const protocol = isSecure ? WS_PROTOCOL_SECURE : WS_PROTOCOL_INSECURE
     return `${protocol}//${origin.host}${normalizedPath}`
   }
 
@@ -264,6 +278,14 @@ export class WebSocketClient {
 
   private isConnecting(socket: WebSocket): boolean {
     return socket.readyState === this.getReadyStateValue(socket, 'CONNECTING')
+  }
+
+  private isWebSocketUrl(path: string): boolean {
+    return path.startsWith(WS_PROTOCOL_INSECURE) || path.startsWith(WS_PROTOCOL_SECURE)
+  }
+
+  private isHttpUrl(path: string): boolean {
+    return path.startsWith(URL_PROTOCOL_HTTP) || path.startsWith(URL_PROTOCOL_HTTPS)
   }
 
   private getReadyStateValue(socket: WebSocket, state: 'OPEN' | 'CONNECTING'): number {

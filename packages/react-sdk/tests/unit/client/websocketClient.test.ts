@@ -26,15 +26,18 @@ import {
   TEST_WS_CLOSE_CODE_NORMAL,
   TEST_WS_BASE_URL,
   TEST_WS_SERVER_URL,
+  TEST_WS_PATH_CUSTOM,
+  TEST_WS_PROTOCOL_INSECURE,
 } from '../../constants'
 
 const MOCK_SERVER_OPTIONS: ServerOptions = { mock: TEST_BOOLEAN_FALSE }
 const activeServers: Server[] = []
-const createServer = () => {
-  const server = new Server(TEST_WS_SERVER_URL, MOCK_SERVER_OPTIONS)
+const createServerAt = (url: string) => {
+  const server = new Server(url, MOCK_SERVER_OPTIONS)
   activeServers.push(server)
   return server
 }
+const createServer = () => createServerAt(TEST_WS_SERVER_URL)
 const createFactory = () =>
   vi.fn((url: string) => {
     const socket = new MockSocket(url)
@@ -119,6 +122,41 @@ describe('WebSocketClient', () => {
       expect(factory).toHaveBeenCalledTimes(TEST_NUMBER_ONE)
       expect(messageListener).toHaveBeenCalledWith(expect.objectContaining({ type: WS_MESSAGE_TYPE_HEALTH_UPDATE }))
     })
+  })
+
+  it('uses absolute WebSocket URL when provided in options', async () => {
+    createServer()
+    let capturedUrl: string | null = null
+    const factory = vi.fn((url: string) => {
+      capturedUrl = url
+      const socket = new MockSocket(url)
+      return socket as unknown as WebSocket
+    })
+    const client = new WebSocketClient(TEST_WS_BASE_URL, { path: TEST_WS_SERVER_URL, webSocketFactory: factory })
+
+    client.connect()
+
+    await waitFor(() => {
+      expect(client.getConnectionInfo().state).toBe(WS_STATE_CONNECTED)
+    })
+
+    expect(factory).toHaveBeenCalledTimes(TEST_NUMBER_ONE)
+    expect(capturedUrl).toBe(TEST_WS_SERVER_URL)
+  })
+
+  it('converts http(s) WebSocket paths to ws(s) protocol', async () => {
+    const httpPath = `${TEST_WS_BASE_URL}${TEST_WS_PATH_CUSTOM}`
+    const expectedWsUrl = `${TEST_WS_PROTOCOL_INSECURE}${new URL(TEST_WS_BASE_URL).host}${TEST_WS_PATH_CUSTOM}`
+    createServerAt(expectedWsUrl)
+    const factory = createFactory()
+    const client = new WebSocketClient(TEST_WS_BASE_URL, { path: httpPath, webSocketFactory: factory })
+
+    client.connect()
+
+    await waitFor(() => {
+      expect(client.getConnectionInfo().state).toBe(WS_STATE_CONNECTED)
+    })
+    expect(factory).toHaveBeenCalledWith(expectedWsUrl)
   })
 
   it('sends request health messages when connected', async () => {
