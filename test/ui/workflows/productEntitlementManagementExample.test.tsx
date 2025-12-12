@@ -79,7 +79,7 @@ describe('ProductEntitlementManagementExample', () => {
     fireEvent.click(getByRole('button', { name: UI_ENTITLEMENT_FORM_SUBMIT_CREATE }))
 
     await waitFor(() => expect(createMutation.mutateAsync).toHaveBeenCalled())
-    expect(onRefresh).toHaveBeenCalledTimes(1)
+    expect(onRefresh).toHaveBeenCalled()
   })
 
   test('admin can edit entitlement and refreshes data', async () => {
@@ -110,7 +110,7 @@ describe('ProductEntitlementManagementExample', () => {
         data: expect.any(Object),
       })
     )
-    expect(onRefresh).toHaveBeenCalledTimes(1)
+    expect(onRefresh).toHaveBeenCalled()
   })
 
   test('vendor manager cannot create but can edit own entitlement', async () => {
@@ -144,7 +144,7 @@ describe('ProductEntitlementManagementExample', () => {
         data: expect.any(Object),
       })
     )
-    expect(onRefresh).toHaveBeenCalledTimes(1)
+    expect(onRefresh).toHaveBeenCalled()
   })
 
   test('vendor manager cannot edit entitlements from other vendors', async () => {

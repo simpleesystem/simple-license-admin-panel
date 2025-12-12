@@ -30,6 +30,11 @@ import {
   UI_ALERT_THRESHOLD_SECTION_MEDIUM,
   UI_ALERT_THRESHOLD_SECTION_TITLE_HIGH,
   UI_ALERT_THRESHOLD_SECTION_TITLE_MEDIUM,
+  UI_ENTITLEMENT_FORM_ID_CREATE,
+  UI_ENTITLEMENT_FORM_ID_UPDATE,
+  UI_ENTITLEMENT_FORM_SECTION_DETAILS,
+  UI_ENTITLEMENT_FORM_TITLE_CREATE,
+  UI_ENTITLEMENT_FORM_TITLE_UPDATE,
   UI_ENTITLEMENT_VALUE_LABEL_BOOLEAN,
   UI_ENTITLEMENT_VALUE_LABEL_NUMBER,
   UI_ENTITLEMENT_VALUE_LABEL_STRING,
@@ -42,9 +47,10 @@ import {
   UI_FIELD_ALERT_MEDIUM_ACTIVATIONS,
   UI_FIELD_ALERT_MEDIUM_CONCURRENCY,
   UI_FIELD_ALERT_MEDIUM_VALIDATIONS,
+  UI_FIELD_LICENSE_FREEZE_ENTITLEMENTS,
+  UI_FIELD_LICENSE_FREEZE_TIER,
   UI_FORM_CONTROL_TYPE_EMAIL,
   UI_FORM_CONTROL_TYPE_PASSWORD,
-  UI_FORM_CONTROL_TYPE_TEXT,
   UI_FORM_TEXTAREA_MIN_ROWS,
   UI_LICENSE_FORM_ID_CREATE,
   UI_LICENSE_FORM_ID_UPDATE,
@@ -60,8 +66,6 @@ import {
   UI_LICENSE_FREEZE_LABEL_ENTITLEMENTS,
   UI_LICENSE_FREEZE_LABEL_TIER,
   UI_LICENSE_FREEZE_SECTION_OPTIONS,
-  UI_FIELD_LICENSE_FREEZE_ENTITLEMENTS,
-  UI_FIELD_LICENSE_FREEZE_TIER,
   UI_PRODUCT_FORM_ID_CREATE,
   UI_PRODUCT_FORM_ID_UPDATE,
   UI_PRODUCT_FORM_SECTION_DETAILS,
@@ -72,21 +76,19 @@ import {
   UI_PRODUCT_TIER_FORM_SECTION_DETAILS,
   UI_PRODUCT_TIER_FORM_TITLE_CREATE,
   UI_PRODUCT_TIER_FORM_TITLE_UPDATE,
-  UI_ENTITLEMENT_FORM_ID_CREATE,
-  UI_ENTITLEMENT_FORM_ID_UPDATE,
-  UI_ENTITLEMENT_FORM_SECTION_DETAILS,
-  UI_ENTITLEMENT_FORM_TITLE_CREATE,
-  UI_ENTITLEMENT_FORM_TITLE_UPDATE,
   UI_TENANT_FORM_ID_CREATE,
   UI_TENANT_FORM_ID_UPDATE,
+  UI_TENANT_FORM_SECTION_DETAILS,
   UI_TENANT_FORM_TITLE_CREATE,
   UI_TENANT_FORM_TITLE_UPDATE,
-  UI_TENANT_FORM_SECTION_DETAILS,
+  UI_USER_FIELD_LABEL_ROLE,
+  UI_USER_FIELD_LABEL_VENDOR,
   UI_USER_FORM_ID_CREATE,
   UI_USER_FORM_ID_UPDATE,
   UI_USER_FORM_SECTION_DETAILS,
   UI_USER_FORM_TITLE_CREATE,
   UI_USER_FORM_TITLE_UPDATE,
+  UI_USER_VENDOR_PLACEHOLDER,
 } from '../constants'
 import type { UiSelectOption } from '../types'
 import { createFormBlueprint, type FormBlueprint, type FormSectionBlueprint } from './blueprint'
@@ -98,6 +100,11 @@ type BlueprintCustomizer<TFieldValues extends FieldValues> = (
 
 type BaseFactoryOptions<TFieldValues extends FieldValues> = {
   customize?: BlueprintCustomizer<TFieldValues>
+}
+
+type UserBlueprintOptions<TFieldValues extends FieldValues> = BaseFactoryOptions<TFieldValues> & {
+  roleOptions?: readonly UiSelectOption[]
+  vendorOptions?: readonly UiSelectOption[]
 }
 
 type LicenseBlueprintOptions<TFieldValues extends FieldValues> = BaseFactoryOptions<TFieldValues> & {
@@ -548,7 +555,7 @@ type EntitlementModeValues<TMode extends 'create' | 'update'> = TMode extends 'c
 
 export const createEntitlementBlueprint = <TMode extends 'create' | 'update'>(
   mode: TMode,
-  options?: BaseFactoryOptions<EntitlementModeValues<TMode>>,
+  options?: BaseFactoryOptions<EntitlementModeValues<TMode>>
 ): FormBlueprint<EntitlementModeValues<TMode>> => {
   if (mode === 'create') {
     return buildConfig<CreateEntitlementRequest>(
@@ -557,7 +564,7 @@ export const createEntitlementBlueprint = <TMode extends 'create' | 'update'>(
         title: UI_ENTITLEMENT_FORM_TITLE_CREATE,
         sections: ENTITLEMENT_CREATE_SECTIONS as BlueprintSectionConfig<CreateEntitlementRequest>[],
       },
-      options?.customize as BlueprintCustomizer<CreateEntitlementRequest> | undefined,
+      options?.customize as BlueprintCustomizer<CreateEntitlementRequest> | undefined
     ) as FormBlueprint<EntitlementModeValues<TMode>>
   }
 
@@ -567,7 +574,7 @@ export const createEntitlementBlueprint = <TMode extends 'create' | 'update'>(
       title: UI_ENTITLEMENT_FORM_TITLE_UPDATE,
       sections: ENTITLEMENT_UPDATE_SECTIONS as BlueprintSectionConfig<UpdateEntitlementRequest>[],
     },
-    options?.customize as BlueprintCustomizer<UpdateEntitlementRequest> | undefined,
+    options?.customize as BlueprintCustomizer<UpdateEntitlementRequest> | undefined
   ) as FormBlueprint<EntitlementModeValues<TMode>>
 }
 
@@ -609,7 +616,7 @@ const TENANT_QUOTA_SECTIONS: BlueprintSectionConfig<UpdateQuotaLimitsRequest>[] 
 ]
 
 export const createTenantQuotaBlueprint = (
-  options?: BaseFactoryOptions<UpdateQuotaLimitsRequest>,
+  options?: BaseFactoryOptions<UpdateQuotaLimitsRequest>
 ): FormBlueprint<UpdateQuotaLimitsRequest> => {
   return buildConfig<UpdateQuotaLimitsRequest>(
     {
@@ -617,7 +624,7 @@ export const createTenantQuotaBlueprint = (
       title: 'Tenant Quotas',
       sections: TENANT_QUOTA_SECTIONS,
     },
-    options?.customize as BlueprintCustomizer<UpdateQuotaLimitsRequest> | undefined,
+    options?.customize as BlueprintCustomizer<UpdateQuotaLimitsRequest> | undefined
   )
 }
 
@@ -645,12 +652,16 @@ const USER_CREATE_SECTIONS: BlueprintSectionConfig<CreateUserRequest>[] = [
       },
       {
         name: 'role',
-        kind: 'string',
-        format: UI_FORM_CONTROL_TYPE_TEXT,
+        kind: 'select',
+        label: UI_USER_FIELD_LABEL_ROLE,
+        options: [],
+        required: true,
       },
       {
         name: 'vendor_id',
-        kind: 'string',
+        kind: 'select',
+        label: UI_USER_FIELD_LABEL_VENDOR,
+        options: [],
       },
     ],
   },
@@ -673,12 +684,15 @@ const USER_UPDATE_SECTIONS: BlueprintSectionConfig<UpdateUserRequest>[] = [
       },
       {
         name: 'role',
-        kind: 'string',
-        format: UI_FORM_CONTROL_TYPE_TEXT,
+        kind: 'select',
+        label: UI_USER_FIELD_LABEL_ROLE,
+        options: [],
       },
       {
         name: 'vendor_id',
-        kind: 'string',
+        kind: 'select',
+        label: UI_USER_FIELD_LABEL_VENDOR,
+        options: [],
       },
     ],
   },
@@ -688,14 +702,36 @@ type UserModeValues<TMode extends 'create' | 'update'> = TMode extends 'create' 
 
 export const createUserBlueprint = <TMode extends 'create' | 'update'>(
   mode: TMode,
-  options?: BaseFactoryOptions<UserModeValues<TMode>>
+  options?: UserBlueprintOptions<UserModeValues<TMode>>
 ): FormBlueprint<UserModeValues<TMode>> => {
+  const roleOptions = options?.roleOptions ?? []
+  const vendorOptions = options?.vendorOptions ?? []
+  const vendorOptionsWithPlaceholder: UiSelectOption[] =
+    vendorOptions.length > 0
+      ? [{ value: '', label: UI_USER_VENDOR_PLACEHOLDER, disabled: true }, ...vendorOptions]
+      : vendorOptions.slice()
+  const configureSections = <TFieldValues extends FieldValues>(
+    sections: BlueprintSectionConfig<TFieldValues>[]
+  ): BlueprintSectionConfig<TFieldValues>[] =>
+    sections.map((section) => ({
+      ...section,
+      fields: section.fields.map((field) => {
+        if (field.name === 'role') {
+          return { ...field, options: roleOptions }
+        }
+        if (field.name === 'vendor_id') {
+          return { ...field, options: vendorOptionsWithPlaceholder }
+        }
+        return field
+      }),
+    }))
+
   if (mode === 'create') {
     return buildConfig<CreateUserRequest>(
       {
         id: UI_USER_FORM_ID_CREATE,
         title: UI_USER_FORM_TITLE_CREATE,
-        sections: USER_CREATE_SECTIONS,
+        sections: configureSections(USER_CREATE_SECTIONS),
       },
       options?.customize as BlueprintCustomizer<CreateUserRequest> | undefined
     ) as FormBlueprint<UserModeValues<TMode>>
@@ -705,7 +741,7 @@ export const createUserBlueprint = <TMode extends 'create' | 'update'>(
     {
       id: UI_USER_FORM_ID_UPDATE,
       title: UI_USER_FORM_TITLE_UPDATE,
-      sections: USER_UPDATE_SECTIONS,
+      sections: configureSections(USER_UPDATE_SECTIONS),
     },
     options?.customize as BlueprintCustomizer<UpdateUserRequest> | undefined
   ) as FormBlueprint<UserModeValues<TMode>>

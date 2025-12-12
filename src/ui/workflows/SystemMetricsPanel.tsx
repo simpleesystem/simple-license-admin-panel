@@ -1,18 +1,11 @@
 /* c8 ignore file */
 /* istanbul ignore file */
 
-import type {
-  Client,
-  MetricObject,
-  MetricsResponse,
-  MetricValue,
-  UseHealthWebSocketResult,
-} from '@simple-license/react-sdk'
-import { useHealthWebSocket, useSystemMetrics } from '@simple-license/react-sdk'
+import type { Client, MetricObject, MetricsResponse, MetricValue } from '@simple-license/react-sdk'
+import { useSystemMetrics } from '@simple-license/react-sdk'
 import { useCallback, useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
-import { useAppConfig } from '../../app/config'
-import { useLiveData } from '../../hooks/useLiveData'
+import { useAdminSystemLiveFeed, useLiveStatusBadgeModel } from '../../app/live/AdminSystemLiveFeedContext'
 import {
   UI_DATE_FORMAT_LOCALE,
   UI_DATE_TIME_FORMAT_OPTIONS,
@@ -55,6 +48,7 @@ import {
   UI_SYSTEM_METRICS_LOADING_BODY,
   UI_SYSTEM_METRICS_LOADING_TITLE,
   UI_SYSTEM_METRICS_REFRESH_LABEL,
+  UI_SYSTEM_METRICS_REFRESH_PENDING,
   UI_SYSTEM_METRICS_SECTION_APPLICATION,
   UI_SYSTEM_METRICS_SECTION_CACHE,
   UI_SYSTEM_METRICS_SECTION_DATABASE,
@@ -69,7 +63,6 @@ import { InlineAlert } from '../feedback/InlineAlert'
 import { Stack } from '../layout/Stack'
 import type { UiKeyValueItem } from '../types'
 import { BadgeText } from '../typography/BadgeText'
-import { getLiveStatusDescriptor } from '../utils/liveStatus'
 
 type SystemMetricsPanelProps = {
   client: Client
@@ -218,22 +211,14 @@ const buildMetricItems = (
 }
 
 export function SystemMetricsPanel({ client, title = UI_SYSTEM_METRICS_TITLE }: SystemMetricsPanelProps) {
-  const { wsPath } = useAppConfig()
   const systemMetricsQuery = useSystemMetrics(client, { retry: false })
-  const healthSocket = useHealthWebSocket(client, { path: wsPath })
-  const {
-    data: metricsSource,
-    socketResult: healthSocketResult,
-    isLoading,
-    isError,
-    refresh,
-  } = useLiveData<MetricsResponse, UseHealthWebSocketResult, MetricsResponse>({
-    query: () => systemMetricsQuery,
-    socket: () => healthSocket,
-    selectQueryData: (data) => data,
-    selectSocketData: () => undefined,
-    merge: ({ queryData }) => queryData,
-  })
+  const { data: metricsSource, isLoading, isFetching, isError, refetch } = systemMetricsQuery
+  const liveFeed = useAdminSystemLiveFeed()
+  const liveStatusBadge = useLiveStatusBadgeModel()
+  const refresh = () => {
+    void refetch()
+    liveFeed.requestHealth()
+  }
   const numberFormatter = useMemo(() => new Intl.NumberFormat(), [])
   const dateFormatter = useMemo(() => new Intl.DateTimeFormat(UI_DATE_FORMAT_LOCALE, UI_DATE_TIME_FORMAT_OPTIONS), [])
 
@@ -374,7 +359,7 @@ export function SystemMetricsPanel({ client, title = UI_SYSTEM_METRICS_TITLE }: 
 
   const renderContent = () => {
     if (!metricsSource || sections.length === 0) {
-      if (isLoading && !metricsSource) {
+      if ((isLoading || isFetching) && !metricsSource) {
         return (
           <InlineAlert variant="info" title={UI_SYSTEM_METRICS_LOADING_TITLE}>
             {UI_SYSTEM_METRICS_LOADING_BODY}
@@ -409,11 +394,6 @@ export function SystemMetricsPanel({ client, title = UI_SYSTEM_METRICS_TITLE }: 
     )
   }
 
-  const liveStatusDescriptor = getLiveStatusDescriptor(
-    healthSocketResult.connectionInfo.state,
-    Boolean(healthSocketResult.error)
-  )
-
   return (
     <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
@@ -422,9 +402,14 @@ export function SystemMetricsPanel({ client, title = UI_SYSTEM_METRICS_TITLE }: 
           <p className="text-muted mb-0">{UI_SYSTEM_METRICS_DESCRIPTION}</p>
         </div>
         <div className="d-flex flex-wrap align-items-center gap-2">
-          <BadgeText text={liveStatusDescriptor.text} variant={liveStatusDescriptor.variant} />
-          <Button variant="outline-secondary" onClick={refresh}>
-            {UI_SYSTEM_METRICS_REFRESH_LABEL}
+          <BadgeText text={liveStatusBadge.text} variant={liveStatusBadge.variant} />
+          <Button
+            variant="outline-secondary"
+            onClick={refresh}
+            disabled={isFetching || isLoading}
+            aria-busy={isFetching || isLoading}
+          >
+            {isFetching || isLoading ? UI_SYSTEM_METRICS_REFRESH_PENDING : UI_SYSTEM_METRICS_REFRESH_LABEL}
           </Button>
         </div>
       </div>

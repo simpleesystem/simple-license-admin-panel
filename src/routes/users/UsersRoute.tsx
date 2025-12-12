@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useAdminUsers } from '@simple-license/react-sdk'
 
 import { useApiClient } from '../../api/apiContext'
@@ -9,6 +9,7 @@ import {
   UI_PAGE_TITLE_USERS,
   UI_SECTION_STATUS_ERROR,
   UI_SECTION_STATUS_LOADING,
+  UI_TABLE_PAGE_SIZE_DEFAULT,
   UI_USER_STATUS_ACTION_RETRY,
   UI_USER_STATUS_ERROR_BODY,
   UI_USER_STATUS_ERROR_TITLE,
@@ -18,25 +19,54 @@ import {
 import { SectionStatus } from '../../ui/feedback/SectionStatus'
 import { Page } from '../../ui/layout/Page'
 import { PageHeader } from '../../ui/layout/PageHeader'
-import { UserManagementExample } from '../../ui/workflows/UserManagementExample'
+import { UserManagementPanel } from '../../ui/workflows/UserManagementPanel'
+import type { UiDataTableSortState, UiSortDirection } from '../../ui/types'
 
 export function UsersRouteComponent() {
   const client = useApiClient()
   const { currentUser } = useAuth()
-  const { data, isLoading, isError, refetch } = useAdminUsers(client)
+  const [page, setPage] = useState(1)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [sortState, setSortState] = useState<UiDataTableSortState | undefined>()
+
+  const filters = useMemo(() => {
+    const baseParams = {
+      page,
+      limit: UI_TABLE_PAGE_SIZE_DEFAULT,
+      search: searchTerm || undefined,
+    }
+    if (isVendorScopedUser(currentUser) && currentUser?.vendorId) {
+      return { ...baseParams, vendor_id: currentUser.vendorId }
+    }
+    return baseParams
+  }, [currentUser, page, searchTerm])
+
+  const { data, isLoading, isError, refetch } = useAdminUsers(client, filters)
 
   const users = useMemo(() => {
     const list = Array.isArray(data) ? data : data?.data ?? []
-    if (!isVendorScopedUser(currentUser)) {
-      return list
-    }
-    return list.filter((user) => user.vendorId === currentUser?.vendorId)
-  }, [currentUser, data])
+    return list
+  }, [data])
+
+  const totalPages = useMemo(() => {
+    if (Array.isArray(data)) return 1
+    return data?.pagination?.totalPages ?? 1
+  }, [data])
 
   const canView = canViewUsers(currentUser)
 
   const handleRefresh = () => {
     void refetch()
+  }
+
+  const handleSearch = (term: string) => {
+    setSearchTerm(term)
+    setPage(1)
+  }
+
+  const handleSort = (columnId: string, direction: UiSortDirection) => {
+    setSortState({ columnId, direction })
+    // TODO: Pass sort params to API when supported
   }
 
   return (
@@ -65,9 +95,20 @@ export function UsersRouteComponent() {
       ) : null}
 
       {!isLoading && !isError && canView ? (
-        <UserManagementExample client={client} users={users} currentUser={currentUser ?? undefined} onRefresh={handleRefresh} />
+        <UserManagementPanel
+          client={client}
+          users={users}
+          currentUser={currentUser ?? undefined}
+          onRefresh={handleRefresh}
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          searchTerm={searchTerm}
+          onSearchChange={handleSearch}
+          sortState={sortState}
+          onSortChange={handleSort}
+        />
       ) : null}
     </Page>
   )
 }
-

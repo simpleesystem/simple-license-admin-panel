@@ -1,7 +1,8 @@
-import { useMemo } from 'react'
 import type { Client, LicenseActivation, User } from '@simple-license/react-sdk'
 import { useLicenseActivations } from '@simple-license/react-sdk'
-
+import { useMemo } from 'react'
+import Button from 'react-bootstrap/Button'
+import { canViewActivations, isActivationOwnedByUser, isVendorScopedUser } from '../../app/auth/permissions'
 import {
   UI_COLUMN_ID_LICENSE_ACTIVATION_ACTIVATED_AT,
   UI_COLUMN_ID_LICENSE_ACTIVATION_CLIENT_VERSION,
@@ -28,16 +29,13 @@ import {
   UI_LICENSE_ACTIVATIONS_ERROR_TITLE,
   UI_LICENSE_ACTIVATIONS_LOADING_BODY,
   UI_LICENSE_ACTIVATIONS_LOADING_TITLE,
+  UI_LICENSE_ACTIVATIONS_REFRESH_LABEL,
+  UI_LICENSE_ACTIVATIONS_REFRESH_PENDING,
   UI_LICENSE_ACTIVATIONS_TITLE,
   UI_STACK_GAP_SMALL,
   UI_TEXT_ALIGN_END,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
-import {
-  canViewActivations,
-  isActivationOwnedByUser,
-  isVendorScopedUser,
-} from '../../app/auth/permissions'
 import { DataTable } from '../data/DataTable'
 import { InlineAlert } from '../feedback/InlineAlert'
 import { Stack } from '../layout/Stack'
@@ -80,7 +78,7 @@ export function LicenseActivationsPanel({
   const isVendorScoped = isVendorScopedUser(currentUser)
   const dateTimeFormatter = useMemo(
     () => new Intl.DateTimeFormat(UI_DATE_FORMAT_LOCALE, UI_DATE_TIME_FORMAT_OPTIONS),
-    [],
+    []
   )
   const rowLimit = maxRows ?? UI_LICENSE_ACTIVATIONS_DEFAULT_LIMIT
 
@@ -142,7 +140,10 @@ export function LicenseActivationsPanel({
     ]
   }, [dateTimeFormatter])
 
-  if (!allowView || (isVendorScoped && licenseVendorId && !isActivationOwnedByUser(currentUser ?? null, { vendorId: licenseVendorId }))) {
+  if (
+    !allowView ||
+    (isVendorScoped && licenseVendorId && !isActivationOwnedByUser(currentUser ?? null, { vendorId: licenseVendorId }))
+  ) {
     return (
       <InlineAlert variant="danger" title={UI_LICENSE_ACTIVATIONS_ERROR_TITLE}>
         {UI_LICENSE_ACTIVATIONS_ERROR_BODY}
@@ -176,9 +177,23 @@ export function LicenseActivationsPanel({
 
   return (
     <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
-      <div className="d-flex flex-column gap-1">
-        <h2 className="h5 mb-0">{title}</h2>
-        <p className="text-muted mb-0">{UI_LICENSE_ACTIVATIONS_DESCRIPTION}</p>
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+        <div className="d-flex flex-column gap-1">
+          <h2 className="h5 mb-0">{title}</h2>
+          <p className="text-muted mb-0">{UI_LICENSE_ACTIVATIONS_DESCRIPTION}</p>
+        </div>
+        <div className="d-flex flex-wrap align-items-center gap-2">
+          <Button
+            variant="outline-secondary"
+            onClick={() => activationsQuery.refetch()}
+            disabled={activationsQuery.isFetching}
+            aria-busy={activationsQuery.isFetching}
+          >
+            {activationsQuery.isFetching
+              ? UI_LICENSE_ACTIVATIONS_REFRESH_PENDING
+              : UI_LICENSE_ACTIVATIONS_REFRESH_LABEL}
+          </Button>
+        </div>
       </div>
 
       <DataTable
@@ -190,4 +205,3 @@ export function LicenseActivationsPanel({
     </Stack>
   )
 }
-

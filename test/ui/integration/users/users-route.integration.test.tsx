@@ -39,13 +39,19 @@ describe('UsersRouteComponent', () => {
   test('renders vendor-scoped users and hides create for vendor manager', async () => {
     const vendorUser = buildUser({ role: 'VENDOR_MANAGER', vendorId: 'vendor-1' })
     authUser = vendorUser
+    // Simulate API returning only users for this vendor (server-side filtering)
     const adminUsers = [
       buildUser({ username: 'allowed-user', vendorId: 'vendor-1' }),
-      buildUser({ username: 'other-user', vendorId: 'vendor-2' }),
     ]
     useAdminUsersMock.mockReturnValue({ data: adminUsers, isLoading: false, isError: false, refetch: vi.fn() })
 
     renderWithProviders(<UsersRouteComponent />)
+
+    // Verify the correct parameters were passed to the hook
+    expect(useAdminUsersMock).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ vendor_id: 'vendor-1' })
+    )
 
     expect(await screen.findByText('allowed-user')).toBeInTheDocument()
     expect(screen.queryByText('other-user')).toBeNull()
@@ -74,4 +80,3 @@ describe('UsersRouteComponent', () => {
     })
   })
 })
-

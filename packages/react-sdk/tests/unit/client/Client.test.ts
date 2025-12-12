@@ -44,9 +44,6 @@ import {
   TEST_TIER_CODE_PROFESSIONAL,
   TEST_USER_ID,
   TEST_USERNAME,
-  TEST_WS_PATH_CUSTOM,
-  TEST_WS_PATH_HEALTH,
-  TEST_WS_PROTOCOL_SECURE,
   TEST_BASE_URL_WITH_SLASH,
 } from '../../constants'
 import { createLicense } from '../../factories/license'
@@ -83,18 +80,6 @@ describe('Client', () => {
     it('returns normalized base URL without trailing slash', () => {
       const urlClient = new Client(TEST_BASE_URL_WITH_SLASH, mockHttpClient)
       expect(urlClient.getBaseUrl()).toBe(TEST_BASE_URL)
-    })
-
-    it('builds secure WebSocket URL with default path', () => {
-      const wsUrl = client.getWebSocketUrl()
-      const expected = `${TEST_WS_PROTOCOL_SECURE}${new URL(TEST_BASE_URL).host}${TEST_WS_PATH_HEALTH}`
-      expect(wsUrl).toBe(expected)
-    })
-
-    it('builds WebSocket URL with custom path', () => {
-      const wsUrl = client.getWebSocketUrl(TEST_WS_PATH_CUSTOM)
-      const expected = `${TEST_WS_PROTOCOL_SECURE}${new URL(TEST_BASE_URL).host}${TEST_WS_PATH_CUSTOM}`
-      expect(wsUrl).toBe(expected)
     })
   })
 

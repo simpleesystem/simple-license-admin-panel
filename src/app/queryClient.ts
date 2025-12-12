@@ -3,7 +3,8 @@ import { type DefaultOptions, MutationCache, QueryCache, QueryClient } from '@ta
 import { QUERY_CLIENT_GC_TIME_MS, QUERY_CLIENT_STALE_TIME_MS } from './constants'
 import { mapUnknownToAppError } from './errors/appErrors'
 import { createConsoleLogger } from './logging/logger'
-import { shouldRetryRequest } from './query/errorHandling'
+import { handleQueryError, shouldRetryRequest } from './query/errorHandling'
+import { notifyQueryError } from './query/errorNotifier'
 import { coerceScopeFromMeta } from './query/scope'
 import { useAppStore } from './state/store'
 
@@ -29,13 +30,19 @@ const buildDefaultOptions = (): DefaultOptions => ({
   },
 })
 
-const dispatchError = (error: unknown, scope: string) => {
+const dispatchError = (error: unknown, scope: string, meta?: Record<string, unknown>) => {
   const dispatch = useAppStore.getState().dispatch
   const appError = mapUnknownToAppError(error, scope)
   dispatch({
     type: 'error/raise',
     payload: appError,
   })
+
+  const toastPayload = handleQueryError(error)
+  if (toastPayload && !meta?.suppressErrorToast) {
+    notifyQueryError(toastPayload)
+  }
+
   queryLogger.warn('query:error', {
     type: appError.type,
     code: appError.code,
@@ -51,7 +58,7 @@ export const createAppQueryClient = (): QueryClient => {
     queryCache: new QueryCache({
       onError: (error, query) => {
         const scope = coerceScopeFromMeta(query?.meta, query?.queryKey)
-        dispatchError(error, scope)
+        dispatchError(error, scope, query?.meta as Record<string, unknown>)
       },
       onSuccess: (_data, query) => {
         const scope = coerceScopeFromMeta(query?.meta, query?.queryKey)
@@ -72,7 +79,7 @@ export const createAppQueryClient = (): QueryClient => {
     mutationCache: new MutationCache({
       onError: (error, _variables, _context, mutation) => {
         const scope = coerceScopeFromMeta(mutation?.meta, mutation?.options?.mutationKey)
-        dispatchError(error, scope)
+        dispatchError(error, scope, mutation?.meta as Record<string, unknown>)
       },
       onMutate: (_variables, _mutation, context) => {
         const scope = coerceScopeFromMeta(context?.meta)

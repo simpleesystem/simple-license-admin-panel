@@ -71,8 +71,8 @@ export const ENV_VAR_FEATURE_EXPERIMENTAL_FILTERS = 'VITE_FEATURE_EXPERIMENTAL_F
 export const ENV_VAR_HTTP_TIMEOUT_MS = 'VITE_HTTP_TIMEOUT_MS' as const
 export const ENV_VAR_HTTP_RETRY_ATTEMPTS = 'VITE_HTTP_RETRY_ATTEMPTS' as const
 export const ENV_VAR_HTTP_RETRY_DELAY_MS = 'VITE_HTTP_RETRY_DELAY_MS' as const
-export const ENV_VAR_WS_PATH = 'VITE_WS_PATH' as const
 export const ENV_VAR_AUTH_FORGOT_PASSWORD_URL = 'VITE_AUTH_FORGOT_PASSWORD_URL' as const
+export const DEFAULT_API_BASE_URL = 'http://localhost:3000' as const
 
 export const STORAGE_KEY_AUTH_TOKEN = 'simple-license-admin-auth-token' as const
 export const STORAGE_KEY_AUTH_REFRESH_TOKEN = 'simple-license-admin-auth-refresh-token' as const
@@ -94,7 +94,6 @@ export const APP_THEME_DEFAULT = APP_THEME_LIGHT
 export const APP_HTTP_TIMEOUT_MS = 30_000 as const
 export const APP_HTTP_RETRY_ATTEMPTS = 3 as const
 export const APP_HTTP_RETRY_DELAY_MS = 1_000 as const
-export const APP_WS_HEALTH_PATH = '/ws/health' as const
 
 export const NOTIFICATION_EVENT_TOAST = 'notification:toast' as const
 export const NOTIFICATION_TOAST_DURATION_MS = 4_000 as const
@@ -103,6 +102,7 @@ export const NOTIFICATION_VARIANT_INFO = 'info' as const
 export const NOTIFICATION_VARIANT_SUCCESS = 'success' as const
 export const NOTIFICATION_VARIANT_WARNING = 'warning' as const
 export const NOTIFICATION_VARIANT_ERROR = 'error' as const
+export const DEFAULT_NOTIFICATION_EVENT = NOTIFICATION_EVENT_TOAST
 
 export const FORM_VALIDATION_MODE = 'onSubmit' as const
 export const FORM_REVALIDATION_MODE = 'onChange' as const
@@ -114,6 +114,25 @@ export const SESSION_IDLE_WARNING_MS = 720_000 as const
 export const SESSION_IDLE_TIMEOUT_MS = 900_000 as const
 export const TRACKING_EVENT_SESSION_WARNING = 'session.warning' as const
 export const TRACKING_EVENT_SESSION_TIMEOUT = 'session.timeout' as const
+export const ADMIN_SYSTEM_WS_HEALTH_PATH = '/ws/health' as const
+export const ADMIN_SYSTEM_WS_MESSAGE_TYPE_PING = 'ping' as const
+export const ADMIN_SYSTEM_WS_MESSAGE_TYPE_PONG = 'pong' as const
+export const ADMIN_SYSTEM_WS_MESSAGE_TYPE_REQUEST_HEALTH = 'request_health' as const
+export const ADMIN_SYSTEM_WS_MESSAGE_TYPE_HEALTH_UPDATE = 'health_update' as const
+export const ADMIN_SYSTEM_WS_MESSAGE_TYPE_ERROR = 'error' as const
+export const ADMIN_SYSTEM_WS_STATUS_CONNECTING = 'connecting' as const
+export const ADMIN_SYSTEM_WS_STATUS_CONNECTED = 'connected' as const
+export const ADMIN_SYSTEM_WS_STATUS_DISCONNECTED = 'disconnected' as const
+export const ADMIN_SYSTEM_WS_STATUS_ERROR = 'error' as const
+export const ADMIN_SYSTEM_WS_ERROR_INVALID_MESSAGE = 'invalid-message' as const
+export const ADMIN_SYSTEM_WS_ERROR_UNKNOWN_MESSAGE = 'unknown-message' as const
+export const ADMIN_SYSTEM_WS_ERROR_SOCKET = 'socket-error' as const
+export const ADMIN_SYSTEM_WS_ERROR_CONTEXT_UNAVAILABLE = 'AdminSystemLiveFeedContext unavailable' as const
+export const ADMIN_SYSTEM_WS_BACKOFF_MS_INITIAL = 500 as const
+export const ADMIN_SYSTEM_WS_BACKOFF_MS_MAX = 10_000 as const
+export const ADMIN_SYSTEM_WS_BACKOFF_JITTER_RATIO = 0.3 as const
+export const ADMIN_SYSTEM_WS_CONNECT_TIMEOUT_MS = 5_000 as const
+export const ADMIN_SYSTEM_WS_HEALTH_REQUEST_DEBOUNCE_MS = 250 as const
 
 export const TEST_ID_APP_SHELL = 'app-shell' as const
 export const TEST_ID_TOAST_CONTAINER = 'toast-container' as const
@@ -126,6 +145,12 @@ export const AUTH_ERROR_MESSAGE_KEY = 'auth.error.invalidCredentials' as const
 export const AUTH_STATUS_IDLE = 'auth/status/idle' as const
 export const AUTH_STATUS_LOADING = 'auth/status/loading' as const
 export const AUTH_TOKEN_EXPIRY_SKEW_MS = 30_000 as const
+export const AUTH_LOGIN_TOAST_SUCCESS = 'Signed in successfully' as const
+export const AUTH_LOGIN_TOAST_ERROR = 'Unable to sign in' as const
+export const AUTH_RESET_TOAST_SUCCESS = 'Reset link sent successfully' as const
+export const AUTH_RESET_TOAST_ERROR = 'Unable to send reset link' as const
+export const UI_HEADER_SIGN_OUT_TOAST_SUCCESS = 'Signed out successfully' as const
+export const UI_HEADER_SIGN_OUT_TOAST_ERROR = 'Unable to sign out' as const
 
 export type SupportedLanguage = (typeof APP_SUPPORTED_LANGUAGES)[number]
 

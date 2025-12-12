@@ -69,6 +69,6 @@ describe('ChangePasswordFlow integration', () => {
     fireEvent.change(screen.getByLabelText(/confirm new password/i), { target: { value: 'new-pass' } })
     fireEvent.click(screen.getByRole('button', { name: UI_CHANGE_PASSWORD_BUTTON_UPDATE }))
 
-    expect(await screen.findByText(/bad creds/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Unable to update account settings/i)).toBeInTheDocument()
   })
 })

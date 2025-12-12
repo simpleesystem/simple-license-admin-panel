@@ -1,52 +1,40 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { registerQueryErrorNotifier, notifyQueryError } from '../../../src/app/query/errorNotifier'
-import {
-  I18N_KEY_APP_ERROR_MESSAGE,
-  I18N_KEY_APP_ERROR_TITLE,
-  NOTIFICATION_VARIANT_ERROR,
-} from '../../../src/app/constants'
-
-const samplePayload = {
-  titleKey: I18N_KEY_APP_ERROR_TITLE,
-  descriptionKey: I18N_KEY_APP_ERROR_MESSAGE,
-  variant: NOTIFICATION_VARIANT_ERROR,
-}
+import { I18N_KEY_APP_ERROR_MESSAGE, I18N_KEY_APP_ERROR_TITLE, NOTIFICATION_VARIANT_ERROR } from '@/app/constants'
+import { notifyQueryError, registerQueryErrorNotifier } from '@/app/query/errorNotifier'
+import type { ToastNotificationPayload } from '@/notifications/constants'
 
 describe('query error notifier', () => {
-  it('invokes the registered notifier when errors occur', () => {
-    const spy = vi.fn()
-    const cleanup = registerQueryErrorNotifier(spy)
+  const payload: ToastNotificationPayload = {
+    titleKey: I18N_KEY_APP_ERROR_TITLE,
+    descriptionKey: I18N_KEY_APP_ERROR_MESSAGE,
+    variant: NOTIFICATION_VARIANT_ERROR,
+  }
 
-    notifyQueryError(samplePayload)
+  it('routes notifications to the latest registered handler', () => {
+    const firstHandler = vi.fn()
+    const secondHandler = vi.fn()
 
-    expect(spy).toHaveBeenCalledWith(samplePayload)
-    cleanup()
+    const unregisterFirst = registerQueryErrorNotifier(firstHandler)
+    const unregisterSecond = registerQueryErrorNotifier(secondHandler)
+
+    notifyQueryError(payload)
+
+    expect(firstHandler).not.toHaveBeenCalled()
+    expect(secondHandler).toHaveBeenCalledWith(payload)
+
+    unregisterFirst()
+    unregisterSecond()
   })
 
-  it('stops notifying once unsubscribed', () => {
-    const spy = vi.fn()
-    const cleanup = registerQueryErrorNotifier(spy)
+  it('stops routing notifications after unregistering the handler', () => {
+    const handler = vi.fn()
+    const unregister = registerQueryErrorNotifier(handler)
 
-    cleanup()
-    notifyQueryError(samplePayload)
+    notifyQueryError(payload)
+    unregister()
+    notifyQueryError(payload)
 
-    expect(spy).not.toHaveBeenCalled()
-  })
-
-  it('ignores stale cleanup handlers once a new notifier is registered', () => {
-    const first = vi.fn()
-    const second = vi.fn()
-
-    const firstCleanup = registerQueryErrorNotifier(first)
-    registerQueryErrorNotifier(second)
-
-    firstCleanup()
-    notifyQueryError(samplePayload)
-
-    expect(first).not.toHaveBeenCalled()
-    expect(second).toHaveBeenCalledTimes(1)
+    expect(handler).toHaveBeenCalledTimes(1)
   })
 })
-
-

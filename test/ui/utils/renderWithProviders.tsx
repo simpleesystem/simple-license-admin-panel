@@ -5,6 +5,8 @@ import type { ReactElement } from 'react'
 import { ApiContext } from '../../../src/api/apiContext'
 import { AuthProvider } from '../../../src/app/auth/AuthProvider'
 import { AppProviders } from '../../../src/app/AppProviders'
+import { AdminSystemLiveFeedContext } from '../../../src/app/live/AdminSystemLiveFeedContext'
+import { ADMIN_SYSTEM_WS_STATUS_DISCONNECTED } from '../../../src/app/constants'
 
 type RenderWithProvidersOptions = {
   client?: unknown
@@ -19,6 +21,15 @@ export const createTestQueryClient = () =>
     },
   })
 
+const mockLiveContext = {
+  state: {
+    connectionStatus: ADMIN_SYSTEM_WS_STATUS_DISCONNECTED,
+    lastHealthUpdate: null,
+    lastError: null,
+  },
+  requestHealth: () => {},
+}
+
 export const renderWithProviders = (ui: ReactElement, options?: RenderWithProvidersOptions) => {
   const queryClient = options?.queryClient ?? createTestQueryClient()
   const apiClient = options?.client ?? ({} as unknown)
@@ -26,11 +37,12 @@ export const renderWithProviders = (ui: ReactElement, options?: RenderWithProvid
   return render(
     <QueryClientProvider client={queryClient}>
       <ApiContext.Provider value={apiClient}>
-        <AppProviders>
-          <AuthProvider>{ui}</AuthProvider>
-        </AppProviders>
+        <AdminSystemLiveFeedContext.Provider value={mockLiveContext}>
+          <AppProviders>
+            <AuthProvider>{ui}</AuthProvider>
+          </AppProviders>
+        </AdminSystemLiveFeedContext.Provider>
       </ApiContext.Provider>
     </QueryClientProvider>,
   )
 }
-

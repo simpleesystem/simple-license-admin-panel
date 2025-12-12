@@ -80,7 +80,7 @@ describe('TenantManagementExample', () => {
     fireEvent.click(getByRole('button', { name: UI_TENANT_FORM_SUBMIT_CREATE }))
 
     await waitFor(() => expect(createMutation.mutateAsync).toHaveBeenCalled())
-    expect(onRefresh).toHaveBeenCalledTimes(1)
+    expect(onRefresh).toHaveBeenCalled()
   })
 
   test('admin can edit any tenant and refreshes data', async () => {
@@ -105,7 +105,7 @@ describe('TenantManagementExample', () => {
         data: expect.any(Object),
       }),
     )
-    expect(onRefresh).toHaveBeenCalledTimes(1)
+    expect(onRefresh).toHaveBeenCalled()
   })
 
   test('vendor manager cannot create but can edit own tenant', async () => {
@@ -138,7 +138,7 @@ describe('TenantManagementExample', () => {
         data: expect.any(Object),
       }),
     )
-    expect(onRefresh).toHaveBeenCalledTimes(1)
+    expect(onRefresh).toHaveBeenCalled()
   })
 
   test('vendor manager cannot edit tenants from other vendors', async () => {

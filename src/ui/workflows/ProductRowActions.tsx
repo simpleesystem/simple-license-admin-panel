@@ -1,9 +1,10 @@
 import type { Client, User } from '@simple-license/react-sdk'
 import { useDeleteProduct, useResumeProduct, useSuspendProduct } from '@simple-license/react-sdk'
 import type { ReactNode } from 'react'
-
-import { adaptMutation } from '../actions/mutationAdapter'
+import { canDeleteProduct, canUpdateProduct } from '../../app/auth/permissions'
+import { useNotificationBus } from '../../notifications/busContext'
 import { createCrudActions } from '../actions/mutationActions'
+import { adaptMutation } from '../actions/mutationAdapter'
 import {
   UI_ENTITY_PRODUCT,
   UI_PRODUCT_ACTION_DELETE,
@@ -12,8 +13,8 @@ import {
   UI_PRODUCT_BUTTON_DELETE,
 } from '../constants'
 import { ActionMenu } from '../data/ActionMenu'
-import { canDeleteProduct, canUpdateProduct } from '../../app/auth/permissions'
 import type { UiCommonProps } from '../types'
+import { notifyCrudError, notifyProductSuccess } from './notifications'
 
 type ProductRowActionsProps = UiCommonProps & {
   client: Client
@@ -38,6 +39,7 @@ export function ProductRowActions({
   const deleteMutation = adaptMutation(useDeleteProduct(client))
   const suspendMutation = adaptMutation(useSuspendProduct(client))
   const resumeMutation = adaptMutation(useResumeProduct(client))
+  const notificationBus = useNotificationBus()
 
   const productContext = { vendorId }
   const allowUpdate = canUpdateProduct(currentUser, productContext)
@@ -53,9 +55,15 @@ export function ProductRowActions({
           label: UI_PRODUCT_ACTION_DELETE,
           mutation: {
             mutateAsync: async (payload) => {
-              const result = await deleteMutation.mutateAsync(payload)
-              onCompleted?.()
-              return result
+              try {
+                const result = await deleteMutation.mutateAsync(payload)
+                onCompleted?.()
+                notifyProductSuccess(notificationBus, 'delete')
+                return result
+              } catch (error) {
+                notifyCrudError(notificationBus)
+                throw error
+              }
             },
             isPending: deleteMutation.isPending,
           },
@@ -67,9 +75,15 @@ export function ProductRowActions({
           label: UI_PRODUCT_ACTION_SUSPEND,
           mutation: {
             mutateAsync: async (payload) => {
-              const result = await suspendMutation.mutateAsync(payload)
-              onCompleted?.()
-              return result
+              try {
+                const result = await suspendMutation.mutateAsync(payload)
+                onCompleted?.()
+                notifyProductSuccess(notificationBus, 'suspend')
+                return result
+              } catch (error) {
+                notifyCrudError(notificationBus)
+                throw error
+              }
             },
             isPending: suspendMutation.isPending,
           },
@@ -82,9 +96,15 @@ export function ProductRowActions({
           label: UI_PRODUCT_ACTION_RESUME,
           mutation: {
             mutateAsync: async (payload) => {
-              const result = await resumeMutation.mutateAsync(payload)
-              onCompleted?.()
-              return result
+              try {
+                const result = await resumeMutation.mutateAsync(payload)
+                onCompleted?.()
+                notifyProductSuccess(notificationBus, 'resume')
+                return result
+              } catch (error) {
+                notifyCrudError(notificationBus)
+                throw error
+              }
             },
             isPending: resumeMutation.isPending,
           },
@@ -96,14 +116,5 @@ export function ProductRowActions({
 
   const fallbackLabel = allowDelete ? UI_PRODUCT_BUTTON_DELETE : UI_PRODUCT_ACTION_SUSPEND
 
-  return (
-    <ActionMenu
-      {...rest}
-      items={actions}
-      buttonLabel={buttonLabel ?? fallbackLabel}
-      variant="outline-secondary"
-    />
-  )
+  return <ActionMenu {...rest} items={actions} buttonLabel={buttonLabel ?? fallbackLabel} variant="outline-secondary" />
 }
-
-

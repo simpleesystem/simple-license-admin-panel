@@ -125,6 +125,7 @@ import type {
   ListProductsResponse,
   ListProductTiersResponse,
   ListTenantsResponse,
+  ListUsersRequest,
   ListUsersResponse,
   LoginRequest,
   LoginResponse,
@@ -156,8 +157,6 @@ import type {
   ChangePasswordRequest,
 } from './types/api'
 import type { User } from './types/license'
-
-const CLIENT_DEFAULT_WS_PATH = '/ws/health' as const
 
 export class Client {
   private readonly httpClient: HttpClientInterface
@@ -278,24 +277,6 @@ export class Client {
 
   getBaseUrl(): string {
     return this.baseUrl
-  }
-
-  getWebSocketUrl(path: string = CLIENT_DEFAULT_WS_PATH): string {
-    // Allow callers to pass full ws/wss URLs directly.
-    if (path.startsWith('ws://') || path.startsWith('wss://')) {
-      return path
-    }
-    // Support callers passing an http(s) URL to be converted to ws(s).
-    if (path.startsWith('http://') || path.startsWith('https://')) {
-      const httpUrl = new URL(path)
-      const protocol = httpUrl.protocol === 'https:' ? 'wss:' : 'ws:'
-      return `${protocol}//${httpUrl.host}${httpUrl.pathname}${httpUrl.search}`
-    }
-
-    const url = new URL(this.baseUrl)
-    const protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
-    const normalizedPath = path.startsWith('/') ? path : `/${path}`
-    return `${protocol}//${url.host}${normalizedPath}`
   }
 
   // Public API methods
@@ -589,8 +570,30 @@ export class Client {
   }
 
   // Admin API - Users
-  async listUsers(): Promise<ListUsersResponse> {
-    const response = await this.httpClient.get<ApiResponse<ListUsersResponse>>(API_ENDPOINT_ADMIN_USERS_LIST)
+  async listUsers(filters?: ListUsersRequest): Promise<ListUsersResponse> {
+    const queryParams = new URLSearchParams()
+    if (filters?.role) {
+      queryParams.append('role', filters.role)
+    }
+    if (filters?.vendor_id) {
+      queryParams.append('vendor_id', filters.vendor_id)
+    }
+    if (filters?.search) {
+      queryParams.append('search', filters.search)
+    }
+    if (typeof filters?.limit === 'number') {
+      queryParams.append('limit', String(filters.limit))
+    }
+    if (typeof filters?.offset === 'number') {
+      queryParams.append('offset', String(filters.offset))
+    }
+
+    const url =
+      queryParams.size > 0
+        ? `${API_ENDPOINT_ADMIN_USERS_LIST}?${queryParams.toString()}`
+        : API_ENDPOINT_ADMIN_USERS_LIST
+
+    const response = await this.httpClient.get<ApiResponse<ListUsersResponse>>(url)
 
     return this.handleApiResponse(response.data, {} as ListUsersResponse)
   }

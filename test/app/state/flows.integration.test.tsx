@@ -28,7 +28,7 @@ const resetStore = () => {
     user: null,
     permissions: derivePermissionsFromUser(null),
     data: {},
-    surface: {},
+    surface: { errors: {}, lastScope: null, loading: {} },
     navigationIntent: null,
     dispatch,
   })

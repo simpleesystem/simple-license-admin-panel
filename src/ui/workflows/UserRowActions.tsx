@@ -1,26 +1,34 @@
 import type { Client, User } from '@simple-license/react-sdk'
 import { useDeleteUser } from '@simple-license/react-sdk'
-import type { ReactNode } from 'react'
-
+import { useState } from 'react'
+import Button from 'react-bootstrap/Button'
+import { useNotificationBus } from '../../notifications/busContext'
 import { adaptMutation } from '../actions/mutationAdapter'
-import { createCrudActions } from '../actions/mutationActions'
 import {
-  UI_ENTITY_USER,
+  UI_BUTTON_VARIANT_GHOST,
   UI_USER_ACTION_DELETE,
   UI_USER_ACTION_EDIT,
   UI_USER_BUTTON_DELETE,
+  UI_USER_CONFIRM_DELETE_BODY,
+  UI_USER_CONFIRM_DELETE_CANCEL,
+  UI_USER_CONFIRM_DELETE_CONFIRM,
+  UI_USER_CONFIRM_DELETE_TITLE,
+  UI_USER_STATUS_DELETED,
 } from '../constants'
-import { ActionMenu } from '../data/ActionMenu'
+import { Stack } from '../layout/Stack'
+import { ModalDialog } from '../overlay/ModalDialog'
 import type { UiCommonProps } from '../types'
+import { VisibilityGate } from '../utils/PermissionGate'
+import { notifyCrudError, notifyUserSuccess } from './notifications'
 
 type UserRowActionsProps = UiCommonProps & {
   client: Client
   user: User
   onEdit: (user: User) => void
   onCompleted?: () => void
-  buttonLabel?: ReactNode
   allowUpdate?: boolean
   allowDelete?: boolean
+  currentUserId?: string
 }
 
 export function UserRowActions({
@@ -28,52 +36,86 @@ export function UserRowActions({
   user,
   onEdit,
   onCompleted,
-  buttonLabel,
   allowUpdate = true,
   allowDelete = true,
+  currentUserId,
   ...rest
 }: UserRowActionsProps) {
   const deleteMutation = adaptMutation(useDeleteUser(client))
+  const notificationBus = useNotificationBus()
+  const [showConfirm, setShowConfirm] = useState(false)
 
-  const actions = createCrudActions<string, unknown, User>(UI_ENTITY_USER, {
-    update: allowUpdate
-      ? {
-          label: UI_USER_ACTION_EDIT,
-          buildPayload: () => user,
-          mutation: {
-            mutateAsync: async () => user,
-            isPending: false,
-          },
-          onSuccess: () => onEdit(user),
-        }
-      : undefined,
-    delete: allowDelete
-      ? {
-          label: UI_USER_ACTION_DELETE,
-          buildPayload: () => user.id,
-          mutation: {
-            mutateAsync: async (payload) => {
-              const result = await deleteMutation.mutateAsync(payload)
-              onCompleted?.()
-              return result
-            },
-            isPending: deleteMutation.isPending,
-          },
-        }
-      : undefined,
-  })
+  const isSelf = currentUserId === user.id
+  const isDeleted = user.status === UI_USER_STATUS_DELETED
+  const canEdit = allowUpdate && !isSelf
+  const canDelete = allowDelete && !isSelf && !isDeleted
+  const showDeleteButton = allowDelete && !isSelf
 
-  if (actions.length === 0) {
+  const handleConfirmDelete = async () => {
+    try {
+      await deleteMutation.mutateAsync(user.id)
+      notifyUserSuccess(notificationBus, 'delete')
+      onCompleted?.()
+    } catch (error) {
+      notifyCrudError(notificationBus)
+      throw error
+    } finally {
+      setShowConfirm(false)
+    }
+  }
+
+  if (!canEdit && !canDelete) {
     return null
   }
 
   return (
-    <ActionMenu
-      {...rest}
-      items={actions}
-      buttonLabel={buttonLabel ?? UI_USER_BUTTON_DELETE}
-    />
+    <VisibilityGate
+      ability={rest.ability}
+      permissionKey={rest.permissionKey}
+      permissionFallback={rest.permissionFallback}
+    >
+      <Stack direction="row" gap="small" {...rest}>
+        {canEdit ? (
+          <Button variant={UI_BUTTON_VARIANT_GHOST} onClick={() => onEdit(user)} aria-label={UI_USER_ACTION_EDIT}>
+            {UI_USER_ACTION_EDIT}
+          </Button>
+        ) : null}
+        {showDeleteButton ? (
+          <>
+            <Button
+              variant={UI_BUTTON_VARIANT_GHOST}
+              onClick={() => {
+                if (isDeleted) {
+                  return
+                }
+                setShowConfirm(true)
+              }}
+              disabled={deleteMutation.isPending || isDeleted}
+              aria-label={UI_USER_ACTION_DELETE}
+            >
+              {UI_USER_BUTTON_DELETE}
+            </Button>
+            <ModalDialog
+              show={showConfirm}
+              onClose={() => setShowConfirm(false)}
+              title={UI_USER_CONFIRM_DELETE_TITLE}
+              body={UI_USER_CONFIRM_DELETE_BODY}
+              primaryAction={{
+                label: UI_USER_CONFIRM_DELETE_CONFIRM,
+                onClick: handleConfirmDelete,
+                disabled: deleteMutation.isPending,
+              }}
+              secondaryAction={{
+                label: UI_USER_CONFIRM_DELETE_CANCEL,
+                onClick: () => setShowConfirm(false),
+              }}
+              ability={rest.ability}
+              permissionKey={rest.permissionKey}
+              permissionFallback={rest.permissionFallback}
+            />
+          </>
+        ) : null}
+      </Stack>
+    </VisibilityGate>
   )
 }
-
-

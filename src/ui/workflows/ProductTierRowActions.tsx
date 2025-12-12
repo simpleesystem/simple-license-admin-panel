@@ -1,9 +1,10 @@
 import type { Client, ProductTier, User } from '@simple-license/react-sdk'
 import { useDeleteProductTier } from '@simple-license/react-sdk'
 import type { ReactNode } from 'react'
-
-import { adaptMutation } from '../actions/mutationAdapter'
+import { canDeleteProductTier, canUpdateProductTier } from '../../app/auth/permissions'
+import { useNotificationBus } from '../../notifications/busContext'
 import { createCrudActions } from '../actions/mutationActions'
+import { adaptMutation } from '../actions/mutationAdapter'
 import {
   UI_ENTITY_PRODUCT_TIER,
   UI_PRODUCT_TIER_ACTION_DELETE,
@@ -11,8 +12,8 @@ import {
   UI_PRODUCT_TIER_BUTTON_DELETE,
 } from '../constants'
 import { ActionMenu } from '../data/ActionMenu'
-import { canDeleteProductTier, canUpdateProductTier } from '../../app/auth/permissions'
 import type { UiCommonProps } from '../types'
+import { notifyCrudError, notifyProductTierSuccess } from './notifications'
 
 type ProductTierSummary = Pick<ProductTier, 'id' | 'tierCode' | 'tierName'>
 
@@ -37,6 +38,7 @@ export function ProductTierRowActions({
   ...rest
 }: ProductTierRowActionsProps) {
   const deleteMutation = adaptMutation(useDeleteProductTier(client))
+  const notificationBus = useNotificationBus()
   const tierContext = { vendorId: vendorId ?? (tier as { vendorId?: string | null }).vendorId }
   const allowUpdate = canUpdateProductTier(currentUser, tierContext)
   const allowDelete = canDeleteProductTier(currentUser)
@@ -63,9 +65,15 @@ export function ProductTierRowActions({
           buildPayload: () => tier.id,
           mutation: {
             mutateAsync: async (payload) => {
-              const result = await deleteMutation.mutateAsync(payload)
-              onCompleted?.()
-              return result
+              try {
+                const result = await deleteMutation.mutateAsync(payload)
+                onCompleted?.()
+                notifyProductTierSuccess(notificationBus, 'delete')
+                return result
+              } catch (error) {
+                notifyCrudError(notificationBus)
+                throw error
+              }
             },
             isPending: deleteMutation.isPending,
           },
@@ -75,13 +83,5 @@ export function ProductTierRowActions({
 
   const fallbackLabel = allowDelete ? UI_PRODUCT_TIER_BUTTON_DELETE : UI_PRODUCT_TIER_ACTION_EDIT
 
-  return (
-    <ActionMenu
-      {...rest}
-      items={actions}
-      buttonLabel={buttonLabel ?? fallbackLabel}
-    />
-  )
+  return <ActionMenu {...rest} items={actions} buttonLabel={buttonLabel ?? fallbackLabel} />
 }
-
-

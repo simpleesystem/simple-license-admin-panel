@@ -1,27 +1,31 @@
 import Joi from 'joi'
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Button, Card } from 'react-bootstrap'
 import { useFormContext, useWatch } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { AppForm } from '../../forms/Form'
+import { useNotificationBus } from '../../notifications/busContext'
+import { DEFAULT_NOTIFICATION_EVENT } from '../../notifications/constants'
 import { UI_AUTH_CARD_MIN_HEIGHT, UI_STACK_GAP_MEDIUM } from '../../ui/constants'
 import { TextField } from '../../ui/forms/TextField'
 import { Stack } from '../../ui/layout/Stack'
+import { useAppConfig } from '../config'
 import {
   AUTH_FIELD_PASSWORD,
   AUTH_FIELD_USERNAME,
+  AUTH_LOGIN_TOAST_SUCCESS,
   I18N_KEY_AUTH_FORGOT_LINK,
   I18N_KEY_AUTH_SUBMIT,
   I18N_KEY_FORM_PASSWORD_LABEL,
   I18N_KEY_FORM_PASSWORD_REQUIRED,
   I18N_KEY_FORM_USERNAME_LABEL,
   I18N_KEY_FORM_USERNAME_REQUIRED,
+  ROUTE_PATH_DASHBOARD,
 } from '../constants'
+import { mapUnknownToAppError } from '../errors/appErrors'
 import { useLogger } from '../logging/loggerContext'
-import { raiseErrorFromUnknown } from '../state/dispatchers'
 import { useAppStore } from '../state/store'
 import { useAuth } from './authContext'
-import { useAppConfig } from '../config'
 
 type LoginFormValues = {
   [AUTH_FIELD_USERNAME]: string
@@ -59,29 +63,42 @@ export function LoginCard({ redirectTo }: LoginCardProps) {
   const { login } = useAuth()
   const dispatch = useAppStore((state) => state.dispatch)
   const logger = useLogger()
+  const notificationBus = useNotificationBus()
   const { authForgotPasswordUrl = null } = useAppConfig()
   const schema = useMemo(() => buildSchema(t), [t])
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const inFlightRef = useRef(false)
   const submitLabel = t(I18N_KEY_AUTH_SUBMIT)
   const forgotLabel = t(I18N_KEY_AUTH_FORGOT_LINK)
 
   const handleSubmit = async (values: LoginFormValues) => {
+    const attemptId = Math.random().toString(36).slice(2)
+    if (inFlightRef.current) {
+      return
+    }
+
+    inFlightRef.current = true
+
     try {
       setIsSubmitting(true)
       dispatch({ type: 'loading/set', scope: 'auth', isLoading: true })
-      logger.debug('auth:login:submit', { redirectTo: redirectTo ?? '/' })
+      const safeRedirect =
+        redirectTo && redirectTo !== ROUTE_PATH_DASHBOARD && redirectTo !== '/health'
+          ? redirectTo
+          : ROUTE_PATH_DASHBOARD
+      logger.debug('auth:login:submit', { redirectTo: safeRedirect })
       await login(values[AUTH_FIELD_USERNAME], values[AUTH_FIELD_PASSWORD])
       dispatch({
         type: 'nav/intent',
-        payload: { to: redirectTo ?? '/', replace: true },
+        payload: { to: safeRedirect, replace: true },
       })
-      logger.info('auth:login:dispatched-nav', { to: redirectTo ?? '/' })
+      notificationBus.emit(DEFAULT_NOTIFICATION_EVENT, {
+        titleKey: AUTH_LOGIN_TOAST_SUCCESS,
+      })
+      logger.info('auth:login:dispatched-nav', { to: safeRedirect })
     } catch (error) {
-      const appError = raiseErrorFromUnknown({
-        error,
-        dispatch,
-        scope: 'auth',
-      })
+      const appError = mapUnknownToAppError(error, 'auth')
+
       logger.error(error, {
         stage: 'auth:login:submit:error',
         code: appError.code,
@@ -89,9 +106,11 @@ export function LoginCard({ redirectTo }: LoginCardProps) {
         status: appError.status,
         requestId: appError.requestId,
         scope: appError.scope,
+        attemptId,
       })
     } finally {
       setIsSubmitting(false)
+      inFlightRef.current = false
       dispatch({ type: 'loading/set', scope: 'auth', isLoading: false })
     }
   }
@@ -153,17 +172,17 @@ function LoginFormActions({ isSubmitting, submitLabel, forgotLabel, forgotPasswo
         {isSubmitting ? `${submitLabel}…` : submitLabel}
       </Button>
       {forgotPasswordUrl ? (
-      <div className="text-center">
-        <Button
-          variant="link"
-          className="text-decoration-none p-0"
+        <div className="text-center">
+          <Button
+            variant="link"
+            className="text-decoration-none p-0"
             href={forgotPasswordUrl}
-          target="_blank"
-          rel="noreferrer"
-        >
-          {forgotLabel}
-        </Button>
-      </div>
+            target="_blank"
+            rel="noreferrer"
+          >
+            {forgotLabel}
+          </Button>
+        </div>
       ) : null}
     </div>
   )

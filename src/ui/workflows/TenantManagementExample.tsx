@@ -1,10 +1,19 @@
 import type { Client, Tenant, User } from '@simple-license/react-sdk'
-import Button from 'react-bootstrap/Button'
 import { useMemo, useState } from 'react'
-
+import Button from 'react-bootstrap/Button'
+import {
+  canCreateTenant,
+  canUpdateTenant,
+  canViewTenants,
+  isTenantOwnedByUser,
+  isVendorScopedUser,
+} from '../../app/auth/permissions'
+import { useNotificationBus } from '../../notifications/busContext'
 import {
   UI_BUTTON_VARIANT_GHOST,
   UI_BUTTON_VARIANT_PRIMARY,
+  UI_DATE_FORMAT_LOCALE,
+  UI_DATE_FORMAT_OPTIONS,
   UI_TENANT_BUTTON_CREATE,
   UI_TENANT_BUTTON_EDIT,
   UI_TENANT_COLUMN_HEADER_ACTIONS,
@@ -19,13 +28,11 @@ import {
   UI_TENANT_FORM_SUBMIT_CREATE,
   UI_TENANT_FORM_SUBMIT_UPDATE,
   UI_VALUE_PLACEHOLDER,
-  UI_DATE_FORMAT_LOCALE,
-  UI_DATE_FORMAT_OPTIONS,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
 import { Stack } from '../layout/Stack'
-import { canCreateTenant, canUpdateTenant, canViewTenants, isTenantOwnedByUser, isVendorScopedUser } from '../../app/auth/permissions'
 import type { UiDataTableColumn } from '../types'
+import { notifyCrudError, notifyTenantSuccess } from './notifications'
 import { TenantFormFlow } from './TenantFormFlow'
 import { TenantRowActions } from './TenantRowActions'
 
@@ -52,10 +59,11 @@ export const formatTenantCreatedAt = (createdAt: TenantListItem['createdAt'] | u
 export function TenantManagementExample({ client, tenants, currentUser, onRefresh }: TenantManagementExampleProps) {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingTenant, setEditingTenant] = useState<TenantListItem | null>(null)
+  const notificationBus = useNotificationBus()
   const isVendorScoped = isVendorScopedUser(currentUser)
   const visibleTenants = useMemo(
     () => (isVendorScoped ? tenants.filter((tenant) => isTenantOwnedByUser(currentUser, tenant)) : tenants),
-    [currentUser, isVendorScoped, tenants],
+    [currentUser, isVendorScoped, tenants]
   )
   const allowCreate = canCreateTenant(currentUser)
 
@@ -100,10 +108,19 @@ export function TenantManagementExample({ client, tenants, currentUser, onRefres
         },
       },
     ],
-    [client, currentUser, onRefresh],
+    [client, currentUser, onRefresh]
   )
 
   const canView = canViewTenants(currentUser)
+
+  const refreshWith = (action: 'create' | 'update' | 'delete') => {
+    onRefresh?.()
+    notifyTenantSuccess(notificationBus, action)
+  }
+
+  const handleMutationError = () => {
+    notifyCrudError(notificationBus)
+  }
 
   return (
     <Stack direction="column" gap="medium">
@@ -130,6 +147,8 @@ export function TenantManagementExample({ client, tenants, currentUser, onRefres
           onClose={() => setShowCreateModal(false)}
           submitLabel={UI_TENANT_FORM_SUBMIT_CREATE}
           onCompleted={onRefresh}
+          onSuccess={() => refreshWith('create')}
+          onError={handleMutationError}
         />
       ) : null}
 
@@ -137,7 +156,7 @@ export function TenantManagementExample({ client, tenants, currentUser, onRefres
         <TenantFormFlow
           client={client}
           mode="update"
-          show
+          show={Boolean(editingTenant)}
           onClose={() => setEditingTenant(null)}
           submitLabel={UI_TENANT_FORM_SUBMIT_UPDATE}
           tenantId={editingTenant.id}
@@ -145,10 +164,10 @@ export function TenantManagementExample({ client, tenants, currentUser, onRefres
             name: editingTenant.name,
           }}
           onCompleted={onRefresh}
+          onSuccess={() => refreshWith('update')}
+          onError={handleMutationError}
         />
       ) : null}
     </Stack>
   )
 }
-
-

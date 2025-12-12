@@ -1,6 +1,9 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi, beforeEach } from 'vitest'
 
 import { NOTIFICATION_VARIANT_ERROR } from '../../../src/app/constants'
+import { createAppQueryClient } from '../../../src/app/queryClient'
+import { notifyQueryError } from '../../../src/app/query/errorNotifier'
+import { useAppStore } from '../../../src/app/state/store'
 
 const mocks = vi.hoisted(() => ({
   shouldRetryRequestMock: vi.fn(() => true),
@@ -9,6 +12,7 @@ const mocks = vi.hoisted(() => ({
     descriptionKey: 'errors.description',
     variant: NOTIFICATION_VARIANT_ERROR,
   })),
+  dispatchMock: vi.fn(),
 }))
 
 vi.mock('../../../src/app/query/errorHandling', () => ({
@@ -16,23 +20,25 @@ vi.mock('../../../src/app/query/errorHandling', () => ({
   handleQueryError: mocks.handleQueryErrorMock,
 }))
 
-import { createAppQueryClient } from '../../../src/app/queryClient'
-import { QUERY_EVENT_ERROR, type QueryEventBus } from '../../../src/app/query/events'
+vi.mock('../../../src/app/query/errorNotifier', () => ({
+  notifyQueryError: vi.fn(),
+}))
+
+vi.mock('../../../src/app/state/store', () => ({
+  useAppStore: {
+    getState: () => ({
+      dispatch: mocks.dispatchMock,
+    }),
+  },
+}))
 
 describe('createAppQueryClient', () => {
-  it('publishes query and mutation error events through the shared handler', () => {
-    const logger = {
-      debug: vi.fn(),
-      info: vi.fn(),
-      warn: vi.fn(),
-      error: vi.fn(),
-    }
-    const queryEvents: QueryEventBus = {
-      emit: vi.fn(),
-      on: vi.fn(),
-      off: vi.fn(),
-    }
-    const client = createAppQueryClient(logger, queryEvents)
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('publishes query and mutation error events through the notification system', () => {
+    const client = createAppQueryClient()
     const testError = new Error('query failed')
 
     client.getQueryCache().config.onError?.(testError as never, {} as never)
@@ -40,10 +46,13 @@ describe('createAppQueryClient', () => {
       .getMutationCache()
       .config.onError?.(testError as never, undefined, undefined, {} as never, {} as never)
 
-    expect(queryEvents.emit).toHaveBeenNthCalledWith(1, QUERY_EVENT_ERROR, { error: testError })
-    expect(queryEvents.emit).toHaveBeenNthCalledWith(2, QUERY_EVENT_ERROR, { error: testError })
-    expect(logger.error).toHaveBeenNthCalledWith(1, testError, { source: 'react-query' })
-    expect(logger.error).toHaveBeenNthCalledWith(2, testError, { source: 'react-query' })
+    expect(notifyQueryError).toHaveBeenCalledTimes(2)
+    expect(mocks.dispatchMock).toHaveBeenCalledTimes(2)
+    expect(mocks.dispatchMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'error/raise',
+      })
+    )
   })
 
   it('delegates retry decisions to the shared strategy', () => {
@@ -59,22 +68,4 @@ describe('createAppQueryClient', () => {
     expect(queryRetryResult).toBe(true)
     expect(mutationRetryResult).toBe(true)
   })
-
-  it('logs errors even when no query event bus is provided', () => {
-    const logger = {
-      debug: vi.fn(),
-      info: vi.fn(),
-      warn: vi.fn(),
-      error: vi.fn(),
-    }
-
-    const client = createAppQueryClient(logger)
-    const error = new Error('orphaned')
-
-    client.getQueryCache().config.onError?.(error as never, {} as never)
-
-    expect(logger.error).toHaveBeenCalledWith(error, { source: 'react-query' })
-  })
 })
-
-

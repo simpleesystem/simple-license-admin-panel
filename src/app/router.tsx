@@ -53,20 +53,20 @@ const rootRoute = createRootRouteWithContext<RouterContext>()({
 
 const dashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: ROUTE_PATH_ROOT,
+  path: ROUTE_PATH_DASHBOARD,
   beforeLoad: ({ context, location }) => {
     assertPermission(context, location, 'viewDashboard')
   },
   component: DashboardRouteComponent,
 })
 
-const dashboardIndexRoute = createRoute({
+const rootLandingRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: ROUTE_PATH_DASHBOARD,
+  path: ROUTE_PATH_ROOT,
   beforeLoad: ({ context, location }) => {
     assertPermission(context, location, 'viewDashboard')
+    throw redirect({ to: ROUTE_PATH_DASHBOARD })
   },
-  component: DashboardRouteComponent,
 })
 
 const authRoute = createRoute({
@@ -158,7 +158,7 @@ const notFoundRoute = createRoute({
 
 const routeTree = rootRoute.addChildren([
   dashboardRoute,
-  dashboardIndexRoute,
+  rootLandingRoute,
   authRoute,
   changePasswordRoute,
   licensesRoute,

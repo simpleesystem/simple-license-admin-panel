@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { Toaster, toast } from 'react-hot-toast'
+import { toast } from 'react-hot-toast'
 
 import { selectLatestError, useAppStore } from './store'
 
@@ -21,5 +21,5 @@ export function SurfaceRenderer() {
     lastId.current = id
   }, [error])
 
-  return <Toaster />
+  return null
 }

@@ -1,6 +1,7 @@
-import { useMemo } from 'react'
 import type { Client, TopLicensesResponse } from '@simple-license/react-sdk'
 import { useTopLicenses } from '@simple-license/react-sdk'
+import { useMemo } from 'react'
+import Button from 'react-bootstrap/Button'
 
 import {
   UI_ANALYTICS_COLUMN_ACTIVATIONS,
@@ -16,6 +17,8 @@ import {
   UI_ANALYTICS_TOP_LICENSES_ERROR_TITLE,
   UI_ANALYTICS_TOP_LICENSES_LOADING_BODY,
   UI_ANALYTICS_TOP_LICENSES_LOADING_TITLE,
+  UI_ANALYTICS_TOP_LICENSES_REFRESH_LABEL,
+  UI_ANALYTICS_TOP_LICENSES_REFRESH_PENDING,
   UI_ANALYTICS_TOP_LICENSES_TITLE,
   UI_COLUMN_ID_ANALYTICS_ACTIVATIONS,
   UI_COLUMN_ID_ANALYTICS_CUSTOMER_EMAIL,
@@ -44,6 +47,7 @@ const formatNumber = (value: number) => value.toLocaleString()
 
 export function TopLicensesPanel({ client, title = UI_ANALYTICS_TOP_LICENSES_TITLE, maxRows }: TopLicensesPanelProps) {
   const topLicensesQuery = useTopLicenses(client, { retry: false })
+  const { isFetching, isLoading, refetch } = topLicensesQuery
   const rowLimit = maxRows ?? UI_ANALYTICS_TOP_LICENSES_DEFAULT_LIMIT
   const dateFormatter = useMemo(() => new Intl.DateTimeFormat(UI_DATE_FORMAT_LOCALE, UI_DATE_FORMAT_OPTIONS), [])
 
@@ -105,9 +109,23 @@ export function TopLicensesPanel({ client, title = UI_ANALYTICS_TOP_LICENSES_TIT
 
   return (
     <Stack direction="column" gap="small">
-      <div className="d-flex flex-column gap-1">
-        <h2 className="h5 mb-0">{title}</h2>
-        <p className="text-muted mb-0">{UI_ANALYTICS_TOP_LICENSES_DESCRIPTION}</p>
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+        <div className="d-flex flex-column gap-1">
+          <h2 className="h5 mb-0">{title}</h2>
+          <p className="text-muted mb-0">{UI_ANALYTICS_TOP_LICENSES_DESCRIPTION}</p>
+        </div>
+        <div className="d-flex flex-wrap align-items-center gap-2">
+          <Button
+            variant="outline-secondary"
+            onClick={() => void refetch()}
+            disabled={isFetching}
+            aria-busy={isFetching}
+          >
+            {isFetching || isLoading
+              ? UI_ANALYTICS_TOP_LICENSES_REFRESH_PENDING
+              : UI_ANALYTICS_TOP_LICENSES_REFRESH_LABEL}
+          </Button>
+        </div>
       </div>
 
       <DataTable
@@ -119,4 +137,3 @@ export function TopLicensesPanel({ client, title = UI_ANALYTICS_TOP_LICENSES_TIT
     </Stack>
   )
 }
-

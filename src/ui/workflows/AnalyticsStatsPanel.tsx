@@ -1,9 +1,8 @@
-import type { Client, SystemStatsResponse } from '@simple-license/react-sdk'
-import { type UseHealthWebSocketResult, useHealthWebSocket, useSystemStats } from '@simple-license/react-sdk'
+import type { Client } from '@simple-license/react-sdk'
+import { useSystemStats } from '@simple-license/react-sdk'
 import { useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
-import { useAppConfig } from '../../app/config'
-import { useLiveData } from '../../hooks/useLiveData'
+import { useAdminSystemLiveFeed, useLiveStatusBadgeModel } from '../../app/live/AdminSystemLiveFeedContext'
 import {
   UI_ANALYTICS_STATS_DESCRIPTION,
   UI_ANALYTICS_STATS_EMPTY_BODY,
@@ -17,6 +16,7 @@ import {
   UI_ANALYTICS_STATS_LOADING_BODY,
   UI_ANALYTICS_STATS_LOADING_TITLE,
   UI_ANALYTICS_STATS_REFRESH_LABEL,
+  UI_ANALYTICS_STATS_REFRESH_PENDING,
   UI_ANALYTICS_STATS_TITLE,
   UI_STACK_GAP_SMALL,
   UI_SUMMARY_ID_ANALYTICS_STATS_ACTIVATIONS,
@@ -30,7 +30,6 @@ import { InlineAlert } from '../feedback/InlineAlert'
 import { Stack } from '../layout/Stack'
 import type { UiSummaryCardItem } from '../types'
 import { BadgeText } from '../typography/BadgeText'
-import { getLiveStatusDescriptor } from '../utils/liveStatus'
 
 type AnalyticsStatsPanelProps = {
   client: Client
@@ -45,20 +44,15 @@ const formatNumber = (value: number | undefined) => {
 }
 
 export function AnalyticsStatsPanel({ client, title = UI_ANALYTICS_STATS_TITLE }: AnalyticsStatsPanelProps) {
-  const { wsPath } = useAppConfig()
   const statsQuery = useSystemStats(client, { retry: false })
-  const healthSocket = useHealthWebSocket(client, { path: wsPath })
-  const {
-    data: statsSource,
-    isLoading,
-    isError,
-    refresh,
-  } = useLiveData<SystemStatsResponse, UseHealthWebSocketResult, SystemStatsResponse['stats']>({
-    query: () => statsQuery,
-    socket: () => healthSocket,
-    selectQueryData: (data) => data?.stats,
-    selectSocketData: (socket) => socket.healthData?.stats,
-  })
+  const { data: statsData, isLoading, isFetching, isError, refetch } = statsQuery
+  const statsSource = statsData?.stats
+  const liveFeed = useAdminSystemLiveFeed()
+  const liveStatusBadge = useLiveStatusBadgeModel()
+  const refresh = () => {
+    void refetch()
+    liveFeed.requestHealth()
+  }
 
   const statItems = useMemo<UiSummaryCardItem[]>(() => {
     if (!statsSource) {
@@ -89,11 +83,9 @@ export function AnalyticsStatsPanel({ client, title = UI_ANALYTICS_STATS_TITLE }
     ]
   }, [statsSource])
 
-  const shouldShowLoading = isLoading && !statsSource
+  const shouldShowLoading = (isLoading || isFetching) && !statsSource
   const shouldShowError = isError && !statsSource
   const shouldShowEmpty = !shouldShowLoading && !shouldShowError && statItems.length === 0
-
-  const liveStatusDescriptor = getLiveStatusDescriptor(healthSocket.connectionInfo.state, Boolean(healthSocket.error))
 
   const renderContent = () => {
     if (shouldShowLoading) {
@@ -131,9 +123,14 @@ export function AnalyticsStatsPanel({ client, title = UI_ANALYTICS_STATS_TITLE }
           <p className="text-muted mb-0">{UI_ANALYTICS_STATS_DESCRIPTION}</p>
         </div>
         <div className="d-flex flex-wrap align-items-center gap-2">
-          <BadgeText text={liveStatusDescriptor.text} variant={liveStatusDescriptor.variant} />
-          <Button variant="outline-secondary" onClick={refresh}>
-            {UI_ANALYTICS_STATS_REFRESH_LABEL}
+          <BadgeText text={liveStatusBadge.text} variant={liveStatusBadge.variant} />
+          <Button
+            variant="outline-secondary"
+            onClick={refresh}
+            disabled={isFetching || isLoading}
+            aria-busy={isFetching || isLoading}
+          >
+            {isFetching || isLoading ? UI_ANALYTICS_STATS_REFRESH_PENDING : UI_ANALYTICS_STATS_REFRESH_LABEL}
           </Button>
         </div>
       </div>

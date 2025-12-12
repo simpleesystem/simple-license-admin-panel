@@ -84,7 +84,7 @@ describe('ChangePasswordRouteComponent', () => {
     fireEvent.change(screen.getByLabelText(/confirm new password/i), { target: { value: newPassword } })
     fireEvent.click(screen.getByRole('button', { name: UI_CHANGE_PASSWORD_BUTTON_UPDATE }))
 
-    expect(await screen.findByText(error.message)).toBeInTheDocument()
+    expect(await screen.findByText(/Unable to update account settings/i)).toBeInTheDocument()
   })
 })
 

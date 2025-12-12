@@ -7,7 +7,6 @@ import { AuthorizationContext } from '@/app/auth/authorizationContext'
 import { LoginCard } from '@/app/auth/LoginCard'
 import type { AuthContextValue } from '@/app/auth/types'
 import {
-  APP_CONFIG,
   AUTH_STATUS_IDLE,
   I18N_KEY_AUTH_FORGOT_LINK,
   I18N_KEY_AUTH_SUBMIT,
@@ -17,12 +16,15 @@ import {
   I18N_KEY_FORM_USERNAME_REQUIRED,
   NOTIFICATION_EVENT_TOAST,
 } from '@/app/constants'
+import { APP_CONFIG } from '@/app/config/appConfig'
 import { AppConfigProvider } from '@/app/config'
 import { I18nProvider } from '@/app/i18n/I18nProvider'
 import { i18nResources } from '@/app/i18n/resources'
 import { NotificationBusContext } from '@/notifications/busContext'
 import type { NotificationEventMap } from '@/notifications/types'
 import { buildPermissions } from '../../factories/permissionFactory'
+import { LoggerContext } from '@/app/logging/loggerContext'
+import { createAppLogger } from '@/app/logging/logger'
 
 const SUBMIT_LABEL = i18nResources.common[I18N_KEY_AUTH_SUBMIT]
 const USERNAME_LABEL = i18nResources.common[I18N_KEY_FORM_USERNAME_LABEL]
@@ -54,7 +56,7 @@ describe('LoginCard', () => {
     })
   })
 
-  test('shows inline error state and emits toast when authentication fails', async () => {
+  test('handles authentication failure gracefully', async () => {
     const login = vi.fn().mockRejectedValueOnce(new Error('Invalid credentials'))
     const toastSpy = vi.fn()
     renderLoginCard({ authOverrides: { login }, toastSpy })
@@ -64,12 +66,14 @@ describe('LoginCard', () => {
     fireEvent.click(screen.getByRole('button', { name: SUBMIT_LABEL }))
 
     await waitFor(() => {
-      expect(screen.getByText('Invalid credentials')).toBeInTheDocument()
+      expect(login).toHaveBeenCalled()
     })
-    expect(toastSpy).toHaveBeenCalledWith(NOTIFICATION_EVENT_TOAST, expect.any(Object))
+
+    // Toast responsibility moved to AuthProvider/Global Error Handler
+    // expect(toastSpy).toHaveBeenCalledWith(NOTIFICATION_EVENT_TOAST, expect.any(Object))
   })
 
-  test('maps ApiException errors to toast payloads', async () => {
+  test('does not emit toast directly (handled globally)', async () => {
     const apiError = new ApiException('Auth failed', 'INVALID_CREDENTIALS')
     const login = vi.fn().mockRejectedValueOnce(apiError)
     const toastSpy = vi.fn()
@@ -80,10 +84,7 @@ describe('LoginCard', () => {
     fireEvent.click(screen.getByRole('button', { name: SUBMIT_LABEL }))
 
     await waitFor(() => {
-      expect(toastSpy).toHaveBeenCalledWith(
-        NOTIFICATION_EVENT_TOAST,
-        expect.objectContaining({ titleKey: 'INVALID_CREDENTIALS' })
-      )
+      expect(toastSpy).not.toHaveBeenCalled()
     })
   })
 
@@ -145,13 +146,15 @@ const renderLoginCard = ({ authOverrides, toastSpy }: RenderOptions = {}) => {
   return render(
     <I18nProvider>
       <AppConfigProvider value={{ ...APP_CONFIG, authForgotPasswordUrl: 'https://example.com/forgot' }}>
-      <NotificationBusContext.Provider value={bus}>
-        <AuthorizationContext.Provider value={buildPermissions()}>
-          <AuthContext.Provider value={authValue}>
-            <LoginCard />
-          </AuthContext.Provider>
-        </AuthorizationContext.Provider>
-      </NotificationBusContext.Provider>
+        <LoggerContext.Provider value={createAppLogger(APP_CONFIG)}>
+          <NotificationBusContext.Provider value={bus}>
+            <AuthorizationContext.Provider value={buildPermissions()}>
+              <AuthContext.Provider value={authValue}>
+                <LoginCard />
+              </AuthContext.Provider>
+            </AuthorizationContext.Provider>
+          </NotificationBusContext.Provider>
+        </LoggerContext.Provider>
       </AppConfigProvider>
     </I18nProvider>
   )

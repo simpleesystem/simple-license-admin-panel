@@ -1,17 +1,14 @@
 import type { Client, Tenant, User } from '@simple-license/react-sdk'
 import { useResumeTenant, useSuspendTenant } from '@simple-license/react-sdk'
 import type { ReactNode } from 'react'
-
-import { adaptMutation } from '../actions/mutationAdapter'
-import { createCrudActions } from '../actions/mutationActions'
-import {
-  UI_TENANT_ACTION_EDIT,
-  UI_TENANT_ACTION_RESUME,
-  UI_TENANT_ACTION_SUSPEND,
-} from '../constants'
-import { ActionMenu } from '../data/ActionMenu'
 import { canUpdateTenant } from '../../app/auth/permissions'
+import { useNotificationBus } from '../../notifications/busContext'
+import { createCrudActions } from '../actions/mutationActions'
+import { adaptMutation } from '../actions/mutationAdapter'
+import { UI_TENANT_ACTION_EDIT, UI_TENANT_ACTION_RESUME, UI_TENANT_ACTION_SUSPEND } from '../constants'
+import { ActionMenu } from '../data/ActionMenu'
 import type { UiCommonProps } from '../types'
+import { notifyCrudError, notifyTenantSuccess } from './notifications'
 
 type TenantRowActionsProps = UiCommonProps & {
   client: Client
@@ -33,6 +30,7 @@ export function TenantRowActions({
 }: TenantRowActionsProps) {
   const suspendMutation = adaptMutation(useSuspendTenant(client))
   const resumeMutation = adaptMutation(useResumeTenant(client))
+  const notificationBus = useNotificationBus()
   const allowUpdate = canUpdateTenant(currentUser, tenant)
 
   if (!allowUpdate) {
@@ -55,9 +53,15 @@ export function TenantRowActions({
       disabled: tenant.status === 'SUSPENDED',
       mutation: {
         mutateAsync: async (payload) => {
-          const result = await suspendMutation.mutateAsync(payload)
-          onCompleted?.()
-          return result
+          try {
+            const result = await suspendMutation.mutateAsync(payload)
+            onCompleted?.()
+            notifyTenantSuccess(notificationBus, 'suspend')
+            return result
+          } catch (error) {
+            notifyCrudError(notificationBus)
+            throw error
+          }
         },
         isPending: suspendMutation.isPending,
       },
@@ -68,22 +72,20 @@ export function TenantRowActions({
       disabled: tenant.status !== 'SUSPENDED',
       mutation: {
         mutateAsync: async (payload) => {
-          const result = await resumeMutation.mutateAsync(payload)
-          onCompleted?.()
-          return result
+          try {
+            const result = await resumeMutation.mutateAsync(payload)
+            onCompleted?.()
+            notifyTenantSuccess(notificationBus, 'resume')
+            return result
+          } catch (error) {
+            notifyCrudError(notificationBus)
+            throw error
+          }
         },
         isPending: resumeMutation.isPending,
       },
     },
   })
 
-  return (
-    <ActionMenu
-      {...rest}
-      items={actions}
-      buttonLabel={buttonLabel}
-    />
-  )
+  return <ActionMenu {...rest} items={actions} buttonLabel={buttonLabel} />
 }
-
-

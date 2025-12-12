@@ -5,7 +5,6 @@
 export type { Client as ClientType } from './client'
 // Client
 export { Client } from './client'
-export { WebSocketClient } from './client/websocketClient'
 // Constants
 export * from './constants'
 

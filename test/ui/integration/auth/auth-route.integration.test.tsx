@@ -25,6 +25,12 @@ vi.mock('../../../../src/app/auth/authContext', async () => {
   }
 })
 
+vi.mock('@tanstack/react-router', () => ({
+  useSearch: () => ({ redirect: undefined }),
+  useRouterState: () => ({ location: { pathname: '/auth' } }),
+  Link: ({ children }: { children: React.ReactNode }) => children,
+}))
+
 describe('AuthRouteComponent', () => {
   test('renders login page shell with form fields', () => {
     renderWithProviders(<AuthRouteComponent />)
@@ -34,4 +40,3 @@ describe('AuthRouteComponent', () => {
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument()
   })
 })
-

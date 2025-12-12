@@ -13,6 +13,9 @@ export function useLogin(client: Client) {
     mutationFn: async (request: LoginRequest) => {
       return await client.login(request.username, request.password)
     },
+    meta: {
+      // suppressErrorToast: true,
+    },
     onSuccess: (data) => {
       queryClient.setQueryData(QUERY_KEYS.auth.currentUser(), data.user)
       queryClient.setQueryData(QUERY_KEYS.auth.token(), data.token)

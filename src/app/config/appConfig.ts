@@ -1,10 +1,10 @@
-import { z } from 'zod'
+import Joi from 'joi'
 
 import {
   APP_HTTP_RETRY_ATTEMPTS,
   APP_HTTP_RETRY_DELAY_MS,
   APP_HTTP_TIMEOUT_MS,
-  APP_WS_HEALTH_PATH,
+  DEFAULT_API_BASE_URL,
   ENV_VAR_API_BASE_URL,
   ENV_VAR_AUTH_FORGOT_PASSWORD_URL,
   ENV_VAR_FEATURE_DEV_TOOLS,
@@ -14,7 +14,6 @@ import {
   ENV_VAR_HTTP_RETRY_DELAY_MS,
   ENV_VAR_HTTP_TIMEOUT_MS,
   ENV_VAR_SENTRY_DSN,
-  ENV_VAR_WS_PATH,
 } from '../constants'
 
 type EnvRecord = Record<string, string | undefined>
@@ -34,36 +33,45 @@ const normalizeOptionalUrl = (value: string | undefined): string | null => {
   return value
 }
 
-const envSchema = z.object({
-  [ENV_VAR_API_BASE_URL]: z.string().url(),
-  [ENV_VAR_SENTRY_DSN]: z.string().url().optional().or(z.literal('')).optional(),
-  [ENV_VAR_AUTH_FORGOT_PASSWORD_URL]: z.string().url().optional().or(z.literal('')).optional(),
-  [ENV_VAR_HTTP_TIMEOUT_MS]: z
-    .string()
+// Custom validators
+const positiveNumberValidator = (value: string, helpers: Joi.CustomHelpers) => {
+  if (value === undefined || value === '') return value
+  const num = Number(value)
+  if (Number.isNaN(num) || num <= 0) {
+    return helpers.error('any.invalid')
+  }
+  return value
+}
+
+const nonNegativeIntegerValidator = (value: string, helpers: Joi.CustomHelpers) => {
+  if (value === undefined || value === '') return value
+  const num = Number(value)
+  if (Number.isNaN(num) || num < 0) {
+    return helpers.error('any.invalid')
+  }
+  return value
+}
+
+const envSchema = Joi.object({
+  [ENV_VAR_API_BASE_URL]: Joi.string().uri().allow('').optional(),
+  [ENV_VAR_SENTRY_DSN]: Joi.string().uri().allow('').optional(),
+  [ENV_VAR_AUTH_FORGOT_PASSWORD_URL]: Joi.string().uri().allow('').optional(),
+  [ENV_VAR_HTTP_TIMEOUT_MS]: Joi.string()
+    .allow('')
     .optional()
-    .or(z.literal(''))
-    .refine(
-      (value) => value === undefined || value === '' || (!Number.isNaN(Number(value)) && Number(value) > 0),
-      'HTTP timeout must be a positive number in milliseconds'
-    ),
-  [ENV_VAR_HTTP_RETRY_ATTEMPTS]: z
-    .string()
+    .custom(positiveNumberValidator)
+    .message('HTTP timeout must be a positive number in milliseconds'),
+  [ENV_VAR_HTTP_RETRY_ATTEMPTS]: Joi.string()
+    .allow('')
     .optional()
-    .or(z.literal(''))
-    .refine(
-      (value) => value === undefined || value === '' || (!Number.isNaN(Number(value)) && Number(value) >= 0),
-      'HTTP retry attempts must be zero or a positive integer'
-    ),
-  [ENV_VAR_HTTP_RETRY_DELAY_MS]: z
-    .string()
+    .custom(nonNegativeIntegerValidator)
+    .message('HTTP retry attempts must be zero or a positive integer'),
+  [ENV_VAR_HTTP_RETRY_DELAY_MS]: Joi.string()
+    .allow('')
     .optional()
-    .or(z.literal(''))
-    .refine(
-      (value) => value === undefined || value === '' || (!Number.isNaN(Number(value)) && Number(value) >= 0),
-      'HTTP retry delay must be zero or a positive number in milliseconds'
-    ),
-  [ENV_VAR_WS_PATH]: z.string().optional().or(z.literal('')).optional(),
-})
+    .custom(positiveNumberValidator)
+    .message('HTTP retry delay must be zero or a positive number in milliseconds'),
+}).unknown(true)
 
 const ERROR_PREFIX = 'Invalid application environment configuration'
 
@@ -80,7 +88,6 @@ export type AppConfig = {
   httpTimeoutMs: number
   httpRetryAttempts: number
   httpRetryDelayMs: number
-  wsPath: string
   features: FeatureFlags
 }
 
@@ -98,27 +105,20 @@ const coercePositiveNumber = (value: string | undefined, fallback: number): numb
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
 }
 
-const buildDefaultWebSocketPath = (apiBaseUrl: string): string => {
-  try {
-    const parsed = new URL(apiBaseUrl)
-    const isSecure = parsed.protocol === 'https:'
-    const protocol = isSecure ? 'wss:' : 'ws:'
-    return `${protocol}//${parsed.host}${APP_WS_HEALTH_PATH}`
-  } catch {
-    return APP_WS_HEALTH_PATH
-  }
-}
-
 export const createAppConfig = (env: EnvRecord = import.meta.env as EnvRecord): AppConfig => {
-  const parsed = envSchema.safeParse(env)
+  const { error, value } = envSchema.validate(env)
 
-  if (!parsed.success) {
-    const issueMessages = parsed.error.issues.map((issue) => issue.message)
-    const message = issueMessages.length > 0 ? issueMessages.join(', ') : parsed.error.message
+  if (error) {
+    const issueMessages = error.details.map((issue) => issue.message)
+    const message = issueMessages.length > 0 ? issueMessages.join(', ') : error.message
     throw new Error(`${ERROR_PREFIX}: ${message}`)
   }
 
-  const apiBaseUrl = parsed.data[ENV_VAR_API_BASE_URL]
+  const apiBaseUrl =
+    value[ENV_VAR_API_BASE_URL] && value[ENV_VAR_API_BASE_URL] !== ''
+      ? value[ENV_VAR_API_BASE_URL]
+      : DEFAULT_API_BASE_URL
+
   if (!/^https?:\/\//i.test(apiBaseUrl)) {
     throw new Error(`${ERROR_PREFIX}: API base URL must use http or https`)
   }
@@ -137,17 +137,14 @@ export const createAppConfig = (env: EnvRecord = import.meta.env as EnvRecord): 
     Math.floor(coercePositiveNumber(env[ENV_VAR_HTTP_RETRY_ATTEMPTS], APP_HTTP_RETRY_ATTEMPTS))
   )
   const httpRetryDelayMs = coercePositiveNumber(env[ENV_VAR_HTTP_RETRY_DELAY_MS], APP_HTTP_RETRY_DELAY_MS)
-  const wsEnv = env[ENV_VAR_WS_PATH]
-  const wsPath = wsEnv?.trim().length ? wsEnv.trim() : buildDefaultWebSocketPath(apiBaseUrl)
 
   return {
     apiBaseUrl,
-    sentryDsn: normalizeOptionalUrl(parsed.data[ENV_VAR_SENTRY_DSN]),
-    authForgotPasswordUrl: normalizeOptionalUrl(parsed.data[ENV_VAR_AUTH_FORGOT_PASSWORD_URL]),
+    sentryDsn: normalizeOptionalUrl(value[ENV_VAR_SENTRY_DSN]),
+    authForgotPasswordUrl: normalizeOptionalUrl(value[ENV_VAR_AUTH_FORGOT_PASSWORD_URL]),
     httpTimeoutMs,
     httpRetryAttempts,
     httpRetryDelayMs,
-    wsPath,
     features: flags,
   }
 }

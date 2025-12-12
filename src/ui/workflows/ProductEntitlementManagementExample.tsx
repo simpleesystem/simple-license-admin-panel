@@ -1,7 +1,14 @@
 import type { Client, User } from '@simple-license/react-sdk'
-import Button from 'react-bootstrap/Button'
 import { useMemo, useState } from 'react'
-
+import Button from 'react-bootstrap/Button'
+import {
+  canCreateEntitlement,
+  canUpdateEntitlement,
+  canViewEntitlements,
+  isEntitlementOwnedByUser,
+  isVendorScopedUser,
+} from '../../app/auth/permissions'
+import { useNotificationBus } from '../../notifications/busContext'
 import {
   UI_BUTTON_VARIANT_GHOST,
   UI_BUTTON_VARIANT_PRIMARY,
@@ -30,19 +37,11 @@ import {
 } from '../constants'
 import { DataTable } from '../data/DataTable'
 import { Stack } from '../layout/Stack'
-import {
-  canCreateEntitlement,
-  canUpdateEntitlement,
-  canViewEntitlements,
-  isEntitlementOwnedByUser,
-  isVendorScopedUser,
-} from '../../app/auth/permissions'
 import type { UiDataTableColumn } from '../types'
+import { notifyCrudError, notifyProductEntitlementSuccess } from './notifications'
 import { ProductEntitlementFormFlow } from './ProductEntitlementFormFlow'
-import {
-  ProductEntitlementRowActions,
-  type ProductEntitlementListItem,
-} from './ProductEntitlementRowActions'
+import { type ProductEntitlementListItem, ProductEntitlementRowActions } from './ProductEntitlementRowActions'
+
 export type { ProductEntitlementListItem } from './ProductEntitlementRowActions'
 
 type ProductEntitlementManagementExampleProps = {
@@ -68,15 +67,27 @@ export function ProductEntitlementManagementExample({
 }: ProductEntitlementManagementExampleProps) {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingEntitlement, setEditingEntitlement] = useState<ProductEntitlementListItem | null>(null)
+  const notificationBus = useNotificationBus()
 
   const isVendorScoped = isVendorScopedUser(currentUser)
   const visibleEntitlements = useMemo(
     () =>
-      isVendorScoped ? entitlements.filter((entitlement) => isEntitlementOwnedByUser(currentUser, entitlement)) : entitlements,
-    [currentUser, entitlements, isVendorScoped],
+      isVendorScoped
+        ? entitlements.filter((entitlement) => isEntitlementOwnedByUser(currentUser, entitlement))
+        : entitlements,
+    [currentUser, entitlements, isVendorScoped]
   )
   const allowCreate = canCreateEntitlement(currentUser)
   const canView = canViewEntitlements(currentUser)
+
+  const refreshWith = (action: 'create' | 'update' | 'delete') => {
+    onRefresh?.()
+    notifyProductEntitlementSuccess(notificationBus, action)
+  }
+
+  const handleMutationError = () => {
+    notifyCrudError(notificationBus)
+  }
 
   const columns: UiDataTableColumn<ProductEntitlementListItem>[] = useMemo(
     () => [
@@ -124,7 +135,7 @@ export function ProductEntitlementManagementExample({
         },
       },
     ],
-    [client, currentUser, onRefresh],
+    [client, currentUser, onRefresh]
   )
 
   return (
@@ -153,6 +164,8 @@ export function ProductEntitlementManagementExample({
           onClose={() => setShowCreateModal(false)}
           submitLabel={UI_ENTITLEMENT_FORM_SUBMIT_CREATE}
           onCompleted={onRefresh}
+          onSuccess={() => refreshWith('create')}
+          onError={handleMutationError}
         />
       ) : null}
 
@@ -160,7 +173,7 @@ export function ProductEntitlementManagementExample({
         <ProductEntitlementFormFlow
           client={client}
           mode="update"
-          show
+          show={Boolean(editingEntitlement)}
           onClose={() => setEditingEntitlement(null)}
           submitLabel={UI_ENTITLEMENT_FORM_SUBMIT_UPDATE}
           entitlementId={editingEntitlement.id}
@@ -171,10 +184,10 @@ export function ProductEntitlementManagementExample({
             usage_limit: editingEntitlement.usageLimit ?? undefined,
           }}
           onCompleted={onRefresh}
+          onSuccess={() => refreshWith('update')}
+          onError={handleMutationError}
         />
       ) : null}
     </Stack>
   )
 }
-
-

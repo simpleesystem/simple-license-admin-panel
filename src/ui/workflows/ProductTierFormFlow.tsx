@@ -1,17 +1,18 @@
-import type {
-  Client,
-  CreateProductTierRequest,
-  UpdateProductTierRequest,
-} from '@simple-license/react-sdk'
+import type { Client, CreateProductTierRequest, UpdateProductTierRequest } from '@simple-license/react-sdk'
 import { useCreateProductTier, useUpdateProductTier } from '@simple-license/react-sdk'
-import type { FieldValues } from 'react-hook-form'
 import type { ReactNode } from 'react'
 
-import { UI_PRODUCT_TIER_FORM_SUBMIT_CREATE, UI_PRODUCT_TIER_FORM_SUBMIT_UPDATE } from '../constants'
-import { createProductTierBlueprint } from '../formBuilder/factories'
-import { FormModalWithMutation } from '../formBuilder/mutationBridge'
 import type { MutationAdapter } from '../actions/mutationActions'
 import { adaptMutation } from '../actions/mutationAdapter'
+import {
+  UI_PRODUCT_TIER_FORM_PENDING_CREATE,
+  UI_PRODUCT_TIER_FORM_PENDING_UPDATE,
+  UI_PRODUCT_TIER_FORM_SUBMIT_CREATE,
+  UI_PRODUCT_TIER_FORM_SUBMIT_UPDATE,
+} from '../constants'
+import { createProductTierBlueprint } from '../formBuilder/factories'
+import { FormModalWithMutation } from '../formBuilder/mutationBridge'
+import { wrapMutationAdapter } from './mutationHelpers'
 
 type ProductTierBaseProps = {
   client: Client
@@ -21,6 +22,8 @@ type ProductTierBaseProps = {
   pendingLabel?: ReactNode
   secondaryActions?: ReactNode
   onCompleted?: () => void
+  onSuccess?: () => void
+  onError?: (error: unknown) => void
 }
 
 type ProductTierCreateProps = ProductTierBaseProps & {
@@ -51,20 +54,6 @@ const baseUpdateDefaults: UpdateProductTierRequest = {
   metadata: undefined,
 }
 
-const withOnClose = <TFieldValues extends FieldValues>(
-  adapter: MutationAdapter<TFieldValues>,
-  onClose: () => void,
-  onCompleted?: () => void,
-): MutationAdapter<TFieldValues> => ({
-  mutateAsync: async (values) => {
-    const result = await adapter.mutateAsync(values)
-    onCompleted?.()
-    onClose()
-    return result
-  },
-  isPending: adapter.isPending,
-})
-
 export function ProductTierFormFlow(props: ProductTierFormFlowProps) {
   if (props.mode === 'create') {
     return <ProductTierCreateFlow {...props} />
@@ -80,6 +69,7 @@ function ProductTierCreateFlow(props: ProductTierCreateProps) {
     ...props.defaultValues,
   }
   const submitLabel = props.submitLabel ?? UI_PRODUCT_TIER_FORM_SUBMIT_CREATE
+  const pendingLabel = props.pendingLabel ?? UI_PRODUCT_TIER_FORM_PENDING_CREATE
 
   return (
     <FormModalWithMutation
@@ -88,9 +78,14 @@ function ProductTierCreateFlow(props: ProductTierCreateProps) {
       blueprint={createProductTierBlueprint('create')}
       defaultValues={defaultValues}
       submitLabel={submitLabel}
-      pendingLabel={props.pendingLabel}
+      pendingLabel={pendingLabel}
       secondaryActions={props.secondaryActions}
-      mutation={withOnClose(createMutation, props.onClose, props.onCompleted)}
+      mutation={wrapMutationAdapter(createMutation, {
+        onClose: props.onClose,
+        onCompleted: props.onCompleted,
+        onSuccess: props.onSuccess,
+        onError: props.onError,
+      })}
     />
   )
 }
@@ -102,6 +97,7 @@ function ProductTierUpdateFlow(props: ProductTierUpdateProps) {
     ...props.defaultValues,
   }
   const submitLabel = props.submitLabel ?? UI_PRODUCT_TIER_FORM_SUBMIT_UPDATE
+  const pendingLabel = props.pendingLabel ?? UI_PRODUCT_TIER_FORM_PENDING_UPDATE
 
   const adapter: MutationAdapter<UpdateProductTierRequest> = {
     mutateAsync: async (values) => {
@@ -119,12 +115,15 @@ function ProductTierUpdateFlow(props: ProductTierUpdateProps) {
       onClose={props.onClose}
       blueprint={createProductTierBlueprint('update')}
       defaultValues={defaultValues}
-    submitLabel={submitLabel}
-      pendingLabel={props.pendingLabel}
+      submitLabel={submitLabel}
+      pendingLabel={pendingLabel}
       secondaryActions={props.secondaryActions}
-    mutation={withOnClose(adapter, props.onClose, props.onCompleted)}
+      mutation={wrapMutationAdapter(adapter, {
+        onClose: props.onClose,
+        onCompleted: props.onCompleted,
+        onSuccess: props.onSuccess,
+        onError: props.onError,
+      })}
     />
   )
 }
-
-

@@ -1,7 +1,14 @@
 import type { Client, User } from '@simple-license/react-sdk'
-import Button from 'react-bootstrap/Button'
 import { useMemo, useState } from 'react'
-
+import Button from 'react-bootstrap/Button'
+import {
+  canCreateProduct,
+  canUpdateProduct,
+  canViewProducts,
+  isProductOwnedByUser,
+  isVendorScopedUser,
+} from '../../app/auth/permissions'
+import { useNotificationBus } from '../../notifications/busContext'
 import {
   UI_BUTTON_VARIANT_GHOST,
   UI_BUTTON_VARIANT_PRIMARY,
@@ -26,8 +33,8 @@ import {
 } from '../constants'
 import { DataTable } from '../data/DataTable'
 import { Stack } from '../layout/Stack'
-import { canCreateProduct, canUpdateProduct, canViewProducts, isProductOwnedByUser, isVendorScopedUser } from '../../app/auth/permissions'
 import type { UiDataTableColumn } from '../types'
+import { notifyCrudError, notifyProductSuccess } from './notifications'
 import { ProductFormFlow } from './ProductFormFlow'
 import { ProductRowActions } from './ProductRowActions'
 
@@ -50,11 +57,12 @@ type ProductManagementExampleProps = {
 export function ProductManagementExample({ client, products, currentUser, onRefresh }: ProductManagementExampleProps) {
   const [editingProduct, setEditingProduct] = useState<ProductListItem | null>(null)
   const [showCreate, setShowCreate] = useState(false)
+  const notificationBus = useNotificationBus()
 
   const isVendorScoped = isVendorScopedUser(currentUser)
   const visibleProducts = useMemo(
     () => (isVendorScoped ? products.filter((product) => isProductOwnedByUser(currentUser, product)) : products),
-    [currentUser, isVendorScoped, products],
+    [currentUser, isVendorScoped, products]
   )
   const allowCreate = canCreateProduct(currentUser)
   const canView = canViewProducts(currentUser)
@@ -106,8 +114,17 @@ export function ProductManagementExample({ client, products, currentUser, onRefr
         },
       },
     ],
-    [client, currentUser, onRefresh],
+    [client, currentUser, onRefresh]
   )
+
+  const refreshWith = (action: 'create' | 'update' | 'delete' | 'suspend' | 'resume') => {
+    onRefresh?.()
+    notifyProductSuccess(notificationBus, action)
+  }
+
+  const handleMutationError = () => {
+    notifyCrudError(notificationBus)
+  }
 
   return (
     <Stack direction="column" gap="medium">
@@ -134,6 +151,8 @@ export function ProductManagementExample({ client, products, currentUser, onRefr
           onClose={() => setShowCreate(false)}
           submitLabel={UI_PRODUCT_FORM_SUBMIT_CREATE}
           onCompleted={onRefresh}
+          onSuccess={() => refreshWith('create')}
+          onError={handleMutationError}
         />
       ) : null}
 
@@ -142,7 +161,7 @@ export function ProductManagementExample({ client, products, currentUser, onRefr
           client={client}
           mode="update"
           productId={editingProduct.id}
-          show
+          show={Boolean(editingProduct)}
           onClose={() => setEditingProduct(null)}
           submitLabel={UI_PRODUCT_FORM_SUBMIT_UPDATE}
           defaultValues={{
@@ -151,10 +170,10 @@ export function ProductManagementExample({ client, products, currentUser, onRefr
             description: editingProduct.description,
           }}
           onCompleted={onRefresh}
+          onSuccess={() => refreshWith('update')}
+          onError={handleMutationError}
         />
       ) : null}
     </Stack>
   )
 }
-
-

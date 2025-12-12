@@ -3,7 +3,7 @@ import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
 import { FormProvider, useForm } from 'react-hook-form'
 import type { DefaultValues, FieldValues } from 'react-hook-form'
-import type { ReactNode } from 'react'
+import type { JSX, ReactNode } from 'react'
 
 import { FormActions } from '../forms/FormActions'
 import { FormRow } from '../forms/FormRow'
@@ -13,8 +13,17 @@ import { DateField } from '../forms/DateField'
 import { SelectField } from '../forms/SelectField'
 import { TextField } from '../forms/TextField'
 import { TextareaField } from '../forms/TextareaField'
-import type { FormBlueprint, FormFieldBlueprint } from './blueprint'
+import type {
+  CheckboxFieldBlueprint,
+  DateFieldBlueprint,
+  FormBlueprint,
+  FormFieldBlueprint,
+  SelectFieldBlueprint,
+  TextFieldBlueprint,
+  TextareaFieldBlueprint,
+} from './blueprint'
 import type { UiFormRowColumns } from '../types'
+import { UI_FORM_ROW_COLUMNS_ONE } from '../constants'
 
 type DynamicFormProps<TFieldValues extends FieldValues> = {
   blueprint: FormBlueprint<TFieldValues>
@@ -98,10 +107,63 @@ const renderSectionContent = (
   columns: UiFormRowColumns | undefined,
   fields: readonly FormFieldBlueprint<FieldValues>[],
 ) => {
-  if (!columns || columns <= 1) {
+  if (!columns || columns <= UI_FORM_ROW_COLUMNS_ONE) {
     return <div className="d-flex flex-column gap-3">{fields.map((field) => renderField(field))}</div>
   }
   return <FormRow columns={columns}>{fields.map((field) => renderField(field))}</FormRow>
+}
+
+// Field Renderers Registry
+
+type FieldRenderer<T extends FormFieldBlueprint<any>> = (
+  field: T,
+  commonProps: any
+) => JSX.Element
+
+const renderTextField: FieldRenderer<TextFieldBlueprint<any>> = (field, commonProps) => (
+  <TextField
+    key={field.id}
+    {...commonProps}
+    type={field.inputType}
+    placeholder={field.placeholder}
+    autoComplete={field.autoComplete}
+  />
+)
+
+const renderSelectField: FieldRenderer<SelectFieldBlueprint<any>> = (field, commonProps) => (
+  <SelectField key={field.id} {...commonProps} options={field.options} placeholder={field.placeholder} />
+)
+
+const renderTextareaField: FieldRenderer<TextareaFieldBlueprint<any>> = (field, commonProps) => (
+  <TextareaField
+    key={field.id}
+    {...commonProps}
+    rows={field.rows}
+    maxLength={field.maxLength}
+    placeholder={field.placeholder}
+  />
+)
+
+const renderCheckboxField: FieldRenderer<CheckboxFieldBlueprint<any>> = (field, commonProps) => (
+  <CheckboxField key={field.id} {...commonProps} type={field.checkboxType} />
+)
+
+const renderDateField: FieldRenderer<DateFieldBlueprint<any>> = (field, commonProps) => (
+  <DateField
+    key={field.id}
+    {...commonProps}
+    min={field.min}
+    max={field.max}
+    placeholder={field.placeholder}
+  />
+)
+
+const FIELD_RENDERERS: Record<string, FieldRenderer<any>> = {
+  text: renderTextField,
+  select: renderSelectField,
+  textarea: renderTextareaField,
+  checkbox: renderCheckboxField,
+  date: renderDateField,
 }
 
 const renderField = (field: FormFieldBlueprint<FieldValues>) => {
@@ -117,44 +179,10 @@ const renderField = (field: FormFieldBlueprint<FieldValues>) => {
     permissionFallback: field.permissionFallback,
   }
 
-  switch (field.component) {
-    case 'text':
-      return (
-        <TextField
-          key={field.id}
-          {...commonProps}
-          type={field.inputType}
-          placeholder={field.placeholder}
-          autoComplete={field.autoComplete}
-        />
-      )
-    case 'select':
-      return <SelectField key={field.id} {...commonProps} options={field.options} placeholder={field.placeholder} />
-    case 'textarea':
-      return (
-        <TextareaField
-          key={field.id}
-          {...commonProps}
-          rows={field.rows}
-          maxLength={field.maxLength}
-          placeholder={field.placeholder}
-        />
-      )
-    case 'checkbox':
-      return <CheckboxField key={field.id} {...commonProps} type={field.checkboxType} />
-    case 'date':
-      return (
-        <DateField
-          key={field.id}
-          {...commonProps}
-          min={field.min}
-          max={field.max}
-          placeholder={field.placeholder}
-        />
-      )
-    default:
-      return null
+  const renderer = FIELD_RENDERERS[field.component]
+  if (renderer) {
+    return renderer(field, commonProps)
   }
+
+  return null
 }
-
-

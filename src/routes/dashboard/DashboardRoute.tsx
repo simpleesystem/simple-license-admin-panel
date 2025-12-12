@@ -1,8 +1,8 @@
 import { useMemo, type JSX } from 'react'
 import { useTranslation } from 'react-i18next'
-
-import { I18N_KEY_DASHBOARD_HEADING, I18N_KEY_DASHBOARD_SUBTITLE } from '../../app/constants'
 import { useApiClient } from '../../api/apiContext'
+import { I18N_KEY_DASHBOARD_HEADING, I18N_KEY_DASHBOARD_SUBTITLE } from '../../app/constants'
+import { AdminSystemLiveFeedProvider } from '../../app/live/AdminSystemLiveFeedContext'
 import {
   ActivationDistributionPanel,
   AlertThresholdsPanel,
@@ -11,14 +11,14 @@ import {
   PageHeader,
   Stack,
   TopLicensesPanel,
-  UsageSummaryPanel,
-  UsageTrendsPanel,
   UI_CLASS_SECTION_COLUMN_FULL,
   UI_CLASS_SECTION_COLUMN_HALF,
   UI_CLASS_SECTION_COLUMN_THIRD,
   UI_CLASS_SECTION_GRID,
   UI_PAGE_VARIANT_FULL_WIDTH,
   UI_STACK_GAP_LARGE,
+  UsageSummaryPanel,
+  UsageTrendsPanel,
 } from '../../ui'
 
 type DashboardColumnSpan = 'full' | 'half' | 'third'
@@ -101,20 +101,21 @@ export function DashboardRouteComponent() {
   )
 
   return (
-    <Page variant={UI_PAGE_VARIANT_FULL_WIDTH}>
-      <Stack direction="column" gap={UI_STACK_GAP_LARGE}>
-        <PageHeader title={t(I18N_KEY_DASHBOARD_HEADING)} subtitle={t(I18N_KEY_DASHBOARD_SUBTITLE)} />
-        {sections.map((section) => (
-          <div key={section.id} className={UI_CLASS_SECTION_GRID}>
-            {section.columns.map((column) => (
-              <div key={column.id} className={DASHBOARD_COLUMN_CLASS_MAP[column.span]}>
-                {column.render()}
-              </div>
-            ))}
-          </div>
-        ))}
-      </Stack>
-    </Page>
+    <AdminSystemLiveFeedProvider>
+      <Page variant={UI_PAGE_VARIANT_FULL_WIDTH}>
+        <Stack direction="column" gap={UI_STACK_GAP_LARGE}>
+          <PageHeader title={t(I18N_KEY_DASHBOARD_HEADING)} subtitle={t(I18N_KEY_DASHBOARD_SUBTITLE)} />
+          {sections.map((section) => (
+            <div key={section.id} className={UI_CLASS_SECTION_GRID}>
+              {section.columns.map((column) => (
+                <div key={column.id} className={DASHBOARD_COLUMN_CLASS_MAP[column.span]}>
+                  {column.render()}
+                </div>
+              ))}
+            </div>
+          ))}
+        </Stack>
+      </Page>
+    </AdminSystemLiveFeedProvider>
   )
 }
-

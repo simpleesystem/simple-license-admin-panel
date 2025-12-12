@@ -4,16 +4,16 @@ import { describe, expect, test, vi } from 'vitest'
 import { UI_ANALYTICS_STATS_REFRESH_LABEL, UI_ANALYTICS_STATS_TITLE } from '../../../../src/ui/constants'
 import { AnalyticsStatsPanel } from '../../../../src/ui/workflows/AnalyticsStatsPanel'
 import { renderWithProviders } from '../../utils'
+import { AdminSystemLiveFeedContext } from '../../../../src/app/live/AdminSystemLiveFeedContext'
+import { ADMIN_SYSTEM_WS_STATUS_DISCONNECTED } from '../../../../src/app/constants'
 
 const useSystemStatsMock = vi.hoisted(() => vi.fn())
-const useHealthWebSocketMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@simple-license/react-sdk', async () => {
   const actual = await vi.importActual<typeof import('@simple-license/react-sdk')>('@simple-license/react-sdk')
   return {
     ...actual,
     useSystemStats: useSystemStatsMock,
-    useHealthWebSocket: useHealthWebSocketMock,
   }
 })
 
@@ -34,14 +34,21 @@ describe('AnalyticsStatsPanel integration', () => {
       isError: false,
       refetch,
     })
-    useHealthWebSocketMock.mockReturnValue({
-      connectionInfo: { state: 'open' },
-      error: null,
-      requestHealth,
-      healthData: { stats: undefined },
-    })
 
-    renderWithProviders(<AnalyticsStatsPanel client={{} as never} title={UI_ANALYTICS_STATS_TITLE} />)
+    const liveContextValue = {
+        state: {
+            connectionStatus: ADMIN_SYSTEM_WS_STATUS_DISCONNECTED,
+            lastHealthUpdate: null,
+            lastError: null,
+        },
+        requestHealth,
+    }
+
+    renderWithProviders(
+        <AdminSystemLiveFeedContext.Provider value={liveContextValue}>
+            <AnalyticsStatsPanel client={{} as never} title={UI_ANALYTICS_STATS_TITLE} />
+        </AdminSystemLiveFeedContext.Provider>
+    )
 
     expect(screen.getByText(UI_ANALYTICS_STATS_TITLE)).toBeInTheDocument()
     expect(screen.getByText('5')).toBeInTheDocument()
@@ -64,16 +71,9 @@ describe('AnalyticsStatsPanel integration', () => {
       isError: true,
       refetch: vi.fn(),
     })
-    useHealthWebSocketMock.mockReturnValue({
-      connectionInfo: { state: 'error' },
-      error: new Error('ws-error'),
-      requestHealth: vi.fn(),
-      healthData: undefined,
-    })
 
     renderWithProviders(<AnalyticsStatsPanel client={{} as never} />)
 
     expect(screen.getByText(/unable to load analytics/i)).toBeInTheDocument()
   })
 })
-

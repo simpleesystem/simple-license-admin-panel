@@ -1,13 +1,12 @@
 import type { Client, CreateTenantRequest, UpdateTenantRequest } from '@simple-license/react-sdk'
 import { useCreateTenant, useUpdateTenant } from '@simple-license/react-sdk'
-import type { FieldValues } from 'react-hook-form'
 import type { ReactNode } from 'react'
-
+import type { FieldValues } from 'react-hook-form'
+import type { MutationAdapter } from '../actions/mutationActions'
+import { adaptMutation } from '../actions/mutationAdapter'
 import { UI_TENANT_FORM_SUBMIT_CREATE, UI_TENANT_FORM_SUBMIT_UPDATE } from '../constants'
 import { createTenantBlueprint } from '../formBuilder/factories'
 import { FormModalWithMutation } from '../formBuilder/mutationBridge'
-import type { MutationAdapter } from '../actions/mutationActions'
-import { adaptMutation } from '../actions/mutationAdapter'
 
 type TenantFormBaseProps = {
   client: Client
@@ -17,6 +16,8 @@ type TenantFormBaseProps = {
   pendingLabel?: ReactNode
   secondaryActions?: ReactNode
   onCompleted?: () => void
+  onSuccess?: () => void
+  onError?: (error: unknown) => void
 }
 
 type TenantFormCreateProps = TenantFormBaseProps & {
@@ -44,12 +45,20 @@ const withOnClose = <TFieldValues extends FieldValues>(
   adapter: MutationAdapter<TFieldValues>,
   onClose: () => void,
   onCompleted?: () => void,
+  onSuccess?: () => void,
+  onError?: (error: unknown) => void
 ): MutationAdapter<TFieldValues> => ({
   mutateAsync: async (values) => {
-    const result = await adapter.mutateAsync(values)
-    onCompleted?.()
-    onClose()
-    return result
+    try {
+      const result = await adapter.mutateAsync(values)
+      onSuccess?.()
+      onCompleted?.()
+      onClose()
+      return result
+    } catch (error) {
+      onError?.(error)
+      throw error
+    }
   },
   isPending: adapter.isPending,
 })
@@ -75,7 +84,7 @@ export function TenantFormFlow(props: TenantFormFlowProps) {
         submitLabel={submitLabel}
         pendingLabel={props.pendingLabel}
         secondaryActions={props.secondaryActions}
-        mutation={withOnClose(createMutation, props.onClose, props.onCompleted)}
+        mutation={withOnClose(createMutation, props.onClose, props.onCompleted, props.onSuccess, props.onError)}
       />
     )
   }
@@ -105,9 +114,7 @@ export function TenantFormFlow(props: TenantFormFlowProps) {
       submitLabel={submitLabel}
       pendingLabel={props.pendingLabel}
       secondaryActions={props.secondaryActions}
-      mutation={withOnClose(adapter, props.onClose, props.onCompleted)}
+      mutation={withOnClose(adapter, props.onClose, props.onCompleted, props.onSuccess, props.onError)}
     />
   )
 }
-
-

@@ -1,8 +1,8 @@
 import { useMemo, type JSX } from 'react'
 import { useTranslation } from 'react-i18next'
-
-import { I18N_KEY_HEALTH_HEADING, I18N_KEY_HEALTH_SUBTITLE } from '../../app/constants'
 import { useApiClient } from '../../api/apiContext'
+import { I18N_KEY_HEALTH_HEADING, I18N_KEY_HEALTH_SUBTITLE } from '../../app/constants'
+import { AdminSystemLiveFeedProvider } from '../../app/live/AdminSystemLiveFeedContext'
 import {
   HealthMetricsPanel,
   Page,
@@ -71,20 +71,21 @@ export function HealthRouteComponent() {
   )
 
   return (
-    <Page variant={UI_PAGE_VARIANT_FULL_WIDTH}>
-      <Stack direction="column" gap={UI_STACK_GAP_LARGE}>
-        <PageHeader title={t(I18N_KEY_HEALTH_HEADING)} subtitle={t(I18N_KEY_HEALTH_SUBTITLE)} />
-        {sections.map((section) => (
-          <div key={section.id} className={UI_CLASS_SECTION_GRID}>
-            {section.columns.map((column) => (
-              <div key={column.id} className={HEALTH_COLUMN_CLASS_MAP[column.span]}>
-                {column.render()}
-              </div>
-            ))}
-          </div>
-        ))}
-      </Stack>
-    </Page>
+    <AdminSystemLiveFeedProvider>
+      <Page variant={UI_PAGE_VARIANT_FULL_WIDTH}>
+        <Stack direction="column" gap={UI_STACK_GAP_LARGE}>
+          <PageHeader title={t(I18N_KEY_HEALTH_HEADING)} subtitle={t(I18N_KEY_HEALTH_SUBTITLE)} />
+          {sections.map((section) => (
+            <div key={section.id} className={UI_CLASS_SECTION_GRID}>
+              {section.columns.map((column) => (
+                <div key={column.id} className={HEALTH_COLUMN_CLASS_MAP[column.span]}>
+                  {column.render()}
+                </div>
+              ))}
+            </div>
+          ))}
+        </Stack>
+      </Page>
+    </AdminSystemLiveFeedProvider>
   )
 }
-

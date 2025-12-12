@@ -8,10 +8,16 @@ import Button from 'react-bootstrap/Button'
 import Card from 'react-bootstrap/Card'
 import { useApiClient } from '../../api/apiContext'
 import { useAuth } from '../../app/auth/authContext'
+import {
+  DEFAULT_NOTIFICATION_EVENT,
+  NOTIFICATION_VARIANT_ERROR,
+  NOTIFICATION_VARIANT_SUCCESS,
+} from '../../app/constants'
 import { useLogger } from '../../app/logging/loggerContext'
 import { raiseErrorFromUnknown } from '../../app/state/dispatchers'
 import { useAppStore } from '../../app/state/store'
 import { AppForm } from '../../forms/Form'
+import { useNotificationBus } from '../../notifications/busContext'
 import {
   UI_CHANGE_PASSWORD_BUTTON_UPDATE,
   UI_CHANGE_PASSWORD_BUTTON_UPDATING,
@@ -27,6 +33,8 @@ import {
   UI_CHANGE_PASSWORD_LABEL_NEW_PASSWORD,
   UI_CHANGE_PASSWORD_SECTION_DESCRIPTION,
   UI_CHANGE_PASSWORD_SECTION_TITLE,
+  UI_CHANGE_PASSWORD_TOAST_ERROR,
+  UI_CHANGE_PASSWORD_TOAST_SUCCESS,
   UI_CHANGE_PASSWORD_VALIDATION_CURRENT_PASSWORD,
   UI_CHANGE_PASSWORD_VALIDATION_NEW_PASSWORD,
   UI_FORM_CONTROL_TYPE_EMAIL,
@@ -125,6 +133,7 @@ export function ChangePasswordFlow({ onSuccess }: ChangePasswordFlowProps) {
   const { currentUser, refreshCurrentUser } = useAuth()
   const dispatch = useAppStore((state) => state.dispatch)
   const logger = useLogger()
+  const notificationBus = useNotificationBus()
   const mutation = useChangePassword(client)
   const schema = useMemo(() => buildSchema(currentUser?.email ?? ''), [currentUser?.email])
   const defaultValues = useMemo<ChangePasswordValues>(() => {
@@ -153,6 +162,10 @@ export function ChangePasswordFlow({ onSuccess }: ChangePasswordFlowProps) {
       }
       await mutation.mutateAsync(payload)
       await refreshCurrentUser()
+      notificationBus.emit(DEFAULT_NOTIFICATION_EVENT, {
+        titleKey: UI_CHANGE_PASSWORD_TOAST_SUCCESS,
+        variant: NOTIFICATION_VARIANT_SUCCESS,
+      })
       onSuccess?.()
       logger.info('change-password:submit:success', {
         emailUpdated: Boolean(trimmedEmail && trimmedEmail !== currentUser?.email),
@@ -163,6 +176,10 @@ export function ChangePasswordFlow({ onSuccess }: ChangePasswordFlowProps) {
         error,
         dispatch,
         scope: 'auth',
+      })
+      notificationBus.emit(DEFAULT_NOTIFICATION_EVENT, {
+        titleKey: UI_CHANGE_PASSWORD_TOAST_ERROR,
+        variant: NOTIFICATION_VARIANT_ERROR,
       })
       logger.error(error, {
         stage: 'change-password:submit:error',

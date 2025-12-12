@@ -2,7 +2,7 @@ import { useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
 import { LoginCard } from '../../app/auth/LoginCard'
-import { I18N_KEY_AUTH_HEADING, I18N_KEY_AUTH_SUBTITLE, ROUTE_PATH_ROOT } from '../../app/constants'
+import { I18N_KEY_AUTH_HEADING, I18N_KEY_AUTH_SUBTITLE, ROUTE_PATH_DASHBOARD } from '../../app/constants'
 import {
   UI_CLASS_SECTION_COLUMN_AUTH,
   UI_CLASS_SECTION_GRID,
@@ -18,7 +18,7 @@ export function AuthRouteComponent() {
   const redirectTo = useSearch({
     from: '/auth',
     select: (search: { redirect?: string }) =>
-      typeof search.redirect === 'string' && search.redirect.length > 0 ? search.redirect : ROUTE_PATH_ROOT,
+      typeof search.redirect === 'string' && search.redirect.length > 0 ? search.redirect : ROUTE_PATH_DASHBOARD,
   })
 
   return (

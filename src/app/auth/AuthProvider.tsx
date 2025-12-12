@@ -16,7 +16,11 @@ import {
   AUTH_TOKEN_EXPIRY_SKEW_MS,
   STORAGE_KEY_AUTH_TOKEN,
   STORAGE_KEY_AUTH_USER,
+  UI_HEADER_SIGN_OUT_TOAST_ERROR,
+  UI_HEADER_SIGN_OUT_TOAST_SUCCESS,
 } from '../../app/constants'
+import { useNotificationBus } from '../../notifications/busContext'
+import { DEFAULT_NOTIFICATION_EVENT } from '../../notifications/constants'
 import { createLifecycle } from '../lifecycle/lifecycle'
 import { useLogger } from '../logging/loggerContext'
 import { raiseErrorFromUnknown } from '../state/dispatchers'
@@ -56,6 +60,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [currentUser, setCurrentUser] = useState<User | null>(initialUser)
   const dispatch = useAppStore((state) => state.dispatch)
   const logger = useLogger()
+  const notificationBus = useNotificationBus()
   const isRefreshingRef = useRef(false)
   const lifecycleRef = useRef(createLifecycle())
 
@@ -273,10 +278,20 @@ export function AuthProvider({ children }: PropsWithChildren) {
   )
 
   const logout = useCallback(() => {
-    resetAuthState()
-    dispatch({ type: 'auth/setUser', payload: null })
-    logger.info('auth:logout')
-  }, [resetAuthState, dispatch, logger])
+    try {
+      resetAuthState()
+      dispatch({ type: 'auth/setUser', payload: null })
+      notificationBus.emit(DEFAULT_NOTIFICATION_EVENT, {
+        titleKey: UI_HEADER_SIGN_OUT_TOAST_SUCCESS,
+      })
+      logger.info('auth:logout')
+    } catch (error) {
+      notificationBus.emit(DEFAULT_NOTIFICATION_EVENT, {
+        titleKey: UI_HEADER_SIGN_OUT_TOAST_ERROR,
+      })
+      logger.error(error, { stage: 'auth:logout:error' })
+    }
+  }, [resetAuthState, dispatch, notificationBus, logger])
 
   useEffect(() => {
     if (typeof window === 'undefined') {

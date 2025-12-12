@@ -1,17 +1,18 @@
-import type {
-  Client,
-  CreateEntitlementRequest,
-  UpdateEntitlementRequest,
-} from '@simple-license/react-sdk'
+import type { Client, CreateEntitlementRequest, UpdateEntitlementRequest } from '@simple-license/react-sdk'
 import { useCreateEntitlement, useUpdateEntitlement } from '@simple-license/react-sdk'
-import type { FieldValues } from 'react-hook-form'
 import type { ReactNode } from 'react'
 
-import { UI_ENTITLEMENT_FORM_SUBMIT_CREATE, UI_ENTITLEMENT_FORM_SUBMIT_UPDATE } from '../constants'
-import { createEntitlementBlueprint } from '../formBuilder/factories'
-import { FormModalWithMutation } from '../formBuilder/mutationBridge'
 import type { MutationAdapter } from '../actions/mutationActions'
 import { adaptMutation } from '../actions/mutationAdapter'
+import {
+  UI_ENTITLEMENT_FORM_PENDING_CREATE,
+  UI_ENTITLEMENT_FORM_PENDING_UPDATE,
+  UI_ENTITLEMENT_FORM_SUBMIT_CREATE,
+  UI_ENTITLEMENT_FORM_SUBMIT_UPDATE,
+} from '../constants'
+import { createEntitlementBlueprint } from '../formBuilder/factories'
+import { FormModalWithMutation } from '../formBuilder/mutationBridge'
+import { wrapMutationAdapter } from './mutationHelpers'
 
 type ProductEntitlementBaseProps = {
   client: Client
@@ -21,6 +22,8 @@ type ProductEntitlementBaseProps = {
   pendingLabel?: ReactNode
   secondaryActions?: ReactNode
   onCompleted?: () => void
+  onSuccess?: () => void
+  onError?: (error: unknown) => void
 }
 
 type ProductEntitlementCreateProps = ProductEntitlementBaseProps & {
@@ -53,20 +56,6 @@ const baseUpdateDefaults: UpdateEntitlementRequest = {
   metadata: undefined,
 }
 
-const withOnClose = <TFieldValues extends FieldValues>(
-  adapter: MutationAdapter<TFieldValues>,
-  onClose: () => void,
-  onCompleted?: () => void,
-): MutationAdapter<TFieldValues> => ({
-  mutateAsync: async (values) => {
-    const result = await adapter.mutateAsync(values)
-    onCompleted?.()
-    onClose()
-    return result
-  },
-  isPending: adapter.isPending,
-})
-
 export function ProductEntitlementFormFlow(props: ProductEntitlementFormFlowProps) {
   if (props.mode === 'create') {
     return <ProductEntitlementCreateFlow {...props} />
@@ -82,6 +71,7 @@ function ProductEntitlementCreateFlow(props: ProductEntitlementCreateProps) {
     ...props.defaultValues,
   }
   const submitLabel = props.submitLabel ?? UI_ENTITLEMENT_FORM_SUBMIT_CREATE
+  const pendingLabel = props.pendingLabel ?? UI_ENTITLEMENT_FORM_PENDING_CREATE
 
   return (
     <FormModalWithMutation
@@ -90,9 +80,14 @@ function ProductEntitlementCreateFlow(props: ProductEntitlementCreateProps) {
       blueprint={createEntitlementBlueprint('create')}
       defaultValues={defaultValues}
       submitLabel={submitLabel}
-      pendingLabel={props.pendingLabel}
+      pendingLabel={pendingLabel}
       secondaryActions={props.secondaryActions}
-      mutation={withOnClose(createMutation, props.onClose, props.onCompleted)}
+      mutation={wrapMutationAdapter(createMutation, {
+        onClose: props.onClose,
+        onCompleted: props.onCompleted,
+        onSuccess: props.onSuccess,
+        onError: props.onError,
+      })}
     />
   )
 }
@@ -104,6 +99,7 @@ function ProductEntitlementUpdateFlow(props: ProductEntitlementUpdateProps) {
     ...props.defaultValues,
   }
   const submitLabel = props.submitLabel ?? UI_ENTITLEMENT_FORM_SUBMIT_UPDATE
+  const pendingLabel = props.pendingLabel ?? UI_ENTITLEMENT_FORM_PENDING_UPDATE
 
   const adapter: MutationAdapter<UpdateEntitlementRequest> = {
     mutateAsync: async (values) => {
@@ -121,12 +117,15 @@ function ProductEntitlementUpdateFlow(props: ProductEntitlementUpdateProps) {
       onClose={props.onClose}
       blueprint={createEntitlementBlueprint('update')}
       defaultValues={defaultValues}
-    submitLabel={submitLabel}
-      pendingLabel={props.pendingLabel}
+      submitLabel={submitLabel}
+      pendingLabel={pendingLabel}
       secondaryActions={props.secondaryActions}
-    mutation={withOnClose(adapter, props.onClose, props.onCompleted)}
+      mutation={wrapMutationAdapter(adapter, {
+        onClose: props.onClose,
+        onCompleted: props.onCompleted,
+        onSuccess: props.onSuccess,
+        onError: props.onError,
+      })}
     />
   )
 }
-
-

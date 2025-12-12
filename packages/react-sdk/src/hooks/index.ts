@@ -16,7 +16,6 @@ export * from './useAdminTenants'
 export * from './useAdminUsers'
 // Authentication hooks
 export * from './useAuth'
-export * from './useHealthWebSocket'
 // Public API hooks
 export * from './useLicenseActivate'
 export * from './useLicenseData'
@@ -25,4 +24,3 @@ export * from './useLicenseFeatures'
 export * from './useLicenseUsage'
 export * from './useLicenseValidate'
 export * from './useUpdateCheck'
-export * from './useWebSocket'

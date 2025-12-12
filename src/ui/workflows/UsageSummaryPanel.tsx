@@ -1,6 +1,7 @@
-import { useMemo } from 'react'
 import type { Client, UsageSummaryResponse } from '@simple-license/react-sdk'
 import { useUsageSummaries } from '@simple-license/react-sdk'
+import { useMemo } from 'react'
+import Button from 'react-bootstrap/Button'
 
 import {
   UI_ANALYTICS_COLUMN_ACTIVATIONS,
@@ -17,6 +18,8 @@ import {
   UI_ANALYTICS_SUMMARY_ERROR_TITLE,
   UI_ANALYTICS_SUMMARY_LOADING_BODY,
   UI_ANALYTICS_SUMMARY_LOADING_TITLE,
+  UI_ANALYTICS_SUMMARY_REFRESH_LABEL,
+  UI_ANALYTICS_SUMMARY_REFRESH_PENDING,
   UI_ANALYTICS_SUMMARY_TITLE,
   UI_COLUMN_ID_ANALYTICS_ACTIVATIONS,
   UI_COLUMN_ID_ANALYTICS_LICENSE,
@@ -60,6 +63,7 @@ const formatNumber = (value: number) => value.toLocaleString()
 
 export function UsageSummaryPanel({ client, title = UI_ANALYTICS_SUMMARY_TITLE, maxRows }: UsageSummaryPanelProps) {
   const usageSummariesQuery = useUsageSummaries(client, { retry: false })
+  const { isFetching, isLoading: isQueryLoading, refetch } = usageSummariesQuery
   const dateFormatter = useMemo(() => new Intl.DateTimeFormat(UI_DATE_FORMAT_LOCALE, UI_DATE_FORMAT_OPTIONS), [])
   const rowLimit = maxRows ?? UI_ANALYTICS_SUMMARY_DEFAULT_LIMIT
 
@@ -105,7 +109,7 @@ export function UsageSummaryPanel({ client, title = UI_ANALYTICS_SUMMARY_TITLE, 
         textAlign: UI_TEXT_ALIGN_END,
       },
     ],
-    [dateFormatter],
+    [dateFormatter]
   )
 
   const rows = useMemo(() => {
@@ -118,9 +122,21 @@ export function UsageSummaryPanel({ client, title = UI_ANALYTICS_SUMMARY_TITLE, 
 
   return (
     <Stack direction="column" gap="small">
-      <div className="d-flex flex-column gap-1">
-        <h2 className="h5 mb-0">{title}</h2>
-        <p className="text-muted mb-0">{UI_ANALYTICS_SUMMARY_DESCRIPTION}</p>
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+        <div className="d-flex flex-column gap-1">
+          <h2 className="h5 mb-0">{title}</h2>
+          <p className="text-muted mb-0">{UI_ANALYTICS_SUMMARY_DESCRIPTION}</p>
+        </div>
+        <div className="d-flex flex-wrap align-items-center gap-2">
+          <Button
+            variant="outline-secondary"
+            onClick={() => void refetch()}
+            disabled={isFetching}
+            aria-busy={isFetching}
+          >
+            {isFetching || isQueryLoading ? UI_ANALYTICS_SUMMARY_REFRESH_PENDING : UI_ANALYTICS_SUMMARY_REFRESH_LABEL}
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -142,4 +158,3 @@ export function UsageSummaryPanel({ client, title = UI_ANALYTICS_SUMMARY_TITLE, 
     </Stack>
   )
 }
-

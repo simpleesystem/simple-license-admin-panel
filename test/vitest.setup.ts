@@ -15,10 +15,6 @@ beforeAll(() =>
   server.listen({
     onUnhandledRequest: (req) => {
       const url = new URL(req.url.toString())
-      const isWebSocket = url.protocol === 'ws:' || url.protocol === 'wss:'
-      if (isWebSocket && url.pathname === '/ws/health') {
-        return
-      }
       console.warn(`Unhandled ${req.method} ${url.href}`)
     },
   })
@@ -41,6 +37,50 @@ if (typeof window !== 'undefined' && !window.matchMedia) {
     })),
   })
 }
+
+// Global mocks for context hooks to handle missing providers in unit tests
+// while allowing integration tests to use real providers.
+
+vi.mock('../src/app/logging/loggerContext', async () => {
+  const actual = await vi.importActual<typeof import('../src/app/logging/loggerContext')>('../src/app/logging/loggerContext')
+  return {
+    ...actual,
+    useLogger: () => {
+      try {
+        return actual.useLogger()
+      } catch {
+        return {
+          debug: vi.fn(),
+          info: vi.fn(),
+          warn: vi.fn(),
+          error: vi.fn(),
+        }
+      }
+    },
+  }
+})
+
+vi.mock('../src/app/live/AdminSystemLiveFeedContext', async () => {
+  const actual = await vi.importActual<typeof import('../src/app/live/AdminSystemLiveFeedContext')>('../src/app/live/AdminSystemLiveFeedContext')
+  return {
+    ...actual,
+    useAdminSystemLiveFeed: () => {
+      try {
+        return actual.useAdminSystemLiveFeed()
+      } catch {
+        return {
+          state: {
+            connectionStatus: 'disconnected',
+            lastHealthUpdate: null,
+            lastError: null,
+          },
+          requestHealth: vi.fn(),
+        }
+      }
+    },
+  }
+})
+
 /**
  * Vitest Setup
  * Initializes test infrastructure for React components

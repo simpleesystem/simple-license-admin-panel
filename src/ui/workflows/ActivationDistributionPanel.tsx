@@ -1,6 +1,7 @@
-import type { Client, ActivationDistributionResponse } from '@simple-license/react-sdk'
+import type { ActivationDistributionResponse, Client } from '@simple-license/react-sdk'
 import { useActivationDistribution } from '@simple-license/react-sdk'
 import { useMemo } from 'react'
+import Button from 'react-bootstrap/Button'
 
 import {
   UI_ANALYTICS_COLUMN_ACTIVATIONS,
@@ -12,6 +13,8 @@ import {
   UI_ANALYTICS_DISTRIBUTION_ERROR_TITLE,
   UI_ANALYTICS_DISTRIBUTION_LOADING_BODY,
   UI_ANALYTICS_DISTRIBUTION_LOADING_TITLE,
+  UI_ANALYTICS_DISTRIBUTION_REFRESH_LABEL,
+  UI_ANALYTICS_DISTRIBUTION_REFRESH_PENDING,
   UI_ANALYTICS_DISTRIBUTION_TITLE,
   UI_COLUMN_ID_ANALYTICS_ACTIVATIONS,
   UI_COLUMN_ID_ANALYTICS_LICENSE_KEY,
@@ -32,8 +35,12 @@ type DistributionRow = ActivationDistributionResponse['distribution'][number]
 
 const formatNumber = (value: number) => value.toLocaleString()
 
-export function ActivationDistributionPanel({ client, title = UI_ANALYTICS_DISTRIBUTION_TITLE }: ActivationDistributionPanelProps) {
+export function ActivationDistributionPanel({
+  client,
+  title = UI_ANALYTICS_DISTRIBUTION_TITLE,
+}: ActivationDistributionPanelProps) {
   const distributionQuery = useActivationDistribution(client, { retry: false })
+  const { isFetching, isLoading, refetch } = distributionQuery
 
   const columns = useMemo<UiDataTableColumn<DistributionRow>[]>(() => {
     return [
@@ -77,9 +84,23 @@ export function ActivationDistributionPanel({ client, title = UI_ANALYTICS_DISTR
 
   return (
     <Stack direction="column" gap="small">
-      <div className="d-flex flex-column gap-1">
-        <h2 className="h5 mb-0">{title}</h2>
-        <p className="text-muted mb-0">{UI_ANALYTICS_DISTRIBUTION_DESCRIPTION}</p>
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+        <div className="d-flex flex-column gap-1">
+          <h2 className="h5 mb-0">{title}</h2>
+          <p className="text-muted mb-0">{UI_ANALYTICS_DISTRIBUTION_DESCRIPTION}</p>
+        </div>
+        <div className="d-flex flex-wrap align-items-center gap-2">
+          <Button
+            variant="outline-secondary"
+            onClick={() => void refetch()}
+            disabled={isFetching}
+            aria-busy={isFetching}
+          >
+            {isFetching || isLoading
+              ? UI_ANALYTICS_DISTRIBUTION_REFRESH_PENDING
+              : UI_ANALYTICS_DISTRIBUTION_REFRESH_LABEL}
+          </Button>
+        </div>
       </div>
 
       <DataTable
@@ -91,4 +112,3 @@ export function ActivationDistributionPanel({ client, title = UI_ANALYTICS_DISTR
     </Stack>
   )
 }
-

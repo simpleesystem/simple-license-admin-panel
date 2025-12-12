@@ -7,6 +7,7 @@ import {
   canViewProductTiers,
   isProductTierOwnedByUser,
 } from '../../app/auth/permissions'
+import { useNotificationBus } from '../../notifications/busContext'
 import {
   UI_BUTTON_VARIANT_GHOST,
   UI_BUTTON_VARIANT_PRIMARY,
@@ -26,6 +27,7 @@ import {
 import { DataTable } from '../data/DataTable'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn } from '../types'
+import { notifyCrudError, notifyProductTierSuccess } from './notifications'
 import { ProductTierFormFlow } from './ProductTierFormFlow'
 import { ProductTierRowActions } from './ProductTierRowActions'
 
@@ -50,6 +52,7 @@ export function ProductTierManagementExample({
 }: ProductTierManagementExampleProps) {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingTier, setEditingTier] = useState<ProductTierListItem | null>(null)
+  const notificationBus = useNotificationBus()
 
   const visibleTiers = useMemo(() => {
     const isSuperUser = currentUser?.role === 'SUPERUSER' || currentUser?.role === 'ADMIN'
@@ -101,6 +104,15 @@ export function ProductTierManagementExample({
     [client, currentUser, onRefresh]
   )
 
+  const refreshWith = (action: 'create' | 'update' | 'delete') => {
+    onRefresh?.()
+    notifyProductTierSuccess(notificationBus, action)
+  }
+
+  const handleMutationError = () => {
+    notifyCrudError(notificationBus)
+  }
+
   return (
     <Stack direction="column" gap="medium">
       {allowCreate ? (
@@ -127,6 +139,8 @@ export function ProductTierManagementExample({
           onClose={() => setShowCreateModal(false)}
           submitLabel={UI_PRODUCT_TIER_FORM_SUBMIT_CREATE}
           onCompleted={onRefresh}
+          onSuccess={() => refreshWith('create')}
+          onError={handleMutationError}
         />
       ) : null}
 
@@ -134,7 +148,7 @@ export function ProductTierManagementExample({
         <ProductTierFormFlow
           client={client}
           mode="update"
-          show={true}
+          show={Boolean(editingTier)}
           onClose={() => setEditingTier(null)}
           submitLabel={UI_PRODUCT_TIER_FORM_SUBMIT_UPDATE}
           tierId={editingTier.id}
@@ -143,6 +157,8 @@ export function ProductTierManagementExample({
             code: editingTier.tierCode,
           }}
           onCompleted={onRefresh}
+          onSuccess={() => refreshWith('update')}
+          onError={handleMutationError}
         />
       ) : null}
     </Stack>

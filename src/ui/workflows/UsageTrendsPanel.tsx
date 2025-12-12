@@ -1,6 +1,7 @@
 import type { Client } from '@simple-license/react-sdk'
 import { useUsageTrends } from '@simple-license/react-sdk'
 import { useMemo } from 'react'
+import Button from 'react-bootstrap/Button'
 import {
   UI_ANALYTICS_COLUMN_ACTIVATIONS,
   UI_ANALYTICS_COLUMN_PERIOD,
@@ -17,6 +18,8 @@ import {
   UI_USAGE_TRENDS_ERROR_TITLE,
   UI_USAGE_TRENDS_LOADING_BODY,
   UI_USAGE_TRENDS_LOADING_TITLE,
+  UI_USAGE_TRENDS_REFRESH_LABEL,
+  UI_USAGE_TRENDS_REFRESH_PENDING,
   UI_USAGE_TRENDS_TITLE,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
@@ -39,6 +42,7 @@ type TrendRow = {
 
 export function UsageTrendsPanel({ client, title = UI_USAGE_TRENDS_TITLE }: UsageTrendsPanelProps) {
   const trendsQuery = useUsageTrends(client, { retry: false })
+  const { isFetching, isLoading, refetch } = trendsQuery
 
   const rows = useMemo<readonly TrendRow[]>(() => {
     return (
@@ -82,11 +86,23 @@ export function UsageTrendsPanel({ client, title = UI_USAGE_TRENDS_TITLE }: Usag
 
   return (
     <Stack direction="column" gap="small">
-      <div className="d-flex justify-content-between align-items-center">
-        <h2 className="h5 mb-0">{title}</h2>
-        <span className="text-muted small">
-          {trendsQuery.data ? `${trendsQuery.data.periodStart} → ${trendsQuery.data.periodEnd}` : null}
-        </span>
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+        <div className="d-flex flex-column gap-1">
+          <h2 className="h5 mb-0">{title}</h2>
+          <span className="text-muted small">
+            {trendsQuery.data ? `${trendsQuery.data.periodStart} → ${trendsQuery.data.periodEnd}` : null}
+          </span>
+        </div>
+        <div className="d-flex flex-wrap align-items-center gap-2">
+          <Button
+            variant="outline-secondary"
+            onClick={() => void refetch()}
+            disabled={isFetching}
+            aria-busy={isFetching}
+          >
+            {isFetching || isLoading ? UI_USAGE_TRENDS_REFRESH_PENDING : UI_USAGE_TRENDS_REFRESH_LABEL}
+          </Button>
+        </div>
       </div>
 
       {trendsQuery.isLoading ? (

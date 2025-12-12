@@ -19,6 +19,7 @@ import { buildPermissions } from '../../factories/permissionFactory'
 
 const mockUseRouterState = vi.hoisted(() => vi.fn()) as Mock
 const mockChangePasswordFlowRender = vi.hoisted(() => vi.fn())
+const mockUseNavigate = vi.hoisted(() => vi.fn())
 
 vi.mock('@tanstack/react-router', () => ({
   Link: ({
@@ -36,6 +37,7 @@ vi.mock('@tanstack/react-router', () => ({
     </a>
   ),
   useRouterState: mockUseRouterState,
+  useNavigate: () => mockUseNavigate,
 }))
 
 vi.mock('../../../src/ui/auth/ChangePasswordFlow', () => ({
@@ -159,4 +161,3 @@ const renderHeader = ({
     </AuthContext.Provider>,
   )
 }
-

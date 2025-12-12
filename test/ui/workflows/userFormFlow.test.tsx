@@ -8,6 +8,7 @@ import { buildText } from '../../ui/factories/uiFactories'
 
 const useCreateUserMock = vi.hoisted(() => vi.fn())
 const useUpdateUserMock = vi.hoisted(() => vi.fn())
+const useAdminTenantsMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@simple-license/react-sdk', async () => {
   const actual = await vi.importActual<typeof import('@simple-license/react-sdk')>('@simple-license/react-sdk')
@@ -15,6 +16,7 @@ vi.mock('@simple-license/react-sdk', async () => {
     ...actual,
     useCreateUser: useCreateUserMock,
     useUpdateUser: useUpdateUserMock,
+    useAdminTenants: useAdminTenantsMock,
   }
 })
 
@@ -28,6 +30,7 @@ const SINGLE_INVOCATION_COUNT = 1 as const
 describe('UserFormFlow', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    useAdminTenantsMock.mockReturnValue({ data: [] })
   })
 
   test('submits create mutation', async () => {

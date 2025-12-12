@@ -1,4 +1,14 @@
 import type { AdminRole, User } from '@simple-license/react-sdk'
+import {
+  UI_USER_ROLE_ADMIN,
+  UI_USER_ROLE_API_CONSUMER_ACTIVATE,
+  UI_USER_ROLE_API_READ_ONLY,
+  UI_USER_ROLE_API_VENDOR_WRITE,
+  UI_USER_ROLE_SUPERUSER,
+  UI_USER_ROLE_VENDOR_ADMIN,
+  UI_USER_ROLE_VENDOR_MANAGER,
+  UI_USER_ROLE_VIEWER,
+} from '../../ui/constants'
 
 export const PERMISSION_KEYS = [
   'viewDashboard',
@@ -33,9 +43,9 @@ const ALL_PERMISSIONS = createPermissionSet(
 )
 
 const ROLE_PERMISSION_MATRIX: Record<AdminRole, Permissions> = {
-  SUPERUSER: ALL_PERMISSIONS,
-  ADMIN: ALL_PERMISSIONS,
-  VENDOR_MANAGER: createPermissionSet({
+  [UI_USER_ROLE_SUPERUSER]: ALL_PERMISSIONS,
+  [UI_USER_ROLE_ADMIN]: ALL_PERMISSIONS,
+  [UI_USER_ROLE_VENDOR_MANAGER]: createPermissionSet({
     viewDashboard: true,
     manageLicenses: true,
     manageProducts: true,
@@ -43,19 +53,19 @@ const ROLE_PERMISSION_MATRIX: Record<AdminRole, Permissions> = {
     manageUsers: true,
     viewAnalytics: true,
   }),
-  VENDOR_ADMIN: createPermissionSet({
+  [UI_USER_ROLE_VENDOR_ADMIN]: createPermissionSet({
     viewDashboard: true,
     manageLicenses: true,
     manageProducts: true,
     viewAnalytics: true,
   }),
-  VIEWER: createPermissionSet({
+  [UI_USER_ROLE_VIEWER]: createPermissionSet({
     viewDashboard: true,
     viewAnalytics: true,
   }),
-  API_READ_ONLY: createPermissionSet(),
-  API_VENDOR_WRITE: createPermissionSet(),
-  API_CONSUMER_ACTIVATE: createPermissionSet(),
+  [UI_USER_ROLE_API_READ_ONLY]: createPermissionSet(),
+  [UI_USER_ROLE_API_VENDOR_WRITE]: createPermissionSet(),
+  [UI_USER_ROLE_API_CONSUMER_ACTIVATE]: createPermissionSet(),
 }
 
 const DEFAULT_PERMISSIONS = createPermissionSet()
@@ -85,7 +95,7 @@ export const isVendorScopedUser = (user: Pick<User, 'role' | 'vendorId'> | null 
   if (!user) {
     return false
   }
-  if (user.role === 'SUPERUSER' || user.role === 'ADMIN') {
+  if (user.role === UI_USER_ROLE_SUPERUSER || user.role === UI_USER_ROLE_ADMIN) {
     return false
   }
   return Boolean(user.vendorId)
@@ -102,7 +112,7 @@ export const isTenantOwnedByUser = (
 }
 
 export const canCreateTenant = (user: Pick<User, 'role'> | null | undefined): boolean => {
-  return user?.role === 'SUPERUSER' || user?.role === 'ADMIN'
+  return user?.role === UI_USER_ROLE_SUPERUSER || user?.role === UI_USER_ROLE_ADMIN
 }
 
 export const canDeleteTenant = (user: Pick<User, 'role'> | null | undefined): boolean => {
@@ -119,7 +129,7 @@ export const canUpdateTenant = (
   if (!user) {
     return false
   }
-  if (user.role === 'VENDOR_MANAGER') {
+  if (user.role === UI_USER_ROLE_VENDOR_MANAGER) {
     return isTenantOwnedByUser(user, tenant)
   }
   return false
@@ -144,7 +154,7 @@ export const isProductOwnedByUser = (
 }
 
 export const canCreateProduct = (user: Pick<User, 'role'> | null | undefined): boolean => {
-  return user?.role === 'SUPERUSER' || user?.role === 'ADMIN'
+  return user?.role === UI_USER_ROLE_SUPERUSER || user?.role === UI_USER_ROLE_ADMIN
 }
 
 export const canDeleteProduct = (user: Pick<User, 'role'> | null | undefined): boolean => {
@@ -161,7 +171,7 @@ export const canUpdateProduct = (
   if (!user) {
     return false
   }
-  if (user.role === 'VENDOR_MANAGER') {
+  if (user.role === UI_USER_ROLE_VENDOR_MANAGER) {
     return isProductOwnedByUser(user, product)
   }
   return false
@@ -186,7 +196,7 @@ export const isProductTierOwnedByUser = (
 }
 
 export const canCreateProductTier = (user: Pick<User, 'role'> | null | undefined): boolean => {
-  return user?.role === 'SUPERUSER' || user?.role === 'ADMIN'
+  return user?.role === UI_USER_ROLE_SUPERUSER || user?.role === UI_USER_ROLE_ADMIN
 }
 
 export const canDeleteProductTier = (user: Pick<User, 'role'> | null | undefined): boolean => {
@@ -203,7 +213,7 @@ export const canUpdateProductTier = (
   if (!user) {
     return false
   }
-  if (user.role === 'VENDOR_MANAGER') {
+  if (user.role === UI_USER_ROLE_VENDOR_MANAGER) {
     return isProductTierOwnedByUser(user, tier)
   }
   return false
@@ -238,7 +248,7 @@ export const isUserOwnedByUser = (
 }
 
 export const canCreateUser = (user: Pick<User, 'role'> | null | undefined): boolean => {
-  return user?.role === 'SUPERUSER' || user?.role === 'ADMIN'
+  return user?.role === UI_USER_ROLE_SUPERUSER || user?.role === UI_USER_ROLE_ADMIN
 }
 
 export const canUpdateUser = (
@@ -251,7 +261,7 @@ export const canUpdateUser = (
   if (!user) {
     return false
   }
-  if (user.role === 'VENDOR_MANAGER') {
+  if (user.role === UI_USER_ROLE_VENDOR_MANAGER) {
     return isUserOwnedByUser(user, target)
   }
   return false
@@ -273,7 +283,7 @@ export const canViewUsers = (user: Pick<User, 'role' | 'vendorId'> | null | unde
 }
 
 export const canCreateEntitlement = (user: Pick<User, 'role'> | null | undefined): boolean => {
-  return user?.role === 'SUPERUSER' || user?.role === 'ADMIN'
+  return user?.role === UI_USER_ROLE_SUPERUSER || user?.role === UI_USER_ROLE_ADMIN
 }
 
 export const canDeleteEntitlement = (user: Pick<User, 'role'> | null | undefined): boolean => {
@@ -290,7 +300,7 @@ export const canUpdateEntitlement = (
   if (!user) {
     return false
   }
-  if (user.role === 'VENDOR_MANAGER') {
+  if (user.role === UI_USER_ROLE_VENDOR_MANAGER) {
     return isEntitlementOwnedByUser(user, entitlement)
   }
   return false
@@ -315,7 +325,7 @@ export const isLicenseOwnedByUser = (
 }
 
 export const canCreateLicense = (user: Pick<User, 'role'> | null | undefined): boolean => {
-  return user?.role === 'SUPERUSER' || user?.role === 'ADMIN'
+  return user?.role === UI_USER_ROLE_SUPERUSER || user?.role === UI_USER_ROLE_ADMIN
 }
 
 export const canDeleteLicense = (user: Pick<User, 'role'> | null | undefined): boolean => {
@@ -332,7 +342,7 @@ export const canUpdateLicense = (
   if (!user) {
     return false
   }
-  if (user.role === 'VENDOR_MANAGER') {
+  if (user.role === UI_USER_ROLE_VENDOR_MANAGER) {
     return isLicenseOwnedByUser(user, license)
   }
   return false

@@ -1,26 +1,27 @@
 import type { Client, Entitlement, User } from '@simple-license/react-sdk'
 import { useDeleteEntitlement } from '@simple-license/react-sdk'
 import type { ReactNode } from 'react'
-
-import { adaptMutation } from '../actions/mutationAdapter'
+import { canDeleteEntitlement, canUpdateEntitlement } from '../../app/auth/permissions'
+import { useNotificationBus } from '../../notifications/busContext'
 import { createCrudActions } from '../actions/mutationActions'
+import { adaptMutation } from '../actions/mutationAdapter'
 import {
   UI_ENTITLEMENT_ACTION_DELETE,
   UI_ENTITLEMENT_ACTION_EDIT,
   UI_ENTITLEMENT_BUTTON_DELETE,
-  UI_ENTITLEMENT_VALUE_TYPE_BOOLEAN,
-  UI_ENTITLEMENT_VALUE_TYPE_NUMBER,
-  UI_ENTITLEMENT_VALUE_TYPE_STRING,
   UI_ENTITY_ENTITLEMENT,
 } from '../constants'
 import { ActionMenu } from '../data/ActionMenu'
-import { canDeleteEntitlement, canUpdateEntitlement } from '../../app/auth/permissions'
 import type { UiCommonProps } from '../types'
+import { notifyCrudError, notifyProductEntitlementSuccess } from './notifications'
 
 export type ProductEntitlementSummary = Pick<Entitlement, 'id' | 'key'>
 
 export type ProductEntitlementListItem = ProductEntitlementSummary & {
-  valueType: typeof UI_ENTITLEMENT_VALUE_TYPE_NUMBER | typeof UI_ENTITLEMENT_VALUE_TYPE_BOOLEAN | typeof UI_ENTITLEMENT_VALUE_TYPE_STRING
+  valueType:
+    | typeof UI_ENTITLEMENT_VALUE_TYPE_NUMBER
+    | typeof UI_ENTITLEMENT_VALUE_TYPE_BOOLEAN
+    | typeof UI_ENTITLEMENT_VALUE_TYPE_STRING
   defaultValue: string | number | boolean
   usageLimit?: number | null
   vendorId?: string | null
@@ -45,6 +46,7 @@ export function ProductEntitlementRowActions({
   ...rest
 }: ProductEntitlementRowActionsProps) {
   const deleteMutation = adaptMutation(useDeleteEntitlement(client))
+  const notificationBus = useNotificationBus()
 
   const allowUpdate = canUpdateEntitlement(currentUser, entitlement)
   const allowDelete = canDeleteEntitlement(currentUser)
@@ -71,9 +73,15 @@ export function ProductEntitlementRowActions({
           buildPayload: () => entitlement.id,
           mutation: {
             mutateAsync: async (payload) => {
-              const result = await deleteMutation.mutateAsync(payload)
-              onCompleted?.()
-              return result
+              try {
+                const result = await deleteMutation.mutateAsync(payload)
+                onCompleted?.()
+                notifyProductEntitlementSuccess(notificationBus, 'delete')
+                return result
+              } catch (error) {
+                notifyCrudError(notificationBus)
+                throw error
+              }
             },
             isPending: deleteMutation.isPending,
           },
@@ -83,13 +91,5 @@ export function ProductEntitlementRowActions({
 
   const fallbackLabel = allowDelete ? UI_ENTITLEMENT_BUTTON_DELETE : UI_ENTITLEMENT_ACTION_EDIT
 
-  return (
-    <ActionMenu
-      {...rest}
-      items={actions}
-      buttonLabel={buttonLabel ?? fallbackLabel}
-    />
-  )
+  return <ActionMenu {...rest} items={actions} buttonLabel={buttonLabel ?? fallbackLabel} />
 }
-
-

@@ -48,7 +48,7 @@ export const QUERY_KEYS = {
 
   // Admin API - Users
   adminUsers: {
-    all: () => ['admin', 'users'] as const,
+    all: (filters?: Record<string, unknown>) => ['admin', 'users', filters] as const,
     detail: (id: string) => ['admin', 'users', id] as const,
     current: () => ['admin', 'users', 'me'] as const,
   },

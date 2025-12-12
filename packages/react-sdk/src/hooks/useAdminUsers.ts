@@ -9,6 +9,7 @@ import type {
   CreateUserResponse,
   GetCurrentUserResponse,
   GetUserResponse,
+  ListUsersRequest,
   ListUsersResponse,
   UpdateUserRequest,
   UpdateUserResponse,
@@ -17,12 +18,13 @@ import { QUERY_KEYS } from './queryKeys'
 
 export function useAdminUsers(
   client: Client,
+  filters?: ListUsersRequest,
   options?: Omit<UseQueryOptions<ListUsersResponse, Error>, 'queryKey' | 'queryFn'>
 ) {
   return useQuery<ListUsersResponse, Error>({
-    queryKey: QUERY_KEYS.adminUsers.all(),
+    queryKey: QUERY_KEYS.adminUsers.all(filters as Record<string, unknown>),
     queryFn: async () => {
-      return await client.listUsers()
+      return await client.listUsers(filters)
     },
     ...options,
   })

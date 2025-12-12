@@ -1,17 +1,14 @@
 /* c8 ignore file */
 /* istanbul ignore file */
 
-import type { Client, ServerStatusResponse, UseHealthWebSocketResult } from '@simple-license/react-sdk'
-import { useHealthWebSocket, useServerStatus } from '@simple-license/react-sdk'
+import type { Client } from '@simple-license/react-sdk'
+import { useServerStatus } from '@simple-license/react-sdk'
 import { useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
-import { useAppConfig } from '../../app/config'
-import { useLiveData } from '../../hooks/useLiveData'
+import { useAdminSystemLiveFeed, useLiveStatusBadgeModel } from '../../app/live/AdminSystemLiveFeedContext'
 import {
-  UI_BADGE_VARIANT_SECONDARY,
   UI_DATE_FORMAT_LOCALE,
   UI_DATE_TIME_FORMAT_OPTIONS,
-  UI_LIVE_STATUS_DISCONNECTED,
   UI_STACK_GAP_SMALL,
   UI_SUMMARY_ID_SYSTEM_STATUS_DATABASE,
   UI_SUMMARY_ID_SYSTEM_STATUS_LAST_CHECKED,
@@ -27,6 +24,7 @@ import {
   UI_SYSTEM_STATUS_LOADING_BODY,
   UI_SYSTEM_STATUS_LOADING_TITLE,
   UI_SYSTEM_STATUS_REFRESH_LABEL,
+  UI_SYSTEM_STATUS_REFRESH_PENDING,
   UI_SYSTEM_STATUS_TITLE,
   UI_SYSTEM_STATUS_VALUE_DATABASE_CONNECTED,
   UI_SYSTEM_STATUS_VALUE_DATABASE_POOL_IDLE,
@@ -44,17 +42,10 @@ import { InlineAlert } from '../feedback/InlineAlert'
 import { Stack } from '../layout/Stack'
 import type { UiKeyValueItem } from '../types'
 import { BadgeText } from '../typography/BadgeText'
-import { getLiveStatusDescriptor } from '../utils/liveStatus'
 
 type SystemStatusPanelProps = {
   client: Client
   title?: string
-}
-
-type LiveStatusSnapshot = {
-  status?: 'healthy' | 'unhealthy'
-  timestamp?: string | null
-  database?: string
 }
 
 const formatTimestamp = (value: string | null | undefined, formatter: Intl.DateTimeFormat) => {
@@ -250,40 +241,21 @@ const normalizeDatabaseSummary = (value: unknown): string | undefined => {
 }
 
 export function SystemStatusPanel({ client, title = UI_SYSTEM_STATUS_TITLE }: SystemStatusPanelProps) {
-  const { wsPath } = useAppConfig()
   const serverStatusQuery = useServerStatus(client, { retry: false })
-  const healthSocket = useHealthWebSocket(client, { path: wsPath })
-  const {
-    queryData: statusData,
-    liveData: livePayload,
-    socketResult: healthSocketResult,
-    isLoading,
-    isError,
-    refresh,
-  } = useLiveData<ServerStatusResponse, UseHealthWebSocketResult, ServerStatusResponse>({
-    query: () => serverStatusQuery,
-    socket: () => healthSocket,
-    selectQueryData: (data) => data,
-    selectSocketData: () => undefined,
-  })
+  const { data: statusData, isLoading, isFetching, isError, refetch } = serverStatusQuery
+  const liveFeed = useAdminSystemLiveFeed()
+  const liveStatusBadge = useLiveStatusBadgeModel()
+  const refresh = () => {
+    void refetch()
+    liveFeed.requestHealth()
+  }
   const dateFormatter = useMemo(() => new Intl.DateTimeFormat(UI_DATE_FORMAT_LOCALE, UI_DATE_TIME_FORMAT_OPTIONS), [])
-
-  const liveStatus = useMemo<LiveStatusSnapshot | undefined>(() => {
-    if (!livePayload) {
-      return undefined
-    }
-    return {
-      status: livePayload.status,
-      timestamp: livePayload.timestamp ?? null,
-      database: formatDatabaseState(livePayload.checks?.database),
-    }
-  }, [livePayload])
 
   const summaryItems = useMemo<UiKeyValueItem[]>(() => {
     const items: UiKeyValueItem[] = []
-    const statusValue = normalizeHealthSummary(liveStatus?.status ?? statusData?.status)
-    const timestampValue = liveStatus?.timestamp ?? statusData?.timestamp
-    const databaseValue = normalizeDatabaseSummary(liveStatus?.database ?? statusData?.checks?.database)
+    const statusValue = normalizeHealthSummary(statusData?.status)
+    const timestampValue = statusData?.timestamp
+    const databaseValue = normalizeDatabaseSummary(statusData?.checks?.database)
 
     if (statusValue) {
       items.push({
@@ -310,12 +282,12 @@ export function SystemStatusPanel({ client, title = UI_SYSTEM_STATUS_TITLE }: Sy
     }
 
     return items
-  }, [dateFormatter, liveStatus, statusData])
+  }, [dateFormatter, statusData])
 
   /* c8 ignore start */
   const renderContent = () => {
     if (summaryItems.length === 0) {
-      if (isLoading && !liveStatus) {
+      if ((isLoading || isFetching) && !statusData) {
         return (
           <InlineAlert variant="info" title={UI_SYSTEM_STATUS_LOADING_TITLE}>
             {UI_SYSTEM_STATUS_LOADING_BODY}
@@ -323,7 +295,7 @@ export function SystemStatusPanel({ client, title = UI_SYSTEM_STATUS_TITLE }: Sy
         )
       }
 
-      if (isError && !liveStatus) {
+      if (isError && !statusData) {
         return (
           <InlineAlert variant="danger" title={UI_SYSTEM_STATUS_ERROR_TITLE}>
             {UI_SYSTEM_STATUS_ERROR_BODY}
@@ -342,11 +314,6 @@ export function SystemStatusPanel({ client, title = UI_SYSTEM_STATUS_TITLE }: Sy
   }
   /* c8 ignore stop */
 
-  const liveStatusDescriptor = getLiveStatusDescriptor(
-    healthSocketResult.connectionInfo.state,
-    Boolean(healthSocketResult.error)
-  )
-
   return (
     <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
@@ -355,12 +322,14 @@ export function SystemStatusPanel({ client, title = UI_SYSTEM_STATUS_TITLE }: Sy
           <p className="text-muted mb-0">{UI_SYSTEM_STATUS_DESCRIPTION}</p>
         </div>
         <div className="d-flex flex-wrap align-items-center gap-2">
-          <BadgeText
-            text={liveStatusDescriptor.text ?? UI_LIVE_STATUS_DISCONNECTED}
-            variant={liveStatusDescriptor.variant ?? UI_BADGE_VARIANT_SECONDARY}
-          />
-          <Button variant="outline-secondary" onClick={refresh}>
-            {UI_SYSTEM_STATUS_REFRESH_LABEL}
+          <BadgeText text={liveStatusBadge.text} variant={liveStatusBadge.variant} />
+          <Button
+            variant="outline-secondary"
+            onClick={refresh}
+            disabled={isFetching || isLoading}
+            aria-busy={isFetching || isLoading}
+          >
+            {isFetching || isLoading ? UI_SYSTEM_STATUS_REFRESH_PENDING : UI_SYSTEM_STATUS_REFRESH_LABEL}
           </Button>
         </div>
       </div>

@@ -58,7 +58,8 @@ describe('LoginCard integration', () => {
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'wrong' } })
     fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
-    expect(await screen.findByText(/We could not verify those credentials/i)).toBeInTheDocument()
+    const errorMessages = await screen.findAllByText(/Bad credentials/i)
+    expect(errorMessages.length).toBeGreaterThan(0)
   })
 })
 

@@ -14,7 +14,7 @@ import { SidebarNav } from '../../../../src/ui/navigation/SidebarNav'
 import { LicenseManagementExample } from '../../../../src/ui/workflows/LicenseManagementExample'
 import { ProductManagementExample } from '../../../../src/ui/workflows/ProductManagementExample'
 import { TenantManagementExample } from '../../../../src/ui/workflows/TenantManagementExample'
-import { UserManagementExample } from '../../../../src/ui/workflows/UserManagementExample'
+import { UserManagementPanel } from '../../../../src/ui/workflows/UserManagementPanel'
 import { buildLicense } from '../../../factories/licenseFactory'
 import { buildProduct } from '../../../factories/productFactory'
 import { buildTenant } from '../../../factories/tenantFactory'
@@ -139,7 +139,17 @@ const ScreenHost = ({
   return (
     <AppShell sidebar={<SidebarNav items={items} />} topBar={null} currentUser={{ role, vendorId }}>
       {active === 'users' ? (
-        <UserManagementExample client={{} as never} users={user ? [user] : []} currentUser={{ role, vendorId }} onRefresh={onRefresh} />
+        <UserManagementPanel
+          client={{} as never}
+          users={user ? [user] : []}
+          currentUser={{ role, vendorId }}
+          onRefresh={onRefresh}
+          page={1}
+          totalPages={1}
+          onPageChange={vi.fn()}
+          searchTerm=""
+          onSearchChange={vi.fn()}
+        />
       ) : null}
       {active === 'tenants' ? (
         <TenantManagementExample

@@ -368,6 +368,12 @@ export interface UpdateEntitlementResponse {
   entitlement: Entitlement
 }
 
+export interface ListUsersRequest extends PaginationOptions {
+  role?: string
+  vendor_id?: string
+  search?: string
+}
+
 export type ListUsersResponse = PaginatedResponse<User>
 
 export interface GetUserResponse {

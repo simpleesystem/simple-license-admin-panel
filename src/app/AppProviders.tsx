@@ -8,7 +8,10 @@ import { useEffect, useMemo } from 'react'
 
 import { ApiProvider } from '../api/ApiProvider'
 import { AppErrorBoundary } from '../errors/AppErrorBoundary'
-import { NotificationBusProvider } from '../notifications/busContext'
+import { NotificationBusProvider } from '../notifications/bus'
+import { useNotificationBus } from '../notifications/busContext'
+import { DEFAULT_NOTIFICATION_EVENT } from '../notifications/constants'
+import { ToastProvider } from '../notifications/ToastProvider'
 import { createTrackingClient } from './analytics/tracking'
 import { TrackingContext } from './analytics/trackingContext'
 import { AuthorizationProvider } from './auth/AuthorizationProvider'
@@ -21,6 +24,7 @@ import { AppConfigProvider, useAppConfig, useFeatureFlag } from './config'
 import { I18nProvider } from './i18n/I18nProvider'
 import { createAppLogger } from './logging/logger'
 import { LoggerContext, useLogger } from './logging/loggerContext'
+import { registerQueryErrorNotifier } from './query/errorNotifier'
 import { enableQueryCachePersistence } from './query/persistence'
 import { createAppQueryClient } from './queryClient'
 import { computeFirstAllowedRoute, router } from './router'
@@ -63,6 +67,8 @@ function AppProvidersInner({ children }: AppProvidersProps) {
                 <AuthProvider>
                   <AuthorizationProvider>
                     <NotificationBusProvider>
+                      <QueryErrorNotifierBridge />
+                      <ToastProvider />
                       <RouterContextBridge queryClient={queryClient} />
                       <SessionManager />
                       <SurfaceRenderer />
@@ -126,6 +132,19 @@ function RouterContextBridge({ queryClient }: { queryClient: QueryClient }) {
       logger.info('router:navigation-intent', { to: navigationIntent.to, replace: navigationIntent.replace })
     }
   }, [navigationIntent, navigate, dispatch, logger])
+
+  return null
+}
+
+function QueryErrorNotifierBridge() {
+  const notificationBus = useNotificationBus()
+
+  useEffect(() => {
+    const unregister = registerQueryErrorNotifier((payload) => {
+      notificationBus.emit(DEFAULT_NOTIFICATION_EVENT, payload)
+    })
+    return unregister
+  }, [notificationBus])
 
   return null
 }
