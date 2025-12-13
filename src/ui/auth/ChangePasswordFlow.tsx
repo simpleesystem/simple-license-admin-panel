@@ -10,6 +10,7 @@ import Card from 'react-bootstrap/Card'
 import { useApiClient } from '../../api/apiContext'
 import { useAuth } from '../../app/auth/authContext'
 import {
+  APP_ERROR_MESSAGE_REQUEST_FAILED,
   DEFAULT_NOTIFICATION_EVENT,
   NOTIFICATION_VARIANT_SUCCESS,
 } from '../../app/constants'
@@ -18,10 +19,7 @@ import { useLogger } from '../../app/logging/loggerContext'
 import { useAppStore } from '../../app/state/store'
 import { AppForm } from '../../forms/Form'
 import { useNotificationBus } from '../../notifications/busContext'
-import {
-  UI_AUTH_CARD_MIN_HEIGHT,
-  UI_STACK_GAP_MEDIUM,
-} from '../../ui/constants'
+import { UI_AUTH_CARD_MIN_HEIGHT, UI_STACK_GAP_MEDIUM } from '../../ui/constants'
 import {
   UI_CHANGE_PASSWORD_BUTTON_UPDATE,
   UI_CHANGE_PASSWORD_BUTTON_UPDATING,
@@ -41,7 +39,6 @@ import {
   UI_FORM_CONTROL_TYPE_EMAIL,
   UI_FORM_CONTROL_TYPE_PASSWORD,
 } from '../constants'
-import { FormActions } from '../forms/FormActions'
 import { TextField } from '../forms/TextField'
 import { Stack } from '../layout/Stack'
 
@@ -181,11 +178,11 @@ export function ChangePasswordFlow({ onSuccess }: ChangePasswordFlowProps) {
       // try to login with the new credentials. If that succeeds, the password change
       // actually worked despite the API error response.
       let wasActuallySuccessful = false
-      if (appError.message === 'API request failed' && values.new_password && currentUser?.username) {
+      if (appError.message === APP_ERROR_MESSAGE_REQUEST_FAILED && values.new_password && currentUser?.username) {
         try {
           await login(currentUser.username, values.new_password)
           wasActuallySuccessful = true
-        } catch (ignored) {
+        } catch {
           // Login failed, so the original error was likely real
         }
       }
@@ -205,7 +202,7 @@ export function ChangePasswordFlow({ onSuccess }: ChangePasswordFlowProps) {
 
       // Fallback for generic SDK errors
       const displayMessage =
-        appError.message === 'API request failed' ? UI_CHANGE_PASSWORD_ERROR_GENERIC : appError.message
+        appError.message === APP_ERROR_MESSAGE_REQUEST_FAILED ? UI_CHANGE_PASSWORD_ERROR_GENERIC : appError.message
       setErrorMessage(displayMessage)
 
       logger.error(error, {
