@@ -1,12 +1,11 @@
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
+import Nav from 'react-bootstrap/Nav'
 import { ChangePasswordFlow } from '../../ui/auth/ChangePasswordFlow'
 import {
-  UI_ARIA_LABEL_PRIMARY_NAV,
   UI_CLASS_HEADER_ACTIONS,
   UI_CLASS_HEADER_NAV_LINK,
-  UI_CLASS_HEADER_NAV_LIST,
   UI_HEADER_ACTION_CHANGE_PASSWORD,
   UI_HEADER_ACTION_SIGN_OUT,
   UI_HEADER_MODAL_TITLE_CHANGE_PASSWORD,
@@ -95,21 +94,20 @@ const renderNavigation = (items: PrimaryNavItem[]) => {
   }
 
   return (
-    <nav aria-label={UI_ARIA_LABEL_PRIMARY_NAV} data-testid={UI_TEST_ID_HEADER_NAV}>
-      <ul className={UI_CLASS_HEADER_NAV_LIST}>
-        {items.map((item) => (
-          <li key={item.id}>
-            <Link
-              to={item.href}
-              className={`${UI_CLASS_HEADER_NAV_LINK} ${item.active ? 'active' : ''}`}
-              aria-current={item.active ? 'page' : undefined}
-            >
-              {item.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </nav>
+    <>
+      {items.map((item) => (
+        <Nav.Link
+          as={Link}
+          key={item.id}
+          to={item.href}
+          className={UI_CLASS_HEADER_NAV_LINK}
+          active={item.active}
+          data-testid={`${UI_TEST_ID_HEADER_NAV}-item-${item.id}`}
+        >
+          {item.label}
+        </Nav.Link>
+      ))}
+    </>
   )
 }
 

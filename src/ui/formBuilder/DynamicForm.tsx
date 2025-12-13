@@ -82,6 +82,7 @@ export function DynamicForm<TFieldValues extends FieldValues>({
               ability={section.ability}
               permissionKey={section.permissionKey}
               permissionFallback={section.permissionFallback}
+              className="mb-0"
             >
               {renderSectionContent(section.layout, section.fields)}
             </FormSection>

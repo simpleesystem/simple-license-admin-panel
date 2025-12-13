@@ -25,6 +25,7 @@ import {
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
+import { TableToolbar } from '../data/TableToolbar'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn } from '../types'
 import { notifyCrudError, notifyProductTierSuccess } from './notifications'
@@ -63,6 +64,18 @@ export function ProductTierManagementExample({
   }, [currentUser, tiers])
   const allowCreate = canCreateProductTier(currentUser)
   const canView = canViewProductTiers(currentUser)
+
+  const toolbar = (
+    <TableToolbar
+      end={
+        allowCreate ? (
+          <Button variant={UI_BUTTON_VARIANT_PRIMARY} onClick={() => setShowCreateModal(true)}>
+            {UI_PRODUCT_TIER_BUTTON_CREATE}
+          </Button>
+        ) : null
+      }
+    />
+  )
 
   const columns: UiDataTableColumn<ProductTierListItem>[] = useMemo(
     () => [
@@ -115,19 +128,12 @@ export function ProductTierManagementExample({
 
   return (
     <Stack direction="column" gap="medium">
-      {allowCreate ? (
-        <Stack direction="row" gap="small">
-          <Button variant={UI_BUTTON_VARIANT_PRIMARY} onClick={() => setShowCreateModal(true)}>
-            {UI_PRODUCT_TIER_BUTTON_CREATE}
-          </Button>
-        </Stack>
-      ) : null}
-
       <DataTable
         data={canView ? visibleTiers : []}
         columns={columns}
         rowKey={(row) => row.id}
         emptyState={UI_PRODUCT_TIER_EMPTY_STATE_MESSAGE}
+        toolbar={toolbar}
       />
 
       {allowCreate ? (

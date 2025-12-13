@@ -1,6 +1,7 @@
 import type { Client, Tenant, User } from '@simple-license/react-sdk'
 import { useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
+import Form from 'react-bootstrap/Form'
 import {
   canCreateTenant,
   canUpdateTenant,
@@ -14,6 +15,7 @@ import {
   UI_BUTTON_VARIANT_PRIMARY,
   UI_DATE_FORMAT_LOCALE,
   UI_DATE_FORMAT_OPTIONS,
+  UI_TABLE_SEARCH_PLACEHOLDER,
   UI_TENANT_BUTTON_CREATE,
   UI_TENANT_BUTTON_EDIT,
   UI_TENANT_COLUMN_HEADER_ACTIONS,
@@ -30,8 +32,10 @@ import {
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
+import { TableFilter } from '../data/TableFilter'
+import { TableToolbar } from '../data/TableToolbar'
 import { Stack } from '../layout/Stack'
-import type { UiDataTableColumn } from '../types'
+import type { UiDataTableColumn, UiSelectOption } from '../types'
 import { notifyCrudError, notifyTenantSuccess } from './notifications'
 import { TenantFormFlow } from './TenantFormFlow'
 import { TenantRowActions } from './TenantRowActions'
@@ -43,6 +47,10 @@ type TenantManagementExampleProps = {
   tenants: readonly TenantListItem[]
   currentUser?: User | null
   onRefresh?: () => void
+  searchTerm?: string
+  onSearchChange?: (term: string) => void
+  statusFilter?: string
+  onStatusFilterChange?: (status: string) => void
 }
 
 export const formatTenantCreatedAt = (createdAt: TenantListItem['createdAt'] | undefined): string => {
@@ -56,7 +64,16 @@ export const formatTenantCreatedAt = (createdAt: TenantListItem['createdAt'] | u
   return new Intl.DateTimeFormat(UI_DATE_FORMAT_LOCALE, UI_DATE_FORMAT_OPTIONS).format(parsedDate)
 }
 
-export function TenantManagementExample({ client, tenants, currentUser, onRefresh }: TenantManagementExampleProps) {
+export function TenantManagementExample({
+  client,
+  tenants,
+  currentUser,
+  onRefresh,
+  searchTerm = '',
+  onSearchChange,
+  statusFilter,
+  onStatusFilterChange,
+}: TenantManagementExampleProps) {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingTenant, setEditingTenant] = useState<TenantListItem | null>(null)
   const notificationBus = useNotificationBus()
@@ -66,6 +83,45 @@ export function TenantManagementExample({ client, tenants, currentUser, onRefres
     [currentUser, isVendorScoped, tenants]
   )
   const allowCreate = canCreateTenant(currentUser)
+
+  const statusOptions: UiSelectOption[] = [
+    { value: '', label: 'Filter by Status' },
+    { value: 'ACTIVE', label: 'Active' },
+    { value: 'SUSPENDED', label: 'Suspended' },
+  ]
+
+  const toolbar = (
+    <TableToolbar
+      start={
+        <div className="d-flex flex-wrap gap-2 align-items-center">
+          {onSearchChange ? (
+            <Form.Control
+              type="search"
+              placeholder={UI_TABLE_SEARCH_PLACEHOLDER}
+              value={searchTerm}
+              onChange={(event) => onSearchChange(event.target.value)}
+              style={{ maxWidth: '300px' }}
+            />
+          ) : null}
+          {onStatusFilterChange ? (
+            <TableFilter
+              value={statusFilter ?? ''}
+              options={statusOptions}
+              onChange={onStatusFilterChange}
+              placeholder="All Statuses"
+            />
+          ) : null}
+        </div>
+      }
+      end={
+        allowCreate ? (
+          <Button variant={UI_BUTTON_VARIANT_PRIMARY} onClick={() => setShowCreateModal(true)}>
+            {UI_TENANT_BUTTON_CREATE}
+          </Button>
+        ) : null
+      }
+    />
+  )
 
   const columns: UiDataTableColumn<TenantListItem>[] = useMemo(
     () => [
@@ -124,19 +180,12 @@ export function TenantManagementExample({ client, tenants, currentUser, onRefres
 
   return (
     <Stack direction="column" gap="medium">
-      {allowCreate ? (
-        <Stack direction="row" gap="small">
-          <Button variant={UI_BUTTON_VARIANT_PRIMARY} onClick={() => setShowCreateModal(true)}>
-            {UI_TENANT_BUTTON_CREATE}
-          </Button>
-        </Stack>
-      ) : null}
-
       <DataTable
         data={canView ? visibleTenants : []}
         columns={columns}
         rowKey={(row) => row.id}
         emptyState={UI_TENANT_EMPTY_STATE_MESSAGE}
+        toolbar={toolbar}
       />
 
       {allowCreate ? (

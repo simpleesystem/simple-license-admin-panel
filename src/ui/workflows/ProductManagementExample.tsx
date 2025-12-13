@@ -1,6 +1,7 @@
 import type { Client, User } from '@simple-license/react-sdk'
 import { useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
+import Form from 'react-bootstrap/Form'
 import {
   canCreateProduct,
   canUpdateProduct,
@@ -29,11 +30,14 @@ import {
   UI_PRODUCT_FORM_SUBMIT_UPDATE,
   UI_PRODUCT_STATUS_ACTIVE,
   UI_PRODUCT_STATUS_SUSPENDED,
+  UI_TABLE_SEARCH_PLACEHOLDER,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
+import { TableFilter } from '../data/TableFilter'
+import { TableToolbar } from '../data/TableToolbar'
 import { Stack } from '../layout/Stack'
-import type { UiDataTableColumn } from '../types'
+import type { UiDataTableColumn, UiSelectOption } from '../types'
 import { notifyCrudError, notifyProductSuccess } from './notifications'
 import { ProductFormFlow } from './ProductFormFlow'
 import { ProductRowActions } from './ProductRowActions'
@@ -52,9 +56,22 @@ type ProductManagementExampleProps = {
   products: readonly ProductListItem[]
   currentUser?: User | null
   onRefresh?: () => void
+  searchTerm?: string
+  onSearchChange?: (term: string) => void
+  statusFilter?: string
+  onStatusFilterChange?: (status: string) => void
 }
 
-export function ProductManagementExample({ client, products, currentUser, onRefresh }: ProductManagementExampleProps) {
+export function ProductManagementExample({
+  client,
+  products,
+  currentUser,
+  onRefresh,
+  searchTerm = '',
+  onSearchChange,
+  statusFilter,
+  onStatusFilterChange,
+}: ProductManagementExampleProps) {
   const [editingProduct, setEditingProduct] = useState<ProductListItem | null>(null)
   const [showCreate, setShowCreate] = useState(false)
   const notificationBus = useNotificationBus()
@@ -66,6 +83,45 @@ export function ProductManagementExample({ client, products, currentUser, onRefr
   )
   const allowCreate = canCreateProduct(currentUser)
   const canView = canViewProducts(currentUser)
+
+  const statusOptions: UiSelectOption[] = [
+    { value: '', label: 'Filter by Status' },
+    { value: 'true', label: UI_PRODUCT_STATUS_ACTIVE },
+    { value: 'false', label: UI_PRODUCT_STATUS_SUSPENDED },
+  ]
+
+  const toolbar = (
+    <TableToolbar
+      start={
+        <div className="d-flex flex-wrap gap-2 align-items-center">
+          {onSearchChange ? (
+            <Form.Control
+              type="search"
+              placeholder={UI_TABLE_SEARCH_PLACEHOLDER}
+              value={searchTerm}
+              onChange={(event) => onSearchChange(event.target.value)}
+              style={{ maxWidth: '300px' }}
+            />
+          ) : null}
+          {onStatusFilterChange ? (
+            <TableFilter
+              value={statusFilter ?? ''}
+              options={statusOptions}
+              onChange={onStatusFilterChange}
+              placeholder="All Statuses"
+            />
+          ) : null}
+        </div>
+      }
+      end={
+        allowCreate ? (
+          <Button variant={UI_BUTTON_VARIANT_PRIMARY} onClick={() => setShowCreate(true)}>
+            {UI_PRODUCT_BUTTON_CREATE}
+          </Button>
+        ) : null
+      }
+    />
+  )
 
   const columns: UiDataTableColumn<ProductListItem>[] = useMemo(
     () => [
@@ -128,19 +184,12 @@ export function ProductManagementExample({ client, products, currentUser, onRefr
 
   return (
     <Stack direction="column" gap="medium">
-      {allowCreate ? (
-        <Stack direction="row" gap="small">
-          <Button variant={UI_BUTTON_VARIANT_PRIMARY} onClick={() => setShowCreate(true)}>
-            {UI_PRODUCT_BUTTON_CREATE}
-          </Button>
-        </Stack>
-      ) : null}
-
       <DataTable
         data={canView ? visibleProducts : []}
         columns={columns}
         rowKey={(row) => row.id}
         emptyState={UI_PRODUCT_EMPTY_STATE_MESSAGE}
+        toolbar={toolbar}
       />
 
       {allowCreate ? (

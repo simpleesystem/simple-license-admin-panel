@@ -10,6 +10,15 @@ const useCreateUserMock = vi.hoisted(() => vi.fn())
 const useUpdateUserMock = vi.hoisted(() => vi.fn())
 const useAdminTenantsMock = vi.hoisted(() => vi.fn())
 
+vi.mock('../../../src/app/auth/authContext', () => ({
+  useAuth: () => ({
+    currentUser: {
+      id: 'test-admin-id',
+      email: 'admin@example.com',
+    },
+  }),
+}))
+
 vi.mock('@simple-license/react-sdk', async () => {
   const actual = await vi.importActual<typeof import('@simple-license/react-sdk')>('@simple-license/react-sdk')
   return {

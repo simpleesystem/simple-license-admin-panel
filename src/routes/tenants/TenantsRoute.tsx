@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useAdminTenants } from '@simple-license/react-sdk'
 
 import { useApiClient } from '../../api/apiContext'
@@ -24,14 +24,30 @@ export function TenantsRouteComponent() {
   const client = useApiClient()
   const { currentUser } = useAuth()
   const { data, isLoading, isError, refetch } = useAdminTenants(client)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
 
   const tenants = useMemo(() => {
-    const list = Array.isArray(data) ? data : data?.data ?? []
-    if (!isVendorScopedUser(currentUser)) {
-      return list
+    let list = Array.isArray(data) ? data : data?.data ?? []
+
+    // Vendor Scoping
+    if (isVendorScopedUser(currentUser)) {
+      list = list.filter((tenant) => isTenantOwnedByUser(currentUser, tenant))
     }
-    return list.filter((tenant) => isTenantOwnedByUser(currentUser, tenant))
-  }, [currentUser, data])
+
+    // Search Filtering
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase()
+      list = list.filter((tenant) => tenant.name.toLowerCase().includes(term))
+    }
+
+    // Status Filtering
+    if (statusFilter) {
+      list = list.filter((tenant) => tenant.status === statusFilter)
+    }
+
+    return list
+  }, [currentUser, data, searchTerm, statusFilter])
 
   const canView = canViewTenants(currentUser)
 
@@ -70,6 +86,10 @@ export function TenantsRouteComponent() {
           tenants={tenants}
           currentUser={currentUser ?? undefined}
           onRefresh={handleRefresh}
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
         />
       ) : null}
     </Page>

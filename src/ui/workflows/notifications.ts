@@ -7,6 +7,11 @@ import {
 import type { NotificationBus } from '@/notifications/types'
 
 import {
+  UI_LICENSE_TOAST_CREATE_SUCCESS,
+  UI_LICENSE_TOAST_DELETE_SUCCESS,
+  UI_LICENSE_TOAST_RESUME_SUCCESS,
+  UI_LICENSE_TOAST_SUSPEND_SUCCESS,
+  UI_LICENSE_TOAST_UPDATE_SUCCESS,
   UI_PRODUCT_ENTITLEMENT_TOAST_CREATE_SUCCESS,
   UI_PRODUCT_ENTITLEMENT_TOAST_DELETE_SUCCESS,
   UI_PRODUCT_ENTITLEMENT_TOAST_UPDATE_SUCCESS,
@@ -64,6 +69,14 @@ const PRODUCT_ENTITLEMENT_SUCCESS_TITLES: Record<Exclude<CrudKind, 'suspend' | '
   delete: UI_PRODUCT_ENTITLEMENT_TOAST_DELETE_SUCCESS,
 }
 
+const LICENSE_SUCCESS_TITLES: Record<CrudKind, string> = {
+  create: UI_LICENSE_TOAST_CREATE_SUCCESS,
+  update: UI_LICENSE_TOAST_UPDATE_SUCCESS,
+  delete: UI_LICENSE_TOAST_DELETE_SUCCESS,
+  suspend: UI_LICENSE_TOAST_SUSPEND_SUCCESS,
+  resume: UI_LICENSE_TOAST_RESUME_SUCCESS,
+}
+
 const emitSuccessToast = (bus: NotificationBus, titleKey: string) => {
   bus.emit(DEFAULT_NOTIFICATION_EVENT, {
     titleKey,
@@ -85,6 +98,9 @@ export const notifyProductTierSuccess = (bus: NotificationBus, kind: Exclude<Cru
 
 export const notifyProductEntitlementSuccess = (bus: NotificationBus, kind: Exclude<CrudKind, 'suspend' | 'resume'>) =>
   emitSuccessToast(bus, PRODUCT_ENTITLEMENT_SUCCESS_TITLES[kind])
+
+export const notifyLicenseSuccess = (bus: NotificationBus, kind: CrudKind) =>
+  emitSuccessToast(bus, LICENSE_SUCCESS_TITLES[kind])
 
 export const notifyCrudError = (bus: NotificationBus) => {
   bus.emit(DEFAULT_NOTIFICATION_EVENT, {

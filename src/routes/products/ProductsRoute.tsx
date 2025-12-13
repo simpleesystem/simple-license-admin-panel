@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useAdminProducts } from '@simple-license/react-sdk'
 
 import { useApiClient } from '../../api/apiContext'
@@ -7,13 +7,13 @@ import { canViewProducts, isProductOwnedByUser, isVendorScopedUser } from '../..
 import {
   UI_PAGE_SUBTITLE_PRODUCTS,
   UI_PAGE_TITLE_PRODUCTS,
-  UI_SECTION_STATUS_ERROR,
-  UI_SECTION_STATUS_LOADING,
   UI_PRODUCT_STATUS_ACTION_RETRY,
   UI_PRODUCT_STATUS_ERROR_BODY,
   UI_PRODUCT_STATUS_ERROR_TITLE,
   UI_PRODUCT_STATUS_LOADING_BODY,
   UI_PRODUCT_STATUS_LOADING_TITLE,
+  UI_SECTION_STATUS_ERROR,
+  UI_SECTION_STATUS_LOADING,
 } from '../../ui/constants'
 import { SectionStatus } from '../../ui/feedback/SectionStatus'
 import { Page } from '../../ui/layout/Page'
@@ -24,14 +24,31 @@ export function ProductsRouteComponent() {
   const client = useApiClient()
   const { currentUser } = useAuth()
   const { data, isLoading, isError, refetch } = useAdminProducts(client)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
 
   const products = useMemo(() => {
-    const list = Array.isArray(data) ? data : data?.data ?? []
-    if (!isVendorScopedUser(currentUser)) {
-      return list
+    let list = Array.isArray(data) ? data : data?.data ?? []
+
+    // Vendor Scoping
+    if (isVendorScopedUser(currentUser)) {
+      list = list.filter((product) => isProductOwnedByUser(currentUser, product))
     }
-    return list.filter((product) => isProductOwnedByUser(currentUser, product))
-  }, [currentUser, data])
+
+    // Search Filtering
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase()
+      list = list.filter((product) => product.name.toLowerCase().includes(term) || product.slug.toLowerCase().includes(term))
+    }
+
+    // Status Filtering
+    if (statusFilter) {
+      const isActive = statusFilter === 'true'
+      list = list.filter((product) => product.isActive === isActive)
+    }
+
+    return list
+  }, [currentUser, data, searchTerm, statusFilter])
 
   const canView = canViewProducts(currentUser)
 
@@ -70,6 +87,10 @@ export function ProductsRouteComponent() {
           products={products}
           currentUser={currentUser ?? undefined}
           onRefresh={handleRefresh}
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
         />
       ) : null}
     </Page>

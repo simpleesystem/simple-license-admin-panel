@@ -154,7 +154,7 @@ export function UserManagementPanel({
   const toolbar = (
     <TableToolbar
       start={
-        <Stack direction="row" gap="small" wrap className="align-items-center">
+        <div className="d-flex flex-wrap gap-2 align-items-center">
           <Form.Control
             type="search"
             placeholder={UI_TABLE_SEARCH_PLACEHOLDER}
@@ -186,7 +186,7 @@ export function UserManagementPanel({
               placeholder="All Vendors"
             />
           ) : null}
-        </Stack>
+        </div>
       }
       end={
         canCreate ? (

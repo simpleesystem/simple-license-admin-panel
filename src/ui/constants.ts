@@ -70,6 +70,8 @@ export const UI_FORM_SELECT_PLACEHOLDER_VALUE = '' as const
 export const UI_FORM_SELECT_PLACEHOLDER_DISABLED = true as const
 export const UI_FORM_SELECT_PLACEHOLDER_HIDDEN = true as const
 export const UI_FORM_TEXTAREA_MIN_ROWS = 3 as const
+export const UI_FORM_SECTION_METADATA = 'metadata' as const
+export const UI_FIELD_METADATA = 'metadata' as const
 
 export const UI_TABLE_DENSITY_COMPACT = 'compact' as const
 export const UI_TABLE_DENSITY_COMFORTABLE = 'comfortable' as const
@@ -618,6 +620,13 @@ export const UI_USER_FORM_TITLE_UPDATE = 'Update User' as const
 export const UI_USER_FORM_ID_CREATE = 'create-user' as const
 export const UI_USER_FORM_ID_UPDATE = 'update-user' as const
 export const UI_USER_FORM_SECTION_DETAILS = 'details' as const
+export const UI_USER_FORM_SECTION_IDENTITY = 'identity' as const
+export const UI_USER_FORM_SECTION_ACCESS = 'access' as const
+export const UI_USER_FORM_SECTION_TITLE_IDENTITY = 'Identity' as const
+export const UI_USER_FORM_SECTION_DESCRIPTION_IDENTITY = 'Basic account information for the user.' as const
+export const UI_USER_FORM_SECTION_TITLE_ACCESS = 'Access & Permissions' as const
+export const UI_USER_FORM_SECTION_DESCRIPTION_ACCESS = 'Control what this user can see and do.' as const
+export const UI_USER_FIELD_LABEL_STATUS = 'Status' as const
 export const UI_USER_BUTTON_CREATE = 'Create User' as const
 export const UI_USER_BUTTON_EDIT = 'Edit' as const
 export const UI_USER_BUTTON_SAVE = 'Save user' as const
@@ -713,6 +722,10 @@ export const UI_TENANT_TOAST_UPDATE_SUCCESS = 'Tenant updated successfully' as c
 export const UI_TENANT_TOAST_SUSPEND_SUCCESS = 'Tenant suspended successfully' as const
 export const UI_TENANT_TOAST_RESUME_SUCCESS = 'Tenant resumed successfully' as const
 export const UI_TENANT_TOAST_DELETE_SUCCESS = 'Tenant deleted successfully' as const
+
+export const UI_TENANT_QUOTA_FORM_ID = 'tenant-quota' as const
+export const UI_TENANT_QUOTA_FORM_TITLE = 'Tenant Quotas' as const
+export const UI_TENANT_QUOTA_SECTION_LIMITS = 'limits' as const
 
 export const UI_PRODUCT_FORM_TITLE_CREATE = 'Create Product' as const
 export const UI_PRODUCT_FORM_TITLE_UPDATE = 'Update Product' as const
@@ -868,6 +881,11 @@ export const UI_LICENSE_STATUS_LOADING_TITLE = 'Loading licenses' as const
 export const UI_LICENSE_STATUS_LOADING_BODY = 'Fetching the latest licenses.' as const
 export const UI_LICENSE_STATUS_ERROR_TITLE = 'Unable to load licenses' as const
 export const UI_LICENSE_STATUS_ERROR_BODY = 'Please try again after refreshing the page.' as const
+export const UI_LICENSE_TOAST_CREATE_SUCCESS = 'License created successfully' as const
+export const UI_LICENSE_TOAST_UPDATE_SUCCESS = 'License updated successfully' as const
+export const UI_LICENSE_TOAST_DELETE_SUCCESS = 'License revoked successfully' as const
+export const UI_LICENSE_TOAST_SUSPEND_SUCCESS = 'License suspended successfully' as const
+export const UI_LICENSE_TOAST_RESUME_SUCCESS = 'License resumed successfully' as const
 
 export const UI_LICENSE_FREEZE_BUTTON_OPEN = 'Freeze license' as const
 export const UI_LICENSE_FREEZE_BUTTON_SUBMIT = 'Freeze license' as const

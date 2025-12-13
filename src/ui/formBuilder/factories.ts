@@ -49,8 +49,10 @@ import {
   UI_FIELD_ALERT_MEDIUM_VALIDATIONS,
   UI_FIELD_LICENSE_FREEZE_ENTITLEMENTS,
   UI_FIELD_LICENSE_FREEZE_TIER,
+  UI_FIELD_METADATA,
   UI_FORM_CONTROL_TYPE_EMAIL,
   UI_FORM_CONTROL_TYPE_PASSWORD,
+  UI_FORM_SECTION_METADATA,
   UI_FORM_TEXTAREA_MIN_ROWS,
   UI_LICENSE_FORM_ID_CREATE,
   UI_LICENSE_FORM_ID_UPDATE,
@@ -81,11 +83,20 @@ import {
   UI_TENANT_FORM_SECTION_DETAILS,
   UI_TENANT_FORM_TITLE_CREATE,
   UI_TENANT_FORM_TITLE_UPDATE,
+  UI_TENANT_QUOTA_FORM_ID,
+  UI_TENANT_QUOTA_FORM_TITLE,
+  UI_TENANT_QUOTA_SECTION_LIMITS,
   UI_USER_FIELD_LABEL_ROLE,
+  UI_USER_FIELD_LABEL_STATUS,
   UI_USER_FIELD_LABEL_VENDOR,
   UI_USER_FORM_ID_CREATE,
   UI_USER_FORM_ID_UPDATE,
-  UI_USER_FORM_SECTION_DETAILS,
+  UI_USER_FORM_SECTION_ACCESS,
+  UI_USER_FORM_SECTION_DESCRIPTION_ACCESS,
+  UI_USER_FORM_SECTION_DESCRIPTION_IDENTITY,
+  UI_USER_FORM_SECTION_IDENTITY,
+  UI_USER_FORM_SECTION_TITLE_ACCESS,
+  UI_USER_FORM_SECTION_TITLE_IDENTITY,
   UI_USER_FORM_TITLE_CREATE,
   UI_USER_FORM_TITLE_UPDATE,
   UI_USER_VENDOR_PLACEHOLDER,
@@ -176,7 +187,7 @@ const buildCreateLicenseBlueprint = (options?: LicenseBlueprintOptions<CreateLic
       id: UI_LICENSE_FORM_SECTION_METADATA,
       fields: [
         {
-          name: 'metadata',
+          name: UI_FIELD_METADATA,
           kind: 'textarea',
           rows: 4,
         },
@@ -231,7 +242,7 @@ const buildUpdateLicenseBlueprint = (options?: LicenseBlueprintOptions<UpdateLic
       id: UI_LICENSE_FORM_SECTION_METADATA,
       fields: [
         {
-          name: 'metadata',
+          name: UI_FIELD_METADATA,
           kind: 'textarea',
           rows: 4,
         },
@@ -321,10 +332,10 @@ const PRODUCT_SECTION_BLUEPRINT: BlueprintSectionConfig<CreateProductRequest>[] 
     ],
   },
   {
-    id: 'metadata',
+    id: UI_FORM_SECTION_METADATA,
     fields: [
       {
-        name: 'metadata',
+        name: UI_FIELD_METADATA,
         kind: 'textarea',
         rows: 4,
       },
@@ -381,7 +392,7 @@ const PRODUCT_TIER_CREATE_SECTIONS: BlueprintSectionConfig<CreateProductTierRequ
     ],
   },
   {
-    id: 'metadata',
+    id: UI_FORM_SECTION_METADATA,
     fields: [
       {
         name: 'description',
@@ -389,7 +400,7 @@ const PRODUCT_TIER_CREATE_SECTIONS: BlueprintSectionConfig<CreateProductTierRequ
         rows: 3,
       },
       {
-        name: 'metadata',
+        name: UI_FIELD_METADATA,
         kind: 'textarea',
         rows: 4,
       },
@@ -415,7 +426,7 @@ const PRODUCT_TIER_UPDATE_SECTIONS: BlueprintSectionConfig<UpdateProductTierRequ
     ],
   },
   {
-    id: 'metadata',
+    id: UI_FORM_SECTION_METADATA,
     fields: [
       {
         name: 'description',
@@ -423,7 +434,7 @@ const PRODUCT_TIER_UPDATE_SECTIONS: BlueprintSectionConfig<UpdateProductTierRequ
         rows: 3,
       },
       {
-        name: 'metadata',
+        name: UI_FIELD_METADATA,
         kind: 'textarea',
         rows: 4,
       },
@@ -503,10 +514,10 @@ const ENTITLEMENT_CREATE_SECTIONS: BlueprintSectionConfig<CreateEntitlementReque
     ],
   },
   {
-    id: 'metadata',
+    id: UI_FORM_SECTION_METADATA,
     fields: [
       {
-        name: 'metadata',
+        name: UI_FIELD_METADATA,
         kind: 'textarea',
         rows: UI_FORM_TEXTAREA_MIN_ROWS,
       },
@@ -539,10 +550,10 @@ const ENTITLEMENT_UPDATE_SECTIONS: BlueprintSectionConfig<UpdateEntitlementReque
     ],
   },
   {
-    id: 'metadata',
+    id: UI_FORM_SECTION_METADATA,
     fields: [
       {
-        name: 'metadata',
+        name: UI_FIELD_METADATA,
         kind: 'textarea',
         rows: UI_FORM_TEXTAREA_MIN_ROWS,
       },
@@ -581,7 +592,7 @@ export const createEntitlementBlueprint = <TMode extends 'create' | 'update'>(
 
 const TENANT_QUOTA_SECTIONS: BlueprintSectionConfig<UpdateQuotaLimitsRequest>[] = [
   {
-    id: 'limits',
+    id: UI_TENANT_QUOTA_SECTION_LIMITS,
     layout: 2,
     fields: [
       {
@@ -621,8 +632,8 @@ export const createTenantQuotaBlueprint = (
 ): FormBlueprint<UpdateQuotaLimitsRequest> => {
   return buildConfig<UpdateQuotaLimitsRequest>(
     {
-      id: 'tenant-quota',
-      title: 'Tenant Quotas',
+      id: UI_TENANT_QUOTA_FORM_ID,
+      title: UI_TENANT_QUOTA_FORM_TITLE,
       sections: TENANT_QUOTA_SECTIONS,
     },
     options?.customize as BlueprintCustomizer<UpdateQuotaLimitsRequest> | undefined
@@ -631,7 +642,9 @@ export const createTenantQuotaBlueprint = (
 
 const USER_CREATE_SECTIONS: BlueprintSectionConfig<CreateUserRequest>[] = [
   {
-    id: UI_USER_FORM_SECTION_DETAILS,
+    id: UI_USER_FORM_SECTION_IDENTITY,
+    title: UI_USER_FORM_SECTION_TITLE_IDENTITY,
+    description: UI_USER_FORM_SECTION_DESCRIPTION_IDENTITY,
     layout: 2,
     fields: [
       {
@@ -652,6 +665,21 @@ const USER_CREATE_SECTIONS: BlueprintSectionConfig<CreateUserRequest>[] = [
         required: true,
       },
       {
+        name: 'status',
+        kind: 'select',
+        label: UI_USER_FIELD_LABEL_STATUS,
+        options: [],
+        required: true,
+      },
+    ],
+  },
+  {
+    id: UI_USER_FORM_SECTION_ACCESS,
+    title: UI_USER_FORM_SECTION_TITLE_ACCESS,
+    description: UI_USER_FORM_SECTION_DESCRIPTION_ACCESS,
+    layout: 2,
+    fields: [
+      {
         name: 'role',
         kind: 'select',
         label: UI_USER_FIELD_LABEL_ROLE,
@@ -664,19 +692,14 @@ const USER_CREATE_SECTIONS: BlueprintSectionConfig<CreateUserRequest>[] = [
         label: UI_USER_FIELD_LABEL_VENDOR,
         options: [],
       },
-      {
-        name: 'status',
-        kind: 'select',
-        label: 'Status',
-        options: [],
-        required: true,
-      },
     ],
   },
 ]
 const USER_UPDATE_SECTIONS: BlueprintSectionConfig<UpdateUserRequest>[] = [
   {
-    id: UI_USER_FORM_SECTION_DETAILS,
+    id: UI_USER_FORM_SECTION_IDENTITY,
+    title: UI_USER_FORM_SECTION_TITLE_IDENTITY,
+    description: UI_USER_FORM_SECTION_DESCRIPTION_IDENTITY,
     layout: 2,
     fields: [
       {
@@ -691,6 +714,20 @@ const USER_UPDATE_SECTIONS: BlueprintSectionConfig<UpdateUserRequest>[] = [
         required: true,
       },
       {
+        name: 'status',
+        kind: 'select',
+        label: UI_USER_FIELD_LABEL_STATUS,
+        options: [],
+      },
+    ],
+  },
+  {
+    id: UI_USER_FORM_SECTION_ACCESS,
+    title: UI_USER_FORM_SECTION_TITLE_ACCESS,
+    description: UI_USER_FORM_SECTION_DESCRIPTION_ACCESS,
+    layout: 2,
+    fields: [
+      {
         name: 'role',
         kind: 'select',
         label: UI_USER_FIELD_LABEL_ROLE,
@@ -700,12 +737,6 @@ const USER_UPDATE_SECTIONS: BlueprintSectionConfig<UpdateUserRequest>[] = [
         name: 'vendor_id',
         kind: 'select',
         label: UI_USER_FIELD_LABEL_VENDOR,
-        options: [],
-      },
-      {
-        name: 'status',
-        kind: 'select',
-        label: 'Status',
         options: [],
       },
     ],

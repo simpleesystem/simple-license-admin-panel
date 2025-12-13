@@ -1,9 +1,7 @@
-import {
-  UI_CLASS_INLINE_GAP,
-  UI_CLASS_TOP_NAV,
-  UI_CLASS_TOP_NAV_CONTENT,
-  UI_TEST_ID_TOP_NAV,
-} from '../constants'
+import Container from 'react-bootstrap/Container'
+import Nav from 'react-bootstrap/Nav'
+import Navbar from 'react-bootstrap/Navbar'
+import { UI_CLASS_TOP_NAV, UI_TEST_ID_TOP_NAV } from '../constants'
 import type { TopNavBarProps } from '../types'
 import { composeClassNames } from '../utils/classNames'
 import { VisibilityGate } from '../utils/PermissionGate'
@@ -20,22 +18,21 @@ export function TopNavBar({
 }: TopNavBarProps) {
   return (
     <VisibilityGate ability={ability} permissionKey={permissionKey} permissionFallback={permissionFallback}>
-      <header className={composeClassNames(UI_CLASS_TOP_NAV, className)} data-testid={testId ?? UI_TEST_ID_TOP_NAV}>
-        <div className={UI_CLASS_TOP_NAV_CONTENT}>
-          <div className={UI_CLASS_INLINE_GAP}>
-            {brand ? (
-              <h1 className="h6 m-0 fw-normal" style={{ fontSize: 'inherit', fontWeight: 'inherit' }}>
-                {brand}
-              </h1>
-            ) : null}
-            {navigation}
-          </div>
-          <div className={UI_CLASS_INLINE_GAP}>{actions}</div>
-        </div>
-      </header>
+      <Navbar
+        expand="lg"
+        collapseOnSelect={true}
+        className={composeClassNames(UI_CLASS_TOP_NAV, className)}
+        data-testid={testId ?? UI_TEST_ID_TOP_NAV}
+      >
+        <Container fluid={true}>
+          {brand ? <Navbar.Brand>{brand}</Navbar.Brand> : null}
+          <Navbar.Toggle aria-controls="top-navbar-nav" />
+          <Navbar.Collapse id="top-navbar-nav">
+            {navigation ? <Nav className="me-auto">{navigation}</Nav> : <Nav className="me-auto" />}
+            {actions ? <div className="d-flex align-items-center gap-2 mt-2 mt-lg-0">{actions}</div> : null}
+          </Navbar.Collapse>
+        </Container>
+      </Navbar>
     </VisibilityGate>
   )
 }
-
-
-
