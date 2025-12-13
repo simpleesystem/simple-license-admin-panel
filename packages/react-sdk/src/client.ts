@@ -939,7 +939,9 @@ export class Client {
   }
 
   private handleApiResponse<T>(response: unknown, defaultData?: T): T {
+    // console.log('[SDK] handleApiResponse raw:', response)
     const parsed = this.parseResponse(response)
+    // console.log('[SDK] handleApiResponse parsed:', parsed)
 
     if (!parsed.success) {
       const errorDetails = parsed.error ? this.parseErrorDetails(parsed.error.details) : undefined

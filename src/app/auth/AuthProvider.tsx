@@ -16,11 +16,7 @@ import {
   AUTH_TOKEN_EXPIRY_SKEW_MS,
   STORAGE_KEY_AUTH_TOKEN,
   STORAGE_KEY_AUTH_USER,
-  UI_HEADER_SIGN_OUT_TOAST_ERROR,
-  UI_HEADER_SIGN_OUT_TOAST_SUCCESS,
 } from '../../app/constants'
-import { useNotificationBus } from '../../notifications/busContext'
-import { DEFAULT_NOTIFICATION_EVENT } from '../../notifications/constants'
 import { mapUnknownToAppError } from '../errors/appErrors'
 import { createLifecycle } from '../lifecycle/lifecycle'
 import { useLogger } from '../logging/loggerContext'
@@ -59,11 +55,15 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const { token, expiresAt } = authState
   const [status, setStatus] = useState<AuthStatus>(AUTH_STATUS_IDLE)
   const [currentUser, setCurrentUser] = useState<User | null>(initialUser)
+  const currentUserRef = useRef(currentUser)
   const dispatch = useAppStore((state) => state.dispatch)
   const logger = useLogger()
-  const notificationBus = useNotificationBus()
   const isRefreshingRef = useRef(false)
   const lifecycleRef = useRef(createLifecycle())
+
+  useEffect(() => {
+    currentUserRef.current = currentUser
+  }, [currentUser])
 
   useEffect(() => {
     if (!initialAuth.token) {
@@ -108,7 +108,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
     if (isRefreshingRef.current) {
       dispatch({ type: 'loading/set', scope: 'auth', isLoading: false })
-      return currentUser
+      return currentUserRef.current
     }
     isRefreshingRef.current = true
 
@@ -117,10 +117,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
       logger.debug('auth:refresh:start')
       const response = await client.getCurrentUser()
       if (!response?.user) {
-        logger.warn('auth:refresh:no-user-payload', { hasCurrentUser: Boolean(currentUser) })
-        if (currentUser) {
+        logger.warn('auth:refresh:no-user-payload', { hasCurrentUser: Boolean(currentUserRef.current) })
+        if (currentUserRef.current) {
           setStatus(AUTH_STATUS_IDLE)
-          return currentUser
+          return currentUserRef.current
         }
         resetAuthState()
         dispatch({ type: 'auth/setUser', payload: null })
@@ -145,8 +145,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
         if (isPasswordResetError) {
           const updatedUser: User =
-            currentUser !== null
-              ? { ...currentUser, passwordResetRequired: true }
+            currentUserRef.current !== null
+              ? { ...currentUserRef.current, passwordResetRequired: true }
               : {
                   id: '',
                   username: '',
@@ -190,17 +190,17 @@ export function AuthProvider({ children }: PropsWithChildren) {
           requestId: appError.requestId,
           scope: appError.scope,
         })
-        return currentUser
+        return currentUserRef.current
       }
       // Non-API errors: do not drop user; just return idle
       setStatus(AUTH_STATUS_IDLE)
       logger.error(error, { stage: 'auth:refresh:unknown' })
-      return currentUser
+      return currentUserRef.current
     } finally {
       isRefreshingRef.current = false
       dispatch({ type: 'loading/set', scope: 'auth', isLoading: false })
     }
-  }, [client, token, expiresAt, currentUser, dispatch, logger, resetAuthState])
+  }, [client, token, expiresAt, dispatch, logger, resetAuthState])
 
   useEffect(() => {
     if (!token || !isBrowser || currentUser?.passwordResetRequired) {
@@ -278,6 +278,23 @@ export function AuthProvider({ children }: PropsWithChildren) {
     [client, resetAuthState, dispatch, logger]
   )
 
+  const setSession = useCallback(
+    (newToken: string, user: User) => {
+      // Decode token to get expiry if possible, or use default
+      // Ideally backend returns expiry, but for session update we can assume valid
+      // Using null expiry means "no expiry check on client side", which is safe as 401 handles it
+      const expiresAt = null
+      persistAuth(newToken, expiresAt)
+      persistAuthUser(user)
+      setAuthState({ token: newToken, expiresAt })
+      setCurrentUser(user)
+      setTokenOnClient(client, newToken, expiresAt)
+      dispatch({ type: 'auth/setUser', payload: user })
+      logger.info('auth:session:updated', { userId: user.id })
+    },
+    [client, dispatch, logger]
+  )
+
   const logout = useCallback(() => {
     try {
       resetAuthState()
@@ -332,8 +349,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
       login,
       logout,
       refreshCurrentUser,
+      setSession,
     }
-  }, [token, currentUser, status, login, logout, refreshCurrentUser])
+  }, [token, currentUser, status, login, logout, refreshCurrentUser, setSession])
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
 }

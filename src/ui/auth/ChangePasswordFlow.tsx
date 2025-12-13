@@ -160,8 +160,12 @@ export function ChangePasswordFlow({ onSuccess }: ChangePasswordFlowProps) {
       if (trimmedEmail && trimmedEmail !== currentUser?.email) {
         payload.email = trimmedEmail
       }
-      await mutation.mutateAsync(payload)
-      await refreshCurrentUser()
+      const response = await mutation.mutateAsync(payload)
+      if (response.data?.token && response.data.user) {
+        setSession(response.data.token, response.data.user)
+      } else {
+        await refreshCurrentUser()
+      }
       notificationBus.emit(DEFAULT_NOTIFICATION_EVENT, {
         titleKey: UI_CHANGE_PASSWORD_TOAST_SUCCESS,
         variant: NOTIFICATION_VARIANT_SUCCESS,

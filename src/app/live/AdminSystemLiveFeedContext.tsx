@@ -14,7 +14,6 @@ import {
   UI_LIVE_STATUS_ERROR,
 } from '../../ui/constants'
 import { useAppConfig } from '../config'
-import { createLifecycle } from '../lifecycle/lifecycle'
 import {
   ADMIN_SYSTEM_WS_ERROR_CONTEXT_UNAVAILABLE,
   ADMIN_SYSTEM_WS_HEALTH_PATH,
@@ -23,6 +22,7 @@ import {
   ADMIN_SYSTEM_WS_STATUS_DISCONNECTED,
   ADMIN_SYSTEM_WS_STATUS_ERROR,
 } from '../constants'
+import { createLifecycle } from '../lifecycle/lifecycle'
 import AdminSystemWsClient from './AdminSystemWsClient'
 import type { AdminSystemWsConnectionStatus, AdminSystemWsHealthUpdate } from './adminSystemWsProtocol'
 

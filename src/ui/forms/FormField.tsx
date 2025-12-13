@@ -69,29 +69,18 @@ export function FormField({
             </span>
           ) : null}
         </label>
-        <div className="position-relative pb-4" aria-live="polite">
+        <div aria-live="polite">
           {renderedChildren}
           {error ? (
             <div
-              className={composeClassNames(
-                UI_CLASS_FORM_FIELD_ERROR,
-                UI_CLASS_MARGIN_RESET,
-                'position-absolute start-0 bottom-0'
-              )}
+              className={composeClassNames(UI_CLASS_FORM_FIELD_ERROR, UI_CLASS_MARGIN_RESET, 'mt-1')}
               role="alert"
               id={errorId}
             >
               {error}
             </div>
           ) : hint ? (
-            <div
-              className={composeClassNames(
-                UI_CLASS_FORM_FIELD_HINT,
-                UI_CLASS_MARGIN_RESET,
-                'position-absolute start-0 bottom-0'
-              )}
-              id={hintId}
-            >
+            <div className={composeClassNames(UI_CLASS_FORM_FIELD_HINT, UI_CLASS_MARGIN_RESET, 'mt-1')} id={hintId}>
               {hint}
             </div>
           ) : null}
