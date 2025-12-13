@@ -467,6 +467,7 @@ export type DataTableProps<TData> = UiCommonProps & {
   onSort?: (columnId: string, direction: UiSortDirection) => void
   selection?: UiDataTableSelection<TData>
   stickyHeader?: boolean
+  footer?: ReactNode
 }
 
 export type TableToolbarProps = PropsWithChildren<

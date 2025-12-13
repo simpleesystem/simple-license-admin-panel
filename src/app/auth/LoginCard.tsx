@@ -1,6 +1,6 @@
 import Joi from 'joi'
 import { useMemo, useRef, useState } from 'react'
-import { Button, Card } from 'react-bootstrap'
+import { Alert, Button, Card } from 'react-bootstrap'
 import { useFormContext, useWatch } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { AppForm } from '../../forms/Form'
@@ -15,6 +15,7 @@ import {
   AUTH_FIELD_USERNAME,
   AUTH_LOGIN_TOAST_SUCCESS,
   I18N_KEY_AUTH_FORGOT_LINK,
+  I18N_KEY_AUTH_HEADING,
   I18N_KEY_AUTH_SUBMIT,
   I18N_KEY_FORM_PASSWORD_LABEL,
   I18N_KEY_FORM_PASSWORD_REQUIRED,
@@ -67,6 +68,7 @@ export function LoginCard({ redirectTo }: LoginCardProps) {
   const { authForgotPasswordUrl = null } = useAppConfig()
   const schema = useMemo(() => buildSchema(t), [t])
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [loginError, setLoginError] = useState<string | null>(null)
   const inFlightRef = useRef(false)
   const submitLabel = t(I18N_KEY_AUTH_SUBMIT)
   const forgotLabel = t(I18N_KEY_AUTH_FORGOT_LINK)
@@ -78,6 +80,7 @@ export function LoginCard({ redirectTo }: LoginCardProps) {
     }
 
     inFlightRef.current = true
+    setLoginError(null)
 
     try {
       setIsSubmitting(true)
@@ -98,16 +101,7 @@ export function LoginCard({ redirectTo }: LoginCardProps) {
       logger.info('auth:login:dispatched-nav', { to: safeRedirect })
     } catch (error) {
       const appError = mapUnknownToAppError(error, 'auth')
-
-      logger.error(error, {
-        stage: 'auth:login:submit:error',
-        code: appError.code,
-        type: appError.type,
-        status: appError.status,
-        requestId: appError.requestId,
-        scope: appError.scope,
-        attemptId,
-      })
+      setLoginError(appError.message)
     } finally {
       setIsSubmitting(false)
       inFlightRef.current = false
@@ -117,9 +111,13 @@ export function LoginCard({ redirectTo }: LoginCardProps) {
 
   return (
     <Card className="shadow-sm w-100">
-      <Card.Body className="d-flex flex-column gap-4 p-4 p-md-5 h-100" style={{ minHeight: UI_AUTH_CARD_MIN_HEIGHT }}>
+      <Card.Header className="bg-white border-bottom-0 pt-4 pb-0 text-center">
+        <h2 className="h4 m-0">{t(I18N_KEY_AUTH_HEADING)}</h2>
+      </Card.Header>
+      <Card.Body className="d-flex flex-column p-4 p-md-5 pt-3 h-100" style={{ minHeight: UI_AUTH_CARD_MIN_HEIGHT }}>
         <AppForm<LoginFormValues> schema={schema} defaultValues={DEFAULT_VALUES} onSubmit={handleSubmit}>
           <Stack direction="column" gap={UI_STACK_GAP_MEDIUM} className="w-100">
+            {loginError ? <Alert variant="danger">{loginError}</Alert> : null}
             <TextField<LoginFormValues>
               name={AUTH_FIELD_USERNAME}
               label={t(I18N_KEY_FORM_USERNAME_LABEL)}

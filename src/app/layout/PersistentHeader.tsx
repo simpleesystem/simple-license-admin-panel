@@ -21,7 +21,7 @@ import { ModalDialog } from '../../ui/overlay/ModalDialog'
 import { useAuth } from '../auth/authContext'
 import { usePermissions } from '../auth/useAuthorization'
 import { isApiUser } from '../auth/userUtils'
-import { APP_BRAND_NAME, APP_BRAND_TAGLINE } from '../constants'
+import { APP_BRAND_NAME } from '../constants'
 import type { PrimaryNavItem } from '../navigation/primaryNav'
 import { buildPrimaryNavigation } from '../navigation/primaryNav'
 
@@ -61,12 +61,7 @@ export function PersistentHeader() {
     <>
       <TopNavBar
         testId={UI_TEST_ID_HEADER}
-        brand={
-          <div className="d-flex flex-column">
-            <strong>{APP_BRAND_NAME}</strong>
-            <small className="text-muted">{APP_BRAND_TAGLINE}</small>
-          </div>
-        }
+        brand={APP_BRAND_NAME}
         navigation={renderNavigation(navItems)}
         actions={
           headerShouldRenderActions

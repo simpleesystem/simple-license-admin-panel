@@ -1,4 +1,4 @@
-export const APP_BRAND_NAME = 'Simple License Admin' as const
+export const APP_BRAND_NAME = 'Simple License System' as const
 export const APP_BRAND_TAGLINE = 'Operate licenses with confidence' as const
 export const APP_DEFAULT_LANGUAGE = 'en' as const
 export const APP_SECONDARY_LANGUAGE = 'en-US' as const

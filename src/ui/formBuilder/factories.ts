@@ -105,6 +105,7 @@ type BaseFactoryOptions<TFieldValues extends FieldValues> = {
 type UserBlueprintOptions<TFieldValues extends FieldValues> = BaseFactoryOptions<TFieldValues> & {
   roleOptions?: readonly UiSelectOption[]
   vendorOptions?: readonly UiSelectOption[]
+  statusOptions?: readonly UiSelectOption[]
 }
 
 type LicenseBlueprintOptions<TFieldValues extends FieldValues> = BaseFactoryOptions<TFieldValues> & {
@@ -663,6 +664,13 @@ const USER_CREATE_SECTIONS: BlueprintSectionConfig<CreateUserRequest>[] = [
         label: UI_USER_FIELD_LABEL_VENDOR,
         options: [],
       },
+      {
+        name: 'status',
+        kind: 'select',
+        label: 'Status',
+        options: [],
+        required: true,
+      },
     ],
   },
 ]
@@ -694,6 +702,12 @@ const USER_UPDATE_SECTIONS: BlueprintSectionConfig<UpdateUserRequest>[] = [
         label: UI_USER_FIELD_LABEL_VENDOR,
         options: [],
       },
+      {
+        name: 'status',
+        kind: 'select',
+        label: 'Status',
+        options: [],
+      },
     ],
   },
 ]
@@ -706,6 +720,7 @@ export const createUserBlueprint = <TMode extends 'create' | 'update'>(
 ): FormBlueprint<UserModeValues<TMode>> => {
   const roleOptions = options?.roleOptions ?? []
   const vendorOptions = options?.vendorOptions ?? []
+  const statusOptions = options?.statusOptions ?? []
   const vendorOptionsWithPlaceholder: UiSelectOption[] =
     vendorOptions.length > 0
       ? [{ value: '', label: UI_USER_VENDOR_PLACEHOLDER, disabled: true }, ...vendorOptions]
@@ -721,6 +736,9 @@ export const createUserBlueprint = <TMode extends 'create' | 'update'>(
         }
         if (field.name === 'vendor_id') {
           return { ...field, options: vendorOptionsWithPlaceholder }
+        }
+        if (field.name === 'status') {
+          return { ...field, options: statusOptions }
         }
         return field
       }),

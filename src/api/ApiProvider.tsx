@@ -24,7 +24,7 @@ export function ApiProvider({ children }: PropsWithChildren) {
           correlationId: payload.correlationId,
         }),
       onError: (payload) =>
-        logger.warn('http:error', {
+        logger.debug('http:error', {
           method: payload.method,
           url: payload.url ?? 'unknown',
           status: payload.status ?? -1,

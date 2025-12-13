@@ -3,6 +3,7 @@ import { useAdminTenants, useCreateUser, useUpdateUser } from '@simple-license/r
 import type { ReactNode } from 'react'
 import { useMemo } from 'react'
 import type { FieldValues } from 'react-hook-form'
+import { useAuth } from '../../app/auth/authContext'
 import type { MutationAdapter } from '../actions/mutationActions'
 import { adaptMutation } from '../actions/mutationAdapter'
 import {
@@ -16,11 +17,9 @@ import {
   UI_USER_ROLE_LABEL_API_CONSUMER_ACTIVATE,
   UI_USER_ROLE_LABEL_API_READ_ONLY,
   UI_USER_ROLE_LABEL_API_VENDOR_WRITE,
-  UI_USER_ROLE_LABEL_SUPERUSER,
   UI_USER_ROLE_LABEL_VENDOR_ADMIN,
   UI_USER_ROLE_LABEL_VENDOR_MANAGER,
   UI_USER_ROLE_LABEL_VIEWER,
-  UI_USER_ROLE_SUPERUSER,
   UI_USER_ROLE_VENDOR_ADMIN,
   UI_USER_ROLE_VENDOR_MANAGER,
   UI_USER_ROLE_VIEWER,
@@ -99,22 +98,40 @@ const withOnClose = <TFieldValues extends FieldValues>(
 })
 
 export function UserFormFlow(props: UserFormFlowProps) {
+  const { currentUser } = useAuth()
   const createMutation = adaptMutation(useCreateUser(props.client))
   const updateMutation = useUpdateUser(props.client)
   const tenantsQuery = useAdminTenants(props.client)
 
   const roleOptions: UiSelectOption[] = useMemo(
-    () => [
-      { value: UI_USER_ROLE_SUPERUSER, label: UI_USER_ROLE_LABEL_SUPERUSER },
-      { value: UI_USER_ROLE_ADMIN, label: UI_USER_ROLE_LABEL_ADMIN },
-      { value: UI_USER_ROLE_VENDOR_MANAGER, label: UI_USER_ROLE_LABEL_VENDOR_MANAGER },
-      { value: UI_USER_ROLE_VENDOR_ADMIN, label: UI_USER_ROLE_LABEL_VENDOR_ADMIN },
-      { value: UI_USER_ROLE_VIEWER, label: UI_USER_ROLE_LABEL_VIEWER },
-      { value: UI_USER_ROLE_API_READ_ONLY, label: UI_USER_ROLE_LABEL_API_READ_ONLY },
-      { value: UI_USER_ROLE_API_VENDOR_WRITE, label: UI_USER_ROLE_LABEL_API_VENDOR_WRITE },
-      { value: UI_USER_ROLE_API_CONSUMER_ACTIVATE, label: UI_USER_ROLE_LABEL_API_CONSUMER_ACTIVATE },
-    ],
-    []
+    () => {
+      const allRoles = [
+        { value: UI_USER_ROLE_ADMIN, label: UI_USER_ROLE_LABEL_ADMIN },
+        { value: UI_USER_ROLE_VENDOR_MANAGER, label: UI_USER_ROLE_LABEL_VENDOR_MANAGER },
+        { value: UI_USER_ROLE_VENDOR_ADMIN, label: UI_USER_ROLE_LABEL_VENDOR_ADMIN },
+        { value: UI_USER_ROLE_VIEWER, label: UI_USER_ROLE_LABEL_VIEWER },
+        { value: UI_USER_ROLE_API_READ_ONLY, label: UI_USER_ROLE_LABEL_API_READ_ONLY },
+        { value: UI_USER_ROLE_API_VENDOR_WRITE, label: UI_USER_ROLE_LABEL_API_VENDOR_WRITE },
+        { value: UI_USER_ROLE_API_CONSUMER_ACTIVATE, label: UI_USER_ROLE_LABEL_API_CONSUMER_ACTIVATE },
+      ]
+
+      return allRoles.filter((option) => {
+        // Superuser can see all roles (except Superuser which is already excluded)
+        // Admin cannot assign Admin
+        if (currentUser?.role === UI_USER_ROLE_ADMIN) {
+          if (option.value === UI_USER_ROLE_ADMIN) return false
+        }
+
+        // Vendor Manager cannot assign Admin or Vendor Manager
+        if (currentUser?.role === UI_USER_ROLE_VENDOR_MANAGER) {
+          if (option.value === UI_USER_ROLE_ADMIN) return false
+          if (option.value === UI_USER_ROLE_VENDOR_MANAGER) return false
+        }
+
+        return true
+      })
+    },
+    [currentUser?.role]
   )
 
   const statusOptions: UiSelectOption[] = useMemo(

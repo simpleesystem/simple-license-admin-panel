@@ -3,14 +3,12 @@ import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { ApiContext } from '../../../src/api/apiContext'
 import { AuthContext } from '../../../src/app/auth/authContext'
 import type { AuthContextValue } from '../../../src/app/auth/types'
-import { AUTH_STATUS_IDLE } from '../../../src/app/constants'
+import { APP_ERROR_MESSAGE_NON_ERROR_THROWABLE, AUTH_STATUS_IDLE } from '../../../src/app/constants'
 import { ChangePasswordFlow } from '../../../src/ui/auth/ChangePasswordFlow'
 import {
   UI_CHANGE_PASSWORD_BUTTON_UPDATE,
   UI_CHANGE_PASSWORD_ERROR_EMAIL_INVALID,
-  UI_CHANGE_PASSWORD_ERROR_GENERIC,
   UI_CHANGE_PASSWORD_ERROR_PASSWORDS_MATCH,
-  UI_CHANGE_PASSWORD_ERROR_TITLE,
   UI_CHANGE_PASSWORD_LABEL_CONFIRM_PASSWORD,
   UI_CHANGE_PASSWORD_LABEL_CURRENT_PASSWORD,
   UI_CHANGE_PASSWORD_LABEL_EMAIL,
@@ -222,7 +220,7 @@ describe('ChangePasswordFlow', () => {
     })
     fireEvent.click(screen.getByRole('button', { name: UI_CHANGE_PASSWORD_BUTTON_UPDATE }))
 
-    await waitFor(() => expect(screen.getByText(UI_CHANGE_PASSWORD_ERROR_GENERIC)).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(APP_ERROR_MESSAGE_NON_ERROR_THROWABLE)).toBeInTheDocument())
   })
 
   test('does not submit when only unchanged email provided', async () => {
@@ -253,7 +251,6 @@ describe('ChangePasswordFlow', () => {
     })
     fireEvent.click(screen.getByRole('button', { name: UI_CHANGE_PASSWORD_BUTTON_UPDATE }))
 
-    await waitFor(() => expect(screen.getByText(UI_CHANGE_PASSWORD_ERROR_TITLE)).toBeInTheDocument())
-    expect(screen.getByText('Network issue')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText('Network issue')).toBeInTheDocument())
   })
 })

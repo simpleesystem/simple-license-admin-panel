@@ -3,27 +3,31 @@
 import type { ChangePasswordRequest } from '@simple-license/react-sdk'
 import { useChangePassword } from '@simple-license/react-sdk'
 import Joi from 'joi'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import Alert from 'react-bootstrap/Alert'
 import Button from 'react-bootstrap/Button'
 import Card from 'react-bootstrap/Card'
 import { useApiClient } from '../../api/apiContext'
 import { useAuth } from '../../app/auth/authContext'
 import {
   DEFAULT_NOTIFICATION_EVENT,
-  NOTIFICATION_VARIANT_ERROR,
   NOTIFICATION_VARIANT_SUCCESS,
 } from '../../app/constants'
+import { mapUnknownToAppError } from '../../app/errors/appErrors'
 import { useLogger } from '../../app/logging/loggerContext'
-import { raiseErrorFromUnknown } from '../../app/state/dispatchers'
 import { useAppStore } from '../../app/state/store'
 import { AppForm } from '../../forms/Form'
 import { useNotificationBus } from '../../notifications/busContext'
 import {
+  UI_AUTH_CARD_MIN_HEIGHT,
+  UI_STACK_GAP_MEDIUM,
+} from '../../ui/constants'
+import {
   UI_CHANGE_PASSWORD_BUTTON_UPDATE,
   UI_CHANGE_PASSWORD_BUTTON_UPDATING,
-  UI_CHANGE_PASSWORD_DESCRIPTION,
   UI_CHANGE_PASSWORD_ERROR_CONFIRM_REQUIRED,
   UI_CHANGE_PASSWORD_ERROR_EMAIL_INVALID,
+  UI_CHANGE_PASSWORD_ERROR_GENERIC,
   UI_CHANGE_PASSWORD_ERROR_PASSWORDS_MATCH,
   UI_CHANGE_PASSWORD_ERROR_REQUIRED,
   UI_CHANGE_PASSWORD_HEADING,
@@ -31,9 +35,6 @@ import {
   UI_CHANGE_PASSWORD_LABEL_CURRENT_PASSWORD,
   UI_CHANGE_PASSWORD_LABEL_EMAIL,
   UI_CHANGE_PASSWORD_LABEL_NEW_PASSWORD,
-  UI_CHANGE_PASSWORD_SECTION_DESCRIPTION,
-  UI_CHANGE_PASSWORD_SECTION_TITLE,
-  UI_CHANGE_PASSWORD_TOAST_ERROR,
   UI_CHANGE_PASSWORD_TOAST_SUCCESS,
   UI_CHANGE_PASSWORD_VALIDATION_CURRENT_PASSWORD,
   UI_CHANGE_PASSWORD_VALIDATION_NEW_PASSWORD,
@@ -41,8 +42,8 @@ import {
   UI_FORM_CONTROL_TYPE_PASSWORD,
 } from '../constants'
 import { FormActions } from '../forms/FormActions'
-import { FormSection } from '../forms/FormSection'
 import { TextField } from '../forms/TextField'
+import { Stack } from '../layout/Stack'
 
 const PASSWORD_MIN_LENGTH = 8
 
@@ -130,12 +131,13 @@ type ChangePasswordFlowProps = {
 
 export function ChangePasswordFlow({ onSuccess }: ChangePasswordFlowProps) {
   const client = useApiClient()
-  const { currentUser, refreshCurrentUser } = useAuth()
+  const { currentUser, refreshCurrentUser, login } = useAuth()
   const dispatch = useAppStore((state) => state.dispatch)
   const logger = useLogger()
   const notificationBus = useNotificationBus()
   const mutation = useChangePassword(client)
   const schema = useMemo(() => buildSchema(currentUser?.email ?? ''), [currentUser?.email])
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const defaultValues = useMemo<ChangePasswordValues>(() => {
     return {
       ...DEFAULT_VALUES,
@@ -145,6 +147,7 @@ export function ChangePasswordFlow({ onSuccess }: ChangePasswordFlowProps) {
 
   const handleSubmit = async (values: ChangePasswordValues) => {
     try {
+      setErrorMessage(null)
       dispatch({ type: 'loading/set', scope: 'auth', isLoading: true })
       const payload: ChangePasswordRequest = {}
       const trimmedEmail = values.email?.trim()
@@ -172,15 +175,39 @@ export function ChangePasswordFlow({ onSuccess }: ChangePasswordFlowProps) {
         passwordUpdated: wantsPasswordChange,
       })
     } catch (error) {
-      const appError = raiseErrorFromUnknown({
-        error,
-        dispatch,
-        scope: 'auth',
-      })
-      notificationBus.emit(DEFAULT_NOTIFICATION_EVENT, {
-        titleKey: UI_CHANGE_PASSWORD_TOAST_ERROR,
-        variant: NOTIFICATION_VARIANT_ERROR,
-      })
+      const appError = mapUnknownToAppError(error, 'auth')
+
+      // Heuristic: If we get a generic error but provided a new password,
+      // try to login with the new credentials. If that succeeds, the password change
+      // actually worked despite the API error response.
+      let wasActuallySuccessful = false
+      if (appError.message === 'API request failed' && values.new_password && currentUser?.username) {
+        try {
+          await login(currentUser.username, values.new_password)
+          wasActuallySuccessful = true
+        } catch (ignored) {
+          // Login failed, so the original error was likely real
+        }
+      }
+
+      if (wasActuallySuccessful) {
+        notificationBus.emit(DEFAULT_NOTIFICATION_EVENT, {
+          titleKey: UI_CHANGE_PASSWORD_TOAST_SUCCESS,
+          variant: NOTIFICATION_VARIANT_SUCCESS,
+        })
+        onSuccess?.()
+        logger.info('change-password:submit:success-after-error', {
+          passwordUpdated: true,
+          emailUpdated: Boolean(values.email?.trim() && values.email?.trim() !== currentUser?.email),
+        })
+        return
+      }
+
+      // Fallback for generic SDK errors
+      const displayMessage =
+        appError.message === 'API request failed' ? UI_CHANGE_PASSWORD_ERROR_GENERIC : appError.message
+      setErrorMessage(displayMessage)
+
       logger.error(error, {
         stage: 'change-password:submit:error',
         code: appError.code,
@@ -195,13 +222,14 @@ export function ChangePasswordFlow({ onSuccess }: ChangePasswordFlowProps) {
   }
 
   return (
-    <Card>
-      <Card.Body>
-        <h1 className="h4 mb-3">{UI_CHANGE_PASSWORD_HEADING}</h1>
-        <p className="text-muted mb-4">{UI_CHANGE_PASSWORD_DESCRIPTION}</p>
-
+    <Card className="shadow-sm w-100">
+      <Card.Header className="bg-white border-bottom-0 pt-4 pb-0 text-center">
+        <h2 className="h4 m-0">{UI_CHANGE_PASSWORD_HEADING}</h2>
+      </Card.Header>
+      <Card.Body className="p-4 p-md-5 pt-3 h-100" style={{ minHeight: UI_AUTH_CARD_MIN_HEIGHT }}>
         <AppForm<ChangePasswordValues> schema={schema} defaultValues={defaultValues} onSubmit={handleSubmit}>
-          <FormSection title={UI_CHANGE_PASSWORD_SECTION_TITLE} description={UI_CHANGE_PASSWORD_SECTION_DESCRIPTION}>
+          <Stack gap={UI_STACK_GAP_MEDIUM}>
+            {errorMessage ? <Alert variant="danger">{errorMessage}</Alert> : null}
             <TextField<ChangePasswordValues>
               name="current_password"
               label={UI_CHANGE_PASSWORD_LABEL_CURRENT_PASSWORD}
@@ -226,13 +254,10 @@ export function ChangePasswordFlow({ onSuccess }: ChangePasswordFlowProps) {
               type={UI_FORM_CONTROL_TYPE_EMAIL}
               autoComplete="email"
             />
-          </FormSection>
-
-          <FormActions>
-            <Button type="submit" variant="primary" disabled={mutation.isPending}>
+            <Button type="submit" variant="primary" disabled={mutation.isPending} className="w-100">
               {mutation.isPending ? UI_CHANGE_PASSWORD_BUTTON_UPDATING : UI_CHANGE_PASSWORD_BUTTON_UPDATE}
             </Button>
-          </FormActions>
+          </Stack>
         </AppForm>
       </Card.Body>
     </Card>

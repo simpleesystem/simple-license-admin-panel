@@ -1,25 +1,35 @@
 import { useEffect, useRef } from 'react'
-import { toast } from 'react-hot-toast'
+import { useNotificationBus } from '../../notifications/busContext'
+import { NOTIFICATION_EVENT_TOAST, NOTIFICATION_VARIANT_ERROR } from '../../app/constants'
 
 import { selectLatestError, useAppStore } from './store'
 
 export function SurfaceRenderer() {
   const error = useAppStore(selectLatestError)
   const lastId = useRef<string | null>(null)
+  const notificationBus = useNotificationBus()
 
   useEffect(() => {
     if (!error) {
-      if (lastId.current) {
-        toast.dismiss(lastId.current)
-        lastId.current = null
-      }
+      // Dismissal logic would go here if we supported dismissing by ID
+      // For now, we rely on auto-hide or user dismissal
+      lastId.current = null
       return
     }
-    const id = toast.error(error.message, {
-      id: error.correlationId ?? error.code,
+
+    // De-duplicate if same error
+    const errorId = error.correlationId ?? error.code
+    if (lastId.current === errorId) {
+      return
+    }
+
+    notificationBus.emit(NOTIFICATION_EVENT_TOAST, {
+      titleKey: error.message,
+      variant: NOTIFICATION_VARIANT_ERROR,
+      id: errorId,
     })
-    lastId.current = id
-  }, [error])
+    lastId.current = errorId
+  }, [error, notificationBus])
 
   return null
 }

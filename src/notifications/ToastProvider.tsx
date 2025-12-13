@@ -1,6 +1,5 @@
-import { useEffect, useRef } from 'react'
-import type { ToastOptions } from 'react-hot-toast'
-import { Toaster, toast, useToasterStore } from 'react-hot-toast'
+import { useEffect, useState } from 'react'
+import { Toast, ToastContainer } from 'react-bootstrap'
 import { useTranslation } from 'react-i18next'
 
 import {
@@ -19,79 +18,110 @@ import {
   type ToastNotificationPayload,
 } from './constants'
 
-const showToastByVariant = (variant: NotificationVariant, message: string, options: Partial<ToastOptions>) => {
+type ToastItem = ToastNotificationPayload & {
+  key: string
+  visible: boolean
+}
+
+const getVariantStyle = (variant?: NotificationVariant) => {
   switch (variant) {
     case NOTIFICATION_VARIANT_SUCCESS:
-      toast.success(message, options)
-      return
+      return 'success'
     case NOTIFICATION_VARIANT_ERROR:
-      toast.error(message, options)
-      return
+      return 'danger'
     case NOTIFICATION_VARIANT_WARNING:
-      toast(message, options)
-      return
+      return 'warning'
     default:
-      toast(message, options)
+      return 'light'
+  }
+}
+
+const getVariantHeaderClass = (variant?: NotificationVariant) => {
+  switch (variant) {
+    case NOTIFICATION_VARIANT_SUCCESS:
+      return 'text-success'
+    case NOTIFICATION_VARIANT_ERROR:
+      return 'text-danger'
+    case NOTIFICATION_VARIANT_WARNING:
+      return 'text-warning'
+    default:
+      return ''
   }
 }
 
 export function ToastProvider() {
   const bus = useNotificationBus()
   const { t } = useTranslation()
-  const handlerRef = useRef<((payload: ToastNotificationPayload) => void) | null>(null)
-  const handlerIdRef = useRef<string | null>(null)
-  const { toasts } = useToasterStore()
+  const [toasts, setToasts] = useState<ToastItem[]>([])
 
   useEffect(() => {
-    // Only subscribe one handler (singleton pattern for React Strict Mode/HMR)
-    if (handlerRef.current) {
-      return undefined
-    }
-
-    const handlerId = 'toast-handler-singleton'
-    handlerIdRef.current = handlerId
-
     const handler = (payload: ToastNotificationPayload) => {
-      // Explicit de-duplication: check if a toast with this ID is already visible
-      if (payload.id) {
-        const isDuplicate = toasts.some((t) => t.id === payload.id && t.visible)
-        if (isDuplicate) {
-          return
+      const key = payload.id || Math.random().toString(36).slice(2)
+
+      setToasts((prev) => {
+        // Strict de-duplication by content/id if provided, or avoid stacking identical messages
+        // If an ID is provided, check if it exists
+        if (payload.id) {
+          const exists = prev.some((item) => item.id === payload.id)
+          if (exists) return prev
         }
-      }
 
-      const variant = payload.variant ?? DEFAULT_NOTIFICATION_VARIANT
-      const title = t(payload.titleKey)
-      const description = payload.descriptionKey ? t(payload.descriptionKey) : ''
-      const renderedMessage = description ? `${title} - ${description}` : title
-
-      showToastByVariant(variant, renderedMessage, {
-        id: payload.id,
-        duration: DEFAULT_NOTIFICATION_DURATION,
-        position: DEFAULT_NOTIFICATION_POSITION,
+        // Add new toast
+        return [...prev, { ...payload, key, visible: true }]
       })
     }
 
-    handlerRef.current = handler
     bus.on(NOTIFICATION_EVENT_TOAST, handler)
 
     return () => {
-      if (handlerRef.current) {
-        bus.off(NOTIFICATION_EVENT_TOAST, handlerRef.current)
-        handlerRef.current = null
-        handlerIdRef.current = null
-      }
+      bus.off(NOTIFICATION_EVENT_TOAST, handler)
     }
-  }, [bus, t, toasts])
+  }, [bus])
+
+  const removeToast = (key: string) => {
+    setToasts((prev) => prev.filter((item) => item.key !== key))
+  }
+
+  // Map position constant to Bootstrap ToastContainer position
+  // 'bottom-right' -> 'bottom-end'
+  // 'top-right' -> 'top-end', etc.
+  // Assuming DEFAULT_NOTIFICATION_POSITION is 'bottom-right' or similar
+  const positionMap: Record<string, 'top-start' | 'top-center' | 'top-end' | 'middle-start' | 'middle-center' | 'middle-end' | 'bottom-start' | 'bottom-center' | 'bottom-end'> = {
+    'top-left': 'top-start',
+    'top-center': 'top-center',
+    'top-right': 'top-end',
+    'bottom-left': 'bottom-start',
+    'bottom-center': 'bottom-center',
+    'bottom-right': 'bottom-end',
+  }
+
+  const bsPosition = positionMap[DEFAULT_NOTIFICATION_POSITION] || 'bottom-end'
 
   return (
-    <div data-testid={TEST_ID_NOTIFICATION_PORTAL}>
-      <Toaster
-        position={DEFAULT_NOTIFICATION_POSITION}
-        toastOptions={{
-          duration: DEFAULT_NOTIFICATION_DURATION,
-        }}
-      />
+    <div data-testid={TEST_ID_NOTIFICATION_PORTAL} aria-live="polite" aria-atomic="true" className="position-relative">
+      <ToastContainer className="p-3" position={bsPosition} style={{ zIndex: 1090, position: 'fixed' }}>
+        {toasts.map((toast) => (
+          <Toast
+            key={toast.key}
+            onClose={() => removeToast(toast.key)}
+            show={toast.visible}
+            delay={DEFAULT_NOTIFICATION_DURATION}
+            autohide
+            bg={getVariantStyle(toast.variant) === 'light' ? 'light' : undefined}
+          >
+            <Toast.Header>
+              <strong className={`me-auto ${getVariantHeaderClass(toast.variant)}`}>
+                {t(toast.titleKey)}
+              </strong>
+            </Toast.Header>
+            {toast.descriptionKey ? (
+              <Toast.Body className={getVariantStyle(toast.variant) !== 'light' ? 'text-white' : ''}>
+                {t(toast.descriptionKey)}
+              </Toast.Body>
+            ) : null}
+          </Toast>
+        ))}
+      </ToastContainer>
     </div>
   )
 }

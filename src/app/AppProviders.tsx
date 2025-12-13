@@ -138,13 +138,28 @@ function RouterContextBridge({ queryClient }: { queryClient: QueryClient }) {
 
 function QueryErrorNotifierBridge() {
   const notificationBus = useNotificationBus()
+  const { currentUser } = useAuth()
 
   useEffect(() => {
     const unregister = registerQueryErrorNotifier((payload) => {
+      // Don't show generic query errors if the user is in a password reset flow
+      // or if the error is 403 (which often triggers the flow)
+      // This prevents "Network Error" or "Forbidden" toasts from stacking up
+      // behind the Change Password screen.
+      if (currentUser?.passwordResetRequired) {
+        return
+      }
+
+      // Also filter out explicit 403s if they are likely related to auth/permissions
+      // that the UI will handle by redirecting or showing a gate.
+      if (payload.status === 403) {
+        return
+      }
+
       notificationBus.emit(DEFAULT_NOTIFICATION_EVENT, payload)
     })
     return unregister
-  }, [notificationBus])
+  }, [notificationBus, currentUser?.passwordResetRequired])
 
   return null
 }

@@ -34,7 +34,7 @@ export function PageHeader({
           {breadcrumbs}
           {eyebrow ? <span className={UI_CLASS_HEADING_EYEBROW}>{eyebrow}</span> : null}
           <div className="d-flex flex-column gap-1">
-            <h1 className={composeClassNames(UI_CLASS_HEADING_TITLE, UI_CLASS_MARGIN_RESET)}>{title}</h1>
+            <h2 className={composeClassNames(UI_CLASS_HEADING_TITLE, UI_CLASS_MARGIN_RESET)}>{title}</h2>
             {subtitle ? (
               <p className={composeClassNames(UI_CLASS_MUTED_TEXT, UI_CLASS_MARGIN_RESET)}>{subtitle}</p>
             ) : null}

@@ -7,7 +7,7 @@ import { ChangePasswordFlow } from '../../ui/auth/ChangePasswordFlow'
 import { UI_HEADER_ACTION_SIGN_OUT, UI_TEST_ID_HEADER } from '../../ui/constants'
 import { AppShell } from '../../ui/layout/AppShell'
 import { TopNavBar } from '../../ui/navigation/TopNavBar'
-import { APP_BRAND_NAME, APP_BRAND_TAGLINE } from '../constants'
+import { APP_BRAND_NAME } from '../constants'
 import { useAuth } from './authContext'
 
 type PasswordResetGateProps = PropsWithChildren
@@ -21,12 +21,7 @@ export function PasswordResetGate({ children }: PasswordResetGateProps) {
         topBar={
           <TopNavBar
             testId={UI_TEST_ID_HEADER}
-            brand={
-              <div className="d-flex flex-column">
-                <strong>{APP_BRAND_NAME}</strong>
-                <small className="text-muted">{APP_BRAND_TAGLINE}</small>
-              </div>
-            }
+            brand={APP_BRAND_NAME}
             navigation={null}
             actions={<PasswordResetHeaderActions />}
           />

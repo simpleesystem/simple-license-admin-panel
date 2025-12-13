@@ -45,6 +45,7 @@ export function DataTable<TData>({
   ability,
   permissionKey,
   permissionFallback,
+  footer,
 }: DataTableProps<TData>) {
   const showSelection = Boolean(selection)
   const selectedIds = selection?.selectedIds ?? []
@@ -189,6 +190,7 @@ export function DataTable<TData>({
           </div>
         ) : null}
       </div>
+      {footer ? <div className="mt-3">{footer}</div> : null}
     </VisibilityGate>
   )
 }

@@ -21,6 +21,7 @@ import {
 } from '../../app/constants'
 import { useNotificationBus } from '../../notifications/busContext'
 import { DEFAULT_NOTIFICATION_EVENT } from '../../notifications/constants'
+import { mapUnknownToAppError } from '../errors/appErrors'
 import { createLifecycle } from '../lifecycle/lifecycle'
 import { useLogger } from '../logging/loggerContext'
 import { raiseErrorFromUnknown } from '../state/dispatchers'
@@ -256,18 +257,18 @@ export function AuthProvider({ children }: PropsWithChildren) {
         return response
       } catch (error) {
         resetAuthState()
-        const appError = raiseErrorFromUnknown({
-          error,
-          dispatch,
-          scope: 'auth',
-        })
-        logger.error(error, {
-          stage: 'auth:login:error',
+        // Use mapUnknownToAppError instead of raiseErrorFromUnknown to avoid dispatching
+        // a global error state (which triggers a toast via SurfaceRenderer).
+        // The login UI (LoginCard) handles the error inline.
+        const appError = mapUnknownToAppError(error, 'auth')
+
+        logger.warn('auth:login:error', {
           code: appError.code,
           type: appError.type,
           status: appError.status,
           requestId: appError.requestId,
           scope: appError.scope,
+          error: appError.message,
         })
         throw error
       } finally {
@@ -281,17 +282,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
     try {
       resetAuthState()
       dispatch({ type: 'auth/setUser', payload: null })
-      notificationBus.emit(DEFAULT_NOTIFICATION_EVENT, {
-        titleKey: UI_HEADER_SIGN_OUT_TOAST_SUCCESS,
-      })
       logger.info('auth:logout')
     } catch (error) {
-      notificationBus.emit(DEFAULT_NOTIFICATION_EVENT, {
-        titleKey: UI_HEADER_SIGN_OUT_TOAST_ERROR,
-      })
       logger.error(error, { stage: 'auth:logout:error' })
     }
-  }, [resetAuthState, dispatch, notificationBus, logger])
+  }, [resetAuthState, dispatch, logger])
 
   useEffect(() => {
     if (typeof window === 'undefined') {

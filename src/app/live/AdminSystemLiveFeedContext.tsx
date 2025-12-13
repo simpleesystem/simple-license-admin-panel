@@ -14,6 +14,7 @@ import {
   UI_LIVE_STATUS_ERROR,
 } from '../../ui/constants'
 import { useAppConfig } from '../config'
+import { createLifecycle } from '../lifecycle/lifecycle'
 import {
   ADMIN_SYSTEM_WS_ERROR_CONTEXT_UNAVAILABLE,
   ADMIN_SYSTEM_WS_HEALTH_PATH,
@@ -125,10 +126,15 @@ export function AdminSystemLiveFeedProvider({ children }: PropsWithChildren) {
   const queryClient = useQueryClient()
   const [state, dispatch] = useReducer(liveReducer, initialState)
   const clientRef = useRef<AdminSystemWsClient | null>(null)
+  const lifecycleRef = useRef(createLifecycle())
 
   const wsUrl = useMemo(() => buildWebSocketUrl(apiBaseUrl), [apiBaseUrl])
 
   useEffect(() => {
+    lifecycleRef.current.dispose()
+    lifecycleRef.current = createLifecycle()
+    const lifecycle = lifecycleRef.current
+
     const client = new AdminSystemWsClient(wsUrl)
     clientRef.current = client
 
@@ -158,13 +164,25 @@ export function AdminSystemLiveFeedProvider({ children }: PropsWithChildren) {
       }),
     ]
 
-    client.start()
-
-    return () => {
+    lifecycle.addCleanup(() => {
       for (const unsubscribe of unsubscribes) {
         unsubscribe()
       }
-      client.stop()
+    })
+
+    // Delay connection start to avoid "WebSocket is closed before the connection is established"
+    // error in React Strict Mode (which mounts/unmounts immediately in dev)
+    const connectTimer = setTimeout(() => {
+      if (!lifecycle.signal.aborted) {
+        client.start()
+        lifecycle.addCleanup(() => client.stop())
+      }
+    }, 0)
+
+    lifecycle.addCleanup(() => clearTimeout(connectTimer))
+
+    return () => {
+      lifecycle.dispose()
     }
   }, [queryClient, wsUrl])
 

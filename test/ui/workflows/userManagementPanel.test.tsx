@@ -16,6 +16,7 @@ import { buildText } from '../../ui/factories/uiFactories'
 
 const useCreateUserMock = vi.hoisted(() => vi.fn())
 const useUpdateUserMock = vi.hoisted(() => vi.fn())
+const useDeleteUserMock = vi.hoisted(() => vi.fn())
 const useAdminTenantsMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@simple-license/react-sdk', async () => {
@@ -24,6 +25,7 @@ vi.mock('@simple-license/react-sdk', async () => {
     ...actual,
     useCreateUser: useCreateUserMock,
     useUpdateUser: useUpdateUserMock,
+    useDeleteUser: useDeleteUserMock,
     useAdminTenants: useAdminTenantsMock,
   }
 })
@@ -92,8 +94,10 @@ describe('UserManagementPanel', () => {
   test('calls create mutation from CTA', async () => {
     const createMutation = mockMutation()
     const updateMutation = mockMutation()
+    const deleteMutation = mockMutation()
     useCreateUserMock.mockReturnValue(createMutation)
     useUpdateUserMock.mockReturnValue(updateMutation)
+    useDeleteUserMock.mockReturnValue(deleteMutation)
     const users = [buildUser()]
 
     const { getByText, getByRole } = render(
@@ -109,8 +113,10 @@ describe('UserManagementPanel', () => {
   test('refreshes after successful create', async () => {
     const createMutation = mockMutation()
     const updateMutation = mockMutation()
+    const deleteMutation = mockMutation()
     useCreateUserMock.mockReturnValue(createMutation)
     useUpdateUserMock.mockReturnValue(updateMutation)
+    useDeleteUserMock.mockReturnValue(deleteMutation)
     const onRefresh = vi.fn()
     const users = [buildUser()]
 
@@ -127,8 +133,10 @@ describe('UserManagementPanel', () => {
   test('calls update mutation for selected row', async () => {
     const createMutation = mockMutation()
     const updateMutation = mockMutation()
+    const deleteMutation = mockMutation()
     useCreateUserMock.mockReturnValue(createMutation)
     useUpdateUserMock.mockReturnValue(updateMutation)
+    useDeleteUserMock.mockReturnValue(deleteMutation)
     const user = buildUser()
 
     const { getByText, getByRole } = render(

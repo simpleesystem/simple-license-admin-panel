@@ -28,13 +28,38 @@ import {
   UI_USER_EMPTY_STATE_MESSAGE,
   UI_USER_FORM_SUBMIT_CREATE,
   UI_USER_FORM_SUBMIT_UPDATE,
+  UI_USER_ROLE_ADMIN,
+  UI_USER_ROLE_API_CONSUMER_ACTIVATE,
+  UI_USER_ROLE_API_READ_ONLY,
+  UI_USER_ROLE_API_VENDOR_WRITE,
+  UI_USER_ROLE_LABEL_ADMIN,
+  UI_USER_ROLE_LABEL_API_CONSUMER_ACTIVATE,
+  UI_USER_ROLE_LABEL_API_READ_ONLY,
+  UI_USER_ROLE_LABEL_API_VENDOR_WRITE,
+  UI_USER_ROLE_LABEL_VENDOR_ADMIN,
+  UI_USER_ROLE_LABEL_VENDOR_MANAGER,
+  UI_USER_ROLE_LABEL_VIEWER,
+  UI_USER_ROLE_VENDOR_ADMIN,
+  UI_USER_ROLE_VENDOR_MANAGER,
+  UI_USER_ROLE_LABEL_SUPERUSER,
+  UI_USER_ROLE_SUPERUSER,
+  UI_USER_ROLE_VIEWER,
+  UI_USER_STATUS_ACTIVE,
   UI_USER_STATUS_DELETED,
+  UI_USER_STATUS_DISABLED,
+  UI_USER_STATUS_LABEL_ACTIVE,
+  UI_USER_STATUS_LABEL_DELETED,
+  UI_USER_STATUS_LABEL_DISABLED,
   UI_VALUE_PLACEHOLDER,
+  UI_USER_VENDOR_PLACEHOLDER,
+  UI_USER_FIELD_LABEL_VENDOR,
+  UI_USER_FIELD_LABEL_ROLE,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
 import { TableToolbar } from '../data/TableToolbar'
+import { TableFilter } from '../data/TableFilter'
 import { Stack } from '../layout/Stack'
-import type { UiDataTableColumn, UiDataTableSortState, UiSortDirection } from '../types'
+import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
 import { notifyCrudError, notifyUserSuccess } from './notifications'
 import { UserFormFlow } from './UserFormFlow'
 import { UserRowActions } from './UserRowActions'
@@ -55,6 +80,13 @@ type UserManagementPanelProps = {
   onSearchChange: (term: string) => void
   sortState?: UiDataTableSortState
   onSortChange?: (columnId: string, direction: UiSortDirection) => void
+  // Filters
+  roleFilter?: string
+  statusFilter?: string
+  vendorFilter?: string
+  onRoleFilterChange?: (role: string) => void
+  onStatusFilterChange?: (status: string) => void
+  onVendorFilterChange?: (vendorId: string) => void
 }
 
 export function UserManagementPanel({
@@ -69,6 +101,12 @@ export function UserManagementPanel({
   onSearchChange,
   sortState,
   onSortChange,
+  roleFilter = '',
+  statusFilter = '',
+  vendorFilter = '',
+  onRoleFilterChange,
+  onStatusFilterChange,
+  onVendorFilterChange,
 }: UserManagementPanelProps) {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingUser, setEditingUser] = useState<UserListItem | null>(null)
@@ -83,34 +121,101 @@ export function UserManagementPanel({
     }, {})
   }, [tenantsQuery.data])
 
+  const vendorOptions = useMemo<UiSelectOption[]>(() => {
+    const tenantList = Array.isArray(tenantsQuery.data) ? tenantsQuery.data : (tenantsQuery.data?.data ?? [])
+    return [
+      { value: '', label: UI_USER_VENDOR_PLACEHOLDER },
+      ...tenantList.map((tenant) => ({
+        value: String(tenant.id),
+        label: tenant.name,
+      })),
+    ]
+  }, [tenantsQuery.data])
+
+  const roleOptions: UiSelectOption[] = [
+    { value: '', label: 'Filter by Role' },
+    { value: UI_USER_ROLE_SUPERUSER, label: UI_USER_ROLE_LABEL_SUPERUSER },
+    { value: UI_USER_ROLE_ADMIN, label: UI_USER_ROLE_LABEL_ADMIN },
+    { value: UI_USER_ROLE_VENDOR_MANAGER, label: UI_USER_ROLE_LABEL_VENDOR_MANAGER },
+    { value: UI_USER_ROLE_VENDOR_ADMIN, label: UI_USER_ROLE_LABEL_VENDOR_ADMIN },
+    { value: UI_USER_ROLE_VIEWER, label: UI_USER_ROLE_LABEL_VIEWER },
+    { value: UI_USER_ROLE_API_READ_ONLY, label: UI_USER_ROLE_LABEL_API_READ_ONLY },
+    { value: UI_USER_ROLE_API_VENDOR_WRITE, label: UI_USER_ROLE_LABEL_API_VENDOR_WRITE },
+    { value: UI_USER_ROLE_API_CONSUMER_ACTIVATE, label: UI_USER_ROLE_LABEL_API_CONSUMER_ACTIVATE },
+  ]
+
+  const statusOptions: UiSelectOption[] = [
+    { value: '', label: 'Filter by Status' },
+    { value: UI_USER_STATUS_ACTIVE, label: UI_USER_STATUS_LABEL_ACTIVE },
+    { value: UI_USER_STATUS_DISABLED, label: UI_USER_STATUS_LABEL_DISABLED },
+    { value: UI_USER_STATUS_DELETED, label: UI_USER_STATUS_LABEL_DELETED },
+  ]
+
   const toolbar = (
     <TableToolbar
       start={
-        <Form.Control
-          type="search"
-          placeholder={UI_TABLE_SEARCH_PLACEHOLDER}
-          value={searchTerm}
-          onChange={(event) => onSearchChange(event.target.value)}
-        />
-      }
-      end={
-        <Stack direction="row" gap="small" aria-label={UI_TABLE_PAGINATION_LABEL}>
-          <Button variant={UI_BUTTON_VARIANT_SECONDARY} onClick={() => onPageChange(page - 1)} disabled={page <= 1}>
-            {UI_TABLE_PAGINATION_PREVIOUS}
-          </Button>
-          <span>
-            {page} / {totalPages}
-          </span>
-          <Button
-            variant={UI_BUTTON_VARIANT_SECONDARY}
-            onClick={() => onPageChange(page + 1)}
-            disabled={page >= totalPages}
-          >
-            {UI_TABLE_PAGINATION_NEXT}
-          </Button>
+        <Stack direction="row" gap="small" wrap className="align-items-center">
+          <Form.Control
+            type="search"
+            placeholder={UI_TABLE_SEARCH_PLACEHOLDER}
+            value={searchTerm}
+            onChange={(event) => onSearchChange(event.target.value)}
+            style={{ maxWidth: '300px' }}
+          />
+          {onRoleFilterChange ? (
+            <TableFilter
+              value={roleFilter}
+              options={roleOptions}
+              onChange={onRoleFilterChange}
+              placeholder="All Roles"
+            />
+          ) : null}
+          {onStatusFilterChange ? (
+            <TableFilter
+              value={statusFilter}
+              options={statusOptions}
+              onChange={onStatusFilterChange}
+              placeholder="All Statuses"
+            />
+          ) : null}
+          {onVendorFilterChange && !currentUser?.vendorId ? (
+            <TableFilter
+              value={vendorFilter}
+              options={vendorOptions}
+              onChange={onVendorFilterChange}
+              placeholder="All Vendors"
+            />
+          ) : null}
         </Stack>
       }
+      end={
+        canCreate ? (
+          <Button variant={UI_BUTTON_VARIANT_PRIMARY} onClick={() => setShowCreateModal(true)}>
+            {UI_USER_BUTTON_CREATE}
+          </Button>
+        ) : null
+      }
     />
+  )
+
+  const pagination = (
+    <Stack direction="row" gap="small" justify="end" aria-label={UI_TABLE_PAGINATION_LABEL}>
+      <Button variant={UI_BUTTON_VARIANT_SECONDARY} onClick={() => onPageChange(page - 1)} disabled={page <= 1}>
+        {UI_TABLE_PAGINATION_PREVIOUS}
+      </Button>
+      <div className="d-flex align-items-center px-2">
+        <span>
+          {page} / {totalPages}
+        </span>
+      </div>
+      <Button
+        variant={UI_BUTTON_VARIANT_SECONDARY}
+        onClick={() => onPageChange(page + 1)}
+        disabled={page >= totalPages}
+      >
+        {UI_TABLE_PAGINATION_NEXT}
+      </Button>
+    </Stack>
   )
 
   const columns: UiDataTableColumn<UserListItem>[] = useMemo(
@@ -188,14 +293,6 @@ export function UserManagementPanel({
 
   return (
     <Stack direction="column" gap="medium">
-      {canCreate ? (
-        <Stack direction="row" gap="small">
-          <Button variant={UI_BUTTON_VARIANT_PRIMARY} onClick={() => setShowCreateModal(true)}>
-            {UI_USER_BUTTON_CREATE}
-          </Button>
-        </Stack>
-      ) : null}
-
       <DataTable
         data={users}
         columns={columns}
@@ -204,6 +301,7 @@ export function UserManagementPanel({
         sortState={sortState}
         onSort={onSortChange}
         toolbar={toolbar}
+        footer={pagination}
       />
 
       <UserFormFlow

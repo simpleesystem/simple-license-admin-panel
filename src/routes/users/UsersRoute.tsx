@@ -28,18 +28,23 @@ export function UsersRouteComponent() {
   const [page, setPage] = useState(1)
   const [searchTerm, setSearchTerm] = useState('')
   const [sortState, setSortState] = useState<UiDataTableSortState | undefined>()
+  const [roleFilter, setRoleFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
+  const [vendorFilter, setVendorFilter] = useState('')
 
   const filters = useMemo(() => {
     const baseParams = {
       page,
       limit: UI_TABLE_PAGE_SIZE_DEFAULT,
       search: searchTerm || undefined,
+      role: roleFilter || undefined,
+      status: statusFilter || undefined,
     }
     if (isVendorScopedUser(currentUser) && currentUser?.vendorId) {
       return { ...baseParams, vendor_id: currentUser.vendorId }
     }
-    return baseParams
-  }, [currentUser, page, searchTerm])
+    return { ...baseParams, vendor_id: vendorFilter || undefined }
+  }, [currentUser, page, searchTerm, roleFilter, statusFilter, vendorFilter])
 
   const { data, isLoading, isError, refetch } = useAdminUsers(client, filters)
 
@@ -61,6 +66,11 @@ export function UsersRouteComponent() {
 
   const handleSearch = (term: string) => {
     setSearchTerm(term)
+    setPage(1)
+  }
+
+  const handleFilterChange = (setter: (val: string) => void) => (val: string) => {
+    setter(val)
     setPage(1)
   }
 
@@ -107,6 +117,12 @@ export function UsersRouteComponent() {
           onSearchChange={handleSearch}
           sortState={sortState}
           onSortChange={handleSort}
+          roleFilter={roleFilter}
+          statusFilter={statusFilter}
+          vendorFilter={vendorFilter}
+          onRoleFilterChange={handleFilterChange(setRoleFilter)}
+          onStatusFilterChange={handleFilterChange(setStatusFilter)}
+          onVendorFilterChange={handleFilterChange(setVendorFilter)}
         />
       ) : null}
     </Page>

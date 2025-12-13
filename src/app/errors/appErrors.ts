@@ -63,6 +63,14 @@ const AUTH_CODES = new Set<string>([
 
 const VALIDATION_CODES = new Set<string>([ERROR_CODE_VALIDATION_ERROR, ERROR_CODE_BODY_VALIDATION_ERROR])
 
+const sanitizeMessage = (message: string): string => {
+  // If the message contains a stack trace (looks like file paths or 'at ...'), truncate it
+  if (message.includes('\n    at ') || message.length > 200) {
+    return message.split('\n')[0].substring(0, 200)
+  }
+  return message
+}
+
 export const mapUnknownToAppError = (error: unknown, scope: ErrorScope): AppError => {
   if (error instanceof NetworkException) {
     return mapNetworkException(error, scope)
@@ -77,13 +85,17 @@ export const mapUnknownToAppError = (error: unknown, scope: ErrorScope): AppErro
     }
   }
   if (error instanceof ApiException) {
-    return mapApiException(error, scope)
+    const appError = mapApiException(error, scope)
+    return {
+      ...appError,
+      message: sanitizeMessage(appError.message),
+    }
   }
   if (error instanceof Error) {
     return {
       type: APP_ERROR_TYPE_UNEXPECTED,
       code: APP_ERROR_CODE_UNEXPECTED,
-      message: error.message || APP_ERROR_MESSAGE_UNEXPECTED,
+      message: sanitizeMessage(error.message || APP_ERROR_MESSAGE_UNEXPECTED),
       scope,
       cause: error,
     }
@@ -99,10 +111,17 @@ export const mapUnknownToAppError = (error: unknown, scope: ErrorScope): AppErro
 
 const mapNetworkException = (error: NetworkException, scope: ErrorScope): AppError => {
   const requestId = extractRequestId(error)
+  const code = error.errorCode ?? ERROR_CODE_NETWORK_ERROR
+  // Use a friendlier message than "Network Error" if possible, or suppress if it's too generic
+  const message =
+    code === ERROR_CODE_NETWORK_ERROR && error.message === 'Network Error'
+      ? 'Unable to connect to server'
+      : error.message
+
   return {
     type: APP_ERROR_TYPE_NETWORK,
-    code: error.errorCode ?? ERROR_CODE_NETWORK_ERROR,
-    message: error.message,
+    code,
+    message,
     status: error.errorDetails?.status ?? 0,
     requestId,
     correlationId: requestId,

@@ -468,7 +468,8 @@ export class AxiosHttpClient implements HttpClientInterface {
     }
     if (error instanceof ApiException) {
       const status = error.errorDetails?.status
-      return status === 429 || status === 503 || status === 500
+      // Do not retry on 500 (Internal Server Error) to avoid hammering the server
+      return status === 429 || status === 503
     }
     return false
   }
