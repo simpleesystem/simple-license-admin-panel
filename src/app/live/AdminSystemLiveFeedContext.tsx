@@ -83,18 +83,22 @@ const patchHealthMetricsCache = (
     if (!current) {
       return current
     }
+    // Safety check for metrics and memory objects
+    const currentMetrics = current.metrics || {}
+    const currentMemory = currentMetrics.memory || {}
+
     return {
       ...current,
       metrics: {
-        ...current.metrics,
+        ...currentMetrics,
         uptime: update.data.system.uptime,
         memory: {
-          ...current.metrics.memory,
+          ...currentMemory,
           heapTotal: update.data.system.memory.heap_total,
           heapUsed: update.data.system.memory.heap_used,
         },
       },
-    }
+    } as HealthMetricsResponse
   })
 }
 
@@ -106,18 +110,22 @@ const patchSystemMetricsCache = (
     if (!current) {
       return current
     }
+    // Safety check for system and memory objects
+    const currentSystem = current.system || {}
+    const currentMemory = currentSystem.memory || {}
+
     return {
       ...current,
       system: {
-        ...current.system,
+        ...currentSystem,
         uptime: update.data.system.uptime,
         memory: {
-          ...current.system.memory,
+          ...currentMemory,
           heapTotal: update.data.system.memory.heap_total,
           heapUsed: update.data.system.memory.heap_used,
         },
       },
-    }
+    } as MetricsResponse
   })
 }
 
