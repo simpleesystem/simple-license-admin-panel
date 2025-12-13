@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
+import { I18N_KEY_APP_ERROR_TITLE, NOTIFICATION_EVENT_TOAST, NOTIFICATION_VARIANT_ERROR } from '../../app/constants'
 import { useNotificationBus } from '../../notifications/busContext'
-import { NOTIFICATION_EVENT_TOAST, NOTIFICATION_VARIANT_ERROR } from '../../app/constants'
 
 import { selectLatestError, useAppStore } from './store'
 
@@ -24,7 +24,8 @@ export function SurfaceRenderer() {
     }
 
     notificationBus.emit(NOTIFICATION_EVENT_TOAST, {
-      titleKey: error.message,
+      titleKey: I18N_KEY_APP_ERROR_TITLE,
+      message: error.message,
       variant: NOTIFICATION_VARIANT_ERROR,
       id: errorId,
     })

@@ -1,3 +1,4 @@
+// biome-ignore lint/style/useImportType: Constants used in typeof
 import {
   NOTIFICATION_DEFAULT_POSITION,
   NOTIFICATION_EVENT_TOAST,
@@ -17,6 +18,7 @@ export type NotificationVariant =
 export type ToastNotificationPayload = {
   id?: string
   titleKey: string
+  message?: string
   descriptionKey?: string
   variant?: NotificationVariant
 }
@@ -25,4 +27,3 @@ export const DEFAULT_NOTIFICATION_VARIANT: NotificationVariant = NOTIFICATION_VA
 export const DEFAULT_NOTIFICATION_EVENT = NOTIFICATION_EVENT_TOAST
 export const DEFAULT_NOTIFICATION_DURATION = NOTIFICATION_TOAST_DURATION_MS
 export const DEFAULT_NOTIFICATION_POSITION = NOTIFICATION_DEFAULT_POSITION
-

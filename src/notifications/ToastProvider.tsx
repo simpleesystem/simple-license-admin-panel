@@ -14,7 +14,6 @@ import type { NotificationVariant } from './constants'
 import {
   DEFAULT_NOTIFICATION_DURATION,
   DEFAULT_NOTIFICATION_POSITION,
-  DEFAULT_NOTIFICATION_VARIANT,
   type ToastNotificationPayload,
 } from './constants'
 
@@ -63,7 +62,9 @@ export function ToastProvider() {
         // If an ID is provided, check if it exists
         if (payload.id) {
           const exists = prev.some((item) => item.id === payload.id)
-          if (exists) return prev
+          if (exists) {
+            return prev
+          }
         }
 
         // Add new toast
@@ -86,7 +87,18 @@ export function ToastProvider() {
   // 'bottom-right' -> 'bottom-end'
   // 'top-right' -> 'top-end', etc.
   // Assuming DEFAULT_NOTIFICATION_POSITION is 'bottom-right' or similar
-  const positionMap: Record<string, 'top-start' | 'top-center' | 'top-end' | 'middle-start' | 'middle-center' | 'middle-end' | 'bottom-start' | 'bottom-center' | 'bottom-end'> = {
+  const positionMap: Record<
+    string,
+    | 'top-start'
+    | 'top-center'
+    | 'top-end'
+    | 'middle-start'
+    | 'middle-center'
+    | 'middle-end'
+    | 'bottom-start'
+    | 'bottom-center'
+    | 'bottom-end'
+  > = {
     'top-left': 'top-start',
     'top-center': 'top-center',
     'top-right': 'top-end',
@@ -106,12 +118,12 @@ export function ToastProvider() {
             onClose={() => removeToast(toast.key)}
             show={toast.visible}
             delay={DEFAULT_NOTIFICATION_DURATION}
-            autohide
+            autohide={true}
             bg={getVariantStyle(toast.variant) === 'light' ? 'light' : undefined}
           >
             <Toast.Header>
               <strong className={`me-auto ${getVariantHeaderClass(toast.variant)}`}>
-                {t(toast.titleKey)}
+                {toast.message ?? t(toast.titleKey)}
               </strong>
             </Toast.Header>
             {toast.descriptionKey ? (

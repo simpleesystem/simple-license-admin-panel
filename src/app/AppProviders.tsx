@@ -159,7 +159,7 @@ function QueryErrorNotifierBridge() {
       notificationBus.emit(DEFAULT_NOTIFICATION_EVENT, payload)
     })
     return unregister
-  }, [notificationBus, currentUser?.passwordResetRequired])
+  }, [notificationBus, currentUser])
 
   return null
 }

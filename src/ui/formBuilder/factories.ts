@@ -714,6 +714,12 @@ const USER_UPDATE_SECTIONS: BlueprintSectionConfig<UpdateUserRequest>[] = [
         required: true,
       },
       {
+        name: 'password',
+        kind: 'string',
+        format: UI_FORM_CONTROL_TYPE_PASSWORD,
+        placeholder: 'Leave blank to keep unchanged',
+      },
+      {
         name: 'status',
         kind: 'select',
         label: UI_USER_FIELD_LABEL_STATUS,
