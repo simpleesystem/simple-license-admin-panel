@@ -717,11 +717,26 @@ export const UI_TENANT_STATUS_LOADING_TITLE = 'Loading tenants' as const
 export const UI_TENANT_STATUS_LOADING_BODY = 'Fetching the latest tenant list.' as const
 export const UI_TENANT_STATUS_ERROR_TITLE = 'Unable to load tenants' as const
 export const UI_TENANT_STATUS_ERROR_BODY = 'Please try again after refreshing the page.' as const
+export const UI_TENANT_STATUS_ACTIVE = 'ACTIVE' as const
+export const UI_TENANT_STATUS_SUSPENDED = 'SUSPENDED' as const
+export const UI_TENANT_STATUS_LABEL_ACTIVE = 'Active' as const
+export const UI_TENANT_STATUS_LABEL_SUSPENDED = 'Suspended' as const
 export const UI_TENANT_TOAST_CREATE_SUCCESS = 'Tenant created successfully' as const
 export const UI_TENANT_TOAST_UPDATE_SUCCESS = 'Tenant updated successfully' as const
 export const UI_TENANT_TOAST_SUSPEND_SUCCESS = 'Tenant suspended successfully' as const
 export const UI_TENANT_TOAST_RESUME_SUCCESS = 'Tenant resumed successfully' as const
 export const UI_TENANT_TOAST_DELETE_SUCCESS = 'Tenant deleted successfully' as const
+
+export const UI_TENANT_CONFIRM_SUSPEND_TITLE = 'Suspend tenant?' as const
+export const UI_TENANT_CONFIRM_SUSPEND_BODY =
+  'Suspending a tenant will block all API access and license validations immediately. You can resume it later.' as const
+export const UI_TENANT_CONFIRM_SUSPEND_CONFIRM = 'Suspend tenant' as const
+export const UI_TENANT_CONFIRM_SUSPEND_CANCEL = 'Cancel' as const
+export const UI_TENANT_CONFIRM_RESUME_TITLE = 'Resume tenant?' as const
+export const UI_TENANT_CONFIRM_RESUME_BODY =
+  'Resuming this tenant will immediately restore API access and license validation services.' as const
+export const UI_TENANT_CONFIRM_RESUME_CONFIRM = 'Resume tenant' as const
+export const UI_TENANT_CONFIRM_RESUME_CANCEL = 'Cancel' as const
 
 export const UI_TENANT_QUOTA_FORM_ID = 'tenant-quota' as const
 export const UI_TENANT_QUOTA_FORM_TITLE = 'Tenant Quotas' as const
@@ -771,6 +786,21 @@ export const UI_PRODUCT_TOAST_DELETE_SUCCESS = 'Product deleted successfully' as
 export const UI_PRODUCT_TOAST_SUSPEND_SUCCESS = 'Product suspended successfully' as const
 export const UI_PRODUCT_TOAST_RESUME_SUCCESS = 'Product resumed successfully' as const
 
+export const UI_PRODUCT_CONFIRM_DELETE_TITLE = 'Delete product?' as const
+export const UI_PRODUCT_CONFIRM_DELETE_BODY =
+  'Deleting a product will remove it permanently. This action cannot be undone.' as const
+export const UI_PRODUCT_CONFIRM_DELETE_CONFIRM = 'Delete product' as const
+export const UI_PRODUCT_CONFIRM_DELETE_CANCEL = 'Cancel' as const
+export const UI_PRODUCT_CONFIRM_SUSPEND_TITLE = 'Suspend product?' as const
+export const UI_PRODUCT_CONFIRM_SUSPEND_BODY =
+  'Suspending a product will prevent new licenses from being created. Existing licenses will continue to work.' as const
+export const UI_PRODUCT_CONFIRM_SUSPEND_CONFIRM = 'Suspend product' as const
+export const UI_PRODUCT_CONFIRM_SUSPEND_CANCEL = 'Cancel' as const
+export const UI_PRODUCT_CONFIRM_RESUME_TITLE = 'Resume product?' as const
+export const UI_PRODUCT_CONFIRM_RESUME_BODY = 'Resuming this product will allow new licenses to be created.' as const
+export const UI_PRODUCT_CONFIRM_RESUME_CONFIRM = 'Resume product' as const
+export const UI_PRODUCT_CONFIRM_RESUME_CANCEL = 'Cancel' as const
+
 export const UI_PRODUCT_TIER_FORM_TITLE_CREATE = 'Create Product Tier' as const
 export const UI_PRODUCT_TIER_FORM_TITLE_UPDATE = 'Update Product Tier' as const
 export const UI_PRODUCT_TIER_FORM_ID_CREATE = 'create-product-tier' as const
@@ -802,6 +832,12 @@ export const UI_PRODUCT_TIER_STATUS_ERROR_BODY = 'Please try again after refresh
 export const UI_PRODUCT_TIER_TOAST_CREATE_SUCCESS = 'Tier created successfully' as const
 export const UI_PRODUCT_TIER_TOAST_UPDATE_SUCCESS = 'Tier updated successfully' as const
 export const UI_PRODUCT_TIER_TOAST_DELETE_SUCCESS = 'Tier deleted successfully' as const
+
+export const UI_PRODUCT_TIER_CONFIRM_DELETE_TITLE = 'Delete tier?' as const
+export const UI_PRODUCT_TIER_CONFIRM_DELETE_BODY =
+  'Deleting a tier will remove it permanently. This action cannot be undone.' as const
+export const UI_PRODUCT_TIER_CONFIRM_DELETE_CONFIRM = 'Delete tier' as const
+export const UI_PRODUCT_TIER_CONFIRM_DELETE_CANCEL = 'Cancel' as const
 
 export const UI_ENTITLEMENT_FORM_TITLE_CREATE = 'Create Entitlement' as const
 export const UI_ENTITLEMENT_FORM_TITLE_UPDATE = 'Update Entitlement' as const
@@ -838,6 +874,12 @@ export const UI_ENTITLEMENT_STATUS_ERROR_BODY = 'Please try again after refreshi
 export const UI_PRODUCT_ENTITLEMENT_TOAST_CREATE_SUCCESS = 'Entitlement created successfully' as const
 export const UI_PRODUCT_ENTITLEMENT_TOAST_UPDATE_SUCCESS = 'Entitlement updated successfully' as const
 export const UI_PRODUCT_ENTITLEMENT_TOAST_DELETE_SUCCESS = 'Entitlement deleted successfully' as const
+
+export const UI_PRODUCT_ENTITLEMENT_CONFIRM_DELETE_TITLE = 'Delete entitlement?' as const
+export const UI_PRODUCT_ENTITLEMENT_CONFIRM_DELETE_BODY =
+  'Deleting an entitlement will remove it permanently. This action cannot be undone.' as const
+export const UI_PRODUCT_ENTITLEMENT_CONFIRM_DELETE_CONFIRM = 'Delete entitlement' as const
+export const UI_PRODUCT_ENTITLEMENT_CONFIRM_DELETE_CANCEL = 'Cancel' as const
 
 export const UI_LICENSE_FORM_TITLE_CREATE = 'Create License' as const
 export const UI_LICENSE_FORM_TITLE_UPDATE = 'Update License' as const
@@ -887,6 +929,22 @@ export const UI_LICENSE_TOAST_DELETE_SUCCESS = 'License revoked successfully' as
 export const UI_LICENSE_TOAST_SUSPEND_SUCCESS = 'License suspended successfully' as const
 export const UI_LICENSE_TOAST_RESUME_SUCCESS = 'License resumed successfully' as const
 
+export const UI_LICENSE_CONFIRM_DELETE_TITLE = 'Revoke license?' as const
+export const UI_LICENSE_CONFIRM_DELETE_BODY =
+  'Revoking a license will permanently disable it. This action cannot be undone.' as const
+export const UI_LICENSE_CONFIRM_DELETE_CONFIRM = 'Revoke license' as const
+export const UI_LICENSE_CONFIRM_DELETE_CANCEL = 'Cancel' as const
+export const UI_LICENSE_CONFIRM_SUSPEND_TITLE = 'Suspend license?' as const
+export const UI_LICENSE_CONFIRM_SUSPEND_BODY =
+  'Suspending a license will temporarily block validations. You can resume it later.' as const
+export const UI_LICENSE_CONFIRM_SUSPEND_CONFIRM = 'Suspend license' as const
+export const UI_LICENSE_CONFIRM_SUSPEND_CANCEL = 'Cancel' as const
+export const UI_LICENSE_CONFIRM_RESUME_TITLE = 'Resume license?' as const
+export const UI_LICENSE_CONFIRM_RESUME_BODY =
+  'Resuming this license will immediately restore validation services.' as const
+export const UI_LICENSE_CONFIRM_RESUME_CONFIRM = 'Resume license' as const
+export const UI_LICENSE_CONFIRM_RESUME_CANCEL = 'Cancel' as const
+
 export const UI_LICENSE_FREEZE_BUTTON_OPEN = 'Freeze license' as const
 export const UI_LICENSE_FREEZE_BUTTON_SUBMIT = 'Freeze license' as const
 export const UI_LICENSE_FREEZE_BUTTON_PENDING = 'Freezing…' as const
@@ -935,8 +993,7 @@ export const UI_ARIA_LABEL_USER_ACTIONS = 'User actions'
 export const UI_TEST_ID_HEADER = `${UI_TEST_ID_PREFIX}header`
 export const UI_TEST_ID_HEADER_NAV = `${UI_TEST_ID_PREFIX}header-nav`
 export const UI_TEST_ID_HEADER_ACTIONS = `${UI_TEST_ID_PREFIX}header-actions`
-export const UI_HEADER_USER_GREETING = 'Signed in as'
-export const UI_HEADER_ACTION_CHANGE_PASSWORD = 'Change password / email'
+export const UI_HEADER_ACTION_CHANGE_PASSWORD = 'Account'
 export const UI_HEADER_ACTION_SIGN_OUT = 'Sign out'
 export const UI_HEADER_MODAL_TITLE_CHANGE_PASSWORD = 'Secure your account'
 export const UI_HEADER_SIGN_OUT_LABEL = 'Sign out'

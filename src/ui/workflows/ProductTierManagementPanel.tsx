@@ -9,10 +9,9 @@ import {
 } from '../../app/auth/permissions'
 import { useNotificationBus } from '../../notifications/busContext'
 import {
-  UI_BUTTON_VARIANT_GHOST,
   UI_BUTTON_VARIANT_PRIMARY,
+  UI_BUTTON_VARIANT_SECONDARY,
   UI_PRODUCT_TIER_BUTTON_CREATE,
-  UI_PRODUCT_TIER_BUTTON_EDIT,
   UI_PRODUCT_TIER_COLUMN_HEADER_ACTIONS,
   UI_PRODUCT_TIER_COLUMN_HEADER_CODE,
   UI_PRODUCT_TIER_COLUMN_HEADER_NAME,
@@ -22,12 +21,15 @@ import {
   UI_PRODUCT_TIER_EMPTY_STATE_MESSAGE,
   UI_PRODUCT_TIER_FORM_SUBMIT_CREATE,
   UI_PRODUCT_TIER_FORM_SUBMIT_UPDATE,
+  UI_TABLE_PAGINATION_LABEL,
+  UI_TABLE_PAGINATION_NEXT,
+  UI_TABLE_PAGINATION_PREVIOUS,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
 import { TableToolbar } from '../data/TableToolbar'
 import { Stack } from '../layout/Stack'
-import type { UiDataTableColumn } from '../types'
+import type { UiDataTableColumn, UiDataTableSortState, UiSortDirection } from '../types'
 import { notifyCrudError, notifyProductTierSuccess } from './notifications'
 import { ProductTierFormFlow } from './ProductTierFormFlow'
 import { ProductTierRowActions } from './ProductTierRowActions'
@@ -36,21 +38,31 @@ export type ProductTierListItem = Pick<ProductTier, 'id' | 'tierCode' | 'tierNam
   vendorId?: string | null
 }
 
-type ProductTierManagementExampleProps = {
+type ProductTierManagementPanelProps = {
   client: Client
   productId: string
   tiers: readonly ProductTierListItem[]
   currentUser?: User | null
   onRefresh?: () => void
+  page: number
+  totalPages: number
+  onPageChange: (page: number) => void
+  sortState?: UiDataTableSortState
+  onSortChange?: (columnId: string, direction: UiSortDirection) => void
 }
 
-export function ProductTierManagementExample({
+export function ProductTierManagementPanel({
   client,
   productId,
   tiers,
   currentUser,
   onRefresh,
-}: ProductTierManagementExampleProps) {
+  page,
+  totalPages,
+  onPageChange,
+  sortState,
+  onSortChange,
+}: ProductTierManagementPanelProps) {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingTier, setEditingTier] = useState<ProductTierListItem | null>(null)
   const notificationBus = useNotificationBus()
@@ -77,39 +89,56 @@ export function ProductTierManagementExample({
     />
   )
 
+  const pagination = (
+    <Stack direction="row" gap="small" justify="end" aria-label={UI_TABLE_PAGINATION_LABEL}>
+      <Button variant={UI_BUTTON_VARIANT_SECONDARY} onClick={() => onPageChange(page - 1)} disabled={page <= 1}>
+        {UI_TABLE_PAGINATION_PREVIOUS}
+      </Button>
+      <div className="d-flex align-items-center px-2">
+        <span>
+          {page} / {totalPages}
+        </span>
+      </div>
+      <Button
+        variant={UI_BUTTON_VARIANT_SECONDARY}
+        onClick={() => onPageChange(page + 1)}
+        disabled={page >= totalPages}
+      >
+        {UI_TABLE_PAGINATION_NEXT}
+      </Button>
+    </Stack>
+  )
+
   const columns: UiDataTableColumn<ProductTierListItem>[] = useMemo(
     () => [
       {
         id: UI_PRODUCT_TIER_COLUMN_ID_NAME,
         header: UI_PRODUCT_TIER_COLUMN_HEADER_NAME,
         cell: (row) => row.tierName ?? UI_VALUE_PLACEHOLDER,
+        sortable: true,
       },
       {
         id: UI_PRODUCT_TIER_COLUMN_ID_CODE,
         header: UI_PRODUCT_TIER_COLUMN_HEADER_CODE,
         cell: (row) => row.tierCode ?? UI_VALUE_PLACEHOLDER,
+        sortable: true,
       },
       {
         id: UI_PRODUCT_TIER_COLUMN_ID_ACTIONS,
         header: UI_PRODUCT_TIER_COLUMN_HEADER_ACTIONS,
         cell: (row) => {
           if (!canUpdateProductTier(currentUser, row)) {
-            return null
+            return UI_VALUE_PLACEHOLDER
           }
           return (
-            <Stack direction="row" gap="small">
-              <Button variant={UI_BUTTON_VARIANT_GHOST} onClick={() => setEditingTier(row)}>
-                {UI_PRODUCT_TIER_BUTTON_EDIT}
-              </Button>
-              <ProductTierRowActions
-                client={client}
-                tier={row}
-                onEdit={setEditingTier}
-                onCompleted={onRefresh}
-                currentUser={currentUser ?? null}
-                vendorId={row.vendorId ?? null}
-              />
-            </Stack>
+            <ProductTierRowActions
+              client={client}
+              tier={row}
+              onEdit={setEditingTier}
+              onCompleted={onRefresh}
+              currentUser={currentUser ?? null}
+              vendorId={row.vendorId ?? null}
+            />
           )
         },
       },
@@ -133,7 +162,10 @@ export function ProductTierManagementExample({
         columns={columns}
         rowKey={(row) => row.id}
         emptyState={UI_PRODUCT_TIER_EMPTY_STATE_MESSAGE}
+        sortState={sortState}
+        onSort={onSortChange}
         toolbar={toolbar}
+        footer={pagination}
       />
 
       {allowCreate ? (

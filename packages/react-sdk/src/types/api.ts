@@ -186,6 +186,12 @@ export interface ChangePasswordRequest {
   email?: string
 }
 
+export interface ChangePasswordResponse {
+  success: boolean
+  token: string
+  user: User
+}
+
 export interface GetCurrentUserResponse {
   user: User
 }
@@ -275,14 +281,10 @@ export interface UpdateUserRequest {
   vendor_id?: string | null
 }
 
-export interface ChangePasswordRequest {
-  current_password?: string
-  new_password?: string
-  email?: string
-}
-
 export interface CreateTenantRequest {
   name: string
+  status?: string
+  suspensionReason?: string
 }
 
 export interface UpdateTenantRequest {

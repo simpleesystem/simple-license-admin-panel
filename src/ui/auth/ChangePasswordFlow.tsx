@@ -128,7 +128,7 @@ type ChangePasswordFlowProps = {
 
 export function ChangePasswordFlow({ onSuccess }: ChangePasswordFlowProps) {
   const client = useApiClient()
-  const { currentUser, refreshCurrentUser, login } = useAuth()
+  const { currentUser, refreshCurrentUser, login, setSession } = useAuth()
   const dispatch = useAppStore((state) => state.dispatch)
   const logger = useLogger()
   const notificationBus = useNotificationBus()
@@ -161,8 +161,8 @@ export function ChangePasswordFlow({ onSuccess }: ChangePasswordFlowProps) {
         payload.email = trimmedEmail
       }
       const response = await mutation.mutateAsync(payload)
-      if (response.data?.token && response.data.user) {
-        setSession(response.data.token, response.data.user)
+      if (response.token && response.user) {
+        setSession(response.token, response.user)
       } else {
         await refreshCurrentUser()
       }

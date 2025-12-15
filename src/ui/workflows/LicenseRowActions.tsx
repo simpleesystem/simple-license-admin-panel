@@ -1,21 +1,39 @@
 import type { Client, LicenseStatus, User } from '@simple-license/react-sdk'
-import {
-  useResumeLicense,
-  useRevokeLicense,
-  useSuspendLicense,
-} from '@simple-license/react-sdk'
+import { useResumeLicense, useRevokeLicense, useSuspendLicense } from '@simple-license/react-sdk'
 import type { ReactNode } from 'react'
-
+import { useState } from 'react'
+import Button from 'react-bootstrap/Button'
+import { canDeleteLicense, canUpdateLicense } from '../../app/auth/permissions'
+import { useNotificationBus } from '../../notifications/busContext'
+import { adaptMutation } from '../actions/mutationAdapter'
 import {
+  UI_BUTTON_VARIANT_GHOST,
   UI_LICENSE_ACTION_DELETE,
+  UI_LICENSE_ACTION_EDIT,
   UI_LICENSE_ACTION_RESUME,
   UI_LICENSE_ACTION_SUSPEND,
+  UI_LICENSE_BUTTON_DELETE,
+  UI_LICENSE_BUTTON_RESUME,
+  UI_LICENSE_BUTTON_SUSPEND,
+  UI_LICENSE_CONFIRM_DELETE_BODY,
+  UI_LICENSE_CONFIRM_DELETE_CANCEL,
+  UI_LICENSE_CONFIRM_DELETE_CONFIRM,
+  UI_LICENSE_CONFIRM_DELETE_TITLE,
+  UI_LICENSE_CONFIRM_RESUME_BODY,
+  UI_LICENSE_CONFIRM_RESUME_CANCEL,
+  UI_LICENSE_CONFIRM_RESUME_CONFIRM,
+  UI_LICENSE_CONFIRM_RESUME_TITLE,
+  UI_LICENSE_CONFIRM_SUSPEND_BODY,
+  UI_LICENSE_CONFIRM_SUSPEND_CANCEL,
+  UI_LICENSE_CONFIRM_SUSPEND_CONFIRM,
+  UI_LICENSE_CONFIRM_SUSPEND_TITLE,
+  UI_LICENSE_STATUS_SUSPENDED,
 } from '../constants'
-import { ActionMenu } from '../data/ActionMenu'
+import { Stack } from '../layout/Stack'
+import { ModalDialog } from '../overlay/ModalDialog'
 import type { UiCommonProps } from '../types'
-import { createCrudActions } from '../actions/mutationActions'
-import { adaptMutation } from '../actions/mutationAdapter'
-import { canDeleteLicense, canUpdateLicense } from '../../app/auth/permissions'
+import { VisibilityGate } from '../utils/PermissionGate'
+import { notifyCrudError, notifyLicenseSuccess } from './notifications'
 
 type LicenseRowActionsProps = UiCommonProps & {
   client: Client
@@ -23,6 +41,7 @@ type LicenseRowActionsProps = UiCommonProps & {
   licenseStatus: LicenseStatus
   licenseVendorId?: string | null
   currentUser?: Pick<User, 'role' | 'vendorId'> | null
+  onEdit?: (licenseId: string) => void
   onCompleted?: () => void
   buttonLabel?: ReactNode
 }
@@ -33,6 +52,7 @@ export function LicenseRowActions({
   licenseStatus,
   licenseVendorId,
   currentUser,
+  onEdit,
   onCompleted,
   buttonLabel,
   ...rest
@@ -40,65 +60,157 @@ export function LicenseRowActions({
   const revokeMutation = adaptMutation(useRevokeLicense(client))
   const suspendMutation = adaptMutation(useSuspendLicense(client))
   const resumeMutation = adaptMutation(useResumeLicense(client))
+  const notificationBus = useNotificationBus()
+
+  const [showRevokeConfirm, setShowRevokeConfirm] = useState(false)
+  const [showSuspendConfirm, setShowSuspendConfirm] = useState(false)
+  const [showResumeConfirm, setShowResumeConfirm] = useState(false)
+
   const allowDelete = canDeleteLicense(currentUser ?? null)
   const allowUpdate = canUpdateLicense(currentUser ?? null, { vendorId: licenseVendorId })
+  const isSuspended = licenseStatus === UI_LICENSE_STATUS_SUSPENDED
 
   if (!allowDelete && !allowUpdate) {
     return null
   }
 
-  const actions = createCrudActions<string>('License', {
-    ...(allowDelete && {
-      delete: {
-        label: UI_LICENSE_ACTION_DELETE,
-        mutation: {
-          mutateAsync: async (payload) => {
-            const result = await revokeMutation.mutateAsync(payload)
-            onCompleted?.()
-            return result
-          },
-          isPending: revokeMutation.isPending,
-        },
-        buildPayload: () => licenseId,
-      },
-    }),
-    ...(allowUpdate && {
-      suspend: {
-        label: UI_LICENSE_ACTION_SUSPEND,
-        mutation: {
-          mutateAsync: async (payload) => {
-            const result = await suspendMutation.mutateAsync(payload)
-            onCompleted?.()
-            return result
-          },
-          isPending: suspendMutation.isPending,
-        },
-        buildPayload: () => licenseId,
-        disabled: licenseStatus === 'SUSPENDED',
-      },
-      resume: {
-        label: UI_LICENSE_ACTION_RESUME,
-        mutation: {
-          mutateAsync: async (payload) => {
-            const result = await resumeMutation.mutateAsync(payload)
-            onCompleted?.()
-            return result
-          },
-          isPending: resumeMutation.isPending,
-        },
-        buildPayload: () => licenseId,
-        disabled: licenseStatus !== 'SUSPENDED',
-      },
-    }),
-  })
+  const handleRevoke = async () => {
+    try {
+      await revokeMutation.mutateAsync(licenseId)
+      notifyLicenseSuccess(notificationBus, 'delete')
+      onCompleted?.()
+    } catch (error) {
+      notifyCrudError(notificationBus)
+      throw error
+    } finally {
+      setShowRevokeConfirm(false)
+    }
+  }
+
+  const handleSuspend = async () => {
+    try {
+      await suspendMutation.mutateAsync(licenseId)
+      notifyLicenseSuccess(notificationBus, 'suspend')
+      onCompleted?.()
+    } catch (error) {
+      notifyCrudError(notificationBus)
+      throw error
+    } finally {
+      setShowSuspendConfirm(false)
+    }
+  }
+
+  const handleResume = async () => {
+    try {
+      await resumeMutation.mutateAsync(licenseId)
+      notifyLicenseSuccess(notificationBus, 'resume')
+      onCompleted?.()
+    } catch (error) {
+      notifyCrudError(notificationBus)
+      throw error
+    } finally {
+      setShowResumeConfirm(false)
+    }
+  }
 
   return (
-    <ActionMenu
-      {...rest}
-      items={actions}
-      buttonLabel={buttonLabel}
-    />
+    <VisibilityGate
+      ability={rest.ability}
+      permissionKey={rest.permissionKey}
+      permissionFallback={rest.permissionFallback}
+    >
+      <Stack direction="row" gap="small" {...rest}>
+        {allowUpdate && onEdit ? (
+          <Button
+            variant={UI_BUTTON_VARIANT_GHOST}
+            onClick={() => onEdit(licenseId)}
+            aria-label={UI_LICENSE_ACTION_EDIT}
+          >
+            {UI_LICENSE_ACTION_EDIT}
+          </Button>
+        ) : null}
+
+        {allowUpdate ? (
+          isSuspended ? (
+            <Button
+              variant={UI_BUTTON_VARIANT_GHOST}
+              onClick={() => setShowResumeConfirm(true)}
+              disabled={resumeMutation.isPending}
+              aria-label={UI_LICENSE_ACTION_RESUME}
+            >
+              {UI_LICENSE_BUTTON_RESUME}
+            </Button>
+          ) : (
+            <Button
+              variant={UI_BUTTON_VARIANT_GHOST}
+              onClick={() => setShowSuspendConfirm(true)}
+              disabled={suspendMutation.isPending}
+              aria-label={UI_LICENSE_ACTION_SUSPEND}
+            >
+              {UI_LICENSE_BUTTON_SUSPEND}
+            </Button>
+          )
+        ) : null}
+
+        {allowDelete ? (
+          <Button
+            variant={UI_BUTTON_VARIANT_GHOST}
+            onClick={() => setShowRevokeConfirm(true)}
+            disabled={revokeMutation.isPending}
+            aria-label={UI_LICENSE_ACTION_DELETE}
+          >
+            {UI_LICENSE_BUTTON_DELETE}
+          </Button>
+        ) : null}
+
+        <ModalDialog
+          show={showSuspendConfirm}
+          onClose={() => setShowSuspendConfirm(false)}
+          title={UI_LICENSE_CONFIRM_SUSPEND_TITLE}
+          body={UI_LICENSE_CONFIRM_SUSPEND_BODY}
+          primaryAction={{
+            label: UI_LICENSE_CONFIRM_SUSPEND_CONFIRM,
+            onClick: handleSuspend,
+            disabled: suspendMutation.isPending,
+          }}
+          secondaryAction={{
+            label: UI_LICENSE_CONFIRM_SUSPEND_CANCEL,
+            onClick: () => setShowSuspendConfirm(false),
+          }}
+        />
+
+        <ModalDialog
+          show={showResumeConfirm}
+          onClose={() => setShowResumeConfirm(false)}
+          title={UI_LICENSE_CONFIRM_RESUME_TITLE}
+          body={UI_LICENSE_CONFIRM_RESUME_BODY}
+          primaryAction={{
+            label: UI_LICENSE_CONFIRM_RESUME_CONFIRM,
+            onClick: handleResume,
+            disabled: resumeMutation.isPending,
+          }}
+          secondaryAction={{
+            label: UI_LICENSE_CONFIRM_RESUME_CANCEL,
+            onClick: () => setShowResumeConfirm(false),
+          }}
+        />
+
+        <ModalDialog
+          show={showRevokeConfirm}
+          onClose={() => setShowRevokeConfirm(false)}
+          title={UI_LICENSE_CONFIRM_DELETE_TITLE}
+          body={UI_LICENSE_CONFIRM_DELETE_BODY}
+          primaryAction={{
+            label: UI_LICENSE_CONFIRM_DELETE_CONFIRM,
+            onClick: handleRevoke,
+            disabled: revokeMutation.isPending,
+          }}
+          secondaryAction={{
+            label: UI_LICENSE_CONFIRM_DELETE_CANCEL,
+            onClick: () => setShowRevokeConfirm(false),
+          }}
+        />
+      </Stack>
+    </VisibilityGate>
   )
 }
-
-

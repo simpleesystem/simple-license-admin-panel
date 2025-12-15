@@ -5,6 +5,7 @@ import { type UseQueryOptions, useMutation, useQuery, useQueryClient } from '@ta
 import type { Client } from '../client'
 import type {
   ChangePasswordRequest,
+  ChangePasswordResponse,
   CreateUserRequest,
   CreateUserResponse,
   GetCurrentUserResponse,
@@ -100,7 +101,7 @@ export function useDeleteUser(client: Client) {
 }
 
 export function useChangePassword(client: Client) {
-  return useMutation<{ success: boolean }, Error, ChangePasswordRequest>({
+  return useMutation<ChangePasswordResponse, Error, ChangePasswordRequest>({
     mutationFn: async (request) => {
       return await client.changePassword(request)
     },

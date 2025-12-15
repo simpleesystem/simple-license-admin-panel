@@ -9,7 +9,6 @@ import {
   UI_HEADER_ACTION_CHANGE_PASSWORD,
   UI_HEADER_ACTION_SIGN_OUT,
   UI_HEADER_MODAL_TITLE_CHANGE_PASSWORD,
-  UI_HEADER_USER_GREETING,
   UI_TEST_ID_HEADER,
   UI_TEST_ID_HEADER_ACTIONS,
   UI_TEST_ID_HEADER_NAV,
@@ -121,10 +120,7 @@ type UserActionsProps = {
 const renderUserActions = ({ userLabel, showChangePasswordAction, onChangePassword, onLogout }: UserActionsProps) => {
   return (
     <div className={UI_CLASS_HEADER_ACTIONS} data-testid={UI_TEST_ID_HEADER_ACTIONS}>
-      <div className="text-end me-2">
-        <small className="text-muted">{UI_HEADER_USER_GREETING}</small>
-        <div>{userLabel}</div>
-      </div>
+      <div className="text-muted me-2">{userLabel}</div>
       {showChangePasswordAction ? (
         <Button variant="outline-secondary" size="sm" onClick={onChangePassword}>
           {UI_HEADER_ACTION_CHANGE_PASSWORD}

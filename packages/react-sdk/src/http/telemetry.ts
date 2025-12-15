@@ -41,8 +41,8 @@ export const getHeaderString = (
   }
   const lower = key.toLowerCase()
   return (
-    toStringOrUndefined(headers[lower] as unknown) ??
-    toStringOrUndefined(headers[key] as unknown)
+    toStringOrUndefined(headers[lower] as unknown as MaybeHeaderValue) ??
+    toStringOrUndefined(headers[key] as unknown as MaybeHeaderValue)
   )
 }
 

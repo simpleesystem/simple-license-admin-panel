@@ -2,7 +2,6 @@ import type { Client, LicenseStatus, User } from '@simple-license/react-sdk'
 import { useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
-
 import {
   canCreateLicense,
   canUpdateLicense,
@@ -10,12 +9,10 @@ import {
   isLicenseOwnedByUser,
   isVendorScopedUser,
 } from '../../app/auth/permissions'
-import { useNotificationBus } from '../../notifications/busContext'
 import {
-  UI_BUTTON_VARIANT_GHOST,
   UI_BUTTON_VARIANT_PRIMARY,
+  UI_BUTTON_VARIANT_SECONDARY,
   UI_LICENSE_BUTTON_CREATE,
-  UI_LICENSE_BUTTON_EDIT,
   UI_LICENSE_COLUMN_HEADER_ACTIONS,
   UI_LICENSE_COLUMN_HEADER_CUSTOMER,
   UI_LICENSE_COLUMN_HEADER_PRODUCT,
@@ -32,6 +29,9 @@ import {
   UI_LICENSE_STATUS_ACTIVE,
   UI_LICENSE_STATUS_REVOKED,
   UI_LICENSE_STATUS_SUSPENDED,
+  UI_TABLE_PAGINATION_LABEL,
+  UI_TABLE_PAGINATION_NEXT,
+  UI_TABLE_PAGINATION_PREVIOUS,
   UI_TABLE_SEARCH_PLACEHOLDER,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
@@ -39,61 +39,60 @@ import { DataTable } from '../data/DataTable'
 import { TableFilter } from '../data/TableFilter'
 import { TableToolbar } from '../data/TableToolbar'
 import { Stack } from '../layout/Stack'
-import type { UiDataTableColumn, UiSelectOption } from '../types'
+import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
 import { LicenseFormFlow } from './LicenseFormFlow'
 import { LicenseRowActions } from './LicenseRowActions'
-import { notifyCrudError, notifyLicenseSuccess } from './notifications'
 
 export type LicenseListItem = {
   id: string
-  customerEmail?: string | null
-  productSlug?: string | null
-  tierCode?: string | null
-  status?: string | null
+  productSlug: string
+  tierCode: string
+  customerEmail: string
+  status: LicenseStatus
   vendorId?: string | null
 }
 
-type LicensesPanelProps = {
+type LicenseManagementPanelProps = {
   client: Client
   licenses: readonly LicenseListItem[]
-  currentUser?: User | null
+  currentUser?: Pick<User, 'role' | 'vendorId'> | null
+  tierOptions: readonly UiSelectOption[]
+  productOptions: readonly UiSelectOption[]
   onRefresh?: () => void
+  page: number
+  totalPages: number
+  onPageChange: (page: number) => void
   searchTerm?: string
   onSearchChange?: (term: string) => void
   statusFilter?: string
   onStatusFilterChange?: (status: string) => void
+  sortState?: UiDataTableSortState
+  onSortChange?: (columnId: string, direction: UiSortDirection) => void
 }
 
-const VALID_LICENSE_STATUSES: readonly LicenseStatus[] = [
-  UI_LICENSE_STATUS_ACTIVE,
-  UI_LICENSE_STATUS_SUSPENDED,
-  UI_LICENSE_STATUS_REVOKED,
-]
-
-const normalizeLicenseStatus = (status: unknown): LicenseStatus => {
-  if (VALID_LICENSE_STATUSES.includes(status as LicenseStatus)) {
-    return status as LicenseStatus
-  }
-  return UI_LICENSE_STATUS_ACTIVE
-}
-
-export function LicensesPanel({
+export function LicenseManagementPanel({
   client,
   licenses,
   currentUser,
+  tierOptions,
+  productOptions,
   onRefresh,
+  page,
+  totalPages,
+  onPageChange,
   searchTerm = '',
   onSearchChange,
   statusFilter,
   onStatusFilterChange,
-}: LicensesPanelProps) {
+  sortState,
+  onSortChange,
+}: LicenseManagementPanelProps) {
+  const [editingLicense, setEditingLicense] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
-  const [editingLicense, setEditingLicense] = useState<LicenseListItem | null>(null)
-  const notificationBus = useNotificationBus()
 
   const isVendorScoped = isVendorScopedUser(currentUser)
   const visibleLicenses = useMemo(
-    () => (isVendorScoped ? licenses.filter((license) => isLicenseOwnedByUser(currentUser, { vendorId: license.vendorId })) : licenses),
+    () => (isVendorScoped ? licenses.filter((license) => isLicenseOwnedByUser(currentUser, license)) : licenses),
     [currentUser, isVendorScoped, licenses]
   )
   const allowCreate = canCreateLicense(currentUser)
@@ -101,9 +100,9 @@ export function LicensesPanel({
 
   const statusOptions: UiSelectOption[] = [
     { value: '', label: 'Filter by Status' },
-    { value: UI_LICENSE_STATUS_ACTIVE, label: 'Active' },
-    { value: UI_LICENSE_STATUS_SUSPENDED, label: 'Suspended' },
-    { value: UI_LICENSE_STATUS_REVOKED, label: 'Revoked' },
+    { value: 'ACTIVE', label: UI_LICENSE_STATUS_ACTIVE },
+    { value: 'SUSPENDED', label: UI_LICENSE_STATUS_SUSPENDED },
+    { value: 'REVOKED', label: UI_LICENSE_STATUS_REVOKED },
   ]
 
   const toolbar = (
@@ -139,63 +138,82 @@ export function LicensesPanel({
     />
   )
 
+  const pagination = (
+    <Stack direction="row" gap="small" justify="end" aria-label={UI_TABLE_PAGINATION_LABEL}>
+      <Button variant={UI_BUTTON_VARIANT_SECONDARY} onClick={() => onPageChange(page - 1)} disabled={page <= 1}>
+        {UI_TABLE_PAGINATION_PREVIOUS}
+      </Button>
+      <div className="d-flex align-items-center px-2">
+        <span>
+          {page} / {totalPages}
+        </span>
+      </div>
+      <Button
+        variant={UI_BUTTON_VARIANT_SECONDARY}
+        onClick={() => onPageChange(page + 1)}
+        disabled={page >= totalPages}
+      >
+        {UI_TABLE_PAGINATION_NEXT}
+      </Button>
+    </Stack>
+  )
+
   const columns: UiDataTableColumn<LicenseListItem>[] = useMemo(
     () => [
       {
         id: UI_LICENSE_COLUMN_ID_CUSTOMER,
         header: UI_LICENSE_COLUMN_HEADER_CUSTOMER,
-        cell: (row) => row.customerEmail ?? UI_VALUE_PLACEHOLDER,
+        cell: (row) => row.customerEmail,
+        sortable: true,
       },
       {
         id: UI_LICENSE_COLUMN_ID_PRODUCT,
         header: UI_LICENSE_COLUMN_HEADER_PRODUCT,
-        cell: (row) => row.productSlug ?? UI_VALUE_PLACEHOLDER,
+        cell: (row) => row.productSlug,
+        sortable: true,
       },
       {
         id: UI_LICENSE_COLUMN_ID_TIER,
         header: UI_LICENSE_COLUMN_HEADER_TIER,
-        cell: (row) => row.tierCode ?? UI_VALUE_PLACEHOLDER,
+        cell: (row) => row.tierCode,
+        sortable: true,
       },
       {
         id: UI_LICENSE_COLUMN_ID_STATUS,
         header: UI_LICENSE_COLUMN_HEADER_STATUS,
         cell: (row) => row.status ?? UI_VALUE_PLACEHOLDER,
+        sortable: true,
       },
       {
         id: UI_LICENSE_COLUMN_ID_ACTIONS,
         header: UI_LICENSE_COLUMN_HEADER_ACTIONS,
-        cell: (row) => (
-          <Stack direction="row" gap="small">
-            {canUpdateLicense(currentUser, { vendorId: row.vendorId }) ? (
-              <Button variant={UI_BUTTON_VARIANT_GHOST} onClick={() => setEditingLicense(row)}>
-                {UI_LICENSE_BUTTON_EDIT}
-              </Button>
-            ) : null}
+        cell: (row) => {
+          if (!canUpdateLicense(currentUser, row)) {
+            return UI_VALUE_PLACEHOLDER
+          }
+          return (
             <LicenseRowActions
               client={client}
               licenseId={row.id}
+              licenseStatus={row.status}
               licenseVendorId={row.vendorId}
-              licenseStatus={normalizeLicenseStatus(row.status)}
               currentUser={currentUser}
-              onCompleted={() => {
-                onRefresh?.()
-              }}
+              onEdit={setEditingLicense}
+              onCompleted={onRefresh}
             />
-          </Stack>
-        ),
+          )
+        },
       },
     ],
     [client, currentUser, onRefresh]
   )
 
-  const refreshWith = (action: 'create' | 'update' | 'delete' | 'suspend' | 'resume') => {
-    onRefresh?.()
-    notifyLicenseSuccess(notificationBus, action)
-  }
-
-  const handleMutationError = () => {
-    notifyCrudError(notificationBus)
-  }
+  const editingLicenseData = useMemo(() => {
+    if (!editingLicense) {
+      return null
+    }
+    return licenses.find((l) => l.id === editingLicense)
+  }, [editingLicense, licenses])
 
   return (
     <Stack direction="column" gap="medium">
@@ -204,7 +222,10 @@ export function LicensesPanel({
         columns={columns}
         rowKey={(row) => row.id}
         emptyState={UI_LICENSE_EMPTY_STATE_MESSAGE}
+        sortState={sortState}
+        onSort={onSortChange}
         toolbar={toolbar}
+        footer={pagination}
       />
 
       {allowCreate ? (
@@ -214,32 +235,30 @@ export function LicensesPanel({
           show={showCreate}
           onClose={() => setShowCreate(false)}
           submitLabel={UI_LICENSE_FORM_SUBMIT_CREATE}
+          tierOptions={tierOptions}
+          productOptions={productOptions}
+          defaultValues={{
+            product_slug: productOptions[0]?.value ?? '',
+            tier_code: tierOptions[0]?.value ?? '',
+          }}
           onCompleted={onRefresh}
-          onSuccess={() => refreshWith('create')}
-          onError={handleMutationError}
         />
       ) : null}
 
-      {editingLicense ? (
+      {editingLicenseData ? (
         <LicenseFormFlow
           client={client}
           mode="update"
           show={Boolean(editingLicense)}
           onClose={() => setEditingLicense(null)}
           submitLabel={UI_LICENSE_FORM_SUBMIT_UPDATE}
-          licenseId={editingLicense.id}
-          licenseVendorId={editingLicense.vendorId}
-          defaultValues={{
-            customer_email: editingLicense.customerEmail ?? undefined,
-            tier_code: editingLicense.tierCode ?? undefined,
-          }}
+          licenseId={editingLicenseData.id}
+          licenseVendorId={editingLicenseData.vendorId}
+          tierOptions={tierOptions}
+          defaultValues={{ tier_code: tierOptions[0]?.value }}
           onCompleted={onRefresh}
-          onSuccess={() => refreshWith('update')}
-          onError={handleMutationError}
         />
       ) : null}
     </Stack>
   )
 }
-
-

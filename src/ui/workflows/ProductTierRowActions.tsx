@@ -1,18 +1,24 @@
 import type { Client, ProductTier, User } from '@simple-license/react-sdk'
 import { useDeleteProductTier } from '@simple-license/react-sdk'
-import type { ReactNode } from 'react'
+import { useState } from 'react'
+import Button from 'react-bootstrap/Button'
 import { canDeleteProductTier, canUpdateProductTier } from '../../app/auth/permissions'
 import { useNotificationBus } from '../../notifications/busContext'
-import { createCrudActions } from '../actions/mutationActions'
 import { adaptMutation } from '../actions/mutationAdapter'
 import {
-  UI_ENTITY_PRODUCT_TIER,
+  UI_BUTTON_VARIANT_GHOST,
   UI_PRODUCT_TIER_ACTION_DELETE,
   UI_PRODUCT_TIER_ACTION_EDIT,
   UI_PRODUCT_TIER_BUTTON_DELETE,
+  UI_PRODUCT_TIER_CONFIRM_DELETE_BODY,
+  UI_PRODUCT_TIER_CONFIRM_DELETE_CANCEL,
+  UI_PRODUCT_TIER_CONFIRM_DELETE_CONFIRM,
+  UI_PRODUCT_TIER_CONFIRM_DELETE_TITLE,
 } from '../constants'
-import { ActionMenu } from '../data/ActionMenu'
+import { Stack } from '../layout/Stack'
+import { ModalDialog } from '../overlay/ModalDialog'
 import type { UiCommonProps } from '../types'
+import { VisibilityGate } from '../utils/PermissionGate'
 import { notifyCrudError, notifyProductTierSuccess } from './notifications'
 
 type ProductTierSummary = Pick<ProductTier, 'id' | 'tierCode' | 'tierName'>
@@ -22,7 +28,6 @@ type ProductTierRowActionsProps = UiCommonProps & {
   tier: ProductTierSummary
   onEdit: (tier: ProductTierSummary) => void
   onCompleted?: () => void
-  buttonLabel?: ReactNode
   currentUser?: User | null
   vendorId?: string | null
 }
@@ -32,13 +37,14 @@ export function ProductTierRowActions({
   tier,
   onEdit,
   onCompleted,
-  buttonLabel,
   currentUser,
   vendorId,
   ...rest
 }: ProductTierRowActionsProps) {
   const deleteMutation = adaptMutation(useDeleteProductTier(client))
   const notificationBus = useNotificationBus()
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
   const tierContext = { vendorId: vendorId ?? (tier as { vendorId?: string | null }).vendorId }
   const allowUpdate = canUpdateProductTier(currentUser, tierContext)
   const allowDelete = canDeleteProductTier(currentUser)
@@ -47,41 +53,63 @@ export function ProductTierRowActions({
     return null
   }
 
-  const actions = createCrudActions<string, unknown, ProductTierSummary>(UI_ENTITY_PRODUCT_TIER, {
-    update: allowUpdate
-      ? {
-          label: UI_PRODUCT_TIER_ACTION_EDIT,
-          buildPayload: () => tier,
-          mutation: {
-            mutateAsync: async () => tier,
-            isPending: false,
-          },
-          onSuccess: () => onEdit(tier),
-        }
-      : undefined,
-    delete: allowDelete
-      ? {
-          label: UI_PRODUCT_TIER_ACTION_DELETE,
-          buildPayload: () => tier.id,
-          mutation: {
-            mutateAsync: async (payload) => {
-              try {
-                const result = await deleteMutation.mutateAsync(payload)
-                onCompleted?.()
-                notifyProductTierSuccess(notificationBus, 'delete')
-                return result
-              } catch (error) {
-                notifyCrudError(notificationBus)
-                throw error
-              }
-            },
-            isPending: deleteMutation.isPending,
-          },
-        }
-      : undefined,
-  })
+  const handleDelete = async () => {
+    try {
+      await deleteMutation.mutateAsync(tier.id)
+      notifyProductTierSuccess(notificationBus, 'delete')
+      onCompleted?.()
+    } catch (error) {
+      notifyCrudError(notificationBus)
+      throw error
+    } finally {
+      setShowDeleteConfirm(false)
+    }
+  }
 
-  const fallbackLabel = allowDelete ? UI_PRODUCT_TIER_BUTTON_DELETE : UI_PRODUCT_TIER_ACTION_EDIT
+  return (
+    <VisibilityGate
+      ability={rest.ability}
+      permissionKey={rest.permissionKey}
+      permissionFallback={rest.permissionFallback}
+    >
+      <Stack direction="row" gap="small" {...rest}>
+        {allowUpdate ? (
+          <Button
+            variant={UI_BUTTON_VARIANT_GHOST}
+            onClick={() => onEdit(tier)}
+            aria-label={UI_PRODUCT_TIER_ACTION_EDIT}
+          >
+            {UI_PRODUCT_TIER_ACTION_EDIT}
+          </Button>
+        ) : null}
 
-  return <ActionMenu {...rest} items={actions} buttonLabel={buttonLabel ?? fallbackLabel} />
+        {allowDelete ? (
+          <Button
+            variant={UI_BUTTON_VARIANT_GHOST}
+            onClick={() => setShowDeleteConfirm(true)}
+            disabled={deleteMutation.isPending}
+            aria-label={UI_PRODUCT_TIER_ACTION_DELETE}
+          >
+            {UI_PRODUCT_TIER_BUTTON_DELETE}
+          </Button>
+        ) : null}
+
+        <ModalDialog
+          show={showDeleteConfirm}
+          onClose={() => setShowDeleteConfirm(false)}
+          title={UI_PRODUCT_TIER_CONFIRM_DELETE_TITLE}
+          body={UI_PRODUCT_TIER_CONFIRM_DELETE_BODY}
+          primaryAction={{
+            label: UI_PRODUCT_TIER_CONFIRM_DELETE_CONFIRM,
+            onClick: handleDelete,
+            disabled: deleteMutation.isPending,
+          }}
+          secondaryAction={{
+            label: UI_PRODUCT_TIER_CONFIRM_DELETE_CANCEL,
+            onClick: () => setShowDeleteConfirm(false),
+          }}
+        />
+      </Stack>
+    </VisibilityGate>
+  )
 }

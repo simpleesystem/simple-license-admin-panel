@@ -1,19 +1,7 @@
 import type { User } from '@simple-license/react-sdk'
 import {
-  ROUTE_PATH_ANALYTICS,
-  ROUTE_PATH_AUDIT,
-  ROUTE_PATH_CHANGE_PASSWORD,
-  ROUTE_PATH_DASHBOARD,
-  ROUTE_PATH_HEALTH,
-  ROUTE_PATH_LICENSES,
-  ROUTE_PATH_PRODUCTS,
-  ROUTE_PATH_TENANTS,
-  ROUTE_PATH_USERS,
-} from '../constants'
-import {
   UI_NAV_ID_ANALYTICS,
   UI_NAV_ID_AUDIT,
-  UI_NAV_ID_CHANGE_PASSWORD,
   UI_NAV_ID_DASHBOARD,
   UI_NAV_ID_HEALTH,
   UI_NAV_ID_LICENSES,
@@ -22,7 +10,6 @@ import {
   UI_NAV_ID_USERS,
   UI_NAV_LABEL_ANALYTICS,
   UI_NAV_LABEL_AUDIT,
-  UI_NAV_LABEL_CHANGE_PASSWORD,
   UI_NAV_LABEL_DASHBOARD,
   UI_NAV_LABEL_HEALTH,
   UI_NAV_LABEL_LICENSES,
@@ -32,6 +19,16 @@ import {
 } from '../../ui/navigation/navConstants'
 import type { PermissionKey, Permissions } from '../auth/permissions'
 import { isSystemAdminUser, isVendorScopedUser } from '../auth/userUtils'
+import {
+  ROUTE_PATH_ANALYTICS,
+  ROUTE_PATH_AUDIT,
+  ROUTE_PATH_DASHBOARD,
+  ROUTE_PATH_HEALTH,
+  ROUTE_PATH_LICENSES,
+  ROUTE_PATH_PRODUCTS,
+  ROUTE_PATH_TENANTS,
+  ROUTE_PATH_USERS,
+} from '../constants'
 
 type NavMatchStrategy = 'exact' | 'startsWith'
 
@@ -51,12 +48,6 @@ const NAV_DEFINITIONS: readonly NavDefinition[] = [
     href: ROUTE_PATH_DASHBOARD,
     permission: 'viewDashboard',
     matchStrategy: 'startsWith',
-  },
-  {
-    id: UI_NAV_ID_CHANGE_PASSWORD,
-    label: UI_NAV_LABEL_CHANGE_PASSWORD,
-    href: ROUTE_PATH_CHANGE_PASSWORD,
-    predicate: (context) => context.permissions.changePassword,
   },
   {
     id: UI_NAV_ID_LICENSES,

@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 import type { FieldValues } from 'react-hook-form'
 import type { MutationAdapter } from '../actions/mutationActions'
 import { adaptMutation } from '../actions/mutationAdapter'
-import { UI_TENANT_FORM_SUBMIT_CREATE, UI_TENANT_FORM_SUBMIT_UPDATE } from '../constants'
+import { UI_TENANT_FORM_SUBMIT_CREATE, UI_TENANT_FORM_SUBMIT_UPDATE, UI_TENANT_STATUS_ACTIVE } from '../constants'
 import { createTenantBlueprint } from '../formBuilder/factories'
 import { FormModalWithMutation } from '../formBuilder/mutationBridge'
 
@@ -35,6 +35,7 @@ export type TenantFormFlowProps = TenantFormCreateProps | TenantFormUpdateProps
 
 const baseCreateDefaults: CreateTenantRequest = {
   name: '',
+  status: UI_TENANT_STATUS_ACTIVE,
 }
 
 const baseUpdateDefaults: UpdateTenantRequest = {

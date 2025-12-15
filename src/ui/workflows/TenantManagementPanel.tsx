@@ -11,13 +11,15 @@ import {
 } from '../../app/auth/permissions'
 import { useNotificationBus } from '../../notifications/busContext'
 import {
-  UI_BUTTON_VARIANT_GHOST,
   UI_BUTTON_VARIANT_PRIMARY,
+  UI_BUTTON_VARIANT_SECONDARY,
   UI_DATE_FORMAT_LOCALE,
   UI_DATE_FORMAT_OPTIONS,
+  UI_TABLE_PAGINATION_LABEL,
+  UI_TABLE_PAGINATION_NEXT,
+  UI_TABLE_PAGINATION_PREVIOUS,
   UI_TABLE_SEARCH_PLACEHOLDER,
   UI_TENANT_BUTTON_CREATE,
-  UI_TENANT_BUTTON_EDIT,
   UI_TENANT_COLUMN_HEADER_ACTIONS,
   UI_TENANT_COLUMN_HEADER_CREATED,
   UI_TENANT_COLUMN_HEADER_NAME,
@@ -29,28 +31,37 @@ import {
   UI_TENANT_EMPTY_STATE_MESSAGE,
   UI_TENANT_FORM_SUBMIT_CREATE,
   UI_TENANT_FORM_SUBMIT_UPDATE,
+  UI_TENANT_STATUS_ACTIVE,
+  UI_TENANT_STATUS_LABEL_ACTIVE,
+  UI_TENANT_STATUS_LABEL_SUSPENDED,
+  UI_TENANT_STATUS_SUSPENDED,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
 import { TableFilter } from '../data/TableFilter'
 import { TableToolbar } from '../data/TableToolbar'
 import { Stack } from '../layout/Stack'
-import type { UiDataTableColumn, UiSelectOption } from '../types'
+import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
 import { notifyCrudError, notifyTenantSuccess } from './notifications'
 import { TenantFormFlow } from './TenantFormFlow'
 import { TenantRowActions } from './TenantRowActions'
 
 export type TenantListItem = Pick<Tenant, 'id' | 'name' | 'status' | 'createdAt' | 'vendorId'>
 
-type TenantManagementExampleProps = {
+type TenantManagementPanelProps = {
   client: Client
   tenants: readonly TenantListItem[]
   currentUser?: User | null
   onRefresh?: () => void
+  page: number
+  totalPages: number
+  onPageChange: (page: number) => void
   searchTerm?: string
   onSearchChange?: (term: string) => void
   statusFilter?: string
   onStatusFilterChange?: (status: string) => void
+  sortState?: UiDataTableSortState
+  onSortChange?: (columnId: string, direction: UiSortDirection) => void
 }
 
 export const formatTenantCreatedAt = (createdAt: TenantListItem['createdAt'] | undefined): string => {
@@ -64,16 +75,21 @@ export const formatTenantCreatedAt = (createdAt: TenantListItem['createdAt'] | u
   return new Intl.DateTimeFormat(UI_DATE_FORMAT_LOCALE, UI_DATE_FORMAT_OPTIONS).format(parsedDate)
 }
 
-export function TenantManagementExample({
+export function TenantManagementPanel({
   client,
   tenants,
   currentUser,
   onRefresh,
+  page,
+  totalPages,
+  onPageChange,
   searchTerm = '',
   onSearchChange,
   statusFilter,
   onStatusFilterChange,
-}: TenantManagementExampleProps) {
+  sortState,
+  onSortChange,
+}: TenantManagementPanelProps) {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingTenant, setEditingTenant] = useState<TenantListItem | null>(null)
   const notificationBus = useNotificationBus()
@@ -83,11 +99,12 @@ export function TenantManagementExample({
     [currentUser, isVendorScoped, tenants]
   )
   const allowCreate = canCreateTenant(currentUser)
+  const canView = canViewTenants(currentUser)
 
   const statusOptions: UiSelectOption[] = [
     { value: '', label: 'Filter by Status' },
-    { value: 'ACTIVE', label: 'Active' },
-    { value: 'SUSPENDED', label: 'Suspended' },
+    { value: UI_TENANT_STATUS_ACTIVE, label: UI_TENANT_STATUS_LABEL_ACTIVE },
+    { value: UI_TENANT_STATUS_SUSPENDED, label: UI_TENANT_STATUS_LABEL_SUSPENDED },
   ]
 
   const toolbar = (
@@ -123,51 +140,67 @@ export function TenantManagementExample({
     />
   )
 
+  const pagination = (
+    <Stack direction="row" gap="small" justify="end" aria-label={UI_TABLE_PAGINATION_LABEL}>
+      <Button variant={UI_BUTTON_VARIANT_SECONDARY} onClick={() => onPageChange(page - 1)} disabled={page <= 1}>
+        {UI_TABLE_PAGINATION_PREVIOUS}
+      </Button>
+      <div className="d-flex align-items-center px-2">
+        <span>
+          {page} / {totalPages}
+        </span>
+      </div>
+      <Button
+        variant={UI_BUTTON_VARIANT_SECONDARY}
+        onClick={() => onPageChange(page + 1)}
+        disabled={page >= totalPages}
+      >
+        {UI_TABLE_PAGINATION_NEXT}
+      </Button>
+    </Stack>
+  )
+
   const columns: UiDataTableColumn<TenantListItem>[] = useMemo(
     () => [
       {
         id: UI_TENANT_COLUMN_ID_NAME,
         header: UI_TENANT_COLUMN_HEADER_NAME,
         cell: (row) => row.name,
+        sortable: true,
       },
       {
         id: UI_TENANT_COLUMN_ID_STATUS,
         header: UI_TENANT_COLUMN_HEADER_STATUS,
         cell: (row) => row.status ?? UI_VALUE_PLACEHOLDER,
+        sortable: true,
       },
       {
         id: UI_TENANT_COLUMN_ID_CREATED,
         header: UI_TENANT_COLUMN_HEADER_CREATED,
         cell: (row) => formatTenantCreatedAt(row.createdAt),
+        sortable: true,
       },
       {
         id: UI_TENANT_COLUMN_ID_ACTIONS,
         header: UI_TENANT_COLUMN_HEADER_ACTIONS,
         cell: (row) => {
           if (!canUpdateTenant(currentUser, row)) {
-            return null
+            return UI_VALUE_PLACEHOLDER
           }
           return (
-            <Stack direction="row" gap="small">
-              <Button variant={UI_BUTTON_VARIANT_GHOST} onClick={() => setEditingTenant(row)}>
-                {UI_TENANT_BUTTON_EDIT}
-              </Button>
-              <TenantRowActions
-                client={client}
-                tenant={row as Tenant}
-                onEdit={setEditingTenant}
-                onCompleted={onRefresh}
-                currentUser={currentUser ?? null}
-              />
-            </Stack>
+            <TenantRowActions
+              client={client}
+              tenant={row as Tenant}
+              onEdit={setEditingTenant}
+              onCompleted={onRefresh}
+              currentUser={currentUser ?? null}
+            />
           )
         },
       },
     ],
     [client, currentUser, onRefresh]
   )
-
-  const canView = canViewTenants(currentUser)
 
   const refreshWith = (action: 'create' | 'update' | 'delete') => {
     onRefresh?.()
@@ -185,7 +218,10 @@ export function TenantManagementExample({
         columns={columns}
         rowKey={(row) => row.id}
         emptyState={UI_TENANT_EMPTY_STATE_MESSAGE}
+        sortState={sortState}
+        onSort={onSortChange}
         toolbar={toolbar}
+        footer={pagination}
       />
 
       {allowCreate ? (

@@ -10,10 +10,9 @@ import {
 } from '../../app/auth/permissions'
 import { useNotificationBus } from '../../notifications/busContext'
 import {
-  UI_BUTTON_VARIANT_GHOST,
   UI_BUTTON_VARIANT_PRIMARY,
+  UI_BUTTON_VARIANT_SECONDARY,
   UI_ENTITLEMENT_BUTTON_CREATE,
-  UI_ENTITLEMENT_BUTTON_EDIT,
   UI_ENTITLEMENT_COLUMN_HEADER_ACTIONS,
   UI_ENTITLEMENT_COLUMN_HEADER_DEFAULT_VALUE,
   UI_ENTITLEMENT_COLUMN_HEADER_KEY,
@@ -33,24 +32,32 @@ import {
   UI_ENTITLEMENT_VALUE_TYPE_BOOLEAN,
   UI_ENTITLEMENT_VALUE_TYPE_NUMBER,
   UI_ENTITLEMENT_VALUE_TYPE_STRING,
+  UI_TABLE_PAGINATION_LABEL,
+  UI_TABLE_PAGINATION_NEXT,
+  UI_TABLE_PAGINATION_PREVIOUS,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
 import { TableToolbar } from '../data/TableToolbar'
 import { Stack } from '../layout/Stack'
-import type { UiDataTableColumn } from '../types'
+import type { UiDataTableColumn, UiDataTableSortState, UiSortDirection } from '../types'
 import { notifyCrudError, notifyProductEntitlementSuccess } from './notifications'
 import { ProductEntitlementFormFlow } from './ProductEntitlementFormFlow'
 import { type ProductEntitlementListItem, ProductEntitlementRowActions } from './ProductEntitlementRowActions'
 
 export type { ProductEntitlementListItem } from './ProductEntitlementRowActions'
 
-type ProductEntitlementManagementExampleProps = {
+type ProductEntitlementManagementPanelProps = {
   client: Client
   productId: string
   entitlements: readonly ProductEntitlementListItem[]
   currentUser?: User | null
   onRefresh?: () => void
+  page: number
+  totalPages: number
+  onPageChange: (page: number) => void
+  sortState?: UiDataTableSortState
+  onSortChange?: (columnId: string, direction: UiSortDirection) => void
 }
 
 const VALUE_TYPE_LABEL_MAP: Record<ProductEntitlementListItem['valueType'], string> = {
@@ -59,13 +66,18 @@ const VALUE_TYPE_LABEL_MAP: Record<ProductEntitlementListItem['valueType'], stri
   [UI_ENTITLEMENT_VALUE_TYPE_STRING]: UI_ENTITLEMENT_VALUE_LABEL_STRING,
 }
 
-export function ProductEntitlementManagementExample({
+export function ProductEntitlementManagementPanel({
   client,
   productId,
   entitlements,
   currentUser,
   onRefresh,
-}: ProductEntitlementManagementExampleProps) {
+  page,
+  totalPages,
+  onPageChange,
+  sortState,
+  onSortChange,
+}: ProductEntitlementManagementPanelProps) {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingEntitlement, setEditingEntitlement] = useState<ProductEntitlementListItem | null>(null)
   const notificationBus = useNotificationBus()
@@ -102,48 +114,67 @@ export function ProductEntitlementManagementExample({
     />
   )
 
+  const pagination = (
+    <Stack direction="row" gap="small" justify="end" aria-label={UI_TABLE_PAGINATION_LABEL}>
+      <Button variant={UI_BUTTON_VARIANT_SECONDARY} onClick={() => onPageChange(page - 1)} disabled={page <= 1}>
+        {UI_TABLE_PAGINATION_PREVIOUS}
+      </Button>
+      <div className="d-flex align-items-center px-2">
+        <span>
+          {page} / {totalPages}
+        </span>
+      </div>
+      <Button
+        variant={UI_BUTTON_VARIANT_SECONDARY}
+        onClick={() => onPageChange(page + 1)}
+        disabled={page >= totalPages}
+      >
+        {UI_TABLE_PAGINATION_NEXT}
+      </Button>
+    </Stack>
+  )
+
   const columns: UiDataTableColumn<ProductEntitlementListItem>[] = useMemo(
     () => [
       {
         id: UI_ENTITLEMENT_COLUMN_ID_KEY,
         header: UI_ENTITLEMENT_COLUMN_HEADER_KEY,
         cell: (row) => row.key,
+        sortable: true,
       },
       {
         id: UI_ENTITLEMENT_COLUMN_ID_VALUE_TYPE,
         header: UI_ENTITLEMENT_COLUMN_HEADER_VALUE_TYPE,
         cell: (row) => VALUE_TYPE_LABEL_MAP[row.valueType],
+        sortable: true,
       },
       {
         id: UI_ENTITLEMENT_COLUMN_ID_DEFAULT_VALUE,
         header: UI_ENTITLEMENT_COLUMN_HEADER_DEFAULT_VALUE,
         cell: (row) => (row.defaultValue !== undefined ? String(row.defaultValue) : UI_VALUE_PLACEHOLDER),
+        sortable: true,
       },
       {
         id: UI_ENTITLEMENT_COLUMN_ID_USAGE_LIMIT,
         header: UI_ENTITLEMENT_COLUMN_HEADER_USAGE_LIMIT,
         cell: (row) => (typeof row.usageLimit === 'number' ? row.usageLimit : UI_VALUE_PLACEHOLDER),
+        sortable: true,
       },
       {
         id: UI_ENTITLEMENT_COLUMN_ID_ACTIONS,
         header: UI_ENTITLEMENT_COLUMN_HEADER_ACTIONS,
         cell: (row) => {
           if (!canUpdateEntitlement(currentUser, row)) {
-            return null
+            return UI_VALUE_PLACEHOLDER
           }
           return (
-            <Stack direction="row" gap="small">
-              <Button variant={UI_BUTTON_VARIANT_GHOST} onClick={() => setEditingEntitlement(row)}>
-                {UI_ENTITLEMENT_BUTTON_EDIT}
-              </Button>
-              <ProductEntitlementRowActions
-                client={client}
-                entitlement={row}
-                onEdit={setEditingEntitlement}
-                onCompleted={onRefresh}
-                currentUser={currentUser ?? null}
-              />
-            </Stack>
+            <ProductEntitlementRowActions
+              client={client}
+              entitlement={row}
+              onEdit={setEditingEntitlement}
+              onCompleted={onRefresh}
+              currentUser={currentUser ?? null}
+            />
           )
         },
       },
@@ -158,7 +189,10 @@ export function ProductEntitlementManagementExample({
         columns={columns}
         rowKey={(row) => row.id}
         emptyState={UI_ENTITLEMENT_EMPTY_STATE_MESSAGE}
+        sortState={sortState}
+        onSort={onSortChange}
         toolbar={toolbar}
+        footer={pagination}
       />
 
       {allowCreate ? (

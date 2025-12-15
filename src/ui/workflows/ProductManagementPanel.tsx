@@ -11,10 +11,9 @@ import {
 } from '../../app/auth/permissions'
 import { useNotificationBus } from '../../notifications/busContext'
 import {
-  UI_BUTTON_VARIANT_GHOST,
   UI_BUTTON_VARIANT_PRIMARY,
+  UI_BUTTON_VARIANT_SECONDARY,
   UI_PRODUCT_BUTTON_CREATE,
-  UI_PRODUCT_BUTTON_EDIT,
   UI_PRODUCT_COLUMN_HEADER_ACTIONS,
   UI_PRODUCT_COLUMN_HEADER_NAME,
   UI_PRODUCT_COLUMN_HEADER_SLUG,
@@ -30,6 +29,9 @@ import {
   UI_PRODUCT_FORM_SUBMIT_UPDATE,
   UI_PRODUCT_STATUS_ACTIVE,
   UI_PRODUCT_STATUS_SUSPENDED,
+  UI_TABLE_PAGINATION_LABEL,
+  UI_TABLE_PAGINATION_NEXT,
+  UI_TABLE_PAGINATION_PREVIOUS,
   UI_TABLE_SEARCH_PLACEHOLDER,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
@@ -37,7 +39,7 @@ import { DataTable } from '../data/DataTable'
 import { TableFilter } from '../data/TableFilter'
 import { TableToolbar } from '../data/TableToolbar'
 import { Stack } from '../layout/Stack'
-import type { UiDataTableColumn, UiSelectOption } from '../types'
+import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
 import { notifyCrudError, notifyProductSuccess } from './notifications'
 import { ProductFormFlow } from './ProductFormFlow'
 import { ProductRowActions } from './ProductRowActions'
@@ -51,28 +53,38 @@ export type ProductListItem = {
   vendorId?: string | null
 }
 
-type ProductManagementExampleProps = {
+type ProductManagementPanelProps = {
   client: Client
   products: readonly ProductListItem[]
   currentUser?: User | null
   onRefresh?: () => void
+  page: number
+  totalPages: number
+  onPageChange: (page: number) => void
   searchTerm?: string
   onSearchChange?: (term: string) => void
   statusFilter?: string
   onStatusFilterChange?: (status: string) => void
+  sortState?: UiDataTableSortState
+  onSortChange?: (columnId: string, direction: UiSortDirection) => void
 }
 
-export function ProductManagementExample({
+export function ProductManagementPanel({
   client,
   products,
   currentUser,
   onRefresh,
+  page,
+  totalPages,
+  onPageChange,
   searchTerm = '',
   onSearchChange,
   statusFilter,
   onStatusFilterChange,
-}: ProductManagementExampleProps) {
-  const [editingProduct, setEditingProduct] = useState<ProductListItem | null>(null)
+  sortState,
+  onSortChange,
+}: ProductManagementPanelProps) {
+  const [editingProduct, setEditingProduct] = useState<{ id: string } | null>(null)
   const [showCreate, setShowCreate] = useState(false)
   const notificationBus = useNotificationBus()
 
@@ -123,49 +135,69 @@ export function ProductManagementExample({
     />
   )
 
+  const pagination = (
+    <Stack direction="row" gap="small" justify="end" aria-label={UI_TABLE_PAGINATION_LABEL}>
+      <Button variant={UI_BUTTON_VARIANT_SECONDARY} onClick={() => onPageChange(page - 1)} disabled={page <= 1}>
+        {UI_TABLE_PAGINATION_PREVIOUS}
+      </Button>
+      <div className="d-flex align-items-center px-2">
+        <span>
+          {page} / {totalPages}
+        </span>
+      </div>
+      <Button
+        variant={UI_BUTTON_VARIANT_SECONDARY}
+        onClick={() => onPageChange(page + 1)}
+        disabled={page >= totalPages}
+      >
+        {UI_TABLE_PAGINATION_NEXT}
+      </Button>
+    </Stack>
+  )
+
   const columns: UiDataTableColumn<ProductListItem>[] = useMemo(
     () => [
       {
         id: UI_PRODUCT_COLUMN_ID_NAME,
         header: UI_PRODUCT_COLUMN_HEADER_NAME,
         cell: (row) => row.name,
+        sortable: true,
       },
       {
         id: UI_PRODUCT_COLUMN_ID_SLUG,
         header: UI_PRODUCT_COLUMN_HEADER_SLUG,
         cell: (row) => row.slug,
+        sortable: true,
       },
       {
         id: UI_PRODUCT_COLUMN_ID_STATUS,
         header: UI_PRODUCT_COLUMN_HEADER_STATUS,
         cell: (row) => (row.isActive ? UI_PRODUCT_STATUS_ACTIVE : UI_PRODUCT_STATUS_SUSPENDED),
+        sortable: true,
       },
       {
         id: UI_PRODUCT_COLUMN_ID_VENDOR,
         header: UI_PRODUCT_COLUMN_HEADER_VENDOR,
         cell: (row) => row.vendorId ?? UI_VALUE_PLACEHOLDER,
+        sortable: true,
       },
       {
         id: UI_PRODUCT_COLUMN_ID_ACTIONS,
         header: UI_PRODUCT_COLUMN_HEADER_ACTIONS,
         cell: (row) => {
           if (!canUpdateProduct(currentUser, row)) {
-            return null
+            return UI_VALUE_PLACEHOLDER
           }
           return (
-            <Stack direction="row" gap="small">
-              <Button variant={UI_BUTTON_VARIANT_GHOST} onClick={() => setEditingProduct(row)}>
-                {UI_PRODUCT_BUTTON_EDIT}
-              </Button>
-              <ProductRowActions
-                client={client}
-                productId={row.id}
-                isActive={row.isActive}
-                onCompleted={onRefresh}
-                currentUser={currentUser ?? null}
-                vendorId={row.vendorId ?? null}
-              />
-            </Stack>
+            <ProductRowActions
+              client={client}
+              productId={row.id}
+              isActive={row.isActive}
+              onEdit={setEditingProduct}
+              onCompleted={onRefresh}
+              currentUser={currentUser ?? null}
+              vendorId={row.vendorId ?? null}
+            />
           )
         },
       },
@@ -182,6 +214,8 @@ export function ProductManagementExample({
     notifyCrudError(notificationBus)
   }
 
+  const productToEdit = editingProduct ? (products.find((p) => p.id === editingProduct.id) ?? null) : null
+
   return (
     <Stack direction="column" gap="medium">
       <DataTable
@@ -189,7 +223,10 @@ export function ProductManagementExample({
         columns={columns}
         rowKey={(row) => row.id}
         emptyState={UI_PRODUCT_EMPTY_STATE_MESSAGE}
+        sortState={sortState}
+        onSort={onSortChange}
         toolbar={toolbar}
+        footer={pagination}
       />
 
       {allowCreate ? (
@@ -205,18 +242,18 @@ export function ProductManagementExample({
         />
       ) : null}
 
-      {editingProduct ? (
+      {productToEdit ? (
         <ProductFormFlow
           client={client}
           mode="update"
-          productId={editingProduct.id}
-          show={Boolean(editingProduct)}
+          productId={productToEdit.id}
+          show={Boolean(productToEdit)}
           onClose={() => setEditingProduct(null)}
           submitLabel={UI_PRODUCT_FORM_SUBMIT_UPDATE}
           defaultValues={{
-            name: editingProduct.name,
-            slug: editingProduct.slug,
-            description: editingProduct.description,
+            name: productToEdit.name,
+            slug: productToEdit.slug,
+            description: productToEdit.description,
           }}
           onCompleted={onRefresh}
           onSuccess={() => refreshWith('update')}

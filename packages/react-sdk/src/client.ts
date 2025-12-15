@@ -115,6 +115,7 @@ import type {
   GetQuotaConfigResponse,
   GetQuotaUsageResponse,
   GetUserResponse,
+  GetCurrentUserResponse,
   HealthMetricsResponse,
   LicenseDataResponse,
   LicenseFeaturesResponse,
@@ -154,7 +155,7 @@ import type {
   ValidateLicenseRequest,
   ValidateLicenseResponse,
   ValidationError,
-  ChangePasswordRequest,
+  ChangePasswordResponse,
 } from './types/api'
 import type { User } from './types/license'
 
@@ -241,18 +242,12 @@ export class Client {
     }
   }
 
-  async getCurrentUser(): Promise<{ user: User }> {
-    const response = await this.httpClient.get<ApiResponse<{ user: User }>>(API_ENDPOINT_ADMIN_USERS_ME)
-    const parsed = this.handleApiResponse<{ user: User }>(response.data)
-    return { user: this.normalizeUser(parsed.user) }
-  }
-
-  async changePassword(request: ChangePasswordRequest): Promise<{ success: boolean }> {
-    const response = await this.httpClient.patch<ApiResponse<{ success: boolean }>>(
+  async changePassword(request: ChangePasswordRequest): Promise<ChangePasswordResponse> {
+    const response = await this.httpClient.patch<ApiResponse<ChangePasswordResponse>>(
       API_ENDPOINT_ADMIN_USERS_ME_PASSWORD,
       request
     )
-    return this.handleApiResponse<{ success: boolean }>(response.data, { success: true })
+    return this.handleApiResponse<ChangePasswordResponse>(response.data)
   }
 
   setToken(token: string | null, expiresAt?: number | null): void {
@@ -632,15 +627,6 @@ export class Client {
     const response = await this.httpClient.get<ApiResponse<GetCurrentUserResponse>>(API_ENDPOINT_ADMIN_USERS_ME)
 
     return this.handleApiResponse(response.data, {} as GetCurrentUserResponse)
-  }
-
-  async changePassword(request: ChangePasswordRequest): Promise<ActionSuccessResponse> {
-    const response = await this.httpClient.patch<ApiResponse<{ success: boolean }>>(
-      API_ENDPOINT_ADMIN_USERS_ME_PASSWORD,
-      request
-    )
-
-    return this.handleApiResponse<ActionSuccessResponse>(response.data, { success: true })
   }
 
   // Admin API - Tenants

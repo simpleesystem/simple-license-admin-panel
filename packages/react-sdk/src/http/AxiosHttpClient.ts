@@ -86,7 +86,7 @@ export class AxiosHttpClient implements HttpClientInterface {
 
   private setupInterceptors(): void {
     this.axiosInstance.interceptors.request.use(
-      (config) => this.enrichRequestConfig(config),
+      (config) => this.enrichRequestConfig(config) as any,
       (error) => Promise.reject(error)
     )
 
@@ -140,7 +140,7 @@ export class AxiosHttpClient implements HttpClientInterface {
           url: error.config?.url || error.response?.config?.url,
           status: error.response?.status,
           durationMs,
-          requestId: errorDetails.requestId,
+          requestId: errorDetails.requestId as unknown as string,
           correlationId: extractHeaderString(error.config?.headers?.[HEADER_CORRELATION_ID]),
           error: apiError,
         })
@@ -183,7 +183,7 @@ export class AxiosHttpClient implements HttpClientInterface {
       normalizeTelemetry({
         method: (error.config?.method || DEFAULT_METHOD).toUpperCase(),
         url: error.config?.url,
-        status: error.response?.status,
+        status: (error as any)?.response?.status ?? 0,
         durationMs,
         requestId: requestIdFromHeaders,
         correlationId: extractHeaderString(error.config?.headers?.[HEADER_CORRELATION_ID]),

@@ -1,27 +1,44 @@
 import type { Client, User } from '@simple-license/react-sdk'
 import { useDeleteProduct, useResumeProduct, useSuspendProduct } from '@simple-license/react-sdk'
-import type { ReactNode } from 'react'
+import { useState } from 'react'
+import Button from 'react-bootstrap/Button'
 import { canDeleteProduct, canUpdateProduct } from '../../app/auth/permissions'
 import { useNotificationBus } from '../../notifications/busContext'
-import { createCrudActions } from '../actions/mutationActions'
 import { adaptMutation } from '../actions/mutationAdapter'
 import {
-  UI_ENTITY_PRODUCT,
+  UI_BUTTON_VARIANT_GHOST,
   UI_PRODUCT_ACTION_DELETE,
+  UI_PRODUCT_ACTION_EDIT,
   UI_PRODUCT_ACTION_RESUME,
   UI_PRODUCT_ACTION_SUSPEND,
   UI_PRODUCT_BUTTON_DELETE,
+  UI_PRODUCT_BUTTON_RESUME,
+  UI_PRODUCT_BUTTON_SUSPEND,
+  UI_PRODUCT_CONFIRM_DELETE_BODY,
+  UI_PRODUCT_CONFIRM_DELETE_CANCEL,
+  UI_PRODUCT_CONFIRM_DELETE_CONFIRM,
+  UI_PRODUCT_CONFIRM_DELETE_TITLE,
+  UI_PRODUCT_CONFIRM_RESUME_BODY,
+  UI_PRODUCT_CONFIRM_RESUME_CANCEL,
+  UI_PRODUCT_CONFIRM_RESUME_CONFIRM,
+  UI_PRODUCT_CONFIRM_RESUME_TITLE,
+  UI_PRODUCT_CONFIRM_SUSPEND_BODY,
+  UI_PRODUCT_CONFIRM_SUSPEND_CANCEL,
+  UI_PRODUCT_CONFIRM_SUSPEND_CONFIRM,
+  UI_PRODUCT_CONFIRM_SUSPEND_TITLE,
 } from '../constants'
-import { ActionMenu } from '../data/ActionMenu'
+import { Stack } from '../layout/Stack'
+import { ModalDialog } from '../overlay/ModalDialog'
 import type { UiCommonProps } from '../types'
+import { VisibilityGate } from '../utils/PermissionGate'
 import { notifyCrudError, notifyProductSuccess } from './notifications'
 
 type ProductRowActionsProps = UiCommonProps & {
   client: Client
   productId: string
   isActive: boolean
+  onEdit: (product: { id: string }) => void
   onCompleted?: () => void
-  buttonLabel?: ReactNode
   currentUser?: User | null
   vendorId?: string | null
 }
@@ -30,8 +47,8 @@ export function ProductRowActions({
   client,
   productId,
   isActive,
+  onEdit,
   onCompleted,
-  buttonLabel,
   currentUser,
   vendorId,
   ...rest
@@ -40,6 +57,9 @@ export function ProductRowActions({
   const suspendMutation = adaptMutation(useSuspendProduct(client))
   const resumeMutation = adaptMutation(useResumeProduct(client))
   const notificationBus = useNotificationBus()
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showSuspendConfirm, setShowSuspendConfirm] = useState(false)
+  const [showResumeConfirm, setShowResumeConfirm] = useState(false)
 
   const productContext = { vendorId }
   const allowUpdate = canUpdateProduct(currentUser, productContext)
@@ -49,72 +69,143 @@ export function ProductRowActions({
     return null
   }
 
-  const actions = createCrudActions<string>(UI_ENTITY_PRODUCT, {
-    delete: allowDelete
-      ? {
-          label: UI_PRODUCT_ACTION_DELETE,
-          mutation: {
-            mutateAsync: async (payload) => {
-              try {
-                const result = await deleteMutation.mutateAsync(payload)
-                onCompleted?.()
-                notifyProductSuccess(notificationBus, 'delete')
-                return result
-              } catch (error) {
-                notifyCrudError(notificationBus)
-                throw error
-              }
-            },
-            isPending: deleteMutation.isPending,
-          },
-          buildPayload: () => productId,
-        }
-      : undefined,
-    suspend: allowUpdate
-      ? {
-          label: UI_PRODUCT_ACTION_SUSPEND,
-          mutation: {
-            mutateAsync: async (payload) => {
-              try {
-                const result = await suspendMutation.mutateAsync(payload)
-                onCompleted?.()
-                notifyProductSuccess(notificationBus, 'suspend')
-                return result
-              } catch (error) {
-                notifyCrudError(notificationBus)
-                throw error
-              }
-            },
-            isPending: suspendMutation.isPending,
-          },
-          buildPayload: () => productId,
-          disabled: !isActive,
-        }
-      : undefined,
-    resume: allowUpdate
-      ? {
-          label: UI_PRODUCT_ACTION_RESUME,
-          mutation: {
-            mutateAsync: async (payload) => {
-              try {
-                const result = await resumeMutation.mutateAsync(payload)
-                onCompleted?.()
-                notifyProductSuccess(notificationBus, 'resume')
-                return result
-              } catch (error) {
-                notifyCrudError(notificationBus)
-                throw error
-              }
-            },
-            isPending: resumeMutation.isPending,
-          },
-          buildPayload: () => productId,
-          disabled: isActive,
-        }
-      : undefined,
-  })
+  const handleDelete = async () => {
+    try {
+      await deleteMutation.mutateAsync(productId)
+      notifyProductSuccess(notificationBus, 'delete')
+      onCompleted?.()
+    } catch (error) {
+      notifyCrudError(notificationBus)
+      throw error
+    } finally {
+      setShowDeleteConfirm(false)
+    }
+  }
 
-  const fallbackLabel = allowDelete ? UI_PRODUCT_BUTTON_DELETE : UI_PRODUCT_ACTION_SUSPEND
+  const handleSuspend = async () => {
+    try {
+      await suspendMutation.mutateAsync(productId)
+      notifyProductSuccess(notificationBus, 'suspend')
+      onCompleted?.()
+    } catch (error) {
+      notifyCrudError(notificationBus)
+      throw error
+    } finally {
+      setShowSuspendConfirm(false)
+    }
+  }
 
-  return <ActionMenu {...rest} items={actions} buttonLabel={buttonLabel ?? fallbackLabel} variant="outline-secondary" />
+  const handleResume = async () => {
+    try {
+      await resumeMutation.mutateAsync(productId)
+      notifyProductSuccess(notificationBus, 'resume')
+      onCompleted?.()
+    } catch (error) {
+      notifyCrudError(notificationBus)
+      throw error
+    } finally {
+      setShowResumeConfirm(false)
+    }
+  }
+
+  return (
+    <VisibilityGate
+      ability={rest.ability}
+      permissionKey={rest.permissionKey}
+      permissionFallback={rest.permissionFallback}
+    >
+      <Stack direction="row" gap="small" {...rest}>
+        {allowUpdate ? (
+          <Button
+            variant={UI_BUTTON_VARIANT_GHOST}
+            onClick={() => onEdit({ id: productId })}
+            aria-label={UI_PRODUCT_ACTION_EDIT}
+          >
+            {UI_PRODUCT_ACTION_EDIT}
+          </Button>
+        ) : null}
+
+        {allowUpdate ? (
+          isActive ? (
+            <Button
+              variant={UI_BUTTON_VARIANT_GHOST}
+              onClick={() => setShowSuspendConfirm(true)}
+              disabled={suspendMutation.isPending}
+              aria-label={UI_PRODUCT_ACTION_SUSPEND}
+            >
+              {UI_PRODUCT_BUTTON_SUSPEND}
+            </Button>
+          ) : (
+            <Button
+              variant={UI_BUTTON_VARIANT_GHOST}
+              onClick={() => setShowResumeConfirm(true)}
+              disabled={resumeMutation.isPending}
+              aria-label={UI_PRODUCT_ACTION_RESUME}
+            >
+              {UI_PRODUCT_BUTTON_RESUME}
+            </Button>
+          )
+        ) : null}
+
+        {allowDelete ? (
+          <Button
+            variant={UI_BUTTON_VARIANT_GHOST}
+            onClick={() => setShowDeleteConfirm(true)}
+            disabled={deleteMutation.isPending}
+            aria-label={UI_PRODUCT_ACTION_DELETE}
+          >
+            {UI_PRODUCT_BUTTON_DELETE}
+          </Button>
+        ) : null}
+
+        <ModalDialog
+          show={showSuspendConfirm}
+          onClose={() => setShowSuspendConfirm(false)}
+          title={UI_PRODUCT_CONFIRM_SUSPEND_TITLE}
+          body={UI_PRODUCT_CONFIRM_SUSPEND_BODY}
+          primaryAction={{
+            label: UI_PRODUCT_CONFIRM_SUSPEND_CONFIRM,
+            onClick: handleSuspend,
+            disabled: suspendMutation.isPending,
+          }}
+          secondaryAction={{
+            label: UI_PRODUCT_CONFIRM_SUSPEND_CANCEL,
+            onClick: () => setShowSuspendConfirm(false),
+          }}
+        />
+
+        <ModalDialog
+          show={showResumeConfirm}
+          onClose={() => setShowResumeConfirm(false)}
+          title={UI_PRODUCT_CONFIRM_RESUME_TITLE}
+          body={UI_PRODUCT_CONFIRM_RESUME_BODY}
+          primaryAction={{
+            label: UI_PRODUCT_CONFIRM_RESUME_CONFIRM,
+            onClick: handleResume,
+            disabled: resumeMutation.isPending,
+          }}
+          secondaryAction={{
+            label: UI_PRODUCT_CONFIRM_RESUME_CANCEL,
+            onClick: () => setShowResumeConfirm(false),
+          }}
+        />
+
+        <ModalDialog
+          show={showDeleteConfirm}
+          onClose={() => setShowDeleteConfirm(false)}
+          title={UI_PRODUCT_CONFIRM_DELETE_TITLE}
+          body={UI_PRODUCT_CONFIRM_DELETE_BODY}
+          primaryAction={{
+            label: UI_PRODUCT_CONFIRM_DELETE_CONFIRM,
+            onClick: handleDelete,
+            disabled: deleteMutation.isPending,
+          }}
+          secondaryAction={{
+            label: UI_PRODUCT_CONFIRM_DELETE_CANCEL,
+            onClick: () => setShowDeleteConfirm(false),
+          }}
+        />
+      </Stack>
+    </VisibilityGate>
+  )
 }
