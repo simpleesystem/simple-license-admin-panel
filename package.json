@@ -8,6 +8,7 @@
     "devtools": "react-devtools",
     "build": "tsc --noEmit -p tsconfig.app.json && vite build",
     "lint": "eslint .",
+    "start": "npm run preview",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
