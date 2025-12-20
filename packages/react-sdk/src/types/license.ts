@@ -108,7 +108,8 @@ export interface Entitlement {
   numberValue?: number | null
   booleanValue?: boolean | null
   stringValue?: string | null
-  tierCodes: string[]
+  tierCodes?: never // deprecated
+  productTiers?: { id: string; tierCode: string }[]
   version: string
   createdAt: Date | string
   updatedAt: Date | string

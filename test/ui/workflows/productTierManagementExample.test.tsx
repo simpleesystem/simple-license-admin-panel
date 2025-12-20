@@ -51,8 +51,6 @@ const mockMutation = () => ({
   isPending: false,
 })
 
-const SINGLE_INVOCATION_COUNT = 1 as const
-
 describe('ProductTierManagementExample', () => {
   beforeEach(() => {
     vi.clearAllMocks()

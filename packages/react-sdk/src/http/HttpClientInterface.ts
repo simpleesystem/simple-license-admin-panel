@@ -27,6 +27,7 @@ export interface HttpResponse<T = Record<string, never>> {
 export interface HttpRequestConfig {
   headers?: Record<string, string>
   timeout?: number
+  signal?: AbortSignal
 }
 
 export interface HttpClientInterface {

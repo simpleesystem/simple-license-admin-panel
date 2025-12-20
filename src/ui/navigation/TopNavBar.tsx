@@ -16,6 +16,8 @@ export function TopNavBar({
   permissionKey,
   permissionFallback,
 }: TopNavBarProps) {
+  const hasContent = Boolean(navigation || actions)
+
   return (
     <VisibilityGate ability={ability} permissionKey={permissionKey} permissionFallback={permissionFallback}>
       <Navbar
@@ -26,11 +28,13 @@ export function TopNavBar({
       >
         <Container fluid={true}>
           {brand ? <Navbar.Brand>{brand}</Navbar.Brand> : null}
-          <Navbar.Toggle aria-controls="top-navbar-nav" />
-          <Navbar.Collapse id="top-navbar-nav">
-            {navigation ? <Nav className="me-auto">{navigation}</Nav> : <Nav className="me-auto" />}
-            {actions ? <div className="d-flex align-items-center gap-2 mt-2 mt-lg-0">{actions}</div> : null}
-          </Navbar.Collapse>
+          {hasContent ? <Navbar.Toggle aria-controls="top-navbar-nav" /> : null}
+          {hasContent ? (
+            <Navbar.Collapse id="top-navbar-nav">
+              {navigation ? <Nav className="me-auto">{navigation}</Nav> : <Nav className="me-auto" />}
+              {actions ? <div className="d-flex align-items-center gap-2 mt-2 mt-lg-0">{actions}</div> : null}
+            </Navbar.Collapse>
+          ) : null}
         </Container>
       </Navbar>
     </VisibilityGate>

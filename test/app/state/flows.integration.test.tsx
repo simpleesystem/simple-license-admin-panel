@@ -90,10 +90,11 @@ const QueryHarness = () => {
   )
 }
 
+const Thrower = () => {
+  throw new Error('boom')
+}
+
 const RuntimeHarness = () => {
-  const Thrower = () => {
-    throw new Error('boom')
-  }
   return (
     <div>
       <Thrower />

@@ -33,6 +33,7 @@ export type SelectFieldBlueprint<TFieldValues extends FieldValues> = BaseFieldBl
   component: 'select'
   options: readonly UiSelectOption[]
   placeholder?: ReactNode
+  multiple?: boolean
 }
 
 export type TextareaFieldBlueprint<TFieldValues extends FieldValues> = BaseFieldBlueprint<TFieldValues> & {

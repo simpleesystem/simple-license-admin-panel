@@ -2,7 +2,8 @@ import type { Client } from '@simple-license/react-sdk'
 import { useSystemStats } from '@simple-license/react-sdk'
 import { useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
-import { useAdminSystemLiveFeed, useLiveStatusBadgeModel } from '../../app/live/AdminSystemLiveFeedContext'
+import { useAdminSystemLiveFeed } from '../../app/live/useAdminSystemLiveFeed'
+import { useLiveStatusBadgeModel } from '../../app/live/useLiveStatusBadgeModel'
 import {
   UI_ANALYTICS_STATS_DESCRIPTION,
   UI_ANALYTICS_STATS_EMPTY_BODY,

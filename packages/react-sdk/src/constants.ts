@@ -36,6 +36,8 @@ export const API_ENDPOINT_UPDATES_CHECK = '/api/v1/updates/check'
 
 // Authentication Endpoints
 export const API_ENDPOINT_AUTH_LOGIN = '/api/v1/auth/login'
+export const API_ENDPOINT_AUTH_REFRESH = '/api/v1/auth/refresh'
+export const API_ENDPOINT_AUTH_LOGOUT = '/api/v1/auth/logout'
 
 // Admin License Endpoints
 export const API_ENDPOINT_ADMIN_LICENSES_LIST = '/api/v1/admin/licenses'

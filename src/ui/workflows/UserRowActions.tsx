@@ -2,7 +2,7 @@ import type { Client, User } from '@simple-license/react-sdk'
 import { useDeleteUser } from '@simple-license/react-sdk'
 import { useState } from 'react'
 import Button from 'react-bootstrap/Button'
-import { useNotificationBus } from '../../notifications/busContext'
+import { useNotificationBus } from '../../notifications/useNotificationBus'
 import { adaptMutation } from '../actions/mutationAdapter'
 import {
   UI_BUTTON_VARIANT_GHOST,
@@ -46,7 +46,7 @@ export function UserRowActions({
   const [showConfirm, setShowConfirm] = useState(false)
 
   const isSelf = currentUserId === user.id
-  const isDeleted = user.status === UI_USER_STATUS_DELETED
+  const isDeleted = (user as unknown as { status: string }).status === UI_USER_STATUS_DELETED
   const canEdit = allowUpdate && !isSelf
   const canDelete = allowDelete && !isSelf && !isDeleted
   const showDeleteButton = allowDelete && !isSelf
@@ -101,11 +101,13 @@ export function UserRowActions({
               title={UI_USER_CONFIRM_DELETE_TITLE}
               body={UI_USER_CONFIRM_DELETE_BODY}
               primaryAction={{
+                id: 'delete-confirm',
                 label: UI_USER_CONFIRM_DELETE_CONFIRM,
                 onClick: handleConfirmDelete,
                 disabled: deleteMutation.isPending,
               }}
               secondaryAction={{
+                id: 'delete-cancel',
                 label: UI_USER_CONFIRM_DELETE_CANCEL,
                 onClick: () => setShowConfirm(false),
               }}

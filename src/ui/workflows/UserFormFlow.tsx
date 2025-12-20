@@ -2,8 +2,8 @@ import type { Client, CreateUserRequest, UpdateUserRequest } from '@simple-licen
 import { useAdminTenants, useCreateUser, useUpdateUser } from '@simple-license/react-sdk'
 import type { ReactNode } from 'react'
 import { useMemo } from 'react'
-import type { FieldValues } from 'react-hook-form'
-import { useAuth } from '../../app/auth/authContext'
+import { isVendorScopedUser } from '../../app/auth/permissions'
+import { useAuth } from '../../app/auth/useAuth'
 import type { MutationAdapter } from '../actions/mutationActions'
 import { adaptMutation } from '../actions/mutationAdapter'
 import {
@@ -33,6 +33,7 @@ import {
 import { createUserBlueprint } from '../formBuilder/factories'
 import { FormModalWithMutation } from '../formBuilder/mutationBridge'
 import type { UiSelectOption } from '../types'
+import { wrapMutationAdapter } from './mutationHelpers'
 
 type UserFormBaseProps = {
   client: Client
@@ -75,64 +76,47 @@ const baseUpdateDefaults: UpdateUserRequest = {
   vendor_id: undefined,
 }
 
-const withOnClose = <TFieldValues extends FieldValues>(
-  adapter: MutationAdapter<TFieldValues>,
-  onClose: () => void,
-  onCompleted?: () => void,
-  onSuccess?: () => void,
-  onError?: (error: unknown) => void
-): MutationAdapter<TFieldValues> => ({
-  mutateAsync: async (values) => {
-    try {
-      const result = await adapter.mutateAsync(values)
-      onSuccess?.()
-      onCompleted?.()
-      onClose()
-      return result
-    } catch (error) {
-      onError?.(error)
-      throw error
-    }
-  },
-  isPending: adapter.isPending,
-})
-
 export function UserFormFlow(props: UserFormFlowProps) {
-  const { currentUser } = useAuth()
+  const { user: currentUser } = useAuth()
   const createMutation = adaptMutation(useCreateUser(props.client))
   const updateMutation = useUpdateUser(props.client)
   const tenantsQuery = useAdminTenants(props.client)
+  // Treat vendor manager as scoped even if vendorId is missing
+  const vendorScoped = currentUser?.role === UI_USER_ROLE_VENDOR_MANAGER || isVendorScopedUser(currentUser)
 
-  const roleOptions: UiSelectOption[] = useMemo(
-    () => {
-      const allRoles = [
-        { value: UI_USER_ROLE_ADMIN, label: UI_USER_ROLE_LABEL_ADMIN },
-        { value: UI_USER_ROLE_VENDOR_MANAGER, label: UI_USER_ROLE_LABEL_VENDOR_MANAGER },
-        { value: UI_USER_ROLE_VENDOR_ADMIN, label: UI_USER_ROLE_LABEL_VENDOR_ADMIN },
-        { value: UI_USER_ROLE_VIEWER, label: UI_USER_ROLE_LABEL_VIEWER },
-        { value: UI_USER_ROLE_API_READ_ONLY, label: UI_USER_ROLE_LABEL_API_READ_ONLY },
-        { value: UI_USER_ROLE_API_VENDOR_WRITE, label: UI_USER_ROLE_LABEL_API_VENDOR_WRITE },
-        { value: UI_USER_ROLE_API_CONSUMER_ACTIVATE, label: UI_USER_ROLE_LABEL_API_CONSUMER_ACTIVATE },
-      ]
+  const roleOptions: UiSelectOption[] = useMemo(() => {
+    const allRoles = [
+      { value: UI_USER_ROLE_ADMIN, label: UI_USER_ROLE_LABEL_ADMIN },
+      { value: UI_USER_ROLE_VENDOR_MANAGER, label: UI_USER_ROLE_LABEL_VENDOR_MANAGER },
+      { value: UI_USER_ROLE_VENDOR_ADMIN, label: UI_USER_ROLE_LABEL_VENDOR_ADMIN },
+      { value: UI_USER_ROLE_VIEWER, label: UI_USER_ROLE_LABEL_VIEWER },
+      { value: UI_USER_ROLE_API_READ_ONLY, label: UI_USER_ROLE_LABEL_API_READ_ONLY },
+      { value: UI_USER_ROLE_API_VENDOR_WRITE, label: UI_USER_ROLE_LABEL_API_VENDOR_WRITE },
+      { value: UI_USER_ROLE_API_CONSUMER_ACTIVATE, label: UI_USER_ROLE_LABEL_API_CONSUMER_ACTIVATE },
+    ]
 
-      return allRoles.filter((option) => {
-        // Superuser can see all roles (except Superuser which is already excluded)
-        // Admin cannot assign Admin
-        if (currentUser?.role === UI_USER_ROLE_ADMIN) {
-          if (option.value === UI_USER_ROLE_ADMIN) return false
+    return allRoles.filter((option) => {
+      // Superuser can see all roles (except Superuser which is already excluded)
+      // Admin cannot assign Admin
+      if (currentUser?.role === UI_USER_ROLE_ADMIN) {
+        if (option.value === UI_USER_ROLE_ADMIN) {
+          return false
         }
+      }
 
-        // Vendor Manager cannot assign Admin or Vendor Manager
-        if (currentUser?.role === UI_USER_ROLE_VENDOR_MANAGER) {
-          if (option.value === UI_USER_ROLE_ADMIN) return false
-          if (option.value === UI_USER_ROLE_VENDOR_MANAGER) return false
+      // Vendor Manager cannot assign Admin or Vendor Manager
+      if (currentUser?.role === UI_USER_ROLE_VENDOR_MANAGER) {
+        if (option.value === UI_USER_ROLE_ADMIN) {
+          return false
         }
+        if (option.value === UI_USER_ROLE_VENDOR_MANAGER) {
+          return false
+        }
+      }
 
-        return true
-      })
-    },
-    [currentUser?.role]
-  )
+      return true
+    })
+  }, [currentUser?.role])
 
   const statusOptions: UiSelectOption[] = useMemo(
     () => [
@@ -151,12 +135,44 @@ export function UserFormFlow(props: UserFormFlowProps) {
     }))
   }, [tenantsQuery.data])
 
+  const removeVendorField = (
+    sections: ReadonlyArray<{ fields: ReadonlyArray<{ name: string }> }>
+  ): Array<{ fields: Array<{ name: string }> }> =>
+    sections.map((section) => ({
+      ...section,
+      fields: section.fields.filter((field) => field.name !== 'vendor_id'),
+    }))
+
+  const buildBlueprint = <TMode extends 'create' | 'update'>(
+    mode: TMode,
+    options: Parameters<typeof createUserBlueprint<TMode>>[1]
+  ) => {
+    if (!vendorScoped) {
+      return createUserBlueprint(mode, options)
+    }
+    const customize = (blueprint: ReturnType<typeof createUserBlueprint<TMode>>) => ({
+      ...blueprint,
+      sections: removeVendorField(blueprint.sections) as any,
+    })
+    return createUserBlueprint(mode, { ...options, customize })
+  }
+
   if (props.mode === 'create') {
-    const blueprint = createUserBlueprint('create', { roleOptions, vendorOptions, statusOptions })
+    const blueprint = buildBlueprint('create', {
+      roleOptions,
+      vendorOptions: vendorScoped ? [] : vendorOptions,
+      statusOptions,
+    })
     const defaultValues: CreateUserRequest = {
       ...baseCreateDefaults,
       ...props.defaultValues,
-      status: UI_USER_STATUS_ACTIVE,
+      // status: UI_USER_STATUS_ACTIVE, // Not supported in CreateUserRequest yet?
+      vendor_id:
+        currentUser?.vendorId !== undefined && currentUser?.vendorId !== null
+          ? currentUser.vendorId
+          : vendorScoped
+            ? ''
+            : (props.defaultValues?.vendor_id ?? ''),
     }
     const submitLabel = props.submitLabel ?? UI_USER_FORM_SUBMIT_CREATE
 
@@ -169,7 +185,12 @@ export function UserFormFlow(props: UserFormFlowProps) {
         submitLabel={submitLabel}
         pendingLabel={props.pendingLabel}
         secondaryActions={props.secondaryActions}
-        mutation={withOnClose(createMutation, props.onClose, props.onCompleted, props.onSuccess, props.onError)}
+        mutation={wrapMutationAdapter(createMutation, {
+          onClose: props.onClose,
+          onCompleted: props.onCompleted,
+          onSuccess: props.onSuccess,
+          onError: props.onError,
+        })}
       />
     )
   }
@@ -177,11 +198,23 @@ export function UserFormFlow(props: UserFormFlowProps) {
   const defaultValues: UpdateUserRequest = {
     ...baseUpdateDefaults,
     ...props.defaultValues,
+    vendor_id:
+      currentUser?.vendorId !== undefined && currentUser?.vendorId !== null
+        ? currentUser.vendorId
+        : vendorScoped
+          ? ''
+          : props.defaultValues?.vendor_id,
   }
   const submitLabel = props.submitLabel ?? UI_USER_FORM_SUBMIT_UPDATE
 
   const adapter: MutationAdapter<UpdateUserRequest> = {
     mutateAsync: async (values) => {
+      if (vendorScoped) {
+        values.vendor_id =
+          currentUser?.vendorId !== undefined && currentUser?.vendorId !== null
+            ? currentUser.vendorId
+            : (values.vendor_id ?? '')
+      }
       return await updateMutation.mutateAsync({
         id: props.userId,
         data: values,
@@ -194,12 +227,21 @@ export function UserFormFlow(props: UserFormFlowProps) {
     <FormModalWithMutation
       show={props.show}
       onClose={props.onClose}
-      blueprint={createUserBlueprint('update', { roleOptions, vendorOptions, statusOptions })}
+      blueprint={buildBlueprint('update', {
+        roleOptions,
+        vendorOptions: vendorScoped ? [] : vendorOptions,
+        statusOptions,
+      })}
       defaultValues={defaultValues}
       submitLabel={submitLabel}
       pendingLabel={props.pendingLabel}
       secondaryActions={props.secondaryActions}
-      mutation={withOnClose(adapter, props.onClose, props.onCompleted, props.onSuccess, props.onError)}
+      mutation={wrapMutationAdapter(adapter, {
+        onClose: props.onClose,
+        onCompleted: props.onCompleted,
+        onSuccess: props.onSuccess,
+        onError: props.onError,
+      })}
     />
   )
 }

@@ -3,7 +3,7 @@ import { useDeleteProduct, useResumeProduct, useSuspendProduct } from '@simple-l
 import { useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import { canDeleteProduct, canUpdateProduct } from '../../app/auth/permissions'
-import { useNotificationBus } from '../../notifications/busContext'
+import { useNotificationBus } from '../../notifications/useNotificationBus'
 import { adaptMutation } from '../actions/mutationAdapter'
 import {
   UI_BUTTON_VARIANT_GHOST,
@@ -61,9 +61,9 @@ export function ProductRowActions({
   const [showSuspendConfirm, setShowSuspendConfirm] = useState(false)
   const [showResumeConfirm, setShowResumeConfirm] = useState(false)
 
-  const productContext = { vendorId }
-  const allowUpdate = canUpdateProduct(currentUser, productContext)
-  const allowDelete = canDeleteProduct(currentUser)
+  // const productContext = { vendorId }
+  const allowUpdate = canUpdateProduct(currentUser ?? null)
+  const allowDelete = canDeleteProduct(currentUser ?? null)
 
   if (!allowUpdate && !allowDelete) {
     return null
@@ -164,11 +164,13 @@ export function ProductRowActions({
           title={UI_PRODUCT_CONFIRM_SUSPEND_TITLE}
           body={UI_PRODUCT_CONFIRM_SUSPEND_BODY}
           primaryAction={{
+            id: 'suspend-confirm',
             label: UI_PRODUCT_CONFIRM_SUSPEND_CONFIRM,
             onClick: handleSuspend,
             disabled: suspendMutation.isPending,
           }}
           secondaryAction={{
+            id: 'suspend-cancel',
             label: UI_PRODUCT_CONFIRM_SUSPEND_CANCEL,
             onClick: () => setShowSuspendConfirm(false),
           }}
@@ -180,11 +182,13 @@ export function ProductRowActions({
           title={UI_PRODUCT_CONFIRM_RESUME_TITLE}
           body={UI_PRODUCT_CONFIRM_RESUME_BODY}
           primaryAction={{
+            id: 'resume-confirm',
             label: UI_PRODUCT_CONFIRM_RESUME_CONFIRM,
             onClick: handleResume,
             disabled: resumeMutation.isPending,
           }}
           secondaryAction={{
+            id: 'resume-cancel',
             label: UI_PRODUCT_CONFIRM_RESUME_CANCEL,
             onClick: () => setShowResumeConfirm(false),
           }}
@@ -196,11 +200,13 @@ export function ProductRowActions({
           title={UI_PRODUCT_CONFIRM_DELETE_TITLE}
           body={UI_PRODUCT_CONFIRM_DELETE_BODY}
           primaryAction={{
+            id: 'delete-confirm',
             label: UI_PRODUCT_CONFIRM_DELETE_CONFIRM,
             onClick: handleDelete,
             disabled: deleteMutation.isPending,
           }}
           secondaryAction={{
+            id: 'delete-cancel',
             label: UI_PRODUCT_CONFIRM_DELETE_CANCEL,
             onClick: () => setShowDeleteConfirm(false),
           }}

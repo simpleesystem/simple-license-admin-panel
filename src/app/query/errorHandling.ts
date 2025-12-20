@@ -2,8 +2,8 @@ import {
   ApiException,
   NetworkException,
 } from '@simple-license/react-sdk'
-import { buildAuthErrorNotification } from '../auth/authErrors'
 import type { ToastNotificationPayload } from '../../notifications/constants'
+import { NOTIFICATION_VARIANT_ERROR } from '../constants'
 
 const RETRYABLE_ERROR_CODES = new Set(['err_network', 'network_error', 'econnaborted'])
 const MAX_NETWORK_RETRIES = 2
@@ -42,7 +42,15 @@ export const isNetworkError = (error: unknown): boolean => {
 }
 
 export const handleQueryError = (error: unknown): ToastNotificationPayload | null => {
-  return buildAuthErrorNotification(error)
+  // Simplified error handling
+  if (isApiException(error)) {
+    return {
+      title: 'Error',
+      message: error.message || 'An error occurred',
+      variant: NOTIFICATION_VARIANT_ERROR,
+    }
+  }
+  return null
 }
 
 export const shouldRetryRequest = (failureCount: number, error: unknown): boolean => {

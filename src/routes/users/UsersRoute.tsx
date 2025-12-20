@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useAdminUsers } from '@simple-license/react-sdk'
 
 import { useApiClient } from '../../api/apiContext'
-import { useAuth } from '../../app/auth/authContext'
+import { useAuth } from '../../app/auth/useAuth'
 import { canViewUsers, isVendorScopedUser } from '../../app/auth/permissions'
 import {
   UI_PAGE_SUBTITLE_USERS,
@@ -24,7 +24,7 @@ import type { UiDataTableSortState, UiSortDirection } from '../../ui/types'
 
 export function UsersRouteComponent() {
   const client = useApiClient()
-  const { currentUser } = useAuth()
+  const { user: currentUser } = useAuth()
   const [page, setPage] = useState(1)
   const [searchTerm, setSearchTerm] = useState('')
   const [sortState, setSortState] = useState<UiDataTableSortState | undefined>()

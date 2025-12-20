@@ -3,16 +3,18 @@ import { useCreateEntitlement, useUpdateEntitlement } from '@simple-license/reac
 import type { ReactNode } from 'react'
 
 import type { MutationAdapter } from '../actions/mutationActions'
-import { adaptMutation } from '../actions/mutationAdapter'
 import {
   UI_ENTITLEMENT_FORM_PENDING_CREATE,
   UI_ENTITLEMENT_FORM_PENDING_UPDATE,
   UI_ENTITLEMENT_FORM_SUBMIT_CREATE,
   UI_ENTITLEMENT_FORM_SUBMIT_UPDATE,
 } from '../constants'
+import type { EntitlementFormValues } from '../formBuilder/factories'
 import { createEntitlementBlueprint } from '../formBuilder/factories'
+import type { FormBlueprint } from '../formBuilder/blueprint'
 import { FormModalWithMutation } from '../formBuilder/mutationBridge'
 import { wrapMutationAdapter } from './mutationHelpers'
+import type { UiSelectOption } from '../types'
 
 type ProductEntitlementBaseProps = {
   client: Client
@@ -24,36 +26,65 @@ type ProductEntitlementBaseProps = {
   onCompleted?: () => void
   onSuccess?: () => void
   onError?: (error: unknown) => void
+  tierOptions?: readonly UiSelectOption[]
 }
 
 type ProductEntitlementCreateProps = ProductEntitlementBaseProps & {
   mode: 'create'
   productId: string
-  defaultValues?: Partial<CreateEntitlementRequest>
+  defaultValues?: Partial<EntitlementFormValues>
 }
 
 type ProductEntitlementUpdateProps = ProductEntitlementBaseProps & {
   mode: 'update'
   entitlementId: string
-  defaultValues?: Partial<UpdateEntitlementRequest>
+  defaultValues?: Partial<EntitlementFormValues>
 }
 
 export type ProductEntitlementFormFlowProps = ProductEntitlementCreateProps | ProductEntitlementUpdateProps
 
-const baseCreateDefaults: CreateEntitlementRequest = {
+const baseFormDefaults: EntitlementFormValues = {
   key: '',
-  value_type: 'string',
-  default_value: '',
-  usage_limit: undefined,
-  metadata: {},
+  description: '',
+  metadata: '',
+  number_value: '',
+  boolean_value: '',
+  string_value: '',
+  tier_ids: [],
 }
 
-const baseUpdateDefaults: UpdateEntitlementRequest = {
-  key: undefined,
-  value_type: undefined,
-  default_value: undefined,
-  usage_limit: undefined,
-  metadata: undefined,
+// Helper to convert FormValues to API Request
+const mapFormToApi = (
+  values: EntitlementFormValues
+): Omit<CreateEntitlementRequest, 'tier_ids'> & { tier_ids?: string[] } => {
+  const result: Partial<CreateEntitlementRequest> & { tier_ids?: string[] } = {
+    key: values.key,
+    description: values.description,
+    tier_ids: values.tier_ids || [], // Form might not have this field yet, but API requires it for create. Controller handles empty check.
+    metadata: values.metadata ? JSON.parse(values.metadata) : undefined,
+  }
+
+  // Handle number_value
+  if (values.number_value !== undefined && values.number_value !== '') {
+    const num = Number(values.number_value)
+    if (!Number.isNaN(num)) {
+      result.number_value = num
+    }
+  }
+
+  // Handle boolean_value
+  if (values.boolean_value === 'true') {
+    result.boolean_value = true
+  } else if (values.boolean_value === 'false') {
+    result.boolean_value = false
+  }
+
+  // Handle string_value
+  if (values.string_value !== undefined && values.string_value !== '') {
+    result.string_value = values.string_value
+  }
+
+  return result as Omit<CreateEntitlementRequest, 'tier_ids'> & { tier_ids?: string[] }
 }
 
 export function ProductEntitlementFormFlow(props: ProductEntitlementFormFlowProps) {
@@ -65,24 +96,45 @@ export function ProductEntitlementFormFlow(props: ProductEntitlementFormFlowProp
 }
 
 function ProductEntitlementCreateFlow(props: ProductEntitlementCreateProps) {
-  const createMutation = adaptMutation(useCreateEntitlement(props.client, props.productId))
-  const defaultValues: CreateEntitlementRequest = {
-    ...baseCreateDefaults,
+  const createMutation = useCreateEntitlement(props.client, props.productId)
+
+  const defaultValues: EntitlementFormValues = {
+    ...baseFormDefaults,
     ...props.defaultValues,
   }
+
   const submitLabel = props.submitLabel ?? UI_ENTITLEMENT_FORM_SUBMIT_CREATE
   const pendingLabel = props.pendingLabel ?? UI_ENTITLEMENT_FORM_PENDING_CREATE
+
+  const adapter: MutationAdapter<EntitlementFormValues> = {
+    mutateAsync: async (values) => {
+      const apiData = mapFormToApi(values)
+      // Ensure tier_ids is present for create
+      const request: CreateEntitlementRequest = {
+        tier_ids: apiData.tier_ids || [], // Will fail validation if empty, but types require it
+        ...apiData,
+      }
+      return await createMutation.mutateAsync(request)
+    },
+    isPending: createMutation.isPending,
+    error: createMutation.error,
+    reset: createMutation.reset,
+  }
+
+  const blueprint = createEntitlementBlueprint('create', {
+    tierOptions: props.tierOptions,
+  }) as unknown as FormBlueprint<EntitlementFormValues>
 
   return (
     <FormModalWithMutation
       show={props.show}
       onClose={props.onClose}
-      blueprint={createEntitlementBlueprint('create')}
+      blueprint={blueprint}
       defaultValues={defaultValues}
       submitLabel={submitLabel}
       pendingLabel={pendingLabel}
       secondaryActions={props.secondaryActions}
-      mutation={wrapMutationAdapter(createMutation, {
+      mutation={wrapMutationAdapter(adapter, {
         onClose: props.onClose,
         onCompleted: props.onCompleted,
         onSuccess: props.onSuccess,
@@ -94,28 +146,40 @@ function ProductEntitlementCreateFlow(props: ProductEntitlementCreateProps) {
 
 function ProductEntitlementUpdateFlow(props: ProductEntitlementUpdateProps) {
   const updateMutation = useUpdateEntitlement(props.client)
-  const defaultValues: UpdateEntitlementRequest = {
-    ...baseUpdateDefaults,
+
+  const defaultValues: EntitlementFormValues = {
+    ...baseFormDefaults,
     ...props.defaultValues,
   }
+
   const submitLabel = props.submitLabel ?? UI_ENTITLEMENT_FORM_SUBMIT_UPDATE
   const pendingLabel = props.pendingLabel ?? UI_ENTITLEMENT_FORM_PENDING_UPDATE
 
-  const adapter: MutationAdapter<UpdateEntitlementRequest> = {
+  const adapter: MutationAdapter<EntitlementFormValues> = {
     mutateAsync: async (values) => {
+      const apiData = mapFormToApi(values)
+      const request: UpdateEntitlementRequest = {
+        ...apiData,
+      }
       return await updateMutation.mutateAsync({
         id: props.entitlementId,
-        data: values,
+        data: request,
       })
     },
     isPending: updateMutation.isPending,
+    error: updateMutation.error,
+    reset: updateMutation.reset,
   }
+
+  const blueprint = createEntitlementBlueprint('update', {
+    tierOptions: props.tierOptions,
+  }) as unknown as FormBlueprint<EntitlementFormValues>
 
   return (
     <FormModalWithMutation
       show={props.show}
       onClose={props.onClose}
-      blueprint={createEntitlementBlueprint('update')}
+      blueprint={blueprint}
       defaultValues={defaultValues}
       submitLabel={submitLabel}
       pendingLabel={pendingLabel}

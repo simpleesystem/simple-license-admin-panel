@@ -42,7 +42,9 @@ if (typeof window !== 'undefined' && !window.matchMedia) {
 // while allowing integration tests to use real providers.
 
 vi.mock('../src/app/logging/loggerContext', async () => {
-  const actual = await vi.importActual<typeof import('../src/app/logging/loggerContext')>('../src/app/logging/loggerContext')
+  const actual = await vi.importActual<typeof import('../src/app/logging/loggerContext')>(
+    '../src/app/logging/loggerContext'
+  )
   return {
     ...actual,
     useLogger: () => {
@@ -60,8 +62,10 @@ vi.mock('../src/app/logging/loggerContext', async () => {
   }
 })
 
-vi.mock('../src/app/live/AdminSystemLiveFeedContext', async () => {
-  const actual = await vi.importActual<typeof import('../src/app/live/AdminSystemLiveFeedContext')>('../src/app/live/AdminSystemLiveFeedContext')
+vi.mock('../src/app/live/useAdminSystemLiveFeed', async () => {
+  const actual = await vi.importActual<typeof import('../src/app/live/useAdminSystemLiveFeed')>(
+    '../src/app/live/useAdminSystemLiveFeed'
+  )
   return {
     ...actual,
     useAdminSystemLiveFeed: () => {

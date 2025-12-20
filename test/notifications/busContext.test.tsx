@@ -2,7 +2,7 @@ import { render } from '@testing-library/react'
 
 import { ERROR_MESSAGE_NOTIFICATION_CONTEXT_UNAVAILABLE } from '../../src/app/constants'
 import { NotificationBusProvider } from '../../src/notifications/bus'
-import { useNotificationBus } from '../../src/notifications/busContext'
+import { useNotificationBus } from '../../src/notifications/useNotificationBus'
 
 const BusConsumer = () => {
   useNotificationBus()
@@ -19,9 +19,8 @@ describe('NotificationBusContext', () => {
       render(
         <NotificationBusProvider>
           <BusConsumer />
-        </NotificationBusProvider>,
-      ),
+        </NotificationBusProvider>
+      )
     ).not.toThrow()
   })
 })
-

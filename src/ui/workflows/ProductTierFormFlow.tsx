@@ -3,7 +3,6 @@ import { useCreateProductTier, useUpdateProductTier } from '@simple-license/reac
 import type { ReactNode } from 'react'
 
 import type { MutationAdapter } from '../actions/mutationActions'
-import { adaptMutation } from '../actions/mutationAdapter'
 import {
   UI_PRODUCT_TIER_FORM_PENDING_CREATE,
   UI_PRODUCT_TIER_FORM_PENDING_UPDATE,
@@ -40,18 +39,32 @@ type ProductTierUpdateProps = ProductTierBaseProps & {
 
 export type ProductTierFormFlowProps = ProductTierCreateProps | ProductTierUpdateProps
 
-const baseCreateDefaults: CreateProductTierRequest = {
-  name: '',
-  code: '',
+// UI type for Form values (metadata is string)
+type ProductTierFormValues = Omit<CreateProductTierRequest, 'metadata'> & { metadata?: string }
+
+const baseCreateDefaults: ProductTierFormValues = {
+  tier_name: '',
+  tier_code: '',
   description: '',
-  metadata: {},
+  max_activations: undefined,
+  does_not_expire: false,
+  license_term_days: undefined,
+  metadata: '',
 }
 
-const baseUpdateDefaults: UpdateProductTierRequest = {
-  name: undefined,
-  code: undefined,
+const baseUpdateDefaults: Partial<ProductTierFormValues> = {
+  tier_name: undefined,
+  tier_code: undefined,
   description: undefined,
-  metadata: undefined,
+  metadata: '',
+}
+
+// Helper to convert empty strings to null/undefined
+const sanitizeNumber = (value: number | string | null | undefined): number | null | undefined => {
+  if (value === '' || value === null) return null // Explicitly return null for backend to handle as nullable
+  if (value === undefined) return undefined
+  const num = Number(value)
+  return Number.isNaN(num) ? undefined : num
 }
 
 export function ProductTierFormFlow(props: ProductTierFormFlowProps) {
@@ -63,13 +76,31 @@ export function ProductTierFormFlow(props: ProductTierFormFlowProps) {
 }
 
 function ProductTierCreateFlow(props: ProductTierCreateProps) {
-  const createMutation = adaptMutation(useCreateProductTier(props.client, props.productId))
-  const defaultValues: CreateProductTierRequest = {
+  const createMutation = useCreateProductTier(props.client, props.productId)
+
+  const defaultValues: ProductTierFormValues = {
     ...baseCreateDefaults,
     ...props.defaultValues,
+    metadata: props.defaultValues?.metadata ? JSON.stringify(props.defaultValues.metadata, null, 2) : '',
   }
+
   const submitLabel = props.submitLabel ?? UI_PRODUCT_TIER_FORM_SUBMIT_CREATE
   const pendingLabel = props.pendingLabel ?? UI_PRODUCT_TIER_FORM_PENDING_CREATE
+
+  const adapter: MutationAdapter<ProductTierFormValues> = {
+    mutateAsync: async (values) => {
+      const data: CreateProductTierRequest = {
+        ...values,
+        max_activations: sanitizeNumber(values.max_activations),
+        license_term_days: sanitizeNumber(values.license_term_days),
+        metadata: values.metadata ? JSON.parse(values.metadata) : undefined,
+      }
+      return await createMutation.mutateAsync(data)
+    },
+    isPending: createMutation.isPending,
+    error: createMutation.error,
+    reset: createMutation.reset,
+  }
 
   return (
     <FormModalWithMutation
@@ -80,7 +111,7 @@ function ProductTierCreateFlow(props: ProductTierCreateProps) {
       submitLabel={submitLabel}
       pendingLabel={pendingLabel}
       secondaryActions={props.secondaryActions}
-      mutation={wrapMutationAdapter(createMutation, {
+      mutation={wrapMutationAdapter(adapter, {
         onClose: props.onClose,
         onCompleted: props.onCompleted,
         onSuccess: props.onSuccess,
@@ -92,21 +123,32 @@ function ProductTierCreateFlow(props: ProductTierCreateProps) {
 
 function ProductTierUpdateFlow(props: ProductTierUpdateProps) {
   const updateMutation = useUpdateProductTier(props.client)
-  const defaultValues: UpdateProductTierRequest = {
+
+  const defaultValues: Partial<ProductTierFormValues> = {
     ...baseUpdateDefaults,
     ...props.defaultValues,
+    metadata: props.defaultValues?.metadata ? JSON.stringify(props.defaultValues.metadata, null, 2) : '',
   }
+
   const submitLabel = props.submitLabel ?? UI_PRODUCT_TIER_FORM_SUBMIT_UPDATE
   const pendingLabel = props.pendingLabel ?? UI_PRODUCT_TIER_FORM_PENDING_UPDATE
 
-  const adapter: MutationAdapter<UpdateProductTierRequest> = {
+  const adapter: MutationAdapter<ProductTierFormValues> = {
     mutateAsync: async (values) => {
+      const data: UpdateProductTierRequest = {
+        ...values,
+        max_activations: sanitizeNumber(values.max_activations),
+        license_term_days: sanitizeNumber(values.license_term_days),
+        metadata: values.metadata ? JSON.parse(values.metadata) : undefined,
+      }
       return await updateMutation.mutateAsync({
         id: props.tierId,
-        data: values,
+        data,
       })
     },
     isPending: updateMutation.isPending,
+    error: updateMutation.error,
+    reset: updateMutation.reset,
   }
 
   return (

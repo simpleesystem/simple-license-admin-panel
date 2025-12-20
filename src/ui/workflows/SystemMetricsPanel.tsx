@@ -5,7 +5,8 @@ import type { Client, MetricObject, MetricsResponse, MetricValue } from '@simple
 import { useSystemMetrics } from '@simple-license/react-sdk'
 import { useCallback, useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
-import { useAdminSystemLiveFeed, useLiveStatusBadgeModel } from '../../app/live/AdminSystemLiveFeedContext'
+import { useAdminSystemLiveFeed } from '../../app/live/useAdminSystemLiveFeed'
+import { useLiveStatusBadgeModel } from '../../app/live/useLiveStatusBadgeModel'
 import {
   UI_DATE_FORMAT_LOCALE,
   UI_DATE_TIME_FORMAT_OPTIONS,

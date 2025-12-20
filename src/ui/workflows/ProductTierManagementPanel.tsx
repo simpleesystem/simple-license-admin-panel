@@ -1,13 +1,14 @@
-import type { Client, ProductTier, User } from '@simple-license/react-sdk'
+import type { Client, Product, ProductTier, User } from '@simple-license/react-sdk'
 import { useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
+import Form from 'react-bootstrap/Form'
 import {
   canCreateProductTier,
   canUpdateProductTier,
   canViewProductTiers,
   isProductTierOwnedByUser,
 } from '../../app/auth/permissions'
-import { useNotificationBus } from '../../notifications/busContext'
+import { useNotificationBus } from '../../notifications/useNotificationBus'
 import {
   UI_BUTTON_VARIANT_PRIMARY,
   UI_BUTTON_VARIANT_SECONDARY,
@@ -21,6 +22,7 @@ import {
   UI_PRODUCT_TIER_EMPTY_STATE_MESSAGE,
   UI_PRODUCT_TIER_FORM_SUBMIT_CREATE,
   UI_PRODUCT_TIER_FORM_SUBMIT_UPDATE,
+  UI_SORT_ASC,
   UI_TABLE_PAGINATION_LABEL,
   UI_TABLE_PAGINATION_NEXT,
   UI_TABLE_PAGINATION_PREVIOUS,
@@ -65,20 +67,74 @@ export function ProductTierManagementPanel({
 }: ProductTierManagementPanelProps) {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingTier, setEditingTier] = useState<ProductTierListItem | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [localSortState, setLocalSortState] = useState<UiDataTableSortState | undefined>(undefined)
   const notificationBus = useNotificationBus()
 
+  const currentSortState = sortState ?? localSortState
+  const handleSortChange = onSortChange ?? ((columnId, direction) => setLocalSortState({ columnId, direction }))
+
   const visibleTiers = useMemo(() => {
+    let list = tiers
     const isSuperUser = currentUser?.role === 'SUPERUSER' || currentUser?.role === 'ADMIN'
-    if (!currentUser?.vendorId || isSuperUser) {
-      return tiers
+
+    // Vendor filtering
+    if (currentUser?.vendorId && !isSuperUser) {
+      list = list.filter((tier) => isProductTierOwnedByUser(currentUser ?? null, tier as unknown as Product))
     }
-    return tiers.filter((tier) => isProductTierOwnedByUser(currentUser, tier))
-  }, [currentUser, tiers])
-  const allowCreate = canCreateProductTier(currentUser)
+
+    // Search filtering
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase()
+      list = list.filter(
+        (tier) => tier.tierName.toLowerCase().includes(term) || tier.tierCode.toLowerCase().includes(term)
+      )
+    }
+
+    // Sorting
+    if (currentSortState) {
+      list = [...list].sort((a, b) => {
+        const aValue = a[currentSortState.columnId as keyof ProductTierListItem]
+        const bValue = b[currentSortState.columnId as keyof ProductTierListItem]
+
+        if (aValue === bValue) {
+          return 0
+        }
+        if (aValue === null || aValue === undefined) {
+          return 1
+        }
+        if (bValue === null || bValue === undefined) {
+          return -1
+        }
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          const cmp = aValue.localeCompare(bValue)
+          return currentSortState.direction === UI_SORT_ASC ? cmp : -cmp
+        }
+
+        const cmp = aValue < bValue ? -1 : 1
+        return currentSortState.direction === UI_SORT_ASC ? cmp : -cmp
+      })
+    }
+
+    return list
+  }, [currentUser, tiers, searchTerm, currentSortState])
+  const allowCreate = canCreateProductTier(currentUser ?? null)
   const canView = canViewProductTiers(currentUser)
 
   const toolbar = (
     <TableToolbar
+      start={
+        <div className="d-flex align-items-center gap-3">
+          <Form.Control
+            type="search"
+            placeholder="Search tiers..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ maxWidth: '250px' }}
+            size="sm"
+          />
+        </div>
+      }
       end={
         allowCreate ? (
           <Button variant={UI_BUTTON_VARIANT_PRIMARY} onClick={() => setShowCreateModal(true)}>
@@ -162,8 +218,8 @@ export function ProductTierManagementPanel({
         columns={columns}
         rowKey={(row) => row.id}
         emptyState={UI_PRODUCT_TIER_EMPTY_STATE_MESSAGE}
-        sortState={sortState}
-        onSort={onSortChange}
+        sortState={currentSortState}
+        onSort={handleSortChange}
         toolbar={toolbar}
         footer={pagination}
       />

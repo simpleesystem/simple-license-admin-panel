@@ -1,29 +1,41 @@
+import type { JSX, ReactNode } from 'react'
 import { useEffect } from 'react'
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
-import { FormProvider, useForm } from 'react-hook-form'
 import type { DefaultValues, FieldValues } from 'react-hook-form'
-import type { JSX, ReactNode } from 'react'
-
+import { FormProvider, useForm } from 'react-hook-form'
+import type { PermissionKey } from '../../app/auth/permissions'
+import { UI_FORM_ROW_COLUMNS_ONE } from '../constants'
+import { CheckboxField } from '../forms/CheckboxField'
+import { DateField } from '../forms/DateField'
 import { FormActions } from '../forms/FormActions'
 import { FormRow } from '../forms/FormRow'
 import { FormSection } from '../forms/FormSection'
-import { CheckboxField } from '../forms/CheckboxField'
-import { DateField } from '../forms/DateField'
 import { SelectField } from '../forms/SelectField'
-import { TextField } from '../forms/TextField'
 import { TextareaField } from '../forms/TextareaField'
+import { TextField } from '../forms/TextField'
+import type { UiAbilityConfig, UiFormRowColumns } from '../types'
 import type {
   CheckboxFieldBlueprint,
   DateFieldBlueprint,
   FormBlueprint,
   FormFieldBlueprint,
   SelectFieldBlueprint,
-  TextFieldBlueprint,
   TextareaFieldBlueprint,
+  TextFieldBlueprint,
 } from './blueprint'
-import type { UiFormRowColumns } from '../types'
-import { UI_FORM_ROW_COLUMNS_ONE } from '../constants'
+
+type CommonFieldProps = {
+  name: string
+  label: ReactNode
+  description?: ReactNode
+  disabled?: boolean
+  required?: boolean
+  testId?: string
+  ability?: UiAbilityConfig
+  permissionKey?: PermissionKey
+  permissionFallback?: ReactNode | (() => ReactNode)
+}
 
 type DynamicFormProps<TFieldValues extends FieldValues> = {
   blueprint: FormBlueprint<TFieldValues>
@@ -69,7 +81,7 @@ export function DynamicForm<TFieldValues extends FieldValues>({
 
   return (
     <FormProvider {...formMethods}>
-      <Form className={className} onSubmit={submitHandler} noValidate>
+      <Form className={className} onSubmit={submitHandler} noValidate={true}>
         {blueprint.title ? <h2 className="h4 mb-3">{blueprint.title}</h2> : null}
         {blueprint.description ? <p className="text-muted">{blueprint.description}</p> : null}
         <div className="d-flex flex-column gap-4">
@@ -106,7 +118,7 @@ export function DynamicForm<TFieldValues extends FieldValues>({
 
 const renderSectionContent = (
   columns: UiFormRowColumns | undefined,
-  fields: readonly FormFieldBlueprint<FieldValues>[],
+  fields: readonly FormFieldBlueprint<FieldValues>[]
 ) => {
   if (!columns || columns <= UI_FORM_ROW_COLUMNS_ONE) {
     return <div className="d-flex flex-column gap-3">{fields.map((field) => renderField(field))}</div>
@@ -116,12 +128,9 @@ const renderSectionContent = (
 
 // Field Renderers Registry
 
-type FieldRenderer<T extends FormFieldBlueprint<any>> = (
-  field: T,
-  commonProps: any
-) => JSX.Element
+type FieldRenderer<T extends FormFieldBlueprint<FieldValues>> = (field: T, commonProps: CommonFieldProps) => JSX.Element
 
-const renderTextField: FieldRenderer<TextFieldBlueprint<any>> = (field, commonProps) => (
+const renderTextField: FieldRenderer<TextFieldBlueprint<FieldValues>> = (field, commonProps) => (
   <TextField
     key={field.id}
     {...commonProps}
@@ -131,11 +140,17 @@ const renderTextField: FieldRenderer<TextFieldBlueprint<any>> = (field, commonPr
   />
 )
 
-const renderSelectField: FieldRenderer<SelectFieldBlueprint<any>> = (field, commonProps) => (
-  <SelectField key={field.id} {...commonProps} options={field.options} placeholder={field.placeholder} />
+const renderSelectField: FieldRenderer<SelectFieldBlueprint<FieldValues>> = (field, commonProps) => (
+  <SelectField
+    key={field.id}
+    {...commonProps}
+    options={field.options}
+    placeholder={field.placeholder}
+    multiple={field.multiple}
+  />
 )
 
-const renderTextareaField: FieldRenderer<TextareaFieldBlueprint<any>> = (field, commonProps) => (
+const renderTextareaField: FieldRenderer<TextareaFieldBlueprint<FieldValues>> = (field, commonProps) => (
   <TextareaField
     key={field.id}
     {...commonProps}
@@ -145,26 +160,20 @@ const renderTextareaField: FieldRenderer<TextareaFieldBlueprint<any>> = (field, 
   />
 )
 
-const renderCheckboxField: FieldRenderer<CheckboxFieldBlueprint<any>> = (field, commonProps) => (
+const renderCheckboxField: FieldRenderer<CheckboxFieldBlueprint<FieldValues>> = (field, commonProps) => (
   <CheckboxField key={field.id} {...commonProps} type={field.checkboxType} />
 )
 
-const renderDateField: FieldRenderer<DateFieldBlueprint<any>> = (field, commonProps) => (
-  <DateField
-    key={field.id}
-    {...commonProps}
-    min={field.min}
-    max={field.max}
-    placeholder={field.placeholder}
-  />
+const renderDateField: FieldRenderer<DateFieldBlueprint<FieldValues>> = (field, commonProps) => (
+  <DateField key={field.id} {...commonProps} min={field.min} max={field.max} placeholder={field.placeholder} />
 )
 
-const FIELD_RENDERERS: Record<string, FieldRenderer<any>> = {
-  text: renderTextField,
-  select: renderSelectField,
-  textarea: renderTextareaField,
-  checkbox: renderCheckboxField,
-  date: renderDateField,
+const FIELD_RENDERERS: Record<string, FieldRenderer<FormFieldBlueprint<FieldValues>>> = {
+  text: renderTextField as unknown as FieldRenderer<FormFieldBlueprint<FieldValues>>,
+  select: renderSelectField as unknown as FieldRenderer<FormFieldBlueprint<FieldValues>>,
+  textarea: renderTextareaField as unknown as FieldRenderer<FormFieldBlueprint<FieldValues>>,
+  checkbox: renderCheckboxField as unknown as FieldRenderer<FormFieldBlueprint<FieldValues>>,
+  date: renderDateField as unknown as FieldRenderer<FormFieldBlueprint<FieldValues>>,
 }
 
 const renderField = (field: FormFieldBlueprint<FieldValues>) => {

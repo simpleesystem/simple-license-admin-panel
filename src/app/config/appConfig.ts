@@ -119,8 +119,9 @@ export const createAppConfig = (env: EnvRecord = import.meta.env as EnvRecord): 
       ? value[ENV_VAR_API_BASE_URL]
       : DEFAULT_API_BASE_URL
 
-  if (!/^https?:\/\//i.test(apiBaseUrl)) {
-    throw new Error(`${ERROR_PREFIX}: API base URL must use http or https`)
+  // Allow empty string for relative paths (proxy usage)
+  if (apiBaseUrl !== '' && !/^https?:\/\//i.test(apiBaseUrl)) {
+    throw new Error(`${ERROR_PREFIX}: API base URL must use http or https or be empty`)
   }
 
   const flags: FeatureFlags = {

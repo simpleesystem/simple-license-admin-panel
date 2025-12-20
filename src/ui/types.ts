@@ -418,6 +418,7 @@ export type SelectFieldProps<TFieldValues extends FieldValues> = UiCommonProps &
   placeholder?: ReactNode
   disabled?: boolean
   required?: boolean
+  multiple?: boolean
 }
 
 export type TextareaFieldProps<TFieldValues extends FieldValues> = UiCommonProps & {

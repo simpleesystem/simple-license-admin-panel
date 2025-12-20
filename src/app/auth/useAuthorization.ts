@@ -1,18 +1,12 @@
-import { useContext } from 'react'
+import { useAuth } from './useAuth'
+import { derivePermissionsFromUser, type PermissionKey, type Permissions } from './permissions'
 
-import { ERROR_MESSAGE_AUTHORIZATION_CONTEXT_UNAVAILABLE } from '../../app/constants'
-import { AuthorizationContext } from './authorizationContext'
-import type { PermissionKey, Permissions } from './permissions'
-
-export const usePermissions = (): Permissions => {
-  const context = useContext(AuthorizationContext)
-  if (!context) {
-    throw new Error(ERROR_MESSAGE_AUTHORIZATION_CONTEXT_UNAVAILABLE)
-  }
-  return context
+export function usePermissions(): Permissions {
+  const { user } = useAuth()
+  return derivePermissionsFromUser(user)
 }
 
-export const useCan = (permission: PermissionKey): boolean => {
+export function useCan(permission: PermissionKey): boolean {
   const permissions = usePermissions()
   return permissions[permission] ?? false
 }

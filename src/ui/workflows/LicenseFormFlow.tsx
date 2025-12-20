@@ -1,25 +1,18 @@
-import type {
-  Client,
-  CreateLicenseRequest,
-  UpdateLicenseRequest,
-} from '@simple-license/react-sdk'
-import {
-  useCreateLicense,
-  useUpdateLicense,
-} from '@simple-license/react-sdk'
+import type { Client, CreateLicenseRequest, UpdateLicenseRequest } from '@simple-license/react-sdk'
+import { useCreateLicense, useUpdateLicense } from '@simple-license/react-sdk'
 import type { ReactNode } from 'react'
-
-import type { UiSelectOption } from '../types'
-import { FormModalWithMutation } from '../formBuilder/FormModalWithMutation'
-import { createLicenseBlueprint } from '../formBuilder/factories'
 import type { MutationAdapter } from '../actions/mutationActions'
-import { adaptMutation } from '../actions/mutationAdapter'
 import {
   UI_LICENSE_FORM_PENDING_CREATE,
   UI_LICENSE_FORM_PENDING_UPDATE,
   UI_LICENSE_FORM_SUBMIT_CREATE,
   UI_LICENSE_FORM_SUBMIT_UPDATE,
 } from '../constants'
+import type { FormBlueprint } from '../formBuilder/blueprint'
+import { FormModalWithMutation } from '../formBuilder/FormModalWithMutation'
+import { createLicenseBlueprint } from '../formBuilder/factories'
+import type { UiSelectOption } from '../types'
+import { wrapMutationAdapter } from './mutationHelpers'
 
 type LicenseFormFlowBaseProps = {
   client: Client
@@ -40,7 +33,7 @@ type LicenseFormCreateProps = LicenseFormFlowBaseProps & {
 
 type LicenseFormUpdateProps = LicenseFormFlowBaseProps & {
   mode: 'update'
-  licenseId: string
+  licenseKey: string
   defaultValues?: Partial<UpdateLicenseRequest>
 }
 
@@ -64,19 +57,20 @@ const baseUpdateDefaults: UpdateLicenseRequest = {
   metadata: undefined,
 }
 
-const ensureAdapter = <TPayload,>(
-  adapter: MutationAdapter<TPayload>,
-  handlers?: {
-    onSuccess?: (payload: TPayload) => void
-  },
-) => ({
-  mutateAsync: async (values: TPayload) => {
-    const result = await adapter.mutateAsync(values)
-    handlers?.onSuccess?.(values)
-    return result
-  },
-  isPending: adapter.isPending,
-})
+type FormValuesCreate = Omit<CreateLicenseRequest, 'metadata'> & { metadata: string }
+type FormValuesUpdate = Omit<UpdateLicenseRequest, 'metadata'> & { metadata: string }
+
+// Helper to convert empty strings to null/undefined
+const sanitizeNumber = (value: number | string | null | undefined): number | undefined => {
+  if (value === '' || value === null) {
+    return undefined
+  }
+  if (value === undefined) {
+    return undefined
+  }
+  const num = Number(value)
+  return Number.isNaN(num) ? undefined : num
+}
 
 export function LicenseFormFlow(props: LicenseFormFlowProps) {
   const createMutation = useCreateLicense(props.client)
@@ -88,10 +82,29 @@ export function LicenseFormFlow(props: LicenseFormFlowProps) {
     const blueprint = createLicenseBlueprint('create', {
       productOptions: props.productOptions,
       tierOptions: props.tierOptions,
-    })
-    const defaultValues = {
+    }) as unknown as FormBlueprint<FormValuesCreate>
+
+    const metadataObj = props.defaultValues?.metadata ?? {}
+    const metadataStr = Object.keys(metadataObj).length > 0 ? JSON.stringify(metadataObj, null, 2) : ''
+
+    const defaultValues: FormValuesCreate = {
       ...baseCreateDefaults,
       ...props.defaultValues,
+      metadata: metadataStr,
+    }
+
+    const adapter: MutationAdapter<FormValuesCreate> = {
+      mutateAsync: async (values) => {
+        const metadata = values.metadata ? JSON.parse(values.metadata) : {}
+        const data: CreateLicenseRequest = {
+          ...values,
+          activation_limit: sanitizeNumber(values.activation_limit),
+          expires_days: sanitizeNumber(values.expires_days),
+          metadata,
+        }
+        return createMutation.mutateAsync(data)
+      },
+      isPending: createMutation.isPending,
     }
 
     return (
@@ -102,30 +115,42 @@ export function LicenseFormFlow(props: LicenseFormFlowProps) {
         defaultValues={defaultValues}
         submitLabel={submitLabel}
         pendingLabel={pendingLabel}
-        mutation={ensureAdapter(adaptMutation(createMutation), {
+        mutation={wrapMutationAdapter(adapter, {
+          onClose: props.onClose,
+          onCompleted: props.onCompleted,
           onSuccess: () => {
-            props.onCompleted?.()
-            props.onClose()
+            // No custom action needed, completed covers refresh
+          },
+          onError: () => {
+            // Optional: Handle error globally or locally
           },
         })}
       />
     )
   }
 
-  const { licenseId } = props
+  const { licenseKey } = props
   const blueprint = createLicenseBlueprint('update', {
     tierOptions: props.tierOptions,
-  })
-  const defaultValues = {
+  }) as unknown as FormBlueprint<FormValuesUpdate>
+
+  const defaultValues: FormValuesUpdate = {
     ...baseUpdateDefaults,
     ...props.defaultValues,
+    metadata: props.defaultValues?.metadata ? JSON.stringify(props.defaultValues.metadata, null, 2) : '',
   }
 
-  const adapter: MutationAdapter<UpdateLicenseRequest> = {
+  const adapter: MutationAdapter<FormValuesUpdate> = {
     mutateAsync: async (values) => {
+      const data: UpdateLicenseRequest = {
+        ...values,
+        activation_limit: sanitizeNumber(values.activation_limit),
+        expires_days: sanitizeNumber(values.expires_days),
+        metadata: values.metadata ? JSON.parse(values.metadata) : undefined,
+      }
       return await updateMutation.mutateAsync({
-        id: licenseId,
-        data: values,
+        id: licenseKey,
+        data,
       })
     },
     isPending: updateMutation.isPending,
@@ -142,14 +167,16 @@ export function LicenseFormFlow(props: LicenseFormFlowProps) {
       defaultValues={defaultValues}
       submitLabel={submitLabel}
       pendingLabel={pendingLabel}
-      mutation={ensureAdapter(adapter, {
+      mutation={wrapMutationAdapter(adapter, {
+        onClose: props.onClose,
+        onCompleted: props.onCompleted,
         onSuccess: () => {
-          props.onCompleted?.()
-          props.onClose()
+          // No custom action needed, completed covers refresh
+        },
+        onError: () => {
+          // Optional: Handle error globally or locally
         },
       })}
     />
   )
 }
-
-

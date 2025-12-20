@@ -66,6 +66,7 @@ export type SelectDescriptor<TFieldValues extends FieldValues> = BaseDescriptor<
   kind: 'select'
   options?: readonly UiSelectOption[]
   placeholder?: ReactNode
+  multiple?: boolean
 }
 
 export type TextareaDescriptor<TFieldValues extends FieldValues> = BaseDescriptor<TFieldValues> & {
@@ -145,6 +146,7 @@ export const inferFieldProps = <TFieldValues extends FieldValues>(
         component: 'select',
         options: descriptor.options ?? [],
         placeholder: descriptor.placeholder,
+        multiple: descriptor.multiple,
       }
     case 'date':
       return {

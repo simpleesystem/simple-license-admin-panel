@@ -3,16 +3,13 @@ import { useDeleteEntitlement } from '@simple-license/react-sdk'
 import { useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import { canDeleteEntitlement, canUpdateEntitlement } from '../../app/auth/permissions'
-import { useNotificationBus } from '../../notifications/busContext'
+import { useNotificationBus } from '../../notifications/useNotificationBus'
 import { adaptMutation } from '../actions/mutationAdapter'
 import {
   UI_BUTTON_VARIANT_GHOST,
   UI_ENTITLEMENT_ACTION_DELETE,
   UI_ENTITLEMENT_ACTION_EDIT,
   UI_ENTITLEMENT_BUTTON_DELETE,
-  type UI_ENTITLEMENT_VALUE_TYPE_BOOLEAN,
-  type UI_ENTITLEMENT_VALUE_TYPE_NUMBER,
-  type UI_ENTITLEMENT_VALUE_TYPE_STRING,
   UI_PRODUCT_ENTITLEMENT_CONFIRM_DELETE_BODY,
   UI_PRODUCT_ENTITLEMENT_CONFIRM_DELETE_CANCEL,
   UI_PRODUCT_ENTITLEMENT_CONFIRM_DELETE_CONFIRM,
@@ -27,13 +24,15 @@ import { notifyCrudError, notifyProductEntitlementSuccess } from './notification
 export type ProductEntitlementSummary = Pick<Entitlement, 'id' | 'key'>
 
 export type ProductEntitlementListItem = ProductEntitlementSummary & {
-  valueType:
-    | typeof UI_ENTITLEMENT_VALUE_TYPE_NUMBER
-    | typeof UI_ENTITLEMENT_VALUE_TYPE_BOOLEAN
-    | typeof UI_ENTITLEMENT_VALUE_TYPE_STRING
-  defaultValue: string | number | boolean
+  valueType?: never // deprecated
+  defaultValue?: never // deprecated
+  number_value?: number | null
+  boolean_value?: boolean | null
+  string_value?: string | null
   usageLimit?: number | null
   vendorId?: string | null
+  productTiers?: { id: string; tierCode: string }[]
+  metadata?: Record<string, string | number | boolean | null>
 }
 
 type ProductEntitlementRowActionsProps = UiCommonProps & {
@@ -56,8 +55,8 @@ export function ProductEntitlementRowActions({
   const notificationBus = useNotificationBus()
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
-  const allowUpdate = canUpdateEntitlement(currentUser, entitlement)
-  const allowDelete = canDeleteEntitlement(currentUser)
+  const allowUpdate = canUpdateEntitlement(currentUser ?? null, entitlement)
+  const allowDelete = canDeleteEntitlement(currentUser ?? null)
 
   if (!allowUpdate && !allowDelete) {
     return null

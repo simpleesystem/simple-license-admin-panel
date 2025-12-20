@@ -1,5 +1,4 @@
 import type {
-  CreateEntitlementRequest,
   CreateLicenseRequest,
   CreateProductRequest,
   CreateProductTierRequest,
@@ -7,16 +6,28 @@ import type {
   CreateUserRequest,
   FreezeLicenseRequest,
   UpdateAlertThresholdsRequest,
-  UpdateEntitlementRequest,
   UpdateLicenseRequest,
   UpdateProductRequest,
   UpdateProductTierRequest,
   UpdateQuotaLimitsRequest,
   UpdateTenantRequest,
   UpdateUserRequest,
+  User,
 } from '@simple-license/react-sdk'
 import type { FieldValues } from 'react-hook-form'
 
+// UI-specific types for Entitlement Form (abstracts the API's union types)
+export interface EntitlementFormValues {
+  key: string
+  description?: string
+  number_value?: string // Use string for form input to handle decimals/empty
+  boolean_value?: string // 'true', 'false', or empty
+  string_value?: string
+  tier_ids?: string[] // Optional in UI (select), required in API
+  metadata?: string // Textarea value
+}
+
+// ... existing imports ...
 import {
   UI_ALERT_THRESHOLD_FORM_ID,
   UI_ALERT_THRESHOLD_FORM_TITLE,
@@ -35,12 +46,6 @@ import {
   UI_ENTITLEMENT_FORM_SECTION_DETAILS,
   UI_ENTITLEMENT_FORM_TITLE_CREATE,
   UI_ENTITLEMENT_FORM_TITLE_UPDATE,
-  UI_ENTITLEMENT_VALUE_LABEL_BOOLEAN,
-  UI_ENTITLEMENT_VALUE_LABEL_NUMBER,
-  UI_ENTITLEMENT_VALUE_LABEL_STRING,
-  UI_ENTITLEMENT_VALUE_TYPE_BOOLEAN,
-  UI_ENTITLEMENT_VALUE_TYPE_NUMBER,
-  UI_ENTITLEMENT_VALUE_TYPE_STRING,
   UI_FIELD_ALERT_HIGH_ACTIVATIONS,
   UI_FIELD_ALERT_HIGH_CONCURRENCY,
   UI_FIELD_ALERT_HIGH_VALIDATIONS,
@@ -54,6 +59,7 @@ import {
   UI_FORM_CONTROL_TYPE_PASSWORD,
   UI_FORM_SECTION_METADATA,
   UI_FORM_TEXTAREA_MIN_ROWS,
+  UI_LICENSE_FORM_DESCRIPTION_CREATE,
   UI_LICENSE_FORM_ID_CREATE,
   UI_LICENSE_FORM_ID_UPDATE,
   UI_LICENSE_FORM_PLACEHOLDER_DOMAIN,
@@ -68,8 +74,10 @@ import {
   UI_LICENSE_FREEZE_LABEL_ENTITLEMENTS,
   UI_LICENSE_FREEZE_LABEL_TIER,
   UI_LICENSE_FREEZE_SECTION_OPTIONS,
+  UI_PRODUCT_FORM_DESCRIPTION_CREATE,
   UI_PRODUCT_FORM_ID_CREATE,
   UI_PRODUCT_FORM_ID_UPDATE,
+  UI_PRODUCT_FORM_SECTION_DESCRIPTION,
   UI_PRODUCT_FORM_SECTION_DETAILS,
   UI_PRODUCT_FORM_TITLE_CREATE,
   UI_PRODUCT_FORM_TITLE_UPDATE,
@@ -103,6 +111,7 @@ import {
   UI_USER_FORM_SECTION_TITLE_IDENTITY,
   UI_USER_FORM_TITLE_CREATE,
   UI_USER_FORM_TITLE_UPDATE,
+  UI_USER_ROLE_VENDOR_MANAGER,
   UI_USER_VENDOR_PLACEHOLDER,
 } from '../constants'
 import type { UiSelectOption } from '../types'
@@ -121,10 +130,15 @@ type UserBlueprintOptions<TFieldValues extends FieldValues> = BaseFactoryOptions
   roleOptions?: readonly UiSelectOption[]
   vendorOptions?: readonly UiSelectOption[]
   statusOptions?: readonly UiSelectOption[]
+  currentUser?: User
 }
 
 type LicenseBlueprintOptions<TFieldValues extends FieldValues> = BaseFactoryOptions<TFieldValues> & {
   productOptions?: readonly UiSelectOption[]
+  tierOptions?: readonly UiSelectOption[]
+}
+
+type EntitlementBlueprintOptions<TFieldValues extends FieldValues> = BaseFactoryOptions<TFieldValues> & {
   tierOptions?: readonly UiSelectOption[]
 }
 
@@ -140,6 +154,8 @@ const buildConfig = <TFieldValues extends FieldValues>(
   customize?: BlueprintCustomizer<TFieldValues>
 ) => applyCustomize(generateBlueprintFromType(config), customize)
 
+// ... (License, Product, Tier blueprints unchanged) ...
+// Copying previous blueprint functions to maintain context
 const buildCreateLicenseBlueprint = (options?: LicenseBlueprintOptions<CreateLicenseRequest>) => {
   const productOptions = options?.productOptions ?? []
   const tierOptions = options?.tierOptions ?? []
@@ -180,10 +196,12 @@ const buildCreateLicenseBlueprint = (options?: LicenseBlueprintOptions<CreateLic
         {
           name: 'activation_limit',
           kind: 'number',
+          placeholder: '1',
         },
         {
           name: 'expires_days',
           kind: 'number',
+          placeholder: '365',
         },
       ],
     },
@@ -203,6 +221,7 @@ const buildCreateLicenseBlueprint = (options?: LicenseBlueprintOptions<CreateLic
     {
       id: UI_LICENSE_FORM_ID_CREATE,
       title: UI_LICENSE_FORM_TITLE_CREATE,
+      description: UI_LICENSE_FORM_DESCRIPTION_CREATE,
       sections,
     },
     options?.customize
@@ -235,10 +254,12 @@ const buildUpdateLicenseBlueprint = (options?: LicenseBlueprintOptions<UpdateLic
         {
           name: 'activation_limit',
           kind: 'number',
+          placeholder: '1',
         },
         {
           name: 'expires_days',
           kind: 'number',
+          placeholder: '365',
         },
       ],
     },
@@ -329,6 +350,23 @@ const PRODUCT_SECTION_BLUEPRINT: BlueprintSectionConfig<CreateProductRequest>[] 
         required: true,
       },
       {
+        name: 'default_license_term_days',
+        kind: 'number',
+        label: 'Default Term (Days)',
+        placeholder: '365',
+      },
+      {
+        name: 'default_max_activations',
+        kind: 'number',
+        label: 'Default Max Activations',
+        placeholder: '1',
+      },
+    ],
+  },
+  {
+    id: UI_PRODUCT_FORM_SECTION_DESCRIPTION,
+    fields: [
+      {
         name: 'description',
         kind: 'textarea',
         rows: 3,
@@ -362,6 +400,7 @@ export const createProductBlueprint = <TMode extends 'create' | 'update'>(
       {
         id: UI_PRODUCT_FORM_ID_CREATE,
         title: UI_PRODUCT_FORM_TITLE_CREATE,
+        description: UI_PRODUCT_FORM_DESCRIPTION_CREATE,
         sections: PRODUCT_SECTION_BLUEPRINT,
       },
       options?.customize as BlueprintCustomizer<CreateProductRequest> | undefined
@@ -384,14 +423,33 @@ const PRODUCT_TIER_CREATE_SECTIONS: BlueprintSectionConfig<CreateProductTierRequ
     layout: 2,
     fields: [
       {
-        name: 'name',
+        name: 'tier_name',
         kind: 'string',
         required: true,
+        label: 'Name',
       },
       {
-        name: 'code',
+        name: 'tier_code',
         kind: 'string',
         required: true,
+        label: 'Code',
+      },
+      {
+        name: 'max_activations',
+        kind: 'number',
+        label: 'Max Activations',
+        placeholder: '1',
+      },
+      {
+        name: 'does_not_expire',
+        kind: 'boolean',
+        label: 'Does Not Expire',
+      },
+      {
+        name: 'license_term_days',
+        kind: 'number',
+        label: 'Term (Days)',
+        placeholder: '365',
       },
     ],
   },
@@ -418,14 +476,33 @@ const PRODUCT_TIER_UPDATE_SECTIONS: BlueprintSectionConfig<UpdateProductTierRequ
     layout: 2,
     fields: [
       {
-        name: 'name',
+        name: 'tier_name',
         kind: 'string',
         required: true,
+        label: 'Name',
       },
       {
-        name: 'code',
+        name: 'tier_code',
         kind: 'string',
         required: true,
+        label: 'Code',
+      },
+      {
+        name: 'max_activations',
+        kind: 'number',
+        label: 'Max Activations',
+        placeholder: '1',
+      },
+      {
+        name: 'does_not_expire',
+        kind: 'boolean',
+        label: 'Does Not Expire',
+      },
+      {
+        name: 'license_term_days',
+        kind: 'number',
+        label: 'Term (Days)',
+        placeholder: '365',
       },
     ],
   },
@@ -475,125 +552,147 @@ export const createProductTierBlueprint = <TMode extends 'create' | 'update'>(
   ) as FormBlueprint<ProductTierModeValues<TMode>>
 }
 
-const ENTITLEMENT_VALUE_TYPE_OPTIONS: readonly UiSelectOption[] = [
-  {
-    value: UI_ENTITLEMENT_VALUE_TYPE_NUMBER,
-    label: UI_ENTITLEMENT_VALUE_LABEL_NUMBER,
-  },
-  {
-    value: UI_ENTITLEMENT_VALUE_TYPE_BOOLEAN,
-    label: UI_ENTITLEMENT_VALUE_LABEL_BOOLEAN,
-  },
-  {
-    value: UI_ENTITLEMENT_VALUE_TYPE_STRING,
-    label: UI_ENTITLEMENT_VALUE_LABEL_STRING,
-  },
-]
+// Entitlement Builders with Tiers
+const buildCreateEntitlementBlueprint = (options?: EntitlementBlueprintOptions<EntitlementFormValues>) => {
+  const tierOptions = options?.tierOptions ?? []
+  const sections: BlueprintSectionConfig<EntitlementFormValues>[] = [
+    {
+      id: UI_ENTITLEMENT_FORM_SECTION_DETAILS,
+      layout: 2,
+      fields: [
+        {
+          name: 'key',
+          kind: 'string',
+          required: true,
+        },
+        {
+          name: 'tier_ids',
+          kind: 'select',
+          label: 'Tiers',
+          options: tierOptions,
+          multiple: true,
+          required: true,
+        },
+        {
+          name: 'number_value',
+          kind: 'number',
+          label: 'Number Value (Optional)',
+        },
+        {
+          name: 'boolean_value',
+          kind: 'select',
+          label: 'Boolean Value (Optional)',
+          options: [
+            { value: '', label: 'Not Set' },
+            { value: 'true', label: 'True' },
+            { value: 'false', label: 'False' },
+          ],
+        },
+        {
+          name: 'string_value',
+          kind: 'string',
+          label: 'String Value (Optional)',
+        },
+      ],
+    },
+    {
+      id: UI_FORM_SECTION_METADATA,
+      fields: [
+        {
+          name: UI_FIELD_METADATA,
+          kind: 'textarea',
+          rows: UI_FORM_TEXTAREA_MIN_ROWS,
+        },
+      ],
+    },
+  ]
 
-const ENTITLEMENT_CREATE_SECTIONS: BlueprintSectionConfig<CreateEntitlementRequest>[] = [
-  {
-    id: UI_ENTITLEMENT_FORM_SECTION_DETAILS,
-    layout: 2,
-    fields: [
-      {
-        name: 'key',
-        kind: 'string',
-        required: true,
-      },
-      {
-        name: 'value_type',
-        kind: 'select',
-        options: ENTITLEMENT_VALUE_TYPE_OPTIONS,
-        required: true,
-      },
-      {
-        name: 'default_value',
-        kind: 'string',
-        required: true,
-      },
-      {
-        name: 'usage_limit',
-        kind: 'number',
-      },
-    ],
-  },
-  {
-    id: UI_FORM_SECTION_METADATA,
-    fields: [
-      {
-        name: UI_FIELD_METADATA,
-        kind: 'textarea',
-        rows: UI_FORM_TEXTAREA_MIN_ROWS,
-      },
-    ],
-  },
-]
+  return buildConfig<EntitlementFormValues>(
+    {
+      id: UI_ENTITLEMENT_FORM_ID_CREATE,
+      title: UI_ENTITLEMENT_FORM_TITLE_CREATE,
+      sections,
+    },
+    options?.customize
+  )
+}
 
-const ENTITLEMENT_UPDATE_SECTIONS: BlueprintSectionConfig<UpdateEntitlementRequest>[] = [
-  {
-    id: UI_ENTITLEMENT_FORM_SECTION_DETAILS,
-    layout: 2,
-    fields: [
-      {
-        name: 'key',
-        kind: 'string',
-      },
-      {
-        name: 'value_type',
-        kind: 'select',
-        options: ENTITLEMENT_VALUE_TYPE_OPTIONS,
-      },
-      {
-        name: 'default_value',
-        kind: 'string',
-      },
-      {
-        name: 'usage_limit',
-        kind: 'number',
-      },
-    ],
-  },
-  {
-    id: UI_FORM_SECTION_METADATA,
-    fields: [
-      {
-        name: UI_FIELD_METADATA,
-        kind: 'textarea',
-        rows: UI_FORM_TEXTAREA_MIN_ROWS,
-      },
-    ],
-  },
-]
+const buildUpdateEntitlementBlueprint = (options?: EntitlementBlueprintOptions<EntitlementFormValues>) => {
+  const tierOptions = options?.tierOptions ?? []
+  const sections: BlueprintSectionConfig<EntitlementFormValues>[] = [
+    {
+      id: UI_ENTITLEMENT_FORM_SECTION_DETAILS,
+      layout: 2,
+      fields: [
+        {
+          name: 'key',
+          kind: 'string',
+        },
+        {
+          name: 'tier_ids',
+          kind: 'select',
+          label: 'Tiers',
+          options: tierOptions,
+          multiple: true,
+        },
+        {
+          name: 'number_value',
+          kind: 'number',
+          label: 'Number Value (Optional)',
+        },
+        {
+          name: 'boolean_value',
+          kind: 'select',
+          label: 'Boolean Value (Optional)',
+          options: [
+            { value: '', label: 'Not Set' },
+            { value: 'true', label: 'True' },
+            { value: 'false', label: 'False' },
+          ],
+        },
+        {
+          name: 'string_value',
+          kind: 'string',
+          label: 'String Value (Optional)',
+        },
+      ],
+    },
+    {
+      id: UI_FORM_SECTION_METADATA,
+      fields: [
+        {
+          name: UI_FIELD_METADATA,
+          kind: 'textarea',
+          rows: UI_FORM_TEXTAREA_MIN_ROWS,
+        },
+      ],
+    },
+  ]
 
-type EntitlementModeValues<TMode extends 'create' | 'update'> = TMode extends 'create'
-  ? CreateEntitlementRequest
-  : UpdateEntitlementRequest
-
-export const createEntitlementBlueprint = <TMode extends 'create' | 'update'>(
-  mode: TMode,
-  options?: BaseFactoryOptions<EntitlementModeValues<TMode>>
-): FormBlueprint<EntitlementModeValues<TMode>> => {
-  if (mode === 'create') {
-    return buildConfig<CreateEntitlementRequest>(
-      {
-        id: UI_ENTITLEMENT_FORM_ID_CREATE,
-        title: UI_ENTITLEMENT_FORM_TITLE_CREATE,
-        sections: ENTITLEMENT_CREATE_SECTIONS as BlueprintSectionConfig<CreateEntitlementRequest>[],
-      },
-      options?.customize as BlueprintCustomizer<CreateEntitlementRequest> | undefined
-    ) as FormBlueprint<EntitlementModeValues<TMode>>
-  }
-
-  return buildConfig<UpdateEntitlementRequest>(
+  return buildConfig<EntitlementFormValues>(
     {
       id: UI_ENTITLEMENT_FORM_ID_UPDATE,
       title: UI_ENTITLEMENT_FORM_TITLE_UPDATE,
-      sections: ENTITLEMENT_UPDATE_SECTIONS as BlueprintSectionConfig<UpdateEntitlementRequest>[],
+      sections,
     },
-    options?.customize as BlueprintCustomizer<UpdateEntitlementRequest> | undefined
-  ) as FormBlueprint<EntitlementModeValues<TMode>>
+    options?.customize
+  )
 }
 
+type EntitlementModeValues = EntitlementFormValues
+
+export const createEntitlementBlueprint = <TMode extends 'create' | 'update'>(
+  mode: TMode,
+  options?: EntitlementBlueprintOptions<EntitlementModeValues>
+): FormBlueprint<EntitlementModeValues> => {
+  if (mode === 'create') {
+    return buildCreateEntitlementBlueprint(options) as FormBlueprint<EntitlementModeValues>
+  }
+
+  return buildUpdateEntitlementBlueprint(options) as FormBlueprint<EntitlementModeValues>
+}
+
+// ... (Tenant, Alert, User blueprints unchanged except imports if affected) ...
 const TENANT_QUOTA_SECTIONS: BlueprintSectionConfig<UpdateQuotaLimitsRequest>[] = [
   {
     id: UI_TENANT_QUOTA_SECTION_LIMITS,
@@ -602,30 +701,37 @@ const TENANT_QUOTA_SECTIONS: BlueprintSectionConfig<UpdateQuotaLimitsRequest>[] 
       {
         name: 'max_products',
         kind: 'number',
+        placeholder: 'Unlimited',
       },
       {
         name: 'max_products_soft',
         kind: 'number',
+        placeholder: 'Unlimited',
       },
       {
         name: 'max_activations_per_product',
         kind: 'number',
+        placeholder: '1',
       },
       {
         name: 'max_activations_per_product_soft',
         kind: 'number',
+        placeholder: '1',
       },
       {
         name: 'max_activations_total',
         kind: 'number',
+        placeholder: 'Unlimited',
       },
       {
         name: 'max_activations_total_soft',
         kind: 'number',
+        placeholder: 'Unlimited',
       },
       {
         name: 'quota_warning_threshold',
         kind: 'number',
+        placeholder: '80',
       },
     ],
   },
@@ -742,6 +848,7 @@ const USER_UPDATE_SECTIONS: BlueprintSectionConfig<UpdateUserRequest>[] = [
         kind: 'select',
         label: UI_USER_FIELD_LABEL_ROLE,
         options: [],
+        required: true,
       },
       {
         name: 'vendor_id',
@@ -771,18 +878,27 @@ export const createUserBlueprint = <TMode extends 'create' | 'update'>(
   ): BlueprintSectionConfig<TFieldValues>[] =>
     sections.map((section) => ({
       ...section,
-      fields: section.fields.map((field) => {
-        if (field.name === 'role') {
-          return { ...field, options: roleOptions }
-        }
-        if (field.name === 'vendor_id') {
-          return { ...field, options: vendorOptionsWithPlaceholder }
-        }
-        if (field.name === 'status') {
-          return { ...field, options: statusOptions }
-        }
-        return field
-      }),
+      fields: section.fields
+        .filter((field) => {
+          if (field.name === 'vendor_id') {
+            if (options?.currentUser?.role === UI_USER_ROLE_VENDOR_MANAGER || options?.currentUser?.vendorId) {
+              return false
+            }
+          }
+          return true
+        })
+        .map((field) => {
+          if (field.name === 'role') {
+            return { ...field, options: roleOptions }
+          }
+          if (field.name === 'vendor_id') {
+            return { ...field, options: vendorOptionsWithPlaceholder }
+          }
+          if (field.name === 'status') {
+            return { ...field, options: statusOptions }
+          }
+          return field
+        }),
     }))
 
   if (mode === 'create') {
@@ -809,6 +925,7 @@ export const createUserBlueprint = <TMode extends 'create' | 'update'>(
 const TENANT_CREATE_SECTIONS: BlueprintSectionConfig<CreateTenantRequest>[] = [
   {
     id: UI_TENANT_FORM_SECTION_DETAILS,
+    layout: 2,
     fields: [
       {
         name: 'name',

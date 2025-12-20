@@ -54,6 +54,8 @@ import {
   API_ENDPOINT_ADMIN_USERS_ME_PASSWORD,
   API_ENDPOINT_ADMIN_USERS_UPDATE,
   API_ENDPOINT_AUTH_LOGIN,
+  API_ENDPOINT_AUTH_LOGOUT,
+  API_ENDPOINT_AUTH_REFRESH,
   API_ENDPOINT_LICENSES_ACTIVATE,
   API_ENDPOINT_LICENSES_DEACTIVATE,
   API_ENDPOINT_LICENSES_FEATURES,
@@ -158,17 +160,37 @@ import type {
   ChangePasswordResponse,
 } from './types/api'
 import type { User } from './types/license'
+import axios from 'axios'
 
 export class Client {
   private readonly httpClient: HttpClientInterface
   private readonly baseUrl: string
   private authToken: string | null = null
-  private tokenExpiresAt: number | null = null
 
   constructor(baseURL: string, httpClient?: HttpClientInterface) {
     const baseUrlClean = baseURL.endsWith('/') ? baseURL.slice(0, -1) : baseURL
     this.baseUrl = baseUrlClean
-    this.httpClient = httpClient || new AxiosHttpClient(baseUrlClean)
+
+    const onRefreshToken = async (): Promise<string | null> => {
+      try {
+        const response = await axios.post(
+          `${this.baseUrl}${API_ENDPOINT_AUTH_REFRESH}`,
+          {},
+          { withCredentials: true }
+        )
+        const data = response.data
+        if (data?.success && data?.token) {
+          this.setToken(data.token)
+          return data.token
+        }
+        return null
+      } catch {
+        this.setToken(null)
+        return null
+      }
+    }
+
+    this.httpClient = httpClient || new AxiosHttpClient(baseUrlClean, undefined, { onRefreshToken })
   }
 
   // Authentication methods
@@ -225,21 +247,64 @@ export class Client {
       throw new AuthenticationException('Invalid or missing token in login response')
     }
 
-    this.setToken(token, Date.now() + expiresInSeconds * 1000)
-    if (this.httpClient instanceof AxiosHttpClient) {
-      this.httpClient.setAuthToken(token)
+      this.setToken(token)
+      if (this.httpClient instanceof AxiosHttpClient) {
+        this.httpClient.setAuthToken(token)
+      }
+
+      return {
+        token,
+        token_type: tokenType,
+        tokenType,
+        expires_in: expiresInSeconds,
+        expiresIn: expiresInSeconds,
+        must_change_password: mustChangePassword,
+        mustChangePassword,
+        user: normalizedUser,
+      }
+  }
+
+  async logout(): Promise<void> {
+    try {
+      await this.httpClient.post(API_ENDPOINT_AUTH_LOGOUT)
+    } catch {
+      // Ignore errors during logout
+    }
+    this.setToken(null)
+  }
+
+  /**
+   * Explicitly attempts to restore the session using the HttpOnly cookie.
+   * This is useful during app initialization when no access token is present.
+   * @param signal Optional AbortSignal to cancel the request
+   * @returns The new access token if successful, null otherwise.
+   */
+  async restoreSession(signal?: AbortSignal): Promise<string | null> {
+    // If we already have a valid token, return it
+    const currentToken = this.getToken()
+    if (currentToken) {
+      return currentToken
     }
 
-    return {
-      token,
-      token_type: tokenType,
-      tokenType,
-      expires_in: expiresInSeconds,
-      expiresIn: expiresInSeconds,
-      must_change_password: mustChangePassword,
-      mustChangePassword,
-      user: normalizedUser,
+    // Try to refresh via the cookie endpoint
+    try {
+      const response = await axios.post(
+        `${this.baseUrl}${API_ENDPOINT_AUTH_REFRESH}`,
+        {},
+        { withCredentials: true, signal }
+      )
+      const data = response.data
+      if (data?.success && data?.token) {
+        const token = data.token
+        this.setToken(token)
+        return token
+      }
+    } catch {
+      // Refresh failed (no cookie, invalid cookie, etc.)
     }
+
+    this.setToken(null)
+    return null
   }
 
   async changePassword(request: ChangePasswordRequest): Promise<ChangePasswordResponse> {
@@ -250,9 +315,8 @@ export class Client {
     return this.handleApiResponse<ChangePasswordResponse>(response.data)
   }
 
-  setToken(token: string | null, expiresAt?: number | null): void {
+  setToken(token: string | null): void {
     this.authToken = token
-    this.tokenExpiresAt = expiresAt || null
 
     if (this.httpClient instanceof AxiosHttpClient) {
       this.httpClient.setAuthToken(token)
@@ -260,13 +324,6 @@ export class Client {
   }
 
   getToken(): string | null {
-    if (this.tokenExpiresAt && this.tokenExpiresAt < Date.now()) {
-      this.authToken = null
-      this.tokenExpiresAt = null
-      if (this.httpClient instanceof AxiosHttpClient) {
-        this.httpClient.setAuthToken(null)
-      }
-    }
     return this.authToken
   }
 

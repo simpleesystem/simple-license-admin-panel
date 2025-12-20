@@ -40,7 +40,7 @@ type LicenseUsageDetailsPanelProps = {
   client: Client
   licenseKey: string
   licenseVendorId?: string | null
-  currentUser?: Pick<User, 'role' | 'vendorId'> | null
+  currentUser?: User | null
   title?: string
   periodStart?: string
   periodEnd?: string
@@ -73,7 +73,7 @@ export function LicenseUsageDetailsPanel({
   maxRows,
 }: LicenseUsageDetailsPanelProps) {
   const allowView = canViewLicenses(currentUser ?? null)
-  const isVendorScoped = isVendorScopedUser(currentUser)
+  const isVendorScoped = isVendorScopedUser(currentUser ?? null)
   const queryParams = useMemo(() => {
     if (!periodStart && !periodEnd) {
       return undefined

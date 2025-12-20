@@ -28,7 +28,7 @@ export function useLogout(client: Client) {
 
   return useMutation<void, Error, void>({
     mutationFn: async () => {
-      client.setToken(null, null)
+      client.setToken(null)
     },
     onSuccess: () => {
       queryClient.clear()

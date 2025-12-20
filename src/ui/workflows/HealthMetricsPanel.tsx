@@ -2,7 +2,8 @@ import type { Client } from '@simple-license/react-sdk'
 import { useHealthMetrics } from '@simple-license/react-sdk'
 import { useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
-import { useAdminSystemLiveFeed, useLiveStatusBadgeModel } from '../../app/live/AdminSystemLiveFeedContext'
+import { useAdminSystemLiveFeed } from '../../app/live/useAdminSystemLiveFeed'
+import { useLiveStatusBadgeModel } from '../../app/live/useLiveStatusBadgeModel'
 import {
   UI_HEALTH_METRICS_DESCRIPTION,
   UI_HEALTH_METRICS_EMPTY_BODY,

@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
 import { canCreateUser, canDeleteUser, canUpdateUser } from '../../app/auth/permissions'
-import { useNotificationBus } from '../../notifications/busContext'
+import { useNotificationBus } from '../../notifications/useNotificationBus'
 import {
   UI_BUTTON_VARIANT_PRIMARY,
   UI_BUTTON_VARIANT_SECONDARY,
@@ -52,12 +52,10 @@ import {
   UI_USER_STATUS_LABEL_DISABLED,
   UI_VALUE_PLACEHOLDER,
   UI_USER_VENDOR_PLACEHOLDER,
-  UI_USER_FIELD_LABEL_VENDOR,
-  UI_USER_FIELD_LABEL_ROLE,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
-import { TableToolbar } from '../data/TableToolbar'
 import { TableFilter } from '../data/TableFilter'
+import { TableToolbar } from '../data/TableToolbar'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
 import { notifyCrudError, notifyUserSuccess } from './notifications'
@@ -111,7 +109,7 @@ export function UserManagementPanel({
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingUser, setEditingUser] = useState<UserListItem | null>(null)
   const notificationBus = useNotificationBus()
-  const canCreate = useMemo(() => canCreateUser(currentUser), [currentUser])
+  const canCreate = useMemo(() => canCreateUser(currentUser as unknown as User), [currentUser])
   const tenantsQuery = useAdminTenants(client)
   const tenantNameById = useMemo(() => {
     const tenantList = Array.isArray(tenantsQuery.data) ? tenantsQuery.data : (tenantsQuery.data?.data ?? [])
@@ -178,7 +176,7 @@ export function UserManagementPanel({
               placeholder="All Statuses"
             />
           ) : null}
-          {onVendorFilterChange && !currentUser?.vendorId ? (
+          {onVendorFilterChange && currentUser?.role !== UI_USER_ROLE_VENDOR_MANAGER ? (
             <TableFilter
               value={vendorFilter}
               options={vendorOptions}
@@ -256,9 +254,9 @@ export function UserManagementPanel({
         cell: (row) => (
           <Stack direction="row" gap="small">
             {(() => {
-              const allowUpdate = canUpdateUser(currentUser, row) && currentUser?.id !== row.id
+              const allowUpdate = canUpdateUser(currentUser as unknown as User, row) && currentUser?.id !== row.id
               const allowDelete =
-                canDeleteUser(currentUser, row) && currentUser?.id !== row.id && row.status !== UI_USER_STATUS_DELETED
+                canDeleteUser(currentUser as unknown as User, row) && currentUser?.id !== row.id && row.status !== UI_USER_STATUS_DELETED
               const hasActions = allowUpdate || allowDelete
               return (
                 <>

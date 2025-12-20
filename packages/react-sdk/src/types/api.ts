@@ -225,6 +225,9 @@ export interface CreateProductRequest {
   name: string
   slug: string
   description?: string
+  is_active?: boolean
+  default_license_term_days?: number | null
+  default_max_activations?: number | null
   metadata?: Record<string, string | number | boolean | null>
 }
 
@@ -232,36 +235,51 @@ export interface UpdateProductRequest {
   name?: string
   slug?: string
   description?: string
+  is_active?: boolean
+  default_license_term_days?: number | null
+  default_max_activations?: number | null
   metadata?: Record<string, string | number | boolean | null>
 }
 
 export interface CreateProductTierRequest {
-  name: string
-  code: string
+  tier_name: string
+  tier_code: string
   description?: string
+  is_active?: boolean
+  max_activations?: number | null
+  does_not_expire?: boolean
+  license_term_days?: number | null
   metadata?: Record<string, string | number | boolean | null>
 }
 
 export interface UpdateProductTierRequest {
-  name?: string
-  code?: string
+  tier_name?: string
+  tier_code?: string
   description?: string
+  is_active?: boolean
+  max_activations?: number | null
+  does_not_expire?: boolean
+  license_term_days?: number | null
   metadata?: Record<string, string | number | boolean | null>
 }
 
 export interface CreateEntitlementRequest {
   key: string
-  value_type: 'number' | 'boolean' | 'string'
-  default_value: number | boolean | string
-  usage_limit?: number | null
+  description?: string
+  number_value?: number
+  boolean_value?: boolean
+  string_value?: string
+  tier_ids: string[]
   metadata?: Record<string, string | number | boolean | null>
 }
 
 export interface UpdateEntitlementRequest {
   key?: string
-  value_type?: 'number' | 'boolean' | 'string'
-  default_value?: number | boolean | string
-  usage_limit?: number | null
+  description?: string
+  number_value?: number
+  boolean_value?: boolean
+  string_value?: string
+  tier_ids?: string[]
   metadata?: Record<string, string | number | boolean | null>
 }
 

@@ -77,6 +77,7 @@ export const useAppStore = create<AppStore>()((set) => ({
         set((prev) => {
           if (action.scope) {
             const { [action.scope]: _removed, ...rest } = prev.surface.errors
+            void _removed
             const lastScope = prev.surface.lastScope === action.scope ? null : prev.surface.lastScope
             return {
               surface: {

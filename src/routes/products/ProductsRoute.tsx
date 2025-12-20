@@ -1,8 +1,8 @@
-import { useAdminProducts } from '@simple-license/react-sdk'
+import { useAdminProducts, useAdminTenants } from '@simple-license/react-sdk'
 import { useMemo, useState } from 'react'
 
 import { useApiClient } from '../../api/apiContext'
-import { useAuth } from '../../app/auth/authContext'
+import { useAuth } from '../../app/auth/useAuth'
 import { canViewProducts, isProductOwnedByUser, isVendorScopedUser } from '../../app/auth/permissions'
 import {
   UI_PAGE_SUBTITLE_PRODUCTS,
@@ -25,8 +25,9 @@ import { ProductManagementPanel } from '../../ui/workflows/ProductManagementPane
 
 export function ProductsRouteComponent() {
   const client = useApiClient()
-  const { currentUser } = useAuth()
+  const { user: currentUser } = useAuth()
   const { data, isLoading, isError, refetch } = useAdminProducts(client)
+  const { data: tenantsData } = useAdminTenants(client)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [page, setPage] = useState(1)
@@ -34,6 +35,14 @@ export function ProductsRouteComponent() {
 
   const allFilteredProducts = useMemo(() => {
     let list = Array.isArray(data) ? data : (data?.data ?? [])
+    const tenants = Array.isArray(tenantsData) ? tenantsData : (tenantsData?.data ?? [])
+    const tenantMap = new Map(tenants.map((t) => [t.id, t.name]))
+
+    // Map vendor names
+    list = list.map((product) => ({
+      ...product,
+      vendorName: product.vendorId ? tenantMap.get(product.vendorId) : undefined,
+    }))
 
     // Vendor Scoping
     if (isVendorScopedUser(currentUser)) {
@@ -81,7 +90,7 @@ export function ProductsRouteComponent() {
     }
 
     return list
-  }, [currentUser, data, searchTerm, statusFilter, sortState])
+  }, [currentUser, data, tenantsData, searchTerm, statusFilter, sortState])
 
   const paginatedProducts = useMemo(() => {
     const startIndex = (page - 1) * UI_TABLE_PAGE_SIZE_DEFAULT

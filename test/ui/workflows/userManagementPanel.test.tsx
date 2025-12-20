@@ -1,12 +1,10 @@
-import { fireEvent, render, waitFor, screen } from '@testing-library/react'
-import { describe, expect, beforeEach, test, vi } from 'vitest'
+import { fireEvent, render, waitFor } from '@testing-library/react'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import {
   UI_USER_ACTION_DELETE,
   UI_USER_ACTION_EDIT,
   UI_USER_BUTTON_CREATE,
-  UI_USER_BUTTON_EDIT,
-  UI_USER_CONFIRM_DELETE_CONFIRM,
   UI_USER_FORM_SUBMIT_CREATE,
   UI_USER_FORM_SUBMIT_UPDATE,
 } from '../../../src/ui/constants'
@@ -100,9 +98,7 @@ describe('UserManagementPanel', () => {
     useDeleteUserMock.mockReturnValue(deleteMutation)
     const users = [buildUser()]
 
-    const { getByText, getByRole } = render(
-      <UserManagementPanel {...defaultProps} users={users} />,
-    )
+    const { getByText, getByRole } = render(<UserManagementPanel {...defaultProps} users={users} />)
 
     fireEvent.click(getByText(UI_USER_BUTTON_CREATE))
     fireEvent.click(getByRole('button', { name: UI_USER_FORM_SUBMIT_CREATE }))
@@ -121,7 +117,7 @@ describe('UserManagementPanel', () => {
     const users = [buildUser()]
 
     const { getByText, getByRole } = render(
-      <UserManagementPanel {...defaultProps} users={users} onRefresh={onRefresh} />,
+      <UserManagementPanel {...defaultProps} users={users} onRefresh={onRefresh} />
     )
 
     fireEvent.click(getByText(UI_USER_BUTTON_CREATE))
@@ -139,18 +135,18 @@ describe('UserManagementPanel', () => {
     useDeleteUserMock.mockReturnValue(deleteMutation)
     const user = buildUser()
 
-    const { getByText, getByRole } = render(
-      <UserManagementPanel {...defaultProps} users={[user]} />,
-    )
+    const { getByText, getByRole } = render(<UserManagementPanel {...defaultProps} users={[user]} />)
 
     // UserRowActions mock renders UI_USER_ACTION_EDIT
     fireEvent.click(getByText(UI_USER_ACTION_EDIT))
     fireEvent.click(getByRole('button', { name: UI_USER_FORM_SUBMIT_UPDATE }))
 
     await waitFor(() =>
-      expect(updateMutation.mutateAsync).toHaveBeenCalledWith(expect.objectContaining({
-        id: user.id
-      }))
+      expect(updateMutation.mutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: user.id,
+        })
+      )
     )
   })
 
@@ -163,7 +159,7 @@ describe('UserManagementPanel', () => {
     const user = buildUser()
 
     const { getByText, getByRole } = render(
-      <UserManagementPanel {...defaultProps} users={[user]} onRefresh={onRefresh} />,
+      <UserManagementPanel {...defaultProps} users={[user]} onRefresh={onRefresh} />
     )
 
     fireEvent.click(getByText(UI_USER_ACTION_EDIT))
@@ -180,9 +176,7 @@ describe('UserManagementPanel', () => {
     const onRefresh = vi.fn()
     const user = buildUser()
 
-    const { getByText } = render(
-      <UserManagementPanel {...defaultProps} users={[user]} onRefresh={onRefresh} />,
-    )
+    const { getByText } = render(<UserManagementPanel {...defaultProps} users={[user]} onRefresh={onRefresh} />)
 
     fireEvent.click(getByText(UI_USER_ACTION_DELETE))
 
@@ -204,7 +198,7 @@ describe('UserManagementPanel', () => {
     const user = buildUser()
 
     const { getByText, getByRole } = render(
-      <UserManagementPanel {...defaultProps} users={[user]} onRefresh={onRefresh} />,
+      <UserManagementPanel {...defaultProps} users={[user]} onRefresh={onRefresh} />
     )
 
     fireEvent.click(getByText(UI_USER_BUTTON_CREATE))

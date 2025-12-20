@@ -3,23 +3,21 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import type { QueryClient } from '@tanstack/react-query'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider } from '@tanstack/react-router'
-import type { PropsWithChildren } from 'react'
+import type { PropsWithChildren, ReactNode } from 'react'
 import { useEffect, useMemo } from 'react'
 
 import { ApiProvider } from '../api/ApiProvider'
 import { AppErrorBoundary } from '../errors/AppErrorBoundary'
 import { NotificationBusProvider } from '../notifications/bus'
-import { useNotificationBus } from '../notifications/busContext'
 import { DEFAULT_NOTIFICATION_EVENT } from '../notifications/constants'
 import { ToastProvider } from '../notifications/ToastProvider'
+import { useNotificationBus } from '../notifications/useNotificationBus'
+import { AbilityProvider } from './abilities/AbilityProvider'
 import { createTrackingClient } from './analytics/tracking'
 import { TrackingContext } from './analytics/trackingContext'
-import { AuthorizationProvider } from './auth/AuthorizationProvider'
 import { AuthProvider } from './auth/AuthProvider'
-import { useAuth } from './auth/authContext'
-import { PasswordResetGate } from './auth/PasswordResetGate'
-import { SessionManager } from './auth/SessionManager'
-import { usePermissions } from './auth/useAuthorization'
+import { derivePermissionsFromUser } from './auth/permissions'
+import { useAuth } from './auth/useAuth'
 import { AppConfigProvider, useAppConfig, useFeatureFlag } from './config'
 import { I18nProvider } from './i18n/I18nProvider'
 import { createAppLogger } from './logging/logger'
@@ -65,18 +63,16 @@ function AppProvidersInner({ children }: AppProvidersProps) {
             <ApiProvider>
               <AppStateProvider>
                 <AuthProvider>
-                  <AuthorizationProvider>
+                  <AbilityProvider>
                     <NotificationBusProvider>
                       <QueryErrorNotifierBridge />
                       <ToastProvider />
-                      <RouterContextBridge queryClient={queryClient} />
-                      <SessionManager />
-                      <SurfaceRenderer />
-                      <AppErrorBoundary>
-                        <PasswordResetGate>{children ?? <RouterProvider router={router} />}</PasswordResetGate>
-                      </AppErrorBoundary>
+                      <RouterContextBridge queryClient={queryClient}>
+                        <SurfaceRenderer />
+                        <AppErrorBoundary>{children ?? <RouterProvider router={router} />}</AppErrorBoundary>
+                      </RouterContextBridge>
                     </NotificationBusProvider>
-                  </AuthorizationProvider>
+                  </AbilityProvider>
                 </AuthProvider>
               </AppStateProvider>
             </ApiProvider>
@@ -87,22 +83,23 @@ function AppProvidersInner({ children }: AppProvidersProps) {
   )
 }
 
-function RouterContextBridge({ queryClient }: { queryClient: QueryClient }) {
-  const { isAuthenticated, currentUser } = useAuth()
-  const permissions = usePermissions()
+function RouterContextBridge({ queryClient, children }: { queryClient: QueryClient; children: ReactNode }) {
+  const { isAuthenticated, user } = useAuth()
   const navigationIntent = useAppStore((state) => state.navigationIntent)
   const dispatch = useAppStore((state) => state.dispatch)
   const navigate = router.navigate
   const logger = useLogger()
 
+  const permissions = useMemo(() => derivePermissionsFromUser(user), [user])
+
   const authState = useMemo(
     () => ({
       isAuthenticated,
       permissions,
-      currentUserRole: currentUser?.role,
-      currentUserVendorId: currentUser?.vendorId ?? null,
+      currentUserRole: user?.role,
+      currentUserVendorId: user?.vendorId ?? null,
     }),
-    [currentUser?.role, currentUser?.vendorId, isAuthenticated, permissions]
+    [user?.role, user?.vendorId, isAuthenticated, permissions]
   )
 
   const firstAllowedRoute = useMemo(() => computeFirstAllowedRoute(authState), [authState])
@@ -133,12 +130,12 @@ function RouterContextBridge({ queryClient }: { queryClient: QueryClient }) {
     }
   }, [navigationIntent, navigate, dispatch, logger])
 
-  return null
+  return <>{children}</>
 }
 
 function QueryErrorNotifierBridge() {
   const notificationBus = useNotificationBus()
-  const { currentUser } = useAuth()
+  const { user } = useAuth()
 
   useEffect(() => {
     const unregister = registerQueryErrorNotifier((payload) => {
@@ -146,7 +143,7 @@ function QueryErrorNotifierBridge() {
       // or if the error is 403 (which often triggers the flow)
       // This prevents "Network Error" or "Forbidden" toasts from stacking up
       // behind the Change Password screen.
-      if (currentUser?.passwordResetRequired) {
+      if (user?.passwordResetRequired) {
         return
       }
 
@@ -159,7 +156,7 @@ function QueryErrorNotifierBridge() {
       notificationBus.emit(DEFAULT_NOTIFICATION_EVENT, payload)
     })
     return unregister
-  }, [notificationBus, currentUser])
+  }, [notificationBus, user])
 
   return null
 }

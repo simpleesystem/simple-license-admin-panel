@@ -18,7 +18,7 @@ import {
   STORAGE_KEY_AUTH_USER,
 } from '../../src/app/constants'
 import { i18nResources } from '../../src/app/i18n/resources'
-import { useNotificationBus } from '../../src/notifications/busContext'
+import { useNotificationBus } from '../../src/notifications/useNotificationBus'
 
 const DASHBOARD_HEADING = i18nResources.common[I18N_KEY_DASHBOARD_HEADING]
 const ERROR_TITLE_TEXT = i18nResources.common[I18N_KEY_APP_ERROR_TITLE]

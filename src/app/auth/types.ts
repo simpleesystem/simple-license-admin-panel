@@ -1,16 +1,15 @@
-import type { LoginResponse, User } from '@simple-license/react-sdk'
+import type { User } from '@simple-license/react-sdk'
+import type { LoginCredentials } from '@/types/auth'
 
-import type { AUTH_STATUS_IDLE, AUTH_STATUS_LOADING } from '../../app/constants'
-
-export type AuthStatus = typeof AUTH_STATUS_IDLE | typeof AUTH_STATUS_LOADING
-
-export type AuthContextValue = {
-  token: string | null
+export interface AuthContextValue {
+  user: User | null
+  // Alias for user, for backward compatibility or clarity
   currentUser: User | null
-  status: AuthStatus
   isAuthenticated: boolean
-  login: (username: string, password: string) => Promise<LoginResponse>
-  logout: () => void
-  refreshCurrentUser: () => Promise<User | null>
-  setSession: (token: string, user: User) => void
+  isLoading: boolean
+  error: string | null
+  login: (credentials: LoginCredentials) => Promise<void>
+  logout: () => Promise<void>
+  refreshCurrentUser: () => Promise<void>
 }
+

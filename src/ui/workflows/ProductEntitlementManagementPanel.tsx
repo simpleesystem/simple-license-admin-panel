@@ -1,6 +1,8 @@
 import type { Client, User } from '@simple-license/react-sdk'
 import { useMemo, useState } from 'react'
+import Badge from 'react-bootstrap/Badge'
 import Button from 'react-bootstrap/Button'
+import Form from 'react-bootstrap/Form'
 import {
   canCreateEntitlement,
   canUpdateEntitlement,
@@ -8,7 +10,7 @@ import {
   isEntitlementOwnedByUser,
   isVendorScopedUser,
 } from '../../app/auth/permissions'
-import { useNotificationBus } from '../../notifications/busContext'
+import { useNotificationBus } from '../../notifications/useNotificationBus'
 import {
   UI_BUTTON_VARIANT_PRIMARY,
   UI_BUTTON_VARIANT_SECONDARY,
@@ -16,12 +18,10 @@ import {
   UI_ENTITLEMENT_COLUMN_HEADER_ACTIONS,
   UI_ENTITLEMENT_COLUMN_HEADER_DEFAULT_VALUE,
   UI_ENTITLEMENT_COLUMN_HEADER_KEY,
-  UI_ENTITLEMENT_COLUMN_HEADER_USAGE_LIMIT,
   UI_ENTITLEMENT_COLUMN_HEADER_VALUE_TYPE,
   UI_ENTITLEMENT_COLUMN_ID_ACTIONS,
   UI_ENTITLEMENT_COLUMN_ID_DEFAULT_VALUE,
   UI_ENTITLEMENT_COLUMN_ID_KEY,
-  UI_ENTITLEMENT_COLUMN_ID_USAGE_LIMIT,
   UI_ENTITLEMENT_COLUMN_ID_VALUE_TYPE,
   UI_ENTITLEMENT_EMPTY_STATE_MESSAGE,
   UI_ENTITLEMENT_FORM_SUBMIT_CREATE,
@@ -29,9 +29,7 @@ import {
   UI_ENTITLEMENT_VALUE_LABEL_BOOLEAN,
   UI_ENTITLEMENT_VALUE_LABEL_NUMBER,
   UI_ENTITLEMENT_VALUE_LABEL_STRING,
-  UI_ENTITLEMENT_VALUE_TYPE_BOOLEAN,
-  UI_ENTITLEMENT_VALUE_TYPE_NUMBER,
-  UI_ENTITLEMENT_VALUE_TYPE_STRING,
+  UI_SORT_ASC,
   UI_TABLE_PAGINATION_LABEL,
   UI_TABLE_PAGINATION_NEXT,
   UI_TABLE_PAGINATION_PREVIOUS,
@@ -40,7 +38,7 @@ import {
 import { DataTable } from '../data/DataTable'
 import { TableToolbar } from '../data/TableToolbar'
 import { Stack } from '../layout/Stack'
-import type { UiDataTableColumn, UiDataTableSortState, UiSortDirection } from '../types'
+import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
 import { notifyCrudError, notifyProductEntitlementSuccess } from './notifications'
 import { ProductEntitlementFormFlow } from './ProductEntitlementFormFlow'
 import { type ProductEntitlementListItem, ProductEntitlementRowActions } from './ProductEntitlementRowActions'
@@ -58,12 +56,7 @@ type ProductEntitlementManagementPanelProps = {
   onPageChange: (page: number) => void
   sortState?: UiDataTableSortState
   onSortChange?: (columnId: string, direction: UiSortDirection) => void
-}
-
-const VALUE_TYPE_LABEL_MAP: Record<ProductEntitlementListItem['valueType'], string> = {
-  [UI_ENTITLEMENT_VALUE_TYPE_NUMBER]: UI_ENTITLEMENT_VALUE_LABEL_NUMBER,
-  [UI_ENTITLEMENT_VALUE_TYPE_BOOLEAN]: UI_ENTITLEMENT_VALUE_LABEL_BOOLEAN,
-  [UI_ENTITLEMENT_VALUE_TYPE_STRING]: UI_ENTITLEMENT_VALUE_LABEL_STRING,
+  tierOptions?: readonly UiSelectOption[]
 }
 
 export function ProductEntitlementManagementPanel({
@@ -77,21 +70,56 @@ export function ProductEntitlementManagementPanel({
   onPageChange,
   sortState,
   onSortChange,
+  tierOptions,
 }: ProductEntitlementManagementPanelProps) {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingEntitlement, setEditingEntitlement] = useState<ProductEntitlementListItem | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [localSortState, setLocalSortState] = useState<UiDataTableSortState | undefined>(undefined)
   const notificationBus = useNotificationBus()
 
+  const currentSortState = sortState ?? localSortState
+  const handleSortChange = onSortChange ?? ((columnId, direction) => setLocalSortState({ columnId, direction }))
+
   const isVendorScoped = isVendorScopedUser(currentUser)
-  const visibleEntitlements = useMemo(
-    () =>
-      isVendorScoped
-        ? entitlements.filter((entitlement) => isEntitlementOwnedByUser(currentUser, entitlement))
-        : entitlements,
-    [currentUser, entitlements, isVendorScoped]
-  )
-  const allowCreate = canCreateEntitlement(currentUser)
-  const canView = canViewEntitlements(currentUser)
+  const visibleEntitlements = useMemo(() => {
+    let list = entitlements
+
+    // Vendor filtering
+    if (isVendorScoped) {
+      list = list.filter((entitlement) => isEntitlementOwnedByUser(currentUser, entitlement))
+    }
+
+    // Search filtering
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase()
+      list = list.filter((entitlement) => entitlement.key.toLowerCase().includes(term))
+    }
+
+    // Sorting
+    if (currentSortState) {
+      list = [...list].sort((a, b) => {
+        const aValue = a[currentSortState.columnId as keyof ProductEntitlementListItem]
+        const bValue = b[currentSortState.columnId as keyof ProductEntitlementListItem]
+
+        if (aValue === bValue) return 0
+        if (aValue === null || aValue === undefined) return 1
+        if (bValue === null || bValue === undefined) return -1
+
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          const cmp = aValue.localeCompare(bValue)
+          return currentSortState.direction === UI_SORT_ASC ? cmp : -cmp
+        }
+
+        const cmp = aValue < bValue ? -1 : 1
+        return currentSortState.direction === UI_SORT_ASC ? cmp : -cmp
+      })
+    }
+
+    return list
+  }, [currentUser, entitlements, isVendorScoped, searchTerm, currentSortState])
+  const allowCreate = canCreateEntitlement(currentUser ?? null)
+  const canView = canViewEntitlements(currentUser ?? null)
 
   const refreshWith = (action: 'create' | 'update' | 'delete') => {
     onRefresh?.()
@@ -104,6 +132,18 @@ export function ProductEntitlementManagementPanel({
 
   const toolbar = (
     <TableToolbar
+      start={
+        <div className="d-flex align-items-center gap-3">
+          <Form.Control
+            type="search"
+            placeholder="Search entitlements..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ maxWidth: '250px' }}
+            size="sm"
+          />
+        </div>
+      }
       end={
         allowCreate ? (
           <Button variant={UI_BUTTON_VARIANT_PRIMARY} onClick={() => setShowCreateModal(true)}>
@@ -145,26 +185,51 @@ export function ProductEntitlementManagementPanel({
       {
         id: UI_ENTITLEMENT_COLUMN_ID_VALUE_TYPE,
         header: UI_ENTITLEMENT_COLUMN_HEADER_VALUE_TYPE,
-        cell: (row) => VALUE_TYPE_LABEL_MAP[row.valueType],
-        sortable: true,
+        cell: (row) => {
+          const types = []
+          if (row.number_value !== null && row.number_value !== undefined) types.push(UI_ENTITLEMENT_VALUE_LABEL_NUMBER)
+          if (row.boolean_value !== null && row.boolean_value !== undefined) {
+            types.push(UI_ENTITLEMENT_VALUE_LABEL_BOOLEAN)
+          }
+          if (row.string_value !== null && row.string_value !== undefined) types.push(UI_ENTITLEMENT_VALUE_LABEL_STRING)
+          return types.join(', ') || UI_VALUE_PLACEHOLDER
+        },
+        sortable: false,
       },
       {
         id: UI_ENTITLEMENT_COLUMN_ID_DEFAULT_VALUE,
         header: UI_ENTITLEMENT_COLUMN_HEADER_DEFAULT_VALUE,
-        cell: (row) => (row.defaultValue !== undefined ? String(row.defaultValue) : UI_VALUE_PLACEHOLDER),
-        sortable: true,
+        cell: (row) => {
+          const values = []
+          if (row.number_value !== null && row.number_value !== undefined) { values.push(row.number_value) }
+          if (row.boolean_value !== null && row.boolean_value !== undefined) { values.push(String(row.boolean_value)) }
+          if (row.string_value !== null && row.string_value !== undefined) values.push(row.string_value)
+          return values.join(', ') || UI_VALUE_PLACEHOLDER
+        },
+        sortable: false,
       },
       {
-        id: UI_ENTITLEMENT_COLUMN_ID_USAGE_LIMIT,
-        header: UI_ENTITLEMENT_COLUMN_HEADER_USAGE_LIMIT,
-        cell: (row) => (typeof row.usageLimit === 'number' ? row.usageLimit : UI_VALUE_PLACEHOLDER),
-        sortable: true,
+        id: 'tiers',
+        header: 'Tiers',
+        cell: (row) => {
+           if (!row.productTiers || row.productTiers.length === 0) return UI_VALUE_PLACEHOLDER
+           return (
+             <div className="d-flex flex-wrap gap-1">
+               {row.productTiers.map(t => (
+                 <Badge key={t.id} bg="light" text="dark" className="border">
+                   {t.tierCode}
+                 </Badge>
+               ))}
+             </div>
+           )
+        },
+        sortable: false,
       },
       {
         id: UI_ENTITLEMENT_COLUMN_ID_ACTIONS,
         header: UI_ENTITLEMENT_COLUMN_HEADER_ACTIONS,
         cell: (row) => {
-          if (!canUpdateEntitlement(currentUser, row)) {
+          if (!canUpdateEntitlement(currentUser ?? null, row as unknown as Product)) {
             return UI_VALUE_PLACEHOLDER
           }
           return (
@@ -189,8 +254,8 @@ export function ProductEntitlementManagementPanel({
         columns={columns}
         rowKey={(row) => row.id}
         emptyState={UI_ENTITLEMENT_EMPTY_STATE_MESSAGE}
-        sortState={sortState}
-        onSort={onSortChange}
+        sortState={currentSortState}
+        onSort={handleSortChange}
         toolbar={toolbar}
         footer={pagination}
       />
@@ -206,6 +271,7 @@ export function ProductEntitlementManagementPanel({
           onCompleted={onRefresh}
           onSuccess={() => refreshWith('create')}
           onError={handleMutationError}
+          tierOptions={tierOptions}
         />
       ) : null}
 
@@ -219,13 +285,18 @@ export function ProductEntitlementManagementPanel({
           entitlementId={editingEntitlement.id}
           defaultValues={{
             key: editingEntitlement.key,
-            value_type: editingEntitlement.valueType,
-            default_value: editingEntitlement.defaultValue,
-            usage_limit: editingEntitlement.usageLimit ?? undefined,
+            number_value:
+              editingEntitlement.number_value !== null ? String(editingEntitlement.number_value) : undefined,
+            boolean_value:
+              editingEntitlement.boolean_value !== null ? String(editingEntitlement.boolean_value) : undefined,
+            string_value: editingEntitlement.string_value ?? undefined,
+            tier_ids: editingEntitlement.productTiers ? editingEntitlement.productTiers.map(pt => pt.id) : [],
+            metadata: editingEntitlement.metadata ? JSON.stringify(editingEntitlement.metadata, null, 2) : '',
           }}
           onCompleted={onRefresh}
           onSuccess={() => refreshWith('update')}
           onError={handleMutationError}
+          tierOptions={tierOptions}
         />
       ) : null}
     </Stack>

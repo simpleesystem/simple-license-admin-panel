@@ -3,8 +3,7 @@ import type { QueryClient } from '@tanstack/react-query'
 import { createRootRouteWithContext, createRoute, createRouter, redirect } from '@tanstack/react-router'
 import { AnalyticsRouteComponent } from '../routes/analytics/AnalyticsRoute'
 import { AuditRouteComponent } from '../routes/audit/AuditRoute'
-import { AuthRouteComponent } from '../routes/auth/AuthRoute'
-import { ChangePasswordRouteComponent } from '../routes/auth/ChangePasswordRoute'
+import { LoginRoute as AuthRouteComponent } from '../routes/auth/LoginRoute'
 import { DashboardRouteComponent } from '../routes/dashboard/DashboardRoute'
 import { HealthRouteComponent } from '../routes/health/HealthRoute'
 import { LicensesRouteComponent } from '../routes/licenses/LicensesRoute'
@@ -18,7 +17,6 @@ import {
   ROUTE_PATH_ANALYTICS,
   ROUTE_PATH_AUDIT,
   ROUTE_PATH_AUTH,
-  ROUTE_PATH_CHANGE_PASSWORD,
   ROUTE_PATH_DASHBOARD,
   ROUTE_PATH_HEALTH,
   ROUTE_PATH_LICENSES,
@@ -64,8 +62,13 @@ const rootLandingRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: ROUTE_PATH_ROOT,
   beforeLoad: ({ context, location }) => {
-    assertPermission(context, location, 'viewDashboard')
-    throw redirect({ to: ROUTE_PATH_DASHBOARD })
+    // If authenticated, go to dashboard
+    if (context.authState?.isAuthenticated) {
+      assertPermission(context, location, 'viewDashboard')
+      throw redirect({ to: ROUTE_PATH_DASHBOARD })
+    }
+    // If not authenticated, go to auth (login)
+    throw redirect({ to: ROUTE_PATH_AUTH })
   },
 })
 
@@ -73,18 +76,6 @@ const authRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: ROUTE_PATH_AUTH,
   component: AuthRouteComponent,
-})
-
-const changePasswordRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: ROUTE_PATH_CHANGE_PASSWORD,
-  beforeLoad: ({ context, location }) => {
-    assertAuthenticated(context, location)
-    if (!context.authState?.permissions.changePassword) {
-      throw redirect({ to: context.firstAllowedRoute ?? ROUTE_PATH_ROOT })
-    }
-  },
-  component: ChangePasswordRouteComponent,
 })
 
 const licensesRoute = createRoute({
@@ -160,7 +151,6 @@ const routeTree = rootRoute.addChildren([
   dashboardRoute,
   rootLandingRoute,
   authRoute,
-  changePasswordRoute,
   licensesRoute,
   productsRoute,
   tenantsRoute,
@@ -245,9 +235,6 @@ export const assertTenantAccess = (context: RouterContext, location: RouterLocat
 export const computeFirstAllowedRoute = (authState: AuthStateSnapshot | undefined): string => {
   if (!authState?.isAuthenticated) {
     return ROUTE_PATH_AUTH
-  }
-  if (authState.permissions.changePassword) {
-    return ROUTE_PATH_CHANGE_PASSWORD
   }
   if (authState.permissions.viewDashboard) {
     return ROUTE_PATH_DASHBOARD

@@ -11,6 +11,13 @@ import type { SelectFieldProps } from '../types'
 import { FormField } from './FormField'
 import { VisibilityGate } from '../utils/PermissionGate'
 
+export interface SelectFieldProps<TFieldValues extends FieldValues> extends FormFieldCommonProps {
+  name: Path<TFieldValues>
+  options: readonly UiSelectOption[]
+  placeholder?: ReactNode
+  multiple?: boolean
+}
+
 export function SelectField<TFieldValues extends FieldValues>({
   name,
   label,
@@ -24,6 +31,7 @@ export function SelectField<TFieldValues extends FieldValues>({
   ability,
   permissionKey,
   permissionFallback,
+  multiple,
 }: SelectFieldProps<TFieldValues>) {
   const {
     register,
@@ -48,6 +56,7 @@ export function SelectField<TFieldValues extends FieldValues>({
             disabled={disabled}
             isInvalid={Boolean(fieldError)}
             aria-describedby={describedBy}
+            multiple={multiple}
             {...register(name)}
           >
             {placeholder ? (

@@ -9,7 +9,7 @@ import {
   isProductOwnedByUser,
   isVendorScopedUser,
 } from '../../app/auth/permissions'
-import { useNotificationBus } from '../../notifications/busContext'
+import { useNotificationBus } from '../../notifications/useNotificationBus'
 import {
   UI_BUTTON_VARIANT_PRIMARY,
   UI_BUTTON_VARIANT_SECONDARY,
@@ -26,7 +26,6 @@ import {
   UI_PRODUCT_COLUMN_ID_VENDOR,
   UI_PRODUCT_EMPTY_STATE_MESSAGE,
   UI_PRODUCT_FORM_SUBMIT_CREATE,
-  UI_PRODUCT_FORM_SUBMIT_UPDATE,
   UI_PRODUCT_STATUS_ACTIVE,
   UI_PRODUCT_STATUS_SUSPENDED,
   UI_TABLE_PAGINATION_LABEL,
@@ -43,6 +42,7 @@ import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDir
 import { notifyCrudError, notifyProductSuccess } from './notifications'
 import { ProductFormFlow } from './ProductFormFlow'
 import { ProductRowActions } from './ProductRowActions'
+import { ProductUpdateDialog } from './ProductUpdateDialog'
 
 export type ProductListItem = {
   id: string
@@ -51,6 +51,7 @@ export type ProductListItem = {
   description?: string
   isActive: boolean
   vendorId?: string | null
+  vendorName?: string
 }
 
 type ProductManagementPanelProps = {
@@ -178,14 +179,14 @@ export function ProductManagementPanel({
       {
         id: UI_PRODUCT_COLUMN_ID_VENDOR,
         header: UI_PRODUCT_COLUMN_HEADER_VENDOR,
-        cell: (row) => row.vendorId ?? UI_VALUE_PLACEHOLDER,
+        cell: (row) => row.vendorName ?? row.vendorId ?? UI_VALUE_PLACEHOLDER,
         sortable: true,
       },
       {
         id: UI_PRODUCT_COLUMN_ID_ACTIONS,
         header: UI_PRODUCT_COLUMN_HEADER_ACTIONS,
         cell: (row) => {
-          if (!canUpdateProduct(currentUser, row)) {
+          if (!canUpdateProduct(currentUser ?? null)) {
             return UI_VALUE_PLACEHOLDER
           }
           return (
@@ -243,14 +244,13 @@ export function ProductManagementPanel({
       ) : null}
 
       {productToEdit ? (
-        <ProductFormFlow
+        <ProductUpdateDialog
           client={client}
-          mode="update"
           productId={productToEdit.id}
           show={Boolean(productToEdit)}
           onClose={() => setEditingProduct(null)}
-          submitLabel={UI_PRODUCT_FORM_SUBMIT_UPDATE}
-          defaultValues={{
+          currentUser={currentUser}
+          initialValues={{
             name: productToEdit.name,
             slug: productToEdit.slug,
             description: productToEdit.description,

@@ -157,7 +157,7 @@ export const UI_TEST_ID_SIDE_PANEL = `${UI_TEST_ID_PREFIX}side-panel`
 export const UI_CLASS_APP_SHELL = 'min-vh-100 d-flex flex-column bg-body-tertiary'
 export const UI_CLASS_APP_SHELL_BODY = 'flex-grow-1 d-flex w-100'
 export const UI_CLASS_APP_SHELL_SIDEBAR = 'bg-body border-end'
-export const UI_CLASS_APP_SHELL_CONTENT = 'flex-grow-1'
+export const UI_CLASS_APP_SHELL_CONTENT = 'flex-grow-1 d-flex flex-column'
 export const UI_CLASS_APP_SHELL_HEADER = 'border-bottom bg-body'
 export const UI_CLASS_APP_SHELL_FOOTER = 'border-top bg-body'
 
@@ -743,10 +743,13 @@ export const UI_TENANT_QUOTA_FORM_TITLE = 'Tenant Quotas' as const
 export const UI_TENANT_QUOTA_SECTION_LIMITS = 'limits' as const
 
 export const UI_PRODUCT_FORM_TITLE_CREATE = 'Create Product' as const
+export const UI_PRODUCT_FORM_DESCRIPTION_CREATE =
+  'Define the product basics. You can add tiers and entitlements after creation.' as const
 export const UI_PRODUCT_FORM_TITLE_UPDATE = 'Update Product' as const
 export const UI_PRODUCT_FORM_ID_CREATE = 'create-product' as const
 export const UI_PRODUCT_FORM_ID_UPDATE = 'update-product' as const
 export const UI_PRODUCT_FORM_SECTION_DETAILS = 'product-details' as const
+export const UI_PRODUCT_FORM_SECTION_DESCRIPTION = 'product-description' as const
 export const UI_PRODUCT_BUTTON_CREATE = 'Create Product' as const
 export const UI_PRODUCT_BUTTON_EDIT = 'Edit' as const
 export const UI_PRODUCT_BUTTON_SAVE = 'Save product' as const
@@ -882,6 +885,8 @@ export const UI_PRODUCT_ENTITLEMENT_CONFIRM_DELETE_CONFIRM = 'Delete entitlement
 export const UI_PRODUCT_ENTITLEMENT_CONFIRM_DELETE_CANCEL = 'Cancel' as const
 
 export const UI_LICENSE_FORM_TITLE_CREATE = 'Create License' as const
+export const UI_LICENSE_FORM_DESCRIPTION_CREATE =
+  'Issue a new license to a customer. You can manage activations and limits after creation.' as const
 export const UI_LICENSE_FORM_TITLE_UPDATE = 'Update License' as const
 export const UI_LICENSE_FORM_ID_CREATE = 'create-license' as const
 export const UI_LICENSE_FORM_ID_UPDATE = 'update-license' as const
@@ -915,6 +920,7 @@ export const UI_LICENSE_COLUMN_HEADER_STATUS = 'Status' as const
 export const UI_LICENSE_COLUMN_HEADER_ACTIONS = 'Actions' as const
 export const UI_LICENSE_EMPTY_STATE_MESSAGE = 'No licenses yet' as const
 export const UI_LICENSE_STATUS_ACTIVE = 'ACTIVE' as const
+export const UI_LICENSE_STATUS_INACTIVE = 'INACTIVE' as const
 export const UI_LICENSE_STATUS_SUSPENDED = 'SUSPENDED' as const
 export const UI_LICENSE_STATUS_REVOKED = 'REVOKED' as const
 export const UI_ENTITY_LICENSE = 'License' as const

@@ -9,13 +9,13 @@ import {
   NOTIFICATION_VARIANT_WARNING,
   TEST_ID_NOTIFICATION_PORTAL,
 } from '../app/constants'
-import { useNotificationBus } from './busContext'
 import type { NotificationVariant } from './constants'
 import {
   DEFAULT_NOTIFICATION_DURATION,
   DEFAULT_NOTIFICATION_POSITION,
   type ToastNotificationPayload,
 } from './constants'
+import { useNotificationBus } from './useNotificationBus'
 
 type ToastItem = ToastNotificationPayload & {
   key: string

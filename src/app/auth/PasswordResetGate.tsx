@@ -1,59 +1,25 @@
 import type { PropsWithChildren } from 'react'
-import { Button } from 'react-bootstrap'
-import Col from 'react-bootstrap/Col'
-import Container from 'react-bootstrap/Container'
-import Row from 'react-bootstrap/Row'
-import { ChangePasswordFlow } from '../../ui/auth/ChangePasswordFlow'
-import { UI_HEADER_ACTION_SIGN_OUT, UI_TEST_ID_HEADER } from '../../ui/constants'
-import { AppShell } from '../../ui/layout/AppShell'
-import { TopNavBar } from '../../ui/navigation/TopNavBar'
-import { APP_BRAND_NAME } from '../constants'
-import { useAuth } from './authContext'
+import { useAuth } from './useAuth'
+import { ChangePasswordFlow } from '@/ui/auth/ChangePasswordFlow'
+import { PersistentHeader } from '../layout/PersistentHeader'
+import { AppShell } from '@/ui/layout/AppShell'
+import { TEST_ID_APP_SHELL } from '../constants'
+import { Container } from 'react-bootstrap'
 
-type PasswordResetGateProps = PropsWithChildren
+export function PasswordResetGate({ children }: PropsWithChildren) {
+  const { currentUser, isAuthenticated } = useAuth()
 
-export function PasswordResetGate({ children }: PasswordResetGateProps) {
-  const { currentUser, refreshCurrentUser } = useAuth()
-
-  if (currentUser?.passwordResetRequired) {
+  // If user is authenticated and password reset is required, show the change password flow
+  // Wrap it in AppShell to preserve the header (and logout functionality)
+  if (isAuthenticated && currentUser?.passwordResetRequired) {
     return (
-      <AppShell
-        topBar={
-          <TopNavBar
-            testId={UI_TEST_ID_HEADER}
-            brand={APP_BRAND_NAME}
-            navigation={null}
-            actions={<PasswordResetHeaderActions />}
-          />
-        }
-      >
-        <div className="min-vh-100 bg-body-tertiary d-flex align-items-center">
-          <Container>
-            <Row className="justify-content-center">
-              <Col md={6} lg={5}>
-                <ChangePasswordFlow
-                  onSuccess={async () => {
-                    await refreshCurrentUser()
-                  }}
-                />
-              </Col>
-            </Row>
-          </Container>
-        </div>
+      <AppShell testId={TEST_ID_APP_SHELL} topBar={<PersistentHeader />}>
+        <Container fluid className="py-4">
+          <ChangePasswordFlow />
+        </Container>
       </AppShell>
     )
   }
 
   return <>{children}</>
-}
-
-const PasswordResetHeaderActions = () => {
-  const { logout } = useAuth()
-  return (
-    <div className="d-flex gap-2">
-      <Button variant="secondary" size="sm" onClick={logout}>
-        {UI_HEADER_ACTION_SIGN_OUT}
-      </Button>
-    </div>
-  )
 }

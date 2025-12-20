@@ -1,7 +1,6 @@
 export * from './actions/createActionMenuItems'
 export * from './actions/mutationActions'
 export * from './actions/mutationAdapter'
-export * from './auth/ChangePasswordFlow'
 export * from './constants'
 export * from './data/ActionMenu'
 export * from './data/CardList'

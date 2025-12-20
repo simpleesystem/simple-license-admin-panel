@@ -2,8 +2,8 @@ import type { Client, Tenant, User } from '@simple-license/react-sdk'
 import { useResumeTenant, useSuspendTenant } from '@simple-license/react-sdk'
 import { useState } from 'react'
 import Button from 'react-bootstrap/Button'
-import { canUpdateTenant } from '../../app/auth/permissions'
-import { useNotificationBus } from '../../notifications/busContext'
+import { canSuspendTenant, canUpdateTenant } from '../../app/auth/permissions'
+import { useNotificationBus } from '../../notifications/useNotificationBus'
 import { adaptMutation } from '../actions/mutationAdapter'
 import {
   UI_BUTTON_VARIANT_GHOST,
@@ -43,7 +43,8 @@ export function TenantRowActions({ client, tenant, onEdit, onCompleted, currentU
   const [showSuspendConfirm, setShowSuspendConfirm] = useState(false)
   const [showResumeConfirm, setShowResumeConfirm] = useState(false)
 
-  const allowUpdate = canUpdateTenant(currentUser, tenant)
+  const allowUpdate = canUpdateTenant(currentUser ?? null, tenant)
+  const allowSuspend = canSuspendTenant(currentUser ?? null)
   const isSuspended = tenant.status === UI_TENANT_STATUS_SUSPENDED
 
   if (!allowUpdate) {
@@ -87,25 +88,26 @@ export function TenantRowActions({ client, tenant, onEdit, onCompleted, currentU
           {UI_TENANT_ACTION_EDIT}
         </Button>
 
-        {isSuspended ? (
-          <Button
-            variant={UI_BUTTON_VARIANT_GHOST}
-            onClick={() => setShowResumeConfirm(true)}
-            disabled={resumeMutation.isPending}
-            aria-label={UI_TENANT_ACTION_RESUME}
-          >
-            {UI_TENANT_BUTTON_RESUME}
-          </Button>
-        ) : (
-          <Button
-            variant={UI_BUTTON_VARIANT_GHOST}
-            onClick={() => setShowSuspendConfirm(true)}
-            disabled={suspendMutation.isPending}
-            aria-label={UI_TENANT_ACTION_SUSPEND}
-          >
-            {UI_TENANT_BUTTON_SUSPEND}
-          </Button>
-        )}
+        {allowSuspend &&
+          (isSuspended ? (
+            <Button
+              variant={UI_BUTTON_VARIANT_GHOST}
+              onClick={() => setShowResumeConfirm(true)}
+              disabled={resumeMutation.isPending}
+              aria-label={UI_TENANT_ACTION_RESUME}
+            >
+              {UI_TENANT_BUTTON_RESUME}
+            </Button>
+          ) : (
+            <Button
+              variant={UI_BUTTON_VARIANT_GHOST}
+              onClick={() => setShowSuspendConfirm(true)}
+              disabled={suspendMutation.isPending}
+              aria-label={UI_TENANT_ACTION_SUSPEND}
+            >
+              {UI_TENANT_BUTTON_SUSPEND}
+            </Button>
+          ))}
 
         <ModalDialog
           show={showSuspendConfirm}
@@ -113,11 +115,13 @@ export function TenantRowActions({ client, tenant, onEdit, onCompleted, currentU
           title={UI_TENANT_CONFIRM_SUSPEND_TITLE}
           body={UI_TENANT_CONFIRM_SUSPEND_BODY}
           primaryAction={{
+            id: 'suspend-confirm',
             label: UI_TENANT_CONFIRM_SUSPEND_CONFIRM,
             onClick: handleSuspend,
             disabled: suspendMutation.isPending,
           }}
           secondaryAction={{
+            id: 'suspend-cancel',
             label: UI_TENANT_CONFIRM_SUSPEND_CANCEL,
             onClick: () => setShowSuspendConfirm(false),
           }}
@@ -129,11 +133,13 @@ export function TenantRowActions({ client, tenant, onEdit, onCompleted, currentU
           title={UI_TENANT_CONFIRM_RESUME_TITLE}
           body={UI_TENANT_CONFIRM_RESUME_BODY}
           primaryAction={{
+            id: 'resume-confirm',
             label: UI_TENANT_CONFIRM_RESUME_CONFIRM,
             onClick: handleResume,
             disabled: resumeMutation.isPending,
           }}
           secondaryAction={{
+            id: 'resume-cancel',
             label: UI_TENANT_CONFIRM_RESUME_CANCEL,
             onClick: () => setShowResumeConfirm(false),
           }}

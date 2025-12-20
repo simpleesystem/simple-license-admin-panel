@@ -3,7 +3,7 @@ import { useDeleteProductTier } from '@simple-license/react-sdk'
 import { useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import { canDeleteProductTier, canUpdateProductTier } from '../../app/auth/permissions'
-import { useNotificationBus } from '../../notifications/busContext'
+import { useNotificationBus } from '../../notifications/useNotificationBus'
 import { adaptMutation } from '../actions/mutationAdapter'
 import {
   UI_BUTTON_VARIANT_GHOST,
@@ -45,9 +45,14 @@ export function ProductTierRowActions({
   const notificationBus = useNotificationBus()
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
-  const tierContext = { vendorId: vendorId ?? (tier as { vendorId?: string | null }).vendorId }
-  const allowUpdate = canUpdateProductTier(currentUser, tierContext)
-  const allowDelete = canDeleteProductTier(currentUser)
+  const productContext = { vendorId }
+  // const allowUpdate = canUpdateProduct(currentUser ?? null, productContext)
+  // tierContext is unused in original code too? No, it was used.
+  // Wait, I am editing ProductTierRowActions but looking at ProductRowActions logic?
+  // Ah, the error was in ProductTierRowActions about tierContext being unused.
+  // const tierContext = { vendorId: vendorId ?? (tier as { vendorId?: string | null }).vendorId }
+  const allowUpdate = canUpdateProductTier(currentUser ?? null)
+  const allowDelete = canDeleteProductTier(currentUser ?? null)
 
   if (!allowUpdate && !allowDelete) {
     return null
@@ -100,11 +105,13 @@ export function ProductTierRowActions({
           title={UI_PRODUCT_TIER_CONFIRM_DELETE_TITLE}
           body={UI_PRODUCT_TIER_CONFIRM_DELETE_BODY}
           primaryAction={{
+            id: 'delete-confirm',
             label: UI_PRODUCT_TIER_CONFIRM_DELETE_CONFIRM,
             onClick: handleDelete,
             disabled: deleteMutation.isPending,
           }}
           secondaryAction={{
+            id: 'delete-cancel',
             label: UI_PRODUCT_TIER_CONFIRM_DELETE_CANCEL,
             onClick: () => setShowDeleteConfirm(false),
           }}

@@ -1,4 +1,4 @@
-import type { Client, LicenseStatus, User } from '@simple-license/react-sdk'
+import type { Client, License, LicenseStatus, User } from '@simple-license/react-sdk'
 import { useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
@@ -25,8 +25,8 @@ import {
   UI_LICENSE_COLUMN_ID_TIER,
   UI_LICENSE_EMPTY_STATE_MESSAGE,
   UI_LICENSE_FORM_SUBMIT_CREATE,
-  UI_LICENSE_FORM_SUBMIT_UPDATE,
   UI_LICENSE_STATUS_ACTIVE,
+  UI_LICENSE_STATUS_INACTIVE,
   UI_LICENSE_STATUS_REVOKED,
   UI_LICENSE_STATUS_SUSPENDED,
   UI_TABLE_PAGINATION_LABEL,
@@ -42,9 +42,11 @@ import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
 import { LicenseFormFlow } from './LicenseFormFlow'
 import { LicenseRowActions } from './LicenseRowActions'
+import { LicenseUpdateDialog } from './LicenseUpdateDialog'
 
 export type LicenseListItem = {
   id: string
+  licenseKey: string
   productSlug: string
   tierCode: string
   customerEmail: string
@@ -55,7 +57,7 @@ export type LicenseListItem = {
 type LicenseManagementPanelProps = {
   client: Client
   licenses: readonly LicenseListItem[]
-  currentUser?: Pick<User, 'role' | 'vendorId'> | null
+  currentUser?: User | null
   tierOptions: readonly UiSelectOption[]
   productOptions: readonly UiSelectOption[]
   onRefresh?: () => void
@@ -90,17 +92,18 @@ export function LicenseManagementPanel({
   const [editingLicense, setEditingLicense] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
 
-  const isVendorScoped = isVendorScopedUser(currentUser)
+  const isVendorScoped = isVendorScopedUser(currentUser ?? null)
   const visibleLicenses = useMemo(
-    () => (isVendorScoped ? licenses.filter((license) => isLicenseOwnedByUser(currentUser, license)) : licenses),
+    () => (isVendorScoped ? licenses.filter((license) => isLicenseOwnedByUser(currentUser ?? null, license as unknown as License)) : licenses),
     [currentUser, isVendorScoped, licenses]
   )
-  const allowCreate = canCreateLicense(currentUser)
-  const canView = canViewLicenses(currentUser)
+  const allowCreate = canCreateLicense(currentUser ?? null)
+  const canView = canViewLicenses(currentUser ?? null)
 
   const statusOptions: UiSelectOption[] = [
     { value: '', label: 'Filter by Status' },
     { value: 'ACTIVE', label: UI_LICENSE_STATUS_ACTIVE },
+    { value: 'INACTIVE', label: UI_LICENSE_STATUS_INACTIVE },
     { value: 'SUSPENDED', label: UI_LICENSE_STATUS_SUSPENDED },
     { value: 'REVOKED', label: UI_LICENSE_STATUS_REVOKED },
   ]
@@ -188,13 +191,13 @@ export function LicenseManagementPanel({
         id: UI_LICENSE_COLUMN_ID_ACTIONS,
         header: UI_LICENSE_COLUMN_HEADER_ACTIONS,
         cell: (row) => {
-          if (!canUpdateLicense(currentUser, row)) {
+          if (!canUpdateLicense(currentUser ?? null)) {
             return UI_VALUE_PLACEHOLDER
           }
           return (
             <LicenseRowActions
               client={client}
-              licenseId={row.id}
+              licenseKey={row.licenseKey}
               licenseStatus={row.status}
               licenseVendorId={row.vendorId}
               currentUser={currentUser}
@@ -212,7 +215,7 @@ export function LicenseManagementPanel({
     if (!editingLicense) {
       return null
     }
-    return licenses.find((l) => l.id === editingLicense)
+    return licenses.find((license) => license.licenseKey === editingLicense)
   }, [editingLicense, licenses])
 
   return (
@@ -246,16 +249,17 @@ export function LicenseManagementPanel({
       ) : null}
 
       {editingLicenseData ? (
-        <LicenseFormFlow
+        <LicenseUpdateDialog
           client={client}
-          mode="update"
+          licenseKey={editingLicenseData.licenseKey}
           show={Boolean(editingLicense)}
           onClose={() => setEditingLicense(null)}
-          submitLabel={UI_LICENSE_FORM_SUBMIT_UPDATE}
-          licenseId={editingLicenseData.id}
-          licenseVendorId={editingLicenseData.vendorId}
+          currentUser={currentUser}
           tierOptions={tierOptions}
-          defaultValues={{ tier_code: tierOptions[0]?.value }}
+          initialValues={{
+            tier_code: editingLicenseData.tierCode,
+            customer_email: editingLicenseData.customerEmail,
+          }}
           onCompleted={onRefresh}
         />
       ) : null}

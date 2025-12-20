@@ -2,7 +2,7 @@ import { useAdminTenants } from '@simple-license/react-sdk'
 import { useMemo, useState } from 'react'
 
 import { useApiClient } from '../../api/apiContext'
-import { useAuth } from '../../app/auth/authContext'
+import { useAuth } from '../../app/auth/useAuth'
 import { canViewTenants, isTenantOwnedByUser, isVendorScopedUser } from '../../app/auth/permissions'
 import {
   UI_PAGE_SUBTITLE_TENANTS,
@@ -25,7 +25,7 @@ import { TenantManagementPanel } from '../../ui/workflows/TenantManagementPanel'
 
 export function TenantsRouteComponent() {
   const client = useApiClient()
-  const { currentUser } = useAuth()
+  const { user: currentUser } = useAuth()
   const { data, isLoading, isError, refetch } = useAdminTenants(client)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('')

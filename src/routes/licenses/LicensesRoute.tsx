@@ -1,9 +1,9 @@
 import { useAdminLicenses, useAdminProducts } from '@simple-license/react-sdk'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { useApiClient } from '../../api/apiContext'
-import { useAuth } from '../../app/auth/authContext'
 import { canViewLicenses, isLicenseOwnedByUser, isVendorScopedUser } from '../../app/auth/permissions'
+import { useAuth } from '../../app/auth/useAuth'
 import {
   UI_LICENSE_STATUS_ACTION_RETRY,
   UI_LICENSE_STATUS_ERROR_BODY,
@@ -26,13 +26,50 @@ import { LicenseManagementPanel } from '../../ui/workflows/LicenseManagementPane
 
 export function LicensesRouteComponent() {
   const client = useApiClient()
-  const { currentUser } = useAuth()
+  const { user: currentUser } = useAuth()
   const { data, isLoading, isError, refetch } = useAdminLicenses(client)
   const { data: productsData } = useAdminProducts(client)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [page, setPage] = useState(1)
   const [sortState, setSortState] = useState<UiDataTableSortState | undefined>()
+  const [tierOptions, setTierOptions] = useState<{ value: string; label: string }[]>([])
+
+  useEffect(() => {
+    const fetchTiers = async () => {
+      const list = Array.isArray(productsData) ? productsData : (productsData?.data ?? [])
+      if (!list.length) {
+        return
+      }
+
+      const allTiers: { value: string; label: string }[] = []
+
+      // Fetch tiers for all products
+      await Promise.all(
+        list.map(async (product) => {
+          try {
+            const response = await client.listProductTiers(product.id)
+            const tiers = Array.isArray(response) ? response : (response.data ?? [])
+
+            for (const tier of tiers) {
+              allTiers.push({
+                value: tier.tierCode,
+                label: `${product.name} - ${tier.tierName}`,
+              })
+            }
+          } catch (e) {
+            console.error(`Failed to fetch tiers for product ${product.name}`, e)
+          }
+        })
+      )
+
+      // Sort tiers by label for better UX
+      allTiers.sort((a, b) => a.label.localeCompare(b.label))
+      setTierOptions(allTiers)
+    }
+
+    void fetchTiers()
+  }, [client, productsData])
 
   const allFilteredLicenses = useMemo<LicenseListItem[]>(() => {
     let list = Array.isArray(data) ? (data as LicenseListItem[]) : ((data?.data as LicenseListItem[]) ?? [])
@@ -158,7 +195,7 @@ export function LicensesRouteComponent() {
           sortState={sortState}
           onSortChange={handleSort}
           productOptions={productOptions}
-          tierOptions={[]} // TODO: Implement tier options logic
+          tierOptions={tierOptions}
         />
       ) : null}
     </Page>

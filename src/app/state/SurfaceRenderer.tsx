@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { I18N_KEY_APP_ERROR_TITLE, NOTIFICATION_EVENT_TOAST, NOTIFICATION_VARIANT_ERROR } from '../../app/constants'
-import { useNotificationBus } from '../../notifications/busContext'
+import { useNotificationBus } from '../../notifications/useNotificationBus'
 
 import { selectLatestError, useAppStore } from './store'
 

@@ -1,9 +1,8 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 
 import { NOTIFICATION_VARIANT_ERROR } from '../../../src/app/constants'
-import { createAppQueryClient } from '../../../src/app/queryClient'
 import { notifyQueryError } from '../../../src/app/query/errorNotifier'
-import { useAppStore } from '../../../src/app/state/store'
+import { createAppQueryClient } from '../../../src/app/queryClient'
 
 const mocks = vi.hoisted(() => ({
   shouldRetryRequestMock: vi.fn(() => true),
@@ -42,9 +41,7 @@ describe('createAppQueryClient', () => {
     const testError = new Error('query failed')
 
     client.getQueryCache().config.onError?.(testError as never, {} as never)
-    client
-      .getMutationCache()
-      .config.onError?.(testError as never, undefined, undefined, {} as never, {} as never)
+    client.getMutationCache().config.onError?.(testError as never, undefined, undefined, {} as never, {} as never)
 
     expect(notifyQueryError).toHaveBeenCalledTimes(2)
     expect(mocks.dispatchMock).toHaveBeenCalledTimes(2)

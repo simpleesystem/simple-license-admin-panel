@@ -9,12 +9,10 @@ import {
   isTenantOwnedByUser,
   isVendorScopedUser,
 } from '../../app/auth/permissions'
-import { useNotificationBus } from '../../notifications/busContext'
+import { useNotificationBus } from '../../notifications/useNotificationBus'
 import {
   UI_BUTTON_VARIANT_PRIMARY,
   UI_BUTTON_VARIANT_SECONDARY,
-  UI_DATE_FORMAT_LOCALE,
-  UI_DATE_FORMAT_OPTIONS,
   UI_TABLE_PAGINATION_LABEL,
   UI_TABLE_PAGINATION_NEXT,
   UI_TABLE_PAGINATION_PREVIOUS,
@@ -42,6 +40,7 @@ import { TableFilter } from '../data/TableFilter'
 import { TableToolbar } from '../data/TableToolbar'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
+import { formatTenantCreatedAt } from '../utils/formatUtils'
 import { notifyCrudError, notifyTenantSuccess } from './notifications'
 import { TenantFormFlow } from './TenantFormFlow'
 import { TenantRowActions } from './TenantRowActions'
@@ -64,17 +63,6 @@ type TenantManagementPanelProps = {
   onSortChange?: (columnId: string, direction: UiSortDirection) => void
 }
 
-export const formatTenantCreatedAt = (createdAt: TenantListItem['createdAt'] | undefined): string => {
-  if (!createdAt) {
-    return UI_VALUE_PLACEHOLDER
-  }
-  const parsedDate = new Date(createdAt)
-  if (Number.isNaN(parsedDate.getTime())) {
-    return UI_VALUE_PLACEHOLDER
-  }
-  return new Intl.DateTimeFormat(UI_DATE_FORMAT_LOCALE, UI_DATE_FORMAT_OPTIONS).format(parsedDate)
-}
-
 export function TenantManagementPanel({
   client,
   tenants,
@@ -93,12 +81,12 @@ export function TenantManagementPanel({
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingTenant, setEditingTenant] = useState<TenantListItem | null>(null)
   const notificationBus = useNotificationBus()
-  const isVendorScoped = isVendorScopedUser(currentUser)
+  const isVendorScoped = isVendorScopedUser(currentUser ?? null)
   const visibleTenants = useMemo(
-    () => (isVendorScoped ? tenants.filter((tenant) => isTenantOwnedByUser(currentUser, tenant)) : tenants),
+    () => (isVendorScoped ? tenants.filter((tenant) => isTenantOwnedByUser(currentUser ?? null, tenant as unknown as Tenant)) : tenants),
     [currentUser, isVendorScoped, tenants]
   )
-  const allowCreate = canCreateTenant(currentUser)
+  const allowCreate = canCreateTenant(currentUser ?? null)
   const canView = canViewTenants(currentUser)
 
   const statusOptions: UiSelectOption[] = [
@@ -184,7 +172,7 @@ export function TenantManagementPanel({
         id: UI_TENANT_COLUMN_ID_ACTIONS,
         header: UI_TENANT_COLUMN_HEADER_ACTIONS,
         cell: (row) => {
-          if (!canUpdateTenant(currentUser, row)) {
+          if (!canUpdateTenant(currentUser ?? null, row as unknown as Tenant)) {
             return UI_VALUE_PLACEHOLDER
           }
           return (

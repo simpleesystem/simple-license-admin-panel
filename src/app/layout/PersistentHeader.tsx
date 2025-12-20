@@ -2,7 +2,8 @@ import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import Nav from 'react-bootstrap/Nav'
-import { ChangePasswordFlow } from '../../ui/auth/ChangePasswordFlow'
+import { ModalDialog } from '../../ui/overlay/ModalDialog'
+import { ChangePasswordForm } from '../../ui/auth/ChangePasswordForm'
 import {
   UI_CLASS_HEADER_ACTIONS,
   UI_CLASS_HEADER_NAV_LINK,
@@ -15,8 +16,7 @@ import {
 } from '../../ui/constants'
 import { UI_NAV_LABEL_DASHBOARD } from '../../ui/navigation/navConstants'
 import { TopNavBar } from '../../ui/navigation/TopNavBar'
-import { ModalDialog } from '../../ui/overlay/ModalDialog'
-import { useAuth } from '../auth/authContext'
+import { useAuth } from '../auth/useAuth'
 import { usePermissions } from '../auth/useAuthorization'
 import { isApiUser } from '../auth/userUtils'
 import { APP_BRAND_NAME } from '../constants'
@@ -75,14 +75,16 @@ export function PersistentHeader() {
         }
       />
 
-      {showChangePasswordAction ? (
-        <ModalDialog
-          show={showPasswordModal}
-          onClose={() => setShowPasswordModal(false)}
-          title={UI_HEADER_MODAL_TITLE_CHANGE_PASSWORD}
-          body={<ChangePasswordFlow onSuccess={handleChangePasswordSuccess} />}
-        />
-      ) : null}
+      <ModalDialog
+        isOpen={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+        title={UI_HEADER_MODAL_TITLE_CHANGE_PASSWORD}
+        size="lg"
+      >
+        <div className="p-3">
+          <ChangePasswordForm onSuccess={handleChangePasswordSuccess} />
+        </div>
+      </ModalDialog>
     </>
   )
 }

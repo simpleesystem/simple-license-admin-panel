@@ -1,22 +1,23 @@
-import type { AdminRole, User } from '@simple-license/react-sdk'
+import type { User } from '@simple-license/react-sdk'
 
-const API_USER_ROLES: readonly AdminRole[] = ['API_READ_ONLY', 'API_VENDOR_WRITE', 'API_CONSUMER_ACTIVATE']
-
-export const isApiUser = (user: User | null | undefined): boolean => {
-  if (!user?.role) {
+export const isSystemAdminUser = (user: User | null): boolean => {
+  if (!user) {
     return false
   }
-  return API_USER_ROLES.includes(user.role)
+  const role = user.role
+  return role === 'SUPERUSER' || role === 'ADMIN'
 }
 
-export const isSystemAdminUser = (user: User | null | undefined): boolean => {
-  if (!user?.role) {
+export const isVendorScopedUser = (user: User | null): boolean => {
+  if (!user) {
     return false
   }
-  return user.role === 'SUPERUSER' || user.role === 'ADMIN'
+  return !!user.vendorId
 }
 
-export const isVendorScopedUser = (user: User | null | undefined): boolean => {
-  return Boolean(user?.vendorId)
+export const isApiUser = (user: User | null): boolean => {
+  if (!user || !user.role) {
+    return false
+  }
+  return user.role.startsWith('API_')
 }
-

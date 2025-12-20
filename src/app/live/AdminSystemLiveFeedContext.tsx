@@ -1,30 +1,24 @@
 import { useQueryClient } from '@tanstack/react-query'
 import type { PropsWithChildren } from 'react'
-import { createContext, useContext, useEffect, useMemo, useReducer, useRef } from 'react'
+import { useEffect, useMemo, useReducer, useRef } from 'react'
 import { QUERY_KEYS } from '../../../packages/react-sdk/src/hooks/queryKeys'
 import type { HealthMetricsResponse, MetricsResponse } from '../../../packages/react-sdk/src/types/api'
-import {
-  UI_BADGE_VARIANT_DANGER,
-  UI_BADGE_VARIANT_INFO,
-  UI_BADGE_VARIANT_SECONDARY,
-  UI_BADGE_VARIANT_SUCCESS,
-  UI_LIVE_STATUS_CONNECTED,
-  UI_LIVE_STATUS_CONNECTING,
-  UI_LIVE_STATUS_DISCONNECTED,
-  UI_LIVE_STATUS_ERROR,
-} from '../../ui/constants'
 import { useAppConfig } from '../config'
 import {
-  ADMIN_SYSTEM_WS_ERROR_CONTEXT_UNAVAILABLE,
   ADMIN_SYSTEM_WS_HEALTH_PATH,
   ADMIN_SYSTEM_WS_STATUS_CONNECTED,
   ADMIN_SYSTEM_WS_STATUS_CONNECTING,
   ADMIN_SYSTEM_WS_STATUS_DISCONNECTED,
-  ADMIN_SYSTEM_WS_STATUS_ERROR,
 } from '../constants'
 import { createLifecycle } from '../lifecycle/lifecycle'
+import {
+  type AdminSystemLiveContextValue,
+  AdminSystemLiveFeedContext,
+  type AdminSystemLiveState,
+  initialState,
+} from './AdminSystemLiveFeedContextDef'
 import AdminSystemWsClient from './AdminSystemWsClient'
-import type { AdminSystemWsConnectionStatus, AdminSystemWsHealthUpdate } from './adminSystemWsProtocol'
+import type { AdminSystemWsHealthUpdate } from './adminSystemWsProtocol'
 
 type LiveAction =
   | { type: 'live/wsConnecting' }
@@ -32,25 +26,6 @@ type LiveAction =
   | { type: 'live/wsDisconnected' }
   | { type: 'live/wsError'; payload?: string }
   | { type: 'live/healthUpdate'; payload: AdminSystemWsHealthUpdate }
-
-type AdminSystemLiveState = {
-  connectionStatus: AdminSystemWsConnectionStatus
-  lastHealthUpdate: AdminSystemWsHealthUpdate | null
-  lastError: string | null
-}
-
-type AdminSystemLiveContextValue = {
-  state: AdminSystemLiveState
-  requestHealth: () => void
-}
-
-const initialState: AdminSystemLiveState = {
-  connectionStatus: ADMIN_SYSTEM_WS_STATUS_DISCONNECTED,
-  lastHealthUpdate: null,
-  lastError: null,
-}
-
-export const AdminSystemLiveFeedContext = createContext<AdminSystemLiveContextValue | null>(null)
 
 const liveReducer = (state: AdminSystemLiveState, action: LiveAction): AdminSystemLiveState => {
   switch (action.type) {
@@ -205,26 +180,4 @@ export function AdminSystemLiveFeedProvider({ children }: PropsWithChildren) {
   )
 
   return <AdminSystemLiveFeedContext.Provider value={value}>{children}</AdminSystemLiveFeedContext.Provider>
-}
-
-export const useAdminSystemLiveFeed = (): AdminSystemLiveContextValue => {
-  const context = useContext(AdminSystemLiveFeedContext)
-  if (!context) {
-    throw new Error(ADMIN_SYSTEM_WS_ERROR_CONTEXT_UNAVAILABLE)
-  }
-  return context
-}
-
-export const useLiveStatusBadgeModel = (): { text: string; variant: string } => {
-  const { state } = useAdminSystemLiveFeed()
-  switch (state.connectionStatus) {
-    case ADMIN_SYSTEM_WS_STATUS_CONNECTING:
-      return { text: UI_LIVE_STATUS_CONNECTING, variant: UI_BADGE_VARIANT_INFO }
-    case ADMIN_SYSTEM_WS_STATUS_CONNECTED:
-      return { text: UI_LIVE_STATUS_CONNECTED, variant: UI_BADGE_VARIANT_SUCCESS }
-    case ADMIN_SYSTEM_WS_STATUS_ERROR:
-      return { text: UI_LIVE_STATUS_ERROR, variant: UI_BADGE_VARIANT_DANGER }
-    default:
-      return { text: UI_LIVE_STATUS_DISCONNECTED, variant: UI_BADGE_VARIANT_SECONDARY }
-  }
 }

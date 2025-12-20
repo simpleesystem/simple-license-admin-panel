@@ -43,9 +43,9 @@ import type { UiDataTableColumn } from '../types'
 
 type LicenseActivationsPanelProps = {
   client: Client
-  licenseId: string
+  licenseKey: string
   licenseVendorId?: string | null
-  currentUser?: Pick<User, 'role' | 'vendorId'> | null
+  currentUser?: User | null
   title?: string
   maxRows?: number
 }
@@ -68,21 +68,21 @@ const formatValue = (value: string | number | null | undefined) => {
 
 export function LicenseActivationsPanel({
   client,
-  licenseId,
+  licenseKey,
   licenseVendorId,
   currentUser,
   title = UI_LICENSE_ACTIVATIONS_TITLE,
   maxRows,
 }: LicenseActivationsPanelProps) {
   const allowView = canViewActivations(currentUser ?? null)
-  const isVendorScoped = isVendorScopedUser(currentUser)
+  const isVendorScoped = isVendorScopedUser(currentUser ?? null)
   const dateTimeFormatter = useMemo(
     () => new Intl.DateTimeFormat(UI_DATE_FORMAT_LOCALE, UI_DATE_TIME_FORMAT_OPTIONS),
     []
   )
   const rowLimit = maxRows ?? UI_LICENSE_ACTIVATIONS_DEFAULT_LIMIT
 
-  const activationsQuery = useLicenseActivations(client, licenseId, { retry: false })
+  const activationsQuery = useLicenseActivations(client, licenseKey, { retry: false })
 
   const rows = useMemo(() => {
     const activations = activationsQuery.data?.activations ?? []
@@ -142,7 +142,7 @@ export function LicenseActivationsPanel({
 
   if (
     !allowView ||
-    (isVendorScoped && licenseVendorId && !isActivationOwnedByUser(currentUser ?? null, { vendorId: licenseVendorId }))
+    (isVendorScoped && licenseVendorId && !isActivationOwnedByUser(currentUser ?? null, { vendorId: licenseVendorId } as LicenseActivation))
   ) {
     return (
       <InlineAlert variant="danger" title={UI_LICENSE_ACTIVATIONS_ERROR_TITLE}>
@@ -151,7 +151,7 @@ export function LicenseActivationsPanel({
     )
   }
 
-  if (!licenseId) {
+  if (!licenseKey) {
     return (
       <InlineAlert variant="warning" title={UI_LICENSE_ACTIVATIONS_ERROR_TITLE}>
         {UI_LICENSE_ACTIVATIONS_ERROR_BODY}

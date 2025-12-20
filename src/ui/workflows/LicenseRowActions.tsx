@@ -1,10 +1,9 @@
 import type { Client, LicenseStatus, User } from '@simple-license/react-sdk'
 import { useResumeLicense, useRevokeLicense, useSuspendLicense } from '@simple-license/react-sdk'
-import type { ReactNode } from 'react'
 import { useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import { canDeleteLicense, canUpdateLicense } from '../../app/auth/permissions'
-import { useNotificationBus } from '../../notifications/busContext'
+import { useNotificationBus } from '../../notifications/useNotificationBus'
 import { adaptMutation } from '../actions/mutationAdapter'
 import {
   UI_BUTTON_VARIANT_GHOST,
@@ -37,24 +36,22 @@ import { notifyCrudError, notifyLicenseSuccess } from './notifications'
 
 type LicenseRowActionsProps = UiCommonProps & {
   client: Client
-  licenseId: string
+  licenseKey: string
   licenseStatus: LicenseStatus
   licenseVendorId?: string | null
-  currentUser?: Pick<User, 'role' | 'vendorId'> | null
-  onEdit?: (licenseId: string) => void
+  currentUser?: User | null
+  onEdit?: (licenseKey: string) => void
   onCompleted?: () => void
-  buttonLabel?: ReactNode
 }
 
 export function LicenseRowActions({
   client,
-  licenseId,
+  licenseKey,
   licenseStatus,
   licenseVendorId,
   currentUser,
   onEdit,
   onCompleted,
-  buttonLabel,
   ...rest
 }: LicenseRowActionsProps) {
   const revokeMutation = adaptMutation(useRevokeLicense(client))
@@ -76,7 +73,7 @@ export function LicenseRowActions({
 
   const handleRevoke = async () => {
     try {
-      await revokeMutation.mutateAsync(licenseId)
+      await revokeMutation.mutateAsync(licenseKey)
       notifyLicenseSuccess(notificationBus, 'delete')
       onCompleted?.()
     } catch (error) {
@@ -89,7 +86,7 @@ export function LicenseRowActions({
 
   const handleSuspend = async () => {
     try {
-      await suspendMutation.mutateAsync(licenseId)
+      await suspendMutation.mutateAsync(licenseKey)
       notifyLicenseSuccess(notificationBus, 'suspend')
       onCompleted?.()
     } catch (error) {
@@ -102,7 +99,7 @@ export function LicenseRowActions({
 
   const handleResume = async () => {
     try {
-      await resumeMutation.mutateAsync(licenseId)
+      await resumeMutation.mutateAsync(licenseKey)
       notifyLicenseSuccess(notificationBus, 'resume')
       onCompleted?.()
     } catch (error) {
@@ -123,7 +120,7 @@ export function LicenseRowActions({
         {allowUpdate && onEdit ? (
           <Button
             variant={UI_BUTTON_VARIANT_GHOST}
-            onClick={() => onEdit(licenseId)}
+            onClick={() => onEdit(licenseKey)}
             aria-label={UI_LICENSE_ACTION_EDIT}
           >
             {UI_LICENSE_ACTION_EDIT}
@@ -169,11 +166,13 @@ export function LicenseRowActions({
           title={UI_LICENSE_CONFIRM_SUSPEND_TITLE}
           body={UI_LICENSE_CONFIRM_SUSPEND_BODY}
           primaryAction={{
+            id: 'suspend-confirm',
             label: UI_LICENSE_CONFIRM_SUSPEND_CONFIRM,
             onClick: handleSuspend,
             disabled: suspendMutation.isPending,
           }}
           secondaryAction={{
+            id: 'suspend-cancel',
             label: UI_LICENSE_CONFIRM_SUSPEND_CANCEL,
             onClick: () => setShowSuspendConfirm(false),
           }}
@@ -185,11 +184,13 @@ export function LicenseRowActions({
           title={UI_LICENSE_CONFIRM_RESUME_TITLE}
           body={UI_LICENSE_CONFIRM_RESUME_BODY}
           primaryAction={{
+            id: 'resume-confirm',
             label: UI_LICENSE_CONFIRM_RESUME_CONFIRM,
             onClick: handleResume,
             disabled: resumeMutation.isPending,
           }}
           secondaryAction={{
+            id: 'resume-cancel',
             label: UI_LICENSE_CONFIRM_RESUME_CANCEL,
             onClick: () => setShowResumeConfirm(false),
           }}
@@ -201,11 +202,13 @@ export function LicenseRowActions({
           title={UI_LICENSE_CONFIRM_DELETE_TITLE}
           body={UI_LICENSE_CONFIRM_DELETE_BODY}
           primaryAction={{
+            id: 'revoke-confirm',
             label: UI_LICENSE_CONFIRM_DELETE_CONFIRM,
             onClick: handleRevoke,
             disabled: revokeMutation.isPending,
           }}
           secondaryAction={{
+            id: 'revoke-cancel',
             label: UI_LICENSE_CONFIRM_DELETE_CANCEL,
             onClick: () => setShowRevokeConfirm(false),
           }}

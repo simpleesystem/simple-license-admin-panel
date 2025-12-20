@@ -1,5 +1,5 @@
 import { fireEvent, render, waitFor } from '@testing-library/react'
-import { describe, expect, beforeEach, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import {
   UI_PRODUCT_BUTTON_CREATE,
@@ -51,8 +51,6 @@ const mockMutation = () => ({
   isPending: false,
 })
 
-const SINGLE_INVOCATION_COUNT = 1 as const
-
 describe('ProductManagementExample', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -68,7 +66,12 @@ describe('ProductManagementExample', () => {
     const products = [buildProduct()]
 
     const { getByText, getByRole } = render(
-      <ProductManagementExample client={{} as never} products={products} currentUser={adminUser} onRefresh={onRefresh} />,
+      <ProductManagementExample
+        client={{} as never}
+        products={products}
+        currentUser={adminUser}
+        onRefresh={onRefresh}
+      />
     )
 
     fireEvent.click(getByText(UI_PRODUCT_BUTTON_CREATE))
@@ -88,7 +91,12 @@ describe('ProductManagementExample', () => {
     const product = buildProduct()
 
     const { getByText, getByRole } = render(
-      <ProductManagementExample client={{} as never} products={[product]} currentUser={adminUser} onRefresh={onRefresh} />,
+      <ProductManagementExample
+        client={{} as never}
+        products={[product]}
+        currentUser={adminUser}
+        onRefresh={onRefresh}
+      />
     )
 
     fireEvent.click(getByText(UI_PRODUCT_BUTTON_EDIT))
@@ -98,7 +106,7 @@ describe('ProductManagementExample', () => {
       expect(updateMutation.mutateAsync).toHaveBeenCalledWith({
         id: product.id,
         data: expect.any(Object),
-      }),
+      })
     )
     expect(onRefresh).toHaveBeenCalled()
   })
@@ -118,7 +126,7 @@ describe('ProductManagementExample', () => {
         products={[product]}
         currentUser={vendorManager}
         onRefresh={onRefresh}
-      />,
+      />
     )
 
     expect(queryByText(UI_PRODUCT_BUTTON_CREATE)).toBeNull()
@@ -130,7 +138,7 @@ describe('ProductManagementExample', () => {
       expect(updateMutation.mutateAsync).toHaveBeenCalledWith({
         id: product.id,
         data: expect.any(Object),
-      }),
+      })
     )
     expect(onRefresh).toHaveBeenCalled()
   })
@@ -144,7 +152,7 @@ describe('ProductManagementExample', () => {
     const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId: `${product.vendorId}-other` })
 
     const { queryByText } = render(
-      <ProductManagementExample client={{} as never} products={[product]} currentUser={vendorManager} />,
+      <ProductManagementExample client={{} as never} products={[product]} currentUser={vendorManager} />
     )
 
     expect(queryByText(UI_PRODUCT_BUTTON_CREATE)).toBeNull()
@@ -161,11 +169,7 @@ describe('ProductManagementExample', () => {
     const vendorUser = buildUser({ role: 'VENDOR_ADMIN', vendorId: ownProduct.vendorId ?? buildText() })
 
     const { getByText, queryByText } = render(
-      <ProductManagementExample
-        client={{} as never}
-        products={[ownProduct, otherProduct]}
-        currentUser={vendorUser}
-      />,
+      <ProductManagementExample client={{} as never} products={[ownProduct, otherProduct]} currentUser={vendorUser} />
     )
 
     expect(getByText(ownProduct.name)).toBeInTheDocument()
@@ -183,7 +187,7 @@ describe('ProductManagementExample', () => {
     const otherProduct = buildProduct({ vendorId: `${vendorUser.vendorId}-other` })
 
     const { getByText } = render(
-      <ProductManagementExample client={{} as never} products={[otherProduct]} currentUser={vendorUser} />,
+      <ProductManagementExample client={{} as never} products={[otherProduct]} currentUser={vendorUser} />
     )
 
     expect(getByText(UI_PRODUCT_EMPTY_STATE_MESSAGE)).toBeInTheDocument()
@@ -205,7 +209,12 @@ describe('ProductManagementExample', () => {
     const product = buildProduct()
 
     const { getByText, getByRole } = render(
-      <ProductManagementExample client={{} as never} products={[product]} currentUser={adminUser} onRefresh={onRefresh} />,
+      <ProductManagementExample
+        client={{} as never}
+        products={[product]}
+        currentUser={adminUser}
+        onRefresh={onRefresh}
+      />
     )
 
     fireEvent.click(getByText(UI_PRODUCT_BUTTON_CREATE))
@@ -217,5 +226,3 @@ describe('ProductManagementExample', () => {
     expect(onRefresh).not.toHaveBeenCalled()
   })
 })
-
-

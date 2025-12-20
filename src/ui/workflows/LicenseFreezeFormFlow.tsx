@@ -1,19 +1,15 @@
 import type { Client, FreezeLicenseRequest, User } from '@simple-license/react-sdk'
 import { useFreezeLicense } from '@simple-license/react-sdk'
-
-import { adaptMutation } from '../actions/mutationAdapter'
-import type { MutationAdapter } from '../actions/mutationActions'
-import {
-  UI_LICENSE_FREEZE_FORM_PENDING_LABEL,
-  UI_LICENSE_FREEZE_FORM_SUBMIT_LABEL,
-} from '../constants'
 import { canUpdateLicense } from '../../app/auth/permissions'
+import type { MutationAdapter } from '../actions/mutationActions'
+import { adaptMutation } from '../actions/mutationAdapter'
+import { UI_LICENSE_FREEZE_FORM_PENDING_LABEL, UI_LICENSE_FREEZE_FORM_SUBMIT_LABEL } from '../constants'
 import { createLicenseFreezeBlueprint } from '../formBuilder/factories'
 import { FormModalWithMutation } from '../formBuilder/mutationBridge'
 
 type LicenseFreezeFormFlowProps = {
   client: Client
-  licenseId: string
+  licenseKey: string
   licenseVendorId?: string | null
   currentUser?: Pick<User, 'role' | 'vendorId'> | null
   show: boolean
@@ -28,7 +24,7 @@ const DEFAULT_FREEZE_VALUES: FreezeLicenseRequest = {
 
 export function LicenseFreezeFormFlow({
   client,
-  licenseId,
+  licenseKey,
   licenseVendorId,
   currentUser,
   onSuccess,
@@ -43,7 +39,7 @@ export function LicenseFreezeFormFlow({
 
   const mutationAdapter: MutationAdapter<FreezeLicenseRequest> = {
     mutateAsync: async (values) => {
-      const result = await mutation.mutateAsync({ id: licenseId, data: values })
+      const result = await mutation.mutateAsync({ id: licenseKey, data: values })
       onSuccess?.()
       return result
     },
@@ -61,4 +57,3 @@ export function LicenseFreezeFormFlow({
     />
   )
 }
-
