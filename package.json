@@ -16,6 +16,9 @@
     "type-check": "tsc --noEmit",
     "test:mutation": "stryker run"
   },
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "dependencies": {
     "@casl/ability": "^6.7.3",
     "@casl/react": "^5.0.0",
