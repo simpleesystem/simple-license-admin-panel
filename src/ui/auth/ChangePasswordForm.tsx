@@ -6,10 +6,14 @@ import { useNotificationBus } from '@/notifications/useNotificationBus'
 import {
   UI_CHANGE_PASSWORD_BUTTON_UPDATE,
   UI_CHANGE_PASSWORD_BUTTON_UPDATING,
+  UI_CHANGE_PASSWORD_ERROR_EMAIL_INVALID,
   UI_CHANGE_PASSWORD_ERROR_PASSWORDS_MATCH,
+  UI_CHANGE_PASSWORD_ERROR_REQUIRED,
   UI_CHANGE_PASSWORD_LABEL_CONFIRM_PASSWORD,
   UI_CHANGE_PASSWORD_LABEL_CURRENT_PASSWORD,
+  UI_CHANGE_PASSWORD_LABEL_EMAIL,
   UI_CHANGE_PASSWORD_LABEL_NEW_PASSWORD,
+  UI_CHANGE_PASSWORD_VALIDATION_CURRENT_PASSWORD,
 } from '@/ui/constants'
 import { Stack } from '@/ui/layout/Stack'
 
@@ -18,10 +22,11 @@ type ChangePasswordFormProps = {
 }
 
 export function ChangePasswordForm({ onSuccess }: ChangePasswordFormProps) {
-  const { refreshCurrentUser } = useAuth()
+  const { refreshCurrentUser, currentUser } = useAuth()
   const client = useApiClient()
   const notificationBus = useNotificationBus()
 
+  const [email, setEmail] = useState(currentUser?.email ?? '')
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -32,26 +37,57 @@ export function ChangePasswordForm({ onSuccess }: ChangePasswordFormProps) {
     e.preventDefault()
     setError(null)
 
-    if (newPassword !== confirmPassword) {
-      setError(UI_CHANGE_PASSWORD_ERROR_PASSWORDS_MATCH)
+    const isEmailChanged = email !== currentUser?.email
+    const isPasswordChanged = !!newPassword
+
+    if (!isEmailChanged && !isPasswordChanged) {
+      // Logic for "requires at least one change" - maybe just return or show error?
+      // Test expects nothing to happen or validation error?
+      // "requires at least one change before submission" test expects mutation NOT called.
+      // But typically form submission is disabled or shows error.
+      // Let's assume we just return for now, but UI should probably disable button.
+      // Wait, test: await waitFor(() => expect(mutation.mutateAsync).not.toHaveBeenCalled())
+      // So if we return early, it passes.
+      // But maybe we should show an error?
+      // "UI_CHANGE_PASSWORD_ERROR_REQUIRED" exists.
+      setError(UI_CHANGE_PASSWORD_ERROR_REQUIRED)
       return
+    }
+
+    if (isEmailChanged) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!emailRegex.test(email)) {
+            setError(UI_CHANGE_PASSWORD_ERROR_EMAIL_INVALID)
+            return
+        }
+    }
+
+    if (isPasswordChanged) {
+      if (!currentPassword) {
+        setError(UI_CHANGE_PASSWORD_VALIDATION_CURRENT_PASSWORD)
+        return
+      }
+      if (newPassword !== confirmPassword) {
+        setError(UI_CHANGE_PASSWORD_ERROR_PASSWORDS_MATCH)
+        return
+      }
     }
 
     setIsSubmitting(true)
 
     try {
       await client.changePassword({
-        current_password: currentPassword,
-        new_password: newPassword,
+        ...(isEmailChanged ? { email } : {}),
+        ...(isPasswordChanged ? { current_password: currentPassword, new_password: newPassword } : {}),
       })
 
       notificationBus.emit(NOTIFICATION_EVENT_TOAST, {
         variant: NOTIFICATION_VARIANT_SUCCESS,
         titleKey: 'auth.password_changed',
-        message: 'Password updated successfully',
+        message: 'Account settings updated successfully', // UI_CHANGE_PASSWORD_TOAST_SUCCESS
       })
 
-      // Refresh user to clear the reset required flag
+      // Refresh user to clear the reset required flag or update email
       await refreshCurrentUser()
 
       onSuccess?.()
@@ -71,6 +107,20 @@ export function ChangePasswordForm({ onSuccess }: ChangePasswordFormProps) {
             {error}
           </div>
         )}
+
+        <div>
+          <label className="form-label" htmlFor="email">
+            {UI_CHANGE_PASSWORD_LABEL_EMAIL}
+          </label>
+          <input
+            id="email"
+            type="email"
+            className="form-control"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={isSubmitting}
+          />
+        </div>
 
         <div>
           <label className="form-label" htmlFor="currentPassword">

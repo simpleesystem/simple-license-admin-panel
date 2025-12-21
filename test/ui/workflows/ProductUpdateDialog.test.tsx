@@ -16,7 +16,7 @@ const createMockClient = (): Client =>
   }) as unknown as Client
 
 // Mock child components
-vi.mock('@/ui/formBuilder/DynamicForm', () => ({
+vi.mock('../../../../src/ui/formBuilder/DynamicForm', () => ({
   DynamicForm: ({ defaultValues, onSubmit }: { defaultValues: unknown; onSubmit: (val: unknown) => void }) => (
     <div data-testid="dynamic-form">
       <button onClick={() => onSubmit({ ...(defaultValues as object), name: 'Updated Product' })}>Submit</button>
@@ -24,15 +24,15 @@ vi.mock('@/ui/formBuilder/DynamicForm', () => ({
   ),
 }))
 
-vi.mock('@/ui/workflows/ProductTierManagementPanel', () => ({
+vi.mock('../../../../src/ui/workflows/ProductTierManagementPanel', () => ({
   ProductTierManagementPanel: () => <div data-testid="tier-panel">Tier Panel</div>,
 }))
 
-vi.mock('@/ui/workflows/ProductEntitlementManagementPanel', () => ({
+vi.mock('../../../../src/ui/workflows/ProductEntitlementManagementPanel', () => ({
   ProductEntitlementManagementPanel: () => <div data-testid="entitlement-panel">Entitlement Panel</div>,
 }))
 
-vi.mock('@/ui/overlay/ModalDialog', () => ({
+vi.mock('../../../../src/ui/overlay/ModalDialog', () => ({
   ModalDialog: ({
     show,
     title,

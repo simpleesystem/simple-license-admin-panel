@@ -18,12 +18,16 @@ vi.mock('@simple-license/react-sdk', async () => {
   }
 })
 
-vi.mock('../../../../src/app/auth/useAuth', () => ({
-  useAuth: () => ({
-    currentUser: buildUser({ role: UI_USER_ROLE_SUPERUSER }),
-    isAuthenticated: true,
-  }),
-}))
+vi.mock('../../../../src/app/auth/useAuth', () => {
+  const user = buildUser({ role: UI_USER_ROLE_SUPERUSER })
+  return {
+    useAuth: () => ({
+      user,
+      currentUser: user,
+      isAuthenticated: true,
+    }),
+  }
+})
 
 describe('AnalyticsStatsPanel integration', () => {
   test('renders stats and triggers refresh (refetch + requestHealth)', async () => {

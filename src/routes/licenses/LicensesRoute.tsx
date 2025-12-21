@@ -27,6 +27,7 @@ import { LicenseManagementPanel } from '../../ui/workflows/LicenseManagementPane
 export function LicensesRouteComponent() {
   const client = useApiClient()
   const { user: currentUser } = useAuth()
+  console.log('LicensesRouteComponent: currentUser', currentUser)
   const { data, isLoading, isError, refetch } = useAdminLicenses(client)
   const { data: productsData } = useAdminProducts(client)
   const [searchTerm, setSearchTerm] = useState('')
@@ -135,6 +136,7 @@ export function LicensesRouteComponent() {
   }, [productsData])
 
   const canView = canViewLicenses(currentUser ?? null)
+  console.log('LicensesRouteComponent: canView', canView)
 
   const handleRefresh = () => {
     void refetch()
