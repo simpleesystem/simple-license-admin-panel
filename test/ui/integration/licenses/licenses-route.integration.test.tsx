@@ -9,6 +9,7 @@ import { renderWithProviders } from '../../utils'
 
 const useAdminLicensesMock = vi.hoisted(() => vi.fn())
 const useAdminProductsMock = vi.hoisted(() => vi.fn())
+const useAuthMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@simple-license/react-sdk', async () => {
   const actual = await vi.importActual<typeof import('@simple-license/react-sdk')>('@simple-license/react-sdk')
@@ -23,19 +24,9 @@ vi.mock('../../../../src/app/auth/AuthProvider', () => ({
   AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }))
 
-let authUser = buildUser({ role: UI_USER_ROLE_SUPERUSER })
-
 vi.mock('../../../../src/app/auth/useAuth', async () => {
   return {
-    useAuth: () => ({
-      currentUser: authUser,
-      isAuthenticated: true,
-      status: 'idle',
-      token: 'token',
-      login: vi.fn(),
-      logout: vi.fn(),
-      refreshCurrentUser: vi.fn(),
-    }),
+    useAuth: useAuthMock,
   }
 })
 
@@ -46,7 +37,7 @@ describe('LicensesRouteComponent', () => {
 
   test('renders vendor-scoped licenses and hides others for vendor manager', async () => {
     const vendorUser = buildUser({ role: UI_USER_ROLE_VENDOR_MANAGER, vendorId: 'vendor-1' })
-    authUser = vendorUser
+    useAuthMock.mockReturnValue({ currentUser: vendorUser, isAuthenticated: true })
     const licenses = [
       buildLicense({ customerEmail: 'allowed@example.com', vendorId: 'vendor-1', status: 'ACTIVE' }),
       buildLicense({ customerEmail: 'other@example.com', vendorId: 'vendor-2', status: 'ACTIVE' }),
@@ -60,7 +51,7 @@ describe('LicensesRouteComponent', () => {
   })
 
   test('shows licenses for superuser', async () => {
-    authUser = buildUser({ role: UI_USER_ROLE_SUPERUSER, vendorId: null })
+    useAuthMock.mockReturnValue({ currentUser: buildUser({ role: UI_USER_ROLE_SUPERUSER, vendorId: null }), isAuthenticated: true })
     const licenses = [buildLicense({ customerEmail: 'root@example.com', status: 'ACTIVE' })]
     useAdminLicensesMock.mockReturnValue({ data: licenses, isLoading: false, isError: false, refetch: vi.fn() })
 
@@ -70,7 +61,7 @@ describe('LicensesRouteComponent', () => {
   })
 
   test('shows error state when list request fails', async () => {
-    authUser = buildUser({ role: UI_USER_ROLE_SUPERUSER, vendorId: null })
+    useAuthMock.mockReturnValue({ currentUser: buildUser({ role: UI_USER_ROLE_SUPERUSER, vendorId: null }), isAuthenticated: true })
     useAdminLicensesMock.mockReturnValue({ data: undefined, isLoading: false, isError: true, refetch: vi.fn() })
 
     renderWithProviders(<LicensesRouteComponent />)
@@ -81,7 +72,7 @@ describe('LicensesRouteComponent', () => {
   })
 
   test('invokes refetch when retrying after error', async () => {
-    authUser = buildUser({ role: UI_USER_ROLE_SUPERUSER, vendorId: null })
+    useAuthMock.mockReturnValue({ currentUser: buildUser({ role: UI_USER_ROLE_SUPERUSER, vendorId: null }), isAuthenticated: true })
     const refetch = vi.fn()
     useAdminLicensesMock.mockReturnValue({ data: undefined, isLoading: false, isError: true, refetch })
 
@@ -93,7 +84,7 @@ describe('LicensesRouteComponent', () => {
   })
 
   test('shows loading state', () => {
-    authUser = buildUser({ role: UI_USER_ROLE_SUPERUSER, vendorId: null })
+    useAuthMock.mockReturnValue({ currentUser: buildUser({ role: UI_USER_ROLE_SUPERUSER, vendorId: null }), isAuthenticated: true })
     useAdminLicensesMock.mockReturnValue({ data: undefined, isLoading: true, isError: false, refetch: vi.fn() })
 
     renderWithProviders(<LicensesRouteComponent />)
@@ -102,7 +93,7 @@ describe('LicensesRouteComponent', () => {
   })
 
   test('hides content for viewer without permissions', () => {
-    authUser = buildUser({ role: UI_USER_ROLE_VIEWER, vendorId: null })
+    useAuthMock.mockReturnValue({ currentUser: buildUser({ role: UI_USER_ROLE_VIEWER, vendorId: null }), isAuthenticated: true })
     const licenses = [buildLicense({ customerEmail: 'blocked@example.com', status: 'ACTIVE' })]
     useAdminLicensesMock.mockReturnValue({ data: licenses, isLoading: false, isError: false, refetch: vi.fn() })
 
@@ -112,7 +103,7 @@ describe('LicensesRouteComponent', () => {
   })
 
   test('renders licenses when payload is nested under data key', async () => {
-    authUser = buildUser({ role: UI_USER_ROLE_SUPERUSER, vendorId: null })
+    useAuthMock.mockReturnValue({ currentUser: buildUser({ role: UI_USER_ROLE_SUPERUSER, vendorId: null }), isAuthenticated: true })
     const licenses = [buildLicense({ customerEmail: 'nested@example.com', status: 'ACTIVE' })]
     useAdminLicensesMock.mockReturnValue({
       data: { data: licenses },

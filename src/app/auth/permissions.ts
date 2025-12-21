@@ -293,6 +293,9 @@ export const isLicenseOwnedByUser = (user: User | null, license: License | null)
   if (isSystemAdminUser(user)) {
     return true
   }
+  if (user.vendorId && license.vendorId) {
+    return user.vendorId === license.vendorId
+  }
   if (user.vendorId) {
     // This is tricky without product vendor lookup, but assuming safe default
     return false
