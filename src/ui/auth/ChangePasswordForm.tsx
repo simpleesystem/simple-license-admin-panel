@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useApiClient } from '@/api/apiContext'
 import { useAuth } from '@/app/auth/useAuth'
-import { NOTIFICATION_EVENT_TOAST, NOTIFICATION_VARIANT_SUCCESS } from '@/app/constants'
+import { APP_ERROR_MESSAGE_NON_ERROR_THROWABLE, NOTIFICATION_EVENT_TOAST, NOTIFICATION_VARIANT_SUCCESS } from '@/app/constants'
 import { useNotificationBus } from '@/notifications/useNotificationBus'
 import {
   UI_CHANGE_PASSWORD_BUTTON_UPDATE,
@@ -56,7 +56,7 @@ export function ChangePasswordForm({ onSuccess }: ChangePasswordFormProps) {
 
       onSuccess?.()
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to update password'
+      const message = err instanceof Error ? err.message : APP_ERROR_MESSAGE_NON_ERROR_THROWABLE
       setError(message)
     } finally {
       setIsSubmitting(false)

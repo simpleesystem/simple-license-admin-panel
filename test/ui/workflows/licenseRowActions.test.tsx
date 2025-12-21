@@ -6,6 +6,8 @@ import {
   UI_LICENSE_ACTION_DELETE,
   UI_LICENSE_ACTION_RESUME,
   UI_LICENSE_ACTION_SUSPEND,
+  UI_USER_ROLE_SUPERUSER,
+  UI_USER_ROLE_VENDOR_MANAGER,
 } from '../../../src/ui/constants'
 import { LicenseRowActions } from '../../../src/ui/workflows/LicenseRowActions'
 import { buildLicense } from '../../factories/licenseFactory'
@@ -68,7 +70,7 @@ describe('LicenseRowActions', () => {
         licenseKey={license.id}
         licenseVendorId={license.vendorId ?? null}
         licenseStatus={license.status}
-        currentUser={{ role: 'SUPERUSER', vendorId: license.vendorId ?? null }}
+        currentUser={{ role: UI_USER_ROLE_SUPERUSER, vendorId: license.vendorId ?? null }}
       />
     )
 
@@ -95,7 +97,7 @@ describe('LicenseRowActions', () => {
         licenseKey={license.id}
         licenseVendorId={license.vendorId ?? null}
         licenseStatus={license.status}
-        currentUser={{ role: 'SUPERUSER', vendorId: license.vendorId ?? null }}
+        currentUser={{ role: UI_USER_ROLE_SUPERUSER, vendorId: license.vendorId ?? null }}
       />
     )
 
@@ -122,7 +124,7 @@ describe('LicenseRowActions', () => {
         licenseKey={license.id}
         licenseVendorId={license.vendorId}
         licenseStatus={license.status}
-        currentUser={{ role: 'SUPERUSER', vendorId: license.vendorId }}
+        currentUser={{ role: UI_USER_ROLE_SUPERUSER, vendorId: license.vendorId }}
       />
     )
 
@@ -150,7 +152,7 @@ describe('LicenseRowActions', () => {
         licenseKey={license.id}
         licenseVendorId={license.vendorId}
         licenseStatus={license.status}
-        currentUser={{ role: 'VENDOR_MANAGER', vendorId: license.vendorId }}
+        currentUser={{ role: UI_USER_ROLE_VENDOR_MANAGER, vendorId: license.vendorId }}
       />
     )
 
@@ -172,7 +174,7 @@ describe('LicenseRowActions', () => {
         licenseKey={license.id}
         licenseVendorId={license.vendorId}
         licenseStatus={license.status}
-        currentUser={{ role: 'VENDOR_MANAGER', vendorId: faker.string.uuid() }}
+        currentUser={{ role: UI_USER_ROLE_VENDOR_MANAGER, vendorId: faker.string.uuid() }}
       />
     )
 
