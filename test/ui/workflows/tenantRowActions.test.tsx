@@ -107,7 +107,7 @@ describe('TenantRowActions', () => {
 
     expect(screen.getByText(UI_TENANT_ACTION_EDIT)).toBeEnabled()
     fireEvent.click(screen.getByText(UI_TENANT_ACTION_SUSPEND))
-    
+
     // Confirm in modal
     const dialog = await screen.findByRole('dialog')
     fireEvent.click(within(dialog).getByRole('button', { name: /Suspend tenant/i }))

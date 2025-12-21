@@ -65,7 +65,7 @@ describe('LicenseRowActions', () => {
     render(
       <LicenseRowActions
         client={{} as never}
-        licenseId={license.id}
+        licenseKey={license.id}
         licenseVendorId={license.vendorId ?? null}
         licenseStatus={license.status}
         currentUser={{ role: 'SUPERUSER', vendorId: license.vendorId ?? null }}
@@ -92,7 +92,7 @@ describe('LicenseRowActions', () => {
     render(
       <LicenseRowActions
         client={{} as never}
-        licenseId={license.id}
+        licenseKey={license.id}
         licenseVendorId={license.vendorId ?? null}
         licenseStatus={license.status}
         currentUser={{ role: 'SUPERUSER', vendorId: license.vendorId ?? null }}
@@ -119,7 +119,7 @@ describe('LicenseRowActions', () => {
     render(
       <LicenseRowActions
         client={{} as never}
-        licenseId={license.id}
+        licenseKey={license.id}
         licenseVendorId={license.vendorId}
         licenseStatus={license.status}
         currentUser={{ role: 'SUPERUSER', vendorId: license.vendorId }}
@@ -147,7 +147,7 @@ describe('LicenseRowActions', () => {
     render(
       <LicenseRowActions
         client={{} as never}
-        licenseId={license.id}
+        licenseKey={license.id}
         licenseVendorId={license.vendorId}
         licenseStatus={license.status}
         currentUser={{ role: 'VENDOR_MANAGER', vendorId: license.vendorId }}
@@ -156,7 +156,7 @@ describe('LicenseRowActions', () => {
 
     expect(screen.queryByText(UI_LICENSE_ACTION_DELETE)).toBeNull()
     expect(screen.getByText(UI_LICENSE_ACTION_SUSPEND)).toBeInTheDocument()
-    
+
     // Verify suspend works via modal
     fireEvent.click(screen.getByText(UI_LICENSE_ACTION_SUSPEND))
     const dialog = await screen.findByRole('dialog')
@@ -169,7 +169,7 @@ describe('LicenseRowActions', () => {
     const view = render(
       <LicenseRowActions
         client={{} as never}
-        licenseId={license.id}
+        licenseKey={license.id}
         licenseVendorId={license.vendorId}
         licenseStatus={license.status}
         currentUser={{ role: 'VENDOR_MANAGER', vendorId: faker.string.uuid() }}

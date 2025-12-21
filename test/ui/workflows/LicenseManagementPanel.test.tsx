@@ -105,7 +105,7 @@ describe('LicenseManagementPanel', () => {
     totalPages: 5,
     onPageChange: mockOnPageChange,
     onRefresh: mockOnRefresh,
-    currentUser: { role: 'admin' } as unknown as User,
+    currentUser: { role: 'SUPERUSER' } as unknown as User,
     searchTerm: '',
     onSearchChange: mockOnSearchChange,
     onStatusFilterChange: mockOnStatusFilterChange,

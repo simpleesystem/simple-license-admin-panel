@@ -37,7 +37,7 @@ describe('TenantsRouteComponent', () => {
       logout: vi.fn(),
       refreshCurrentUser: vi.fn(),
     })
-    
+
     const tenants = [
       buildTenant({ name: 'allowed-tenant', vendorId: 'vendor-1' }),
       buildTenant({ name: 'other-tenant', vendorId: 'vendor-2' }),

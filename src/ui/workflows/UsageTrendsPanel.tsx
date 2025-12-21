@@ -41,7 +41,6 @@ type TrendRow = {
 }
 
 export function UsageTrendsPanel({ client, title = UI_USAGE_TRENDS_TITLE }: UsageTrendsPanelProps) {
-  console.log('UsageTrendsPanel render', { title })
   const trendsQuery = useUsageTrends(client, { retry: false })
   const { isFetching, isLoading, refetch } = trendsQuery
 
