@@ -30,21 +30,27 @@ import { AppStateProvider } from './state/appState'
 import { SurfaceRenderer } from './state/SurfaceRenderer'
 import { useAppStore } from './state/store'
 
-type AppProvidersProps = PropsWithChildren
+import type { Client } from '@simple-license/react-sdk'
+// ... existing imports ...
 
-export function AppProviders({ children }: AppProvidersProps) {
+type AppProvidersProps = PropsWithChildren<{
+  queryClient?: QueryClient
+  apiClient?: Client
+}>
+
+export function AppProviders({ children, queryClient, apiClient }: AppProvidersProps) {
   return (
     <AppConfigProvider>
-      <AppProvidersInner>{children}</AppProvidersInner>
+      <AppProvidersInner queryClient={queryClient} apiClient={apiClient}>{children}</AppProvidersInner>
     </AppConfigProvider>
   )
 }
 
-function AppProvidersInner({ children }: AppProvidersProps) {
+function AppProvidersInner({ children, queryClient: externalQueryClient, apiClient }: AppProvidersProps) {
   const appConfig = useAppConfig()
   const logger = useMemo(() => createAppLogger(appConfig), [appConfig])
   const trackingClient = useMemo(() => createTrackingClient(), [])
-  const queryClient = useMemo(() => createAppQueryClient(), [])
+  const queryClient = useMemo(() => externalQueryClient ?? createAppQueryClient(), [externalQueryClient])
   const enableCachePersistence = useFeatureFlag('enableQueryCachePersistence')
 
   useEffect(() => {
@@ -60,7 +66,7 @@ function AppProvidersInner({ children }: AppProvidersProps) {
       <TrackingContext.Provider value={trackingClient}>
         <I18nProvider>
           <QueryClientProvider client={queryClient}>
-            <ApiProvider>
+            <ApiProvider client={apiClient}>
               <AppStateProvider>
                 <AuthProvider>
                   <AbilityProvider>

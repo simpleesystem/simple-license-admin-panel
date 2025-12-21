@@ -94,6 +94,15 @@ export function TenantsRouteComponent() {
 
   const canView = canViewTenants(currentUser)
 
+  console.log('TenantsRoute DEBUG:', {
+    isLoading,
+    isError,
+    canView,
+    currentUser,
+    dataCount: Array.isArray(data) ? data.length : (data?.data?.length ?? 'unknown'),
+    dataIsArray: Array.isArray(data)
+  })
+
   const handleRefresh = () => {
     void refetch()
   }

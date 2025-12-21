@@ -10,12 +10,14 @@ const useCreateUserMock = vi.hoisted(() => vi.fn())
 const useUpdateUserMock = vi.hoisted(() => vi.fn())
 const useAdminTenantsMock = vi.hoisted(() => vi.fn())
 
-vi.mock('../../../src/app/auth/authContext', () => ({
+vi.mock('../../../src/app/auth/useAuth', () => ({
   useAuth: () => ({
     currentUser: {
       id: 'test-admin-id',
       email: 'admin@example.com',
+      role: 'SUPERUSER',
     },
+    isAuthenticated: true,
   }),
 }))
 

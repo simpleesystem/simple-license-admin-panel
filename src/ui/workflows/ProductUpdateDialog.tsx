@@ -61,7 +61,7 @@ export function ProductUpdateDialog({
       // but TypeScript thinks it returns the wrapper object.
       // We handle both cases to be safe.
       const rawData = response as unknown
-      const data = Array.isArray(rawData) ? rawData : response.data || []
+      const data = Array.isArray(rawData) ? rawData : (response as { data?: ProductTier[] }).data || []
 
       const formatted: ProductTierListItem[] = data.map((t: ProductTier) => ({
         id: t.id,
@@ -81,7 +81,7 @@ export function ProductUpdateDialog({
       const response = await client.listEntitlements(productId)
       // Runtime fix: client.listEntitlements returns the array directly (unwrapped)
       const rawData = response as unknown
-      const data = Array.isArray(rawData) ? rawData : response.data || []
+      const data = Array.isArray(rawData) ? rawData : (response as { data?: Entitlement[] }).data || []
 
       const formatted: ProductEntitlementListItem[] = data.map((e: Entitlement) => ({
         id: e.id,
@@ -89,7 +89,7 @@ export function ProductUpdateDialog({
         number_value: e.numberValue,
         boolean_value: e.booleanValue,
         string_value: e.stringValue,
-        productTiers: (e as any).productTiers,
+        productTiers: (e as unknown as { productTiers?: unknown }).productTiers,
         metadata: (e as unknown as { metadata: Record<string, string | number | boolean | null> | undefined }).metadata,
       }))
       setEntitlements(formatted)
@@ -98,30 +98,38 @@ export function ProductUpdateDialog({
     }
   }, [client, productId])
 
-  useEffect(() => {
-    const fetchProductDetails = async () => {
-      try {
-        const response = await client.getProduct(productId)
-        const productData = response.product as Product & { metadata?: unknown }
-        setProduct(productData)
-        if (productData?.metadata) {
-          setMetadataString(JSON.stringify(productData.metadata, null, 2))
-        }
-      } catch (e) {
-        console.error('Failed to fetch product details', e)
+  const fetchProductDetails = useCallback(async () => {
+    try {
+      const response = await client.getProduct(productId)
+      const productData = response.product as Product & { metadata?: unknown }
+      setProduct(productData)
+      if (productData?.metadata) {
+        setMetadataString(JSON.stringify(productData.metadata, null, 2))
       }
+    } catch (e) {
+      console.error('Failed to fetch product details', e)
     }
+  }, [client, productId])
 
+  useEffect(() => {
     if (show) {
-      void fetchProductDetails()
-      void fetchEntitlements()
-      // Also fetch tiers immediately if product ID is known, don't wait for product details
-      // The vendorId in the list item might be missing initially but can be updated later or ignored
-      // as it's mainly for permission checks which might be fine if we are admin/super user
-      // or if the list action is allowed anyway.
-      void fetchTiers()
+      const load = async () => {
+        await fetchProductDetails()
+        await fetchEntitlements()
+      }
+      void load()
     }
-  }, [show, client, productId, fetchEntitlements, fetchTiers])
+  }, [show, fetchProductDetails, fetchEntitlements])
+
+  // Fetch tiers when show changes or when product (and thus fetchTiers) changes
+  useEffect(() => {
+    if (show) {
+      const load = async () => {
+        await fetchTiers()
+      }
+      void load()
+    }
+  }, [show, fetchTiers])
 
   // Callbacks for manual refresh (e.g. from child panels)
   // const refreshTiers = useCallback(() => { ... }, [])

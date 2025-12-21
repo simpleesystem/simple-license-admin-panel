@@ -38,15 +38,12 @@ export function ProductTierRowActions({
   onEdit,
   onCompleted,
   currentUser,
-  vendorId,
   ...rest
 }: ProductTierRowActionsProps) {
   const deleteMutation = adaptMutation(useDeleteProductTier(client))
   const notificationBus = useNotificationBus()
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
-  const productContext = { vendorId }
-  // const allowUpdate = canUpdateProduct(currentUser ?? null, productContext)
   // tierContext is unused in original code too? No, it was used.
   // Wait, I am editing ProductTierRowActions but looking at ProductRowActions logic?
   // Ah, the error was in ProductTierRowActions about tierContext being unused.

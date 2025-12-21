@@ -40,7 +40,6 @@ type ProductRowActionsProps = UiCommonProps & {
   onEdit: (product: { id: string }) => void
   onCompleted?: () => void
   currentUser?: User | null
-  vendorId?: string | null
 }
 
 export function ProductRowActions({
@@ -50,7 +49,6 @@ export function ProductRowActions({
   onEdit,
   onCompleted,
   currentUser,
-  vendorId,
   ...rest
 }: ProductRowActionsProps) {
   const deleteMutation = adaptMutation(useDeleteProduct(client))

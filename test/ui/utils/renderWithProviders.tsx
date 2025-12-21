@@ -1,11 +1,11 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import type { Client } from '@simple-license/react-sdk'
+import { QueryClient } from '@tanstack/react-query'
 import { render } from '@testing-library/react'
 import type { ReactElement } from 'react'
+import { vi } from 'vitest'
 
-import { ApiContext } from '../../../src/api/apiContext'
-import { AuthProvider } from '../../../src/app/auth/AuthProvider'
 import { AppProviders } from '../../../src/app/AppProviders'
-import { AdminSystemLiveFeedContext } from '../../../src/app/live/AdminSystemLiveFeedContext'
+import { AdminSystemLiveFeedContext } from '../../../src/app/live/AdminSystemLiveFeedContextDef'
 import { ADMIN_SYSTEM_WS_STATUS_DISCONNECTED } from '../../../src/app/constants'
 
 type RenderWithProvidersOptions = {
@@ -30,19 +30,19 @@ const mockLiveContext = {
   requestHealth: () => {},
 }
 
+const defaultMockClient = {
+  restoreSession: vi.fn().mockResolvedValue(null),
+} as unknown as Client
+
 export const renderWithProviders = (ui: ReactElement, options?: RenderWithProvidersOptions) => {
   const queryClient = options?.queryClient ?? createTestQueryClient()
-  const apiClient = options?.client ?? ({} as unknown)
+  const apiClient = (options?.client ?? defaultMockClient) as Client
 
   return render(
-    <QueryClientProvider client={queryClient}>
-      <ApiContext.Provider value={apiClient}>
-        <AdminSystemLiveFeedContext.Provider value={mockLiveContext}>
-          <AppProviders>
-            <AuthProvider>{ui}</AuthProvider>
-          </AppProviders>
-        </AdminSystemLiveFeedContext.Provider>
-      </ApiContext.Provider>
-    </QueryClientProvider>,
+    <AdminSystemLiveFeedContext.Provider value={mockLiveContext}>
+      <AppProviders queryClient={queryClient} apiClient={apiClient}>
+        {ui}
+      </AppProviders>
+    </AdminSystemLiveFeedContext.Provider>
   )
 }

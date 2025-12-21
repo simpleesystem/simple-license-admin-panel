@@ -30,6 +30,7 @@ import {
   UI_USER_STATUS_LABEL_DELETED,
   UI_USER_STATUS_LABEL_DISABLED,
 } from '../constants'
+import type { FormBlueprint } from '../formBuilder/blueprint'
 import { createUserBlueprint } from '../formBuilder/factories'
 import { FormModalWithMutation } from '../formBuilder/mutationBridge'
 import type { UiSelectOption } from '../types'
@@ -152,7 +153,7 @@ export function UserFormFlow(props: UserFormFlowProps) {
     }
     const customize = (blueprint: ReturnType<typeof createUserBlueprint<TMode>>) => ({
       ...blueprint,
-      sections: removeVendorField(blueprint.sections) as any,
+      sections: removeVendorField(blueprint.sections) as unknown as FormBlueprint<CreateUserRequest | UpdateUserRequest>['sections'],
     })
     return createUserBlueprint(mode, { ...options, customize })
   }

@@ -2,7 +2,7 @@ import mitt from 'mitt'
 import type { JSX, PropsWithChildren } from 'react'
 import { useMemo } from 'react'
 
-import { NotificationBusContext } from './busContext'
+import { NotificationBusContext } from './NotificationBusContext'
 import type { NotificationEventMap } from './types'
 
 export function NotificationBusProvider({ children }: PropsWithChildren): JSX.Element {

@@ -8,6 +8,7 @@ import { buildTenant } from '../../../factories/tenantFactory'
 import { buildUser } from '../../../factories/userFactory'
 
 const useAdminTenantsMock = vi.hoisted(() => vi.fn())
+const useAuthMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@simple-license/react-sdk', async () => {
   const actual = await vi.importActual<typeof import('@simple-license/react-sdk')>('@simple-license/react-sdk')
@@ -17,30 +18,26 @@ vi.mock('@simple-license/react-sdk', async () => {
   }
 })
 
-let authUser = buildUser({ role: 'SUPERUSER' })
-
-vi.mock('../../../../src/app/auth/authContext', async () => {
-  const actual = await vi.importActual<typeof import('../../../../src/app/auth/authContext')>(
-    '../../../../src/app/auth/authContext'
-  )
+vi.mock('../../../../src/app/auth/useAuth', async () => {
   return {
-    ...actual,
-    useAuth: () => ({
-      currentUser: authUser,
-      isAuthenticated: true,
-      status: actual.AUTH_STATUS_IDLE,
-      token: 'token',
-      login: vi.fn(),
-      logout: vi.fn(),
-      refreshCurrentUser: vi.fn(),
-    }),
+    useAuth: useAuthMock,
   }
 })
 
 describe('TenantsRouteComponent', () => {
   test('renders vendor-scoped tenants and hides create for vendor manager', async () => {
     const vendorUser = buildUser({ role: 'VENDOR_MANAGER', vendorId: 'vendor-1' })
-    authUser = vendorUser
+    useAuthMock.mockReturnValue({
+      user: vendorUser,
+      currentUser: vendorUser,
+      isAuthenticated: true,
+      status: 'authenticated',
+      token: 'token',
+      login: vi.fn(),
+      logout: vi.fn(),
+      refreshCurrentUser: vi.fn(),
+    })
+    
     const tenants = [
       buildTenant({ name: 'allowed-tenant', vendorId: 'vendor-1' }),
       buildTenant({ name: 'other-tenant', vendorId: 'vendor-2' }),
@@ -55,7 +52,18 @@ describe('TenantsRouteComponent', () => {
   })
 
   test('shows create action for superuser', async () => {
-    authUser = buildUser({ role: 'SUPERUSER', vendorId: null })
+    const superUser = buildUser({ role: 'SUPERUSER', vendorId: null })
+    useAuthMock.mockReturnValue({
+      user: superUser,
+      currentUser: superUser,
+      isAuthenticated: true,
+      status: 'authenticated',
+      token: 'token',
+      login: vi.fn(),
+      logout: vi.fn(),
+      refreshCurrentUser: vi.fn(),
+    })
+
     const tenants = [buildTenant({ name: 'root-tenant' })]
     useAdminTenantsMock.mockReturnValue({ data: tenants, isLoading: false, isError: false, refetch: vi.fn() })
 
@@ -66,7 +74,18 @@ describe('TenantsRouteComponent', () => {
   })
 
   test('shows error state when list request fails', async () => {
-    authUser = buildUser({ role: 'SUPERUSER', vendorId: null })
+    const superUser = buildUser({ role: 'SUPERUSER', vendorId: null })
+    useAuthMock.mockReturnValue({
+      user: superUser,
+      currentUser: superUser,
+      isAuthenticated: true,
+      status: 'authenticated',
+      token: 'token',
+      login: vi.fn(),
+      logout: vi.fn(),
+      refreshCurrentUser: vi.fn(),
+    })
+
     useAdminTenantsMock.mockReturnValue({ data: undefined, isLoading: false, isError: true, refetch: vi.fn() })
 
     renderWithProviders(<TenantsRouteComponent />)

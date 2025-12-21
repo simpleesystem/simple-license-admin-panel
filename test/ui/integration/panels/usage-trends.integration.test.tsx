@@ -1,5 +1,6 @@
+import type { Client } from '@simple-license/react-sdk'
 import { screen } from '@testing-library/react'
-import { describe, expect, test, vi } from 'vitest'
+import { describe, expect, test, vi, beforeEach } from 'vitest'
 
 import {
   UI_USAGE_TRENDS_EMPTY_BODY,
@@ -24,6 +25,10 @@ vi.mock('@simple-license/react-sdk', async () => {
 })
 
 describe('UsageTrendsPanel integration', () => {
+  const mockClient = {
+    restoreSession: vi.fn().mockResolvedValue(null),
+  } as unknown as Client
+
   beforeEach(() => {
     vi.clearAllMocks()
     useUsageTrendsMock.mockReturnValue({
@@ -33,7 +38,7 @@ describe('UsageTrendsPanel integration', () => {
     })
   })
 
-  test('renders trend data', () => {
+  test('renders trend data', async () => {
     useUsageTrendsMock.mockReturnValue({
       data: {
         trends: [
@@ -51,29 +56,29 @@ describe('UsageTrendsPanel integration', () => {
       isError: false,
     })
 
-    renderWithProviders(<UsageTrendsPanel client={{} as never} />)
+    renderWithProviders(<UsageTrendsPanel client={mockClient} />, { client: mockClient })
 
-    expect(screen.getByText(UI_USAGE_TRENDS_TITLE)).toBeInTheDocument()
+    expect(await screen.findByText(UI_USAGE_TRENDS_TITLE)).toBeInTheDocument()
     expect(screen.getByText('2024-01')).toBeInTheDocument()
   })
 
-  test('shows loading, empty, and error states', () => {
+  test('shows loading, empty, and error states', async () => {
     useUsageTrendsMock
       .mockReturnValueOnce({ data: undefined, isLoading: true, isError: false })
       .mockReturnValueOnce({ data: { trends: [] }, isLoading: false, isError: false })
       .mockReturnValueOnce({ data: undefined, isLoading: false, isError: true })
 
-    const { rerender } = renderWithProviders(<UsageTrendsPanel client={{} as never} />)
+    const { rerender } = renderWithProviders(<UsageTrendsPanel client={mockClient} />, { client: mockClient })
 
-    expect(screen.getByText(UI_USAGE_TRENDS_LOADING_TITLE)).toBeInTheDocument()
+    expect(await screen.findByText(UI_USAGE_TRENDS_LOADING_TITLE)).toBeInTheDocument()
     expect(screen.getByText(UI_USAGE_TRENDS_LOADING_BODY)).toBeInTheDocument()
 
-    rerender(<UsageTrendsPanel client={{} as never} />)
-    expect(screen.getByText(UI_USAGE_TRENDS_EMPTY_TITLE)).toBeInTheDocument()
+    rerender(<UsageTrendsPanel client={mockClient} />)
+    expect(await screen.findByText(UI_USAGE_TRENDS_EMPTY_TITLE)).toBeInTheDocument()
     expect(screen.getByText(UI_USAGE_TRENDS_EMPTY_BODY)).toBeInTheDocument()
 
-    rerender(<UsageTrendsPanel client={{} as never} />)
-    expect(screen.getByText(UI_USAGE_TRENDS_ERROR_TITLE)).toBeInTheDocument()
+    rerender(<UsageTrendsPanel client={mockClient} />)
+    expect(await screen.findByText(UI_USAGE_TRENDS_ERROR_TITLE)).toBeInTheDocument()
     expect(screen.getByText(UI_USAGE_TRENDS_ERROR_BODY)).toBeInTheDocument()
   })
 })

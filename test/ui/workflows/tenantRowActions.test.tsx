@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, beforeEach, test, vi } from 'vitest'
 
 import {
@@ -61,6 +61,11 @@ describe('TenantRowActions', () => {
     await waitFor(() => expect(onEdit).toHaveBeenCalledWith(tenant))
 
     fireEvent.click(screen.getByText(UI_TENANT_ACTION_SUSPEND))
+
+    // Confirm in modal
+    const dialog = await screen.findByRole('dialog')
+    fireEvent.click(within(dialog).getByRole('button', { name: /Suspend tenant/i }))
+
     await waitFor(() => expect(suspendMutation.mutateAsync).toHaveBeenCalledWith(tenant.id))
 
     const suspendedTenant = { ...tenant, status: 'SUSPENDED' as const }
@@ -74,6 +79,11 @@ describe('TenantRowActions', () => {
     )
 
     fireEvent.click(screen.getByText(UI_TENANT_ACTION_RESUME))
+
+    // Confirm in modal
+    const resumeDialog = await screen.findByRole('dialog')
+    fireEvent.click(within(resumeDialog).getByRole('button', { name: /Resume tenant/i }))
+
     await waitFor(() => expect(resumeMutation.mutateAsync).toHaveBeenCalledWith(suspendedTenant.id))
   })
 
@@ -97,6 +107,11 @@ describe('TenantRowActions', () => {
 
     expect(screen.getByText(UI_TENANT_ACTION_EDIT)).toBeEnabled()
     fireEvent.click(screen.getByText(UI_TENANT_ACTION_SUSPEND))
+    
+    // Confirm in modal
+    const dialog = await screen.findByRole('dialog')
+    fireEvent.click(within(dialog).getByRole('button', { name: /Suspend tenant/i }))
+
     await waitFor(() => expect(suspendMutation.mutateAsync).toHaveBeenCalledWith(tenant.id))
   })
 

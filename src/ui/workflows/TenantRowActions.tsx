@@ -44,7 +44,7 @@ export function TenantRowActions({ client, tenant, onEdit, onCompleted, currentU
   const [showResumeConfirm, setShowResumeConfirm] = useState(false)
 
   const allowUpdate = canUpdateTenant(currentUser ?? null, tenant)
-  const allowSuspend = canSuspendTenant(currentUser ?? null)
+  const allowSuspend = canSuspendTenant(currentUser ?? null, tenant)
   const isSuspended = tenant.status === UI_TENANT_STATUS_SUSPENDED
 
   if (!allowUpdate) {

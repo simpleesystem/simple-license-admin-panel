@@ -80,7 +80,7 @@ describe('ProductTierManagementPanel', () => {
     totalPages: 5,
     onPageChange: mockOnPageChange,
     onRefresh: mockOnRefresh,
-    currentUser: { role: 'admin' } as unknown as User,
+    currentUser: { role: 'SUPERUSER' } as unknown as User,
     onSortChange: mockOnSortChange,
   }
 

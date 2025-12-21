@@ -19,6 +19,18 @@ vi.mock('@simple-license/react-sdk', async () => {
   }
 })
 
+vi.mock('../../../../src/app/auth/AuthProvider', () => ({
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}))
+
+vi.mock('../../../../src/app/auth/useAuth', () => ({
+  useAuth: () => ({
+    isAuthenticated: true,
+    isLoading: false,
+    user: { role: 'SUPERUSER', email: 'test@example.com' },
+  }),
+}))
+
 const mockMutation = () => ({
   mutateAsync: vi.fn(async () => ({})),
   isPending: false,

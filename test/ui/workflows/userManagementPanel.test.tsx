@@ -1,4 +1,4 @@
-import { fireEvent, render, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import {
@@ -16,6 +16,17 @@ const useCreateUserMock = vi.hoisted(() => vi.fn())
 const useUpdateUserMock = vi.hoisted(() => vi.fn())
 const useDeleteUserMock = vi.hoisted(() => vi.fn())
 const useAdminTenantsMock = vi.hoisted(() => vi.fn())
+
+vi.mock('../../../src/app/auth/useAuth', () => ({
+  useAuth: () => ({
+    currentUser: {
+      id: 'test-admin-id',
+      email: 'admin@example.com',
+      role: 'SUPERUSER',
+    },
+    isAuthenticated: true,
+  }),
+}))
 
 vi.mock('@simple-license/react-sdk', async () => {
   const actual = await vi.importActual<typeof import('@simple-license/react-sdk')>('@simple-license/react-sdk')
@@ -87,6 +98,9 @@ describe('UserManagementPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     useAdminTenantsMock.mockReturnValue({ data: [] })
+    useCreateUserMock.mockReturnValue(mockMutation())
+    useUpdateUserMock.mockReturnValue(mockMutation())
+    useDeleteUserMock.mockReturnValue(mockMutation())
   })
 
   test('calls create mutation from CTA', async () => {
@@ -179,6 +193,10 @@ describe('UserManagementPanel', () => {
     const { getByText } = render(<UserManagementPanel {...defaultProps} users={[user]} onRefresh={onRefresh} />)
 
     fireEvent.click(getByText(UI_USER_ACTION_DELETE))
+
+    // Confirm in modal
+    const dialog = await screen.findByRole('dialog')
+    fireEvent.click(within(dialog).getByRole('button', { name: /Delete user/i }))
 
     await waitFor(() => expect(onRefresh).toHaveBeenCalled())
   })

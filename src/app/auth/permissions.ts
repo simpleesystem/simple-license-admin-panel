@@ -83,7 +83,7 @@ export const canViewTenants = (user: User | null): boolean => {
     return false
   }
   const perms = derivePermissionsFromUser(user)
-  return perms.manageTenants
+  return perms.manageTenants || isVendorScopedUser(user)
 }
 
 export const canViewUsers = (user: User | null): boolean => {
@@ -100,12 +100,27 @@ export const canViewActivations = (user: User | null): boolean => {
 
 // Resource Actions
 
-export const canSuspendTenant = (user: User | null): boolean => {
-  return isSystemAdminUser(user)
+export const canSuspendTenant = (user: User | null, tenant?: Tenant): boolean => {
+  if (!user) {
+    return false
+  }
+  if (user.role === 'VIEWER' || user.role === 'API_READ_ONLY') {
+    return false
+  }
+  if (isSystemAdminUser(user)) {
+    return true
+  }
+  if (tenant && isVendorScopedUser(user)) {
+    return user.vendorId === tenant.vendorId
+  }
+  return false
 }
 
 export const canUpdateTenant = (user: User | null, tenant?: Tenant): boolean => {
   if (!user) {
+    return false
+  }
+  if (user.role === 'VIEWER' || user.role === 'API_READ_ONLY') {
     return false
   }
   if (isSystemAdminUser(user)) {

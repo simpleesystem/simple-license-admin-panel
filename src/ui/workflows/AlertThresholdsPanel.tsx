@@ -54,6 +54,12 @@ export function AlertThresholdsPanel({
   const [showModal, setShowModal] = useState(false)
   const thresholdsQuery = useAlertThresholds(client, { retry: false })
 
+  console.log('AlertThresholdsPanel render', {
+    isLoading: thresholdsQuery.isLoading,
+    isError: thresholdsQuery.isError,
+    data: thresholdsQuery.data,
+  })
+
   const summaryItems = useMemo<UiSummaryCardItem[]>(() => {
     const thresholds = thresholdsQuery.data
     if (!thresholds?.high || !thresholds?.medium) {

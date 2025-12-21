@@ -4,8 +4,9 @@ import { describe, expect, test, vi } from 'vitest'
 import { UI_ANALYTICS_STATS_REFRESH_LABEL, UI_ANALYTICS_STATS_TITLE } from '../../../../src/ui/constants'
 import { AnalyticsStatsPanel } from '../../../../src/ui/workflows/AnalyticsStatsPanel'
 import { renderWithProviders } from '../../utils'
-import { AdminSystemLiveFeedContext } from '../../../../src/app/live/AdminSystemLiveFeedContext'
+import { AdminSystemLiveFeedContext } from '../../../../src/app/live/AdminSystemLiveFeedContextDef'
 import { ADMIN_SYSTEM_WS_STATUS_DISCONNECTED } from '../../../../src/app/constants'
+import { buildUser } from '../../../factories/userFactory'
 
 const useSystemStatsMock = vi.hoisted(() => vi.fn())
 
@@ -16,6 +17,13 @@ vi.mock('@simple-license/react-sdk', async () => {
     useSystemStats: useSystemStatsMock,
   }
 })
+
+vi.mock('../../../../src/app/auth/useAuth', () => ({
+  useAuth: () => ({
+    currentUser: buildUser({ role: 'SUPERUSER' }),
+    isAuthenticated: true,
+  }),
+}))
 
 describe('AnalyticsStatsPanel integration', () => {
   test('renders stats and triggers refresh (refetch + requestHealth)', async () => {

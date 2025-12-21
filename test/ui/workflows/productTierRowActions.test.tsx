@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { UI_PRODUCT_TIER_ACTION_DELETE, UI_PRODUCT_TIER_ACTION_EDIT } from '../../../src/ui/constants'
@@ -64,6 +64,10 @@ describe('ProductTierRowActions', () => {
     await waitFor(() => expect(onEdit).toHaveBeenCalledWith(tier))
 
     fireEvent.click(screen.getByText(UI_PRODUCT_TIER_ACTION_DELETE))
+
+    const dialog = await screen.findByRole('dialog')
+    fireEvent.click(within(dialog).getByRole('button', { name: /Delete tier/i }))
+
     await waitFor(() => expect(deleteMutation.mutateAsync).toHaveBeenCalledWith(tier.id))
   })
 

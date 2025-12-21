@@ -8,27 +8,29 @@ import { buildUser } from '../../../factories/userFactory'
 import { renderWithProviders } from '../../utils'
 
 const useAdminLicensesMock = vi.hoisted(() => vi.fn())
+const useAdminProductsMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@simple-license/react-sdk', async () => {
   const actual = await vi.importActual<typeof import('@simple-license/react-sdk')>('@simple-license/react-sdk')
   return {
     ...actual,
     useAdminLicenses: useAdminLicensesMock,
+    useAdminProducts: useAdminProductsMock,
   }
 })
 
+vi.mock('../../../../src/app/auth/AuthProvider', () => ({
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}))
+
 let authUser = buildUser({ role: 'SUPERUSER' })
 
-vi.mock('../../../../src/app/auth/authContext', async () => {
-  const actual = await vi.importActual<typeof import('../../../../src/app/auth/authContext')>(
-    '../../../../src/app/auth/authContext'
-  )
+vi.mock('../../../../src/app/auth/useAuth', async () => {
   return {
-    ...actual,
     useAuth: () => ({
       currentUser: authUser,
       isAuthenticated: true,
-      status: actual.AUTH_STATUS_IDLE,
+      status: 'idle',
       token: 'token',
       login: vi.fn(),
       logout: vi.fn(),
@@ -38,6 +40,10 @@ vi.mock('../../../../src/app/auth/authContext', async () => {
 })
 
 describe('LicensesRouteComponent', () => {
+  beforeEach(() => {
+    useAdminProductsMock.mockReturnValue({ data: [], isLoading: false, isError: false })
+  })
+
   test('renders vendor-scoped licenses and hides others for vendor manager', async () => {
     const vendorUser = buildUser({ role: 'VENDOR_MANAGER', vendorId: 'vendor-1' })
     authUser = vendorUser

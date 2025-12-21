@@ -32,6 +32,18 @@ vi.mock('@simple-license/react-sdk', async () => {
   }
 })
 
+vi.mock('../../../../src/app/auth/AuthProvider', () => ({
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}))
+
+vi.mock('../../../../src/app/auth/useAuth', () => ({
+  useAuth: () => ({
+    isAuthenticated: true,
+    isLoading: false,
+    user: { role: 'SUPERUSER', email: 'test@example.com' },
+  }),
+}))
+
 describe('Panel states: loading, error, empty', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -53,28 +65,28 @@ describe('Panel states: loading, error, empty', () => {
 
   test('LicenseActivationsPanel loading and error states', () => {
     const client = {} as never
-    const licenseId = faker.string.uuid()
+    const licenseKey = faker.string.uuid()
     const currentUser = { role: 'SUPERUSER', vendorId: faker.string.uuid() }
 
-    useLicenseActivationsMock
-      .mockReturnValueOnce({ data: undefined, isLoading: true, isError: false })
-      .mockReturnValueOnce({ data: undefined, isLoading: false, isError: true })
+    useLicenseActivationsMock.mockReturnValue({ data: undefined, isLoading: true, isError: false })
 
     const { rerender } = renderWithProviders(
-      <LicenseActivationsPanel client={client} licenseId={licenseId} currentUser={currentUser} />
+      <LicenseActivationsPanel client={client} licenseKey={licenseKey} currentUser={currentUser} />
     )
 
     expect(screen.getByText(UI_LICENSE_ACTIVATIONS_LOADING_TITLE)).toBeInTheDocument()
     expect(screen.getByText(UI_LICENSE_ACTIVATIONS_LOADING_BODY)).toBeInTheDocument()
 
-    rerender(<LicenseActivationsPanel client={client} licenseId={licenseId} currentUser={currentUser} />)
+    useLicenseActivationsMock.mockReturnValue({ data: undefined, isLoading: false, isError: true })
+
+    rerender(<LicenseActivationsPanel client={client} licenseKey={licenseKey} currentUser={currentUser} />)
     expect(screen.getByText(UI_LICENSE_ACTIVATIONS_ERROR_TITLE)).toBeInTheDocument()
     expect(screen.getByText(UI_LICENSE_ACTIVATIONS_ERROR_BODY)).toBeInTheDocument()
   })
 
   test('LicenseActivationsPanel empty state', async () => {
     const client = {} as never
-    const licenseId = faker.string.uuid()
+    const licenseKey = faker.string.uuid()
     const currentUser = { role: 'SUPERUSER', vendorId: faker.string.uuid() }
     useLicenseActivationsMock.mockReturnValue({
       data: { activations: [] },
@@ -82,7 +94,7 @@ describe('Panel states: loading, error, empty', () => {
       isError: false,
     })
 
-    renderWithProviders(<LicenseActivationsPanel client={client} licenseId={licenseId} currentUser={currentUser} />)
+    renderWithProviders(<LicenseActivationsPanel client={client} licenseKey={licenseKey} currentUser={currentUser} />)
 
     expect(await screen.findByText(UI_LICENSE_ACTIVATIONS_TITLE)).toBeInTheDocument()
     expect(await screen.findByText(UI_LICENSE_ACTIVATIONS_EMPTY_STATE)).toBeInTheDocument()
@@ -92,15 +104,15 @@ describe('Panel states: loading, error, empty', () => {
     const client = {} as never
     const licenseKey = faker.string.alphanumeric({ length: 12 })
 
-    useLicenseUsageDetailsMock
-      .mockReturnValueOnce({ data: undefined, isLoading: true, isError: false })
-      .mockReturnValueOnce({ data: undefined, isLoading: false, isError: true })
+    useLicenseUsageDetailsMock.mockReturnValue({ data: undefined, isLoading: true, isError: false })
 
     const { rerender } = renderWithProviders(
       <LicenseUsageDetailsPanel client={client} licenseKey={licenseKey} licenseVendorId={faker.string.uuid()} />
     )
 
     expect(screen.getByText(/license usage/i)).toBeInTheDocument()
+
+    useLicenseUsageDetailsMock.mockReturnValue({ data: undefined, isLoading: false, isError: true })
 
     rerender(<LicenseUsageDetailsPanel client={client} licenseKey={licenseKey} licenseVendorId={faker.string.uuid()} />)
     expect(screen.getByText(/unable to load/i)).toBeInTheDocument()

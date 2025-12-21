@@ -8,6 +8,18 @@ import { TopNavBar } from '../../../../src/ui/navigation/TopNavBar'
 import { buildSidebarNavItem } from '../../factories/uiFactories'
 import { renderWithProviders } from '../../utils'
 
+vi.mock('../../../../src/app/auth/AuthProvider', () => ({
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}))
+
+vi.mock('../../../../src/app/auth/useAuth', () => ({
+  useAuth: () => ({
+    isAuthenticated: true,
+    isLoading: false,
+    user: { role: 'SUPERUSER', email: 'test@example.com' },
+  }),
+}))
+
 const navItems = [
   buildSidebarNavItem({ label: 'Dashboard' }),
   buildSidebarNavItem({ label: 'Licenses' }),

@@ -9,6 +9,7 @@ import {
   ADMIN_SYSTEM_WS_STATUS_CONNECTED,
   ADMIN_SYSTEM_WS_STATUS_CONNECTING,
   ADMIN_SYSTEM_WS_STATUS_DISCONNECTED,
+  ADMIN_SYSTEM_WS_STATUS_ERROR,
 } from '../constants'
 import { createLifecycle } from '../lifecycle/lifecycle'
 import {

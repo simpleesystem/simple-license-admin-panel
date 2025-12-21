@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { UI_ENTITLEMENT_ACTION_DELETE, UI_ENTITLEMENT_ACTION_EDIT } from '../../../src/ui/constants'
@@ -70,6 +70,10 @@ describe('ProductEntitlementRowActions', () => {
     await waitFor(() => expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: entitlement.id })))
 
     fireEvent.click(screen.getByText(UI_ENTITLEMENT_ACTION_DELETE))
+
+    const dialog = await screen.findByRole('dialog')
+    fireEvent.click(within(dialog).getByRole('button', { name: /Delete entitlement/i }))
+
     await waitFor(() => expect(deleteMutation.mutateAsync).toHaveBeenCalledWith(entitlement.id))
   })
 

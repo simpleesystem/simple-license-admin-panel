@@ -14,8 +14,9 @@ import {
   UI_LIVE_STATUS_DISCONNECTED,
 } from '../../../src/ui/constants'
 import { HealthMetricsPanel } from '../../../src/ui/workflows/HealthMetricsPanel'
-import { AdminSystemLiveFeedContext } from '../../../src/app/live/AdminSystemLiveFeedContext'
+import { AdminSystemLiveFeedContext } from '../../../src/app/live/AdminSystemLiveFeedContextDef'
 import { ADMIN_SYSTEM_WS_STATUS_DISCONNECTED } from '../../../src/app/constants'
+import { buildUser } from '../../factories/userFactory'
 
 const useHealthMetricsMock = vi.hoisted(() => vi.fn())
 
@@ -26,6 +27,13 @@ vi.mock('@simple-license/react-sdk', async () => {
     useHealthMetrics: useHealthMetricsMock,
   }
 })
+
+vi.mock('../../../src/app/auth/useAuth', () => ({
+  useAuth: () => ({
+    currentUser: buildUser({ role: 'SUPERUSER' }),
+    isAuthenticated: true,
+  }),
+}))
 
 const createMockClient = () => ({}) as Client
 

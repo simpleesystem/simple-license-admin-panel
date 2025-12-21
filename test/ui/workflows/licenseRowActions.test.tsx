@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import {
@@ -74,10 +74,13 @@ describe('LicenseRowActions', () => {
 
     fireEvent.click(screen.getByText(UI_LICENSE_ACTION_DELETE))
 
-    expect(deleteMutation.mutateAsync).toHaveBeenCalledWith(license.id)
+    const dialog = await screen.findByRole('dialog')
+    fireEvent.click(within(dialog).getByRole('button', { name: /Revoke license/i }))
+
+    await waitFor(() => expect(deleteMutation.mutateAsync).toHaveBeenCalledWith(license.id))
   })
 
-  test('disables resume action when license is not suspended', () => {
+  test('disables resume action when license is not suspended', async () => {
     const license = buildLicense({ status: 'ACTIVE' })
     const deleteMutation = mockMutation()
     const suspendMutation = mockMutation()
@@ -98,10 +101,13 @@ describe('LicenseRowActions', () => {
 
     fireEvent.click(screen.getByText(UI_LICENSE_ACTION_SUSPEND))
 
-    expect(suspendMutation.mutateAsync).toHaveBeenCalledWith(license.id)
+    const dialog = await screen.findByRole('dialog')
+    fireEvent.click(within(dialog).getByRole('button', { name: /Suspend license/i }))
+
+    await waitFor(() => expect(suspendMutation.mutateAsync).toHaveBeenCalledWith(license.id))
   })
 
-  test('allows resume action when license is suspended', () => {
+  test('allows resume action when license is suspended', async () => {
     const license = buildLicense({ status: 'SUSPENDED' })
     const deleteMutation = mockMutation()
     const suspendMutation = mockMutation()
@@ -122,10 +128,13 @@ describe('LicenseRowActions', () => {
 
     fireEvent.click(screen.getByText(UI_LICENSE_ACTION_RESUME))
 
-    expect(resumeMutation.mutateAsync).toHaveBeenCalledWith(license.id)
+    const dialog = await screen.findByRole('dialog')
+    fireEvent.click(within(dialog).getByRole('button', { name: /Resume license/i }))
+
+    await waitFor(() => expect(resumeMutation.mutateAsync).toHaveBeenCalledWith(license.id))
   })
 
-  test('hides delete action for vendor manager while allowing updates', () => {
+  test('hides delete action for vendor manager while allowing updates', async () => {
     const vendorId = faker.string.uuid()
     const license = buildLicense({ status: 'ACTIVE', vendorId })
     const deleteMutation = mockMutation()
@@ -147,6 +156,12 @@ describe('LicenseRowActions', () => {
 
     expect(screen.queryByText(UI_LICENSE_ACTION_DELETE)).toBeNull()
     expect(screen.getByText(UI_LICENSE_ACTION_SUSPEND)).toBeInTheDocument()
+    
+    // Verify suspend works via modal
+    fireEvent.click(screen.getByText(UI_LICENSE_ACTION_SUSPEND))
+    const dialog = await screen.findByRole('dialog')
+    fireEvent.click(within(dialog).getByRole('button', { name: /Suspend license/i }))
+    await waitFor(() => expect(suspendMutation.mutateAsync).toHaveBeenCalledWith(license.id))
   })
 
   test('hides all actions when vendor scoped user does not own the license', () => {

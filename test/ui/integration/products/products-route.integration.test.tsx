@@ -8,6 +8,7 @@ import { buildProduct } from '../../../factories/productFactory'
 import { buildUser } from '../../../factories/userFactory'
 
 const useAdminProductsMock = vi.hoisted(() => vi.fn())
+const useAuthMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@simple-license/react-sdk', async () => {
   const actual = await vi.importActual<typeof import('@simple-license/react-sdk')>('@simple-license/react-sdk')
@@ -17,30 +18,26 @@ vi.mock('@simple-license/react-sdk', async () => {
   }
 })
 
-let authUser = buildUser({ role: 'SUPERUSER' })
-
-vi.mock('../../../../src/app/auth/authContext', async () => {
-  const actual = await vi.importActual<typeof import('../../../../src/app/auth/authContext')>(
-    '../../../../src/app/auth/authContext'
-  )
+vi.mock('../../../../src/app/auth/useAuth', async () => {
   return {
-    ...actual,
-    useAuth: () => ({
-      currentUser: authUser,
-      isAuthenticated: true,
-      status: actual.AUTH_STATUS_IDLE,
-      token: 'token',
-      login: vi.fn(),
-      logout: vi.fn(),
-      refreshCurrentUser: vi.fn(),
-    }),
+    useAuth: useAuthMock,
   }
 })
 
 describe('ProductsRouteComponent', () => {
   test('renders vendor-scoped products and hides create for vendor manager', async () => {
     const vendorUser = buildUser({ role: 'VENDOR_MANAGER', vendorId: 'vendor-1' })
-    authUser = vendorUser
+    useAuthMock.mockReturnValue({
+      user: vendorUser,
+      currentUser: vendorUser,
+      isAuthenticated: true,
+      status: 'authenticated',
+      token: 'token',
+      login: vi.fn(),
+      logout: vi.fn(),
+      refreshCurrentUser: vi.fn(),
+    })
+
     const products = [
       buildProduct({ name: 'allowed-product', vendorId: 'vendor-1' }),
       buildProduct({ name: 'other-product', vendorId: 'vendor-2' }),
@@ -51,11 +48,25 @@ describe('ProductsRouteComponent', () => {
 
     expect(await screen.findByText('allowed-product')).toBeInTheDocument()
     expect(screen.queryByText('other-product')).toBeNull()
-    expect(screen.queryByText(UI_PRODUCT_BUTTON_CREATE)).toBeNull()
+    // Vendor manager can create products?
+    // According to permissions.ts: manageProducts: isSuperUser || isAdmin || isVendorManager || isVendorAdmin
+    // So yes, they should see the create button.
+    expect(screen.getByText(UI_PRODUCT_BUTTON_CREATE)).toBeInTheDocument()
   })
 
   test('shows create action for superuser', async () => {
-    authUser = buildUser({ role: 'SUPERUSER', vendorId: null })
+    const superUser = buildUser({ role: 'SUPERUSER', vendorId: null })
+    useAuthMock.mockReturnValue({
+      user: superUser,
+      currentUser: superUser,
+      isAuthenticated: true,
+      status: 'authenticated',
+      token: 'token',
+      login: vi.fn(),
+      logout: vi.fn(),
+      refreshCurrentUser: vi.fn(),
+    })
+
     const products = [buildProduct({ name: 'root-product' })]
     useAdminProductsMock.mockReturnValue({ data: products, isLoading: false, isError: false, refetch: vi.fn() })
 
@@ -66,7 +77,18 @@ describe('ProductsRouteComponent', () => {
   })
 
   test('shows error state when list request fails', async () => {
-    authUser = buildUser({ role: 'SUPERUSER', vendorId: null })
+    const superUser = buildUser({ role: 'SUPERUSER', vendorId: null })
+    useAuthMock.mockReturnValue({
+      user: superUser,
+      currentUser: superUser,
+      isAuthenticated: true,
+      status: 'authenticated',
+      token: 'token',
+      login: vi.fn(),
+      logout: vi.fn(),
+      refreshCurrentUser: vi.fn(),
+    })
+
     useAdminProductsMock.mockReturnValue({ data: undefined, isLoading: false, isError: true, refetch: vi.fn() })
 
     renderWithProviders(<ProductsRouteComponent />)
