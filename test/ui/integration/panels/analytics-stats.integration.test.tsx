@@ -1,7 +1,7 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
 
-import { UI_ANALYTICS_STATS_REFRESH_LABEL, UI_ANALYTICS_STATS_TITLE } from '../../../../src/ui/constants'
+import { UI_ANALYTICS_STATS_REFRESH_LABEL, UI_ANALYTICS_STATS_TITLE, UI_USER_ROLE_SUPERUSER } from '../../../../src/ui/constants'
 import { AnalyticsStatsPanel } from '../../../../src/ui/workflows/AnalyticsStatsPanel'
 import { renderWithProviders } from '../../utils'
 import { AdminSystemLiveFeedContext } from '../../../../src/app/live/AdminSystemLiveFeedContextDef'
@@ -20,7 +20,7 @@ vi.mock('@simple-license/react-sdk', async () => {
 
 vi.mock('../../../../src/app/auth/useAuth', () => ({
   useAuth: () => ({
-    currentUser: buildUser({ role: 'SUPERUSER' }),
+    currentUser: buildUser({ role: UI_USER_ROLE_SUPERUSER }),
     isAuthenticated: true,
   }),
 }))

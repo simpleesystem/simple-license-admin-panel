@@ -2,7 +2,7 @@ import type { Client, User } from '@simple-license/react-sdk'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { NotificationBusProvider } from '@/notifications/busContext'
-import { UI_PRODUCT_TIER_BUTTON_CREATE, UI_PRODUCT_TIER_EMPTY_STATE_MESSAGE } from '@/ui/constants'
+import { UI_PRODUCT_TIER_BUTTON_CREATE, UI_PRODUCT_TIER_EMPTY_STATE_MESSAGE, UI_USER_ROLE_SUPERUSER } from '@/ui/constants'
 import { type ProductTierListItem, ProductTierManagementPanel } from '@/ui/workflows/ProductTierManagementPanel'
 
 // Mock client
@@ -80,7 +80,7 @@ describe('ProductTierManagementPanel', () => {
     totalPages: 5,
     onPageChange: mockOnPageChange,
     onRefresh: mockOnRefresh,
-    currentUser: { role: 'SUPERUSER' } as unknown as User,
+    currentUser: { role: UI_USER_ROLE_SUPERUSER } as unknown as User,
     onSortChange: mockOnSortChange,
   }
 

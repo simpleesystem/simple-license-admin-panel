@@ -2,7 +2,13 @@ import { faker } from '@faker-js/faker'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
-import { UI_ENTITLEMENT_ACTION_DELETE, UI_ENTITLEMENT_ACTION_EDIT } from '../../../src/ui/constants'
+import {
+  UI_ENTITLEMENT_ACTION_DELETE,
+  UI_ENTITLEMENT_ACTION_EDIT,
+  UI_USER_ROLE_SUPERUSER,
+  UI_USER_ROLE_VENDOR_MANAGER,
+  UI_USER_ROLE_VIEWER,
+} from '../../../src/ui/constants'
 import { ProductEntitlementRowActions } from '../../../src/ui/workflows/ProductEntitlementRowActions'
 import { buildEntitlement } from '../../factories/entitlementFactory'
 import { buildUser } from '../../factories/userFactory'
@@ -48,7 +54,7 @@ describe('ProductEntitlementRowActions', () => {
     useDeleteEntitlementMock.mockReturnValue(deleteMutation)
     const onEdit = vi.fn()
     const entitlement = buildEntitlement()
-    const superuser = buildUser({ role: 'SUPERUSER' })
+    const superuser = buildUser({ role: UI_USER_ROLE_SUPERUSER })
 
     render(
       <ProductEntitlementRowActions
@@ -82,7 +88,7 @@ describe('ProductEntitlementRowActions', () => {
     useDeleteEntitlementMock.mockReturnValue(deleteMutation)
     const vendorId = faker.string.uuid()
     const entitlement = buildEntitlement({ vendorId })
-    const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId })
+    const vendorManager = buildUser({ role: UI_USER_ROLE_VENDOR_MANAGER, vendorId })
 
     render(
       <ProductEntitlementRowActions
@@ -109,7 +115,7 @@ describe('ProductEntitlementRowActions', () => {
     const deleteMutation = mockMutation()
     useDeleteEntitlementMock.mockReturnValue(deleteMutation)
     const entitlement = buildEntitlement()
-    const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId: `${entitlement.vendorId}-other` })
+    const vendorManager = buildUser({ role: UI_USER_ROLE_VENDOR_MANAGER, vendorId: `${entitlement.vendorId}-other` })
 
     const { container } = render(
       <ProductEntitlementRowActions
@@ -134,7 +140,7 @@ describe('ProductEntitlementRowActions', () => {
     const deleteMutation = mockMutation()
     useDeleteEntitlementMock.mockReturnValue(deleteMutation)
     const entitlement = buildEntitlement()
-    const viewer = buildUser({ role: 'VIEWER', vendorId: entitlement.vendorId ?? undefined })
+    const viewer = buildUser({ role: UI_USER_ROLE_VIEWER, vendorId: entitlement.vendorId ?? undefined })
 
     const { container } = render(
       <ProductEntitlementRowActions

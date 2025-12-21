@@ -7,6 +7,7 @@ import {
   UI_USER_BUTTON_CREATE,
   UI_USER_FORM_SUBMIT_CREATE,
   UI_USER_FORM_SUBMIT_UPDATE,
+  UI_USER_ROLE_SUPERUSER,
 } from '../../../src/ui/constants'
 import { UserManagementPanel } from '../../../src/ui/workflows/UserManagementPanel'
 import { buildUser } from '../../factories/userFactory'
@@ -22,7 +23,7 @@ vi.mock('../../../src/app/auth/useAuth', () => ({
     currentUser: {
       id: 'test-admin-id',
       email: 'admin@example.com',
-      role: 'SUPERUSER',
+      role: UI_USER_ROLE_SUPERUSER,
     },
     isAuthenticated: true,
   }),
@@ -86,7 +87,7 @@ const defaultProps = {
   client: {} as never,
   users: [],
   onRefresh: vi.fn(),
-  currentUser: buildUser({ role: 'SUPERUSER' }),
+  currentUser: buildUser({ role: UI_USER_ROLE_SUPERUSER }),
   page: 1,
   totalPages: 1,
   onPageChange: vi.fn(),

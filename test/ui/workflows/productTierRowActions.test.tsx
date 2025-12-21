@@ -2,7 +2,12 @@ import { faker } from '@faker-js/faker'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
-import { UI_PRODUCT_TIER_ACTION_DELETE, UI_PRODUCT_TIER_ACTION_EDIT } from '../../../src/ui/constants'
+import {
+  UI_PRODUCT_TIER_ACTION_DELETE,
+  UI_PRODUCT_TIER_ACTION_EDIT,
+  UI_USER_ROLE_SUPERUSER,
+  UI_USER_ROLE_VENDOR_MANAGER,
+} from '../../../src/ui/constants'
 import { ProductTierRowActions } from '../../../src/ui/workflows/ProductTierRowActions'
 import { buildProductTier } from '../../factories/productTierFactory'
 import { buildUser } from '../../factories/userFactory'
@@ -48,7 +53,7 @@ describe('ProductTierRowActions', () => {
     useDeleteProductTierMock.mockReturnValue(deleteMutation)
     const onEdit = vi.fn()
     const tier = buildProductTier()
-    const superuser = buildUser({ role: 'SUPERUSER' })
+    const superuser = buildUser({ role: UI_USER_ROLE_SUPERUSER })
 
     render(
       <ProductTierRowActions
@@ -76,7 +81,7 @@ describe('ProductTierRowActions', () => {
     useDeleteProductTierMock.mockReturnValue(deleteMutation)
     const vendorId = faker.string.uuid()
     const tier = buildProductTier({ vendorId })
-    const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId })
+    const vendorManager = buildUser({ role: UI_USER_ROLE_VENDOR_MANAGER, vendorId })
 
     render(
       <ProductTierRowActions
@@ -97,7 +102,7 @@ describe('ProductTierRowActions', () => {
     const deleteMutation = mockMutation()
     useDeleteProductTierMock.mockReturnValue(deleteMutation)
     const tier = buildProductTier()
-    const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId: `${tier.vendorId}-other` })
+    const vendorManager = buildUser({ role: UI_USER_ROLE_VENDOR_MANAGER, vendorId: `${tier.vendorId}-other` })
 
     const { container } = render(
       <ProductTierRowActions

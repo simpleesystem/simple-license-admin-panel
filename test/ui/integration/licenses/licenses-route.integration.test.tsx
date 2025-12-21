@@ -2,7 +2,7 @@ import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
 
 import { LicensesRouteComponent } from '../../../../src/routes/licenses/LicensesRoute'
-import { UI_LICENSE_STATUS_ERROR_TITLE } from '../../../../src/ui/constants'
+import { UI_LICENSE_STATUS_ERROR_TITLE, UI_USER_ROLE_SUPERUSER, UI_USER_ROLE_VENDOR_MANAGER, UI_USER_ROLE_VIEWER } from '../../../../src/ui/constants'
 import { buildLicense } from '../../../factories/licenseFactory'
 import { buildUser } from '../../../factories/userFactory'
 import { renderWithProviders } from '../../utils'
@@ -23,7 +23,7 @@ vi.mock('../../../../src/app/auth/AuthProvider', () => ({
   AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }))
 
-let authUser = buildUser({ role: 'SUPERUSER' })
+let authUser = buildUser({ role: UI_USER_ROLE_SUPERUSER })
 
 vi.mock('../../../../src/app/auth/useAuth', async () => {
   return {
@@ -45,7 +45,7 @@ describe('LicensesRouteComponent', () => {
   })
 
   test('renders vendor-scoped licenses and hides others for vendor manager', async () => {
-    const vendorUser = buildUser({ role: 'VENDOR_MANAGER', vendorId: 'vendor-1' })
+    const vendorUser = buildUser({ role: UI_USER_ROLE_VENDOR_MANAGER, vendorId: 'vendor-1' })
     authUser = vendorUser
     const licenses = [
       buildLicense({ customerEmail: 'allowed@example.com', vendorId: 'vendor-1', status: 'ACTIVE' }),
@@ -60,7 +60,7 @@ describe('LicensesRouteComponent', () => {
   })
 
   test('shows licenses for superuser', async () => {
-    authUser = buildUser({ role: 'SUPERUSER', vendorId: null })
+    authUser = buildUser({ role: UI_USER_ROLE_SUPERUSER, vendorId: null })
     const licenses = [buildLicense({ customerEmail: 'root@example.com', status: 'ACTIVE' })]
     useAdminLicensesMock.mockReturnValue({ data: licenses, isLoading: false, isError: false, refetch: vi.fn() })
 
@@ -70,7 +70,7 @@ describe('LicensesRouteComponent', () => {
   })
 
   test('shows error state when list request fails', async () => {
-    authUser = buildUser({ role: 'SUPERUSER', vendorId: null })
+    authUser = buildUser({ role: UI_USER_ROLE_SUPERUSER, vendorId: null })
     useAdminLicensesMock.mockReturnValue({ data: undefined, isLoading: false, isError: true, refetch: vi.fn() })
 
     renderWithProviders(<LicensesRouteComponent />)
@@ -81,7 +81,7 @@ describe('LicensesRouteComponent', () => {
   })
 
   test('invokes refetch when retrying after error', async () => {
-    authUser = buildUser({ role: 'SUPERUSER', vendorId: null })
+    authUser = buildUser({ role: UI_USER_ROLE_SUPERUSER, vendorId: null })
     const refetch = vi.fn()
     useAdminLicensesMock.mockReturnValue({ data: undefined, isLoading: false, isError: true, refetch })
 
@@ -93,7 +93,7 @@ describe('LicensesRouteComponent', () => {
   })
 
   test('shows loading state', () => {
-    authUser = buildUser({ role: 'SUPERUSER', vendorId: null })
+    authUser = buildUser({ role: UI_USER_ROLE_SUPERUSER, vendorId: null })
     useAdminLicensesMock.mockReturnValue({ data: undefined, isLoading: true, isError: false, refetch: vi.fn() })
 
     renderWithProviders(<LicensesRouteComponent />)
@@ -102,7 +102,7 @@ describe('LicensesRouteComponent', () => {
   })
 
   test('hides content for viewer without permissions', () => {
-    authUser = buildUser({ role: 'VIEWER', vendorId: null })
+    authUser = buildUser({ role: UI_USER_ROLE_VIEWER, vendorId: null })
     const licenses = [buildLicense({ customerEmail: 'blocked@example.com', status: 'ACTIVE' })]
     useAdminLicensesMock.mockReturnValue({ data: licenses, isLoading: false, isError: false, refetch: vi.fn() })
 
@@ -112,7 +112,7 @@ describe('LicensesRouteComponent', () => {
   })
 
   test('renders licenses when payload is nested under data key', async () => {
-    authUser = buildUser({ role: 'SUPERUSER', vendorId: null })
+    authUser = buildUser({ role: UI_USER_ROLE_SUPERUSER, vendorId: null })
     const licenses = [buildLicense({ customerEmail: 'nested@example.com', status: 'ACTIVE' })]
     useAdminLicensesMock.mockReturnValue({
       data: { data: licenses },

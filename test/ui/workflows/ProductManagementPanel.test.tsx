@@ -2,7 +2,7 @@ import type { Client, User } from '@simple-license/react-sdk'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { NotificationBusProvider } from '@/notifications/busContext'
-import { UI_PRODUCT_BUTTON_CREATE, UI_PRODUCT_EMPTY_STATE_MESSAGE, UI_TABLE_SEARCH_PLACEHOLDER } from '@/ui/constants'
+import { UI_PRODUCT_BUTTON_CREATE, UI_PRODUCT_EMPTY_STATE_MESSAGE, UI_TABLE_SEARCH_PLACEHOLDER, UI_USER_ROLE_SUPERUSER } from '@/ui/constants'
 import { type ProductListItem, ProductManagementPanel } from '@/ui/workflows/ProductManagementPanel'
 
 // Mock client
@@ -90,7 +90,7 @@ describe('ProductManagementPanel', () => {
     totalPages: 5,
     onPageChange: mockOnPageChange,
     onRefresh: mockOnRefresh,
-    currentUser: { role: 'SUPERUSER' } as unknown as User,
+    currentUser: { role: UI_USER_ROLE_SUPERUSER } as unknown as User,
     searchTerm: '',
     onSearchChange: mockOnSearchChange,
     onStatusFilterChange: mockOnStatusFilterChange,
