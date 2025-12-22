@@ -410,7 +410,7 @@ export type TextFieldProps<TFieldValues extends FieldValues> = UiCommonProps & {
   validateNames?: readonly Path<TFieldValues>[]
 }
 
-export type SelectFieldProps<TFieldValues extends FieldValues> = UiCommonProps & {
+export type SelectFieldPropsBase<TFieldValues extends FieldValues> = UiCommonProps & {
   name: Path<TFieldValues>
   label: ReactNode
   options: readonly UiSelectOption[]

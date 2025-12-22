@@ -50,10 +50,11 @@ export class AdminSystemWsClient {
   private debounceTimer: ReturnType<typeof setTimeout> | null = null
   private reconnectAttempt = 0
   private stopped = false
+  private readonly emitter: ReturnType<typeof mitt<AdminSystemWsClientEvents>>
 
-  private readonly emitter = mitt<AdminSystemWsClientEvents>()
-
-  constructor(private readonly url: string) {}
+  constructor(private readonly url: string) {
+    this.emitter = mitt<AdminSystemWsClientEvents>()
+  }
 
   start(): void {
     if (this.stopped) {

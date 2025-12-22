@@ -76,15 +76,16 @@ export function PersistentHeader() {
       />
 
       <ModalDialog
-        isOpen={showPasswordModal}
+        show={showPasswordModal}
         onClose={() => setShowPasswordModal(false)}
         title={UI_HEADER_MODAL_TITLE_CHANGE_PASSWORD}
         size="lg"
-      >
-        <div className="p-3">
-          <ChangePasswordForm onSuccess={handleChangePasswordSuccess} />
-        </div>
-      </ModalDialog>
+        body={
+          <div className="p-3">
+            <ChangePasswordForm onSuccess={handleChangePasswordSuccess} />
+          </div>
+        }
+      />
     </>
   )
 }

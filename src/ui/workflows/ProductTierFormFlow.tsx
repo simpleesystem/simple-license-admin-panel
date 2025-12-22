@@ -98,8 +98,6 @@ function ProductTierCreateFlow(props: ProductTierCreateProps) {
       return await createMutation.mutateAsync(data)
     },
     isPending: createMutation.isPending,
-    error: createMutation.error,
-    reset: createMutation.reset,
   }
 
   return (
@@ -147,8 +145,6 @@ function ProductTierUpdateFlow(props: ProductTierUpdateProps) {
       })
     },
     isPending: updateMutation.isPending,
-    error: updateMutation.error,
-    reset: updateMutation.reset,
   }
 
   return (

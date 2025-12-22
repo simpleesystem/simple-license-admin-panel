@@ -45,7 +45,7 @@ export const handleQueryError = (error: unknown): ToastNotificationPayload | nul
   // Simplified error handling
   if (isApiException(error)) {
     return {
-      title: 'Error',
+      titleKey: 'app.error.title',
       message: error.message || 'An error occurred',
       variant: NOTIFICATION_VARIANT_ERROR,
     }

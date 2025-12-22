@@ -203,3 +203,7 @@ export const LIST_SORT_DIRECTION_ASC = 'asc' as const
 export const LIST_SORT_DIRECTION_DESC = 'desc' as const
 
 export const LICENSE_EXPIRY_WARNING_DAYS = 30 as const
+
+export const STORAGE_KEY_AUTH_TOKEN = 'auth.token' as const
+export const STORAGE_KEY_AUTH_EXPIRY = 'auth.expiry' as const
+export const STORAGE_KEY_AUTH_USER = 'auth.user' as const

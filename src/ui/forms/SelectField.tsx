@@ -1,21 +1,23 @@
+import type { ReactNode } from 'react'
 import Form from 'react-bootstrap/Form'
 import { useFormContext } from 'react-hook-form'
-import type { FieldValues } from 'react-hook-form'
+import type { FieldValues, Path } from 'react-hook-form'
 
 import {
   UI_FORM_SELECT_PLACEHOLDER_DISABLED,
   UI_FORM_SELECT_PLACEHOLDER_HIDDEN,
   UI_FORM_SELECT_PLACEHOLDER_VALUE,
 } from '../constants'
-import type { SelectFieldProps } from '../types'
+import type { FormFieldProps, UiSelectOption } from '../types'
 import { FormField } from './FormField'
 import { VisibilityGate } from '../utils/PermissionGate'
 
-export interface SelectFieldProps<TFieldValues extends FieldValues> extends FormFieldCommonProps {
+export interface SelectFieldProps<TFieldValues extends FieldValues> extends Omit<FormFieldProps, 'children' | 'hint'> {
   name: Path<TFieldValues>
   options: readonly UiSelectOption[]
   placeholder?: ReactNode
   multiple?: boolean
+  description?: ReactNode
 }
 
 export function SelectField<TFieldValues extends FieldValues>({

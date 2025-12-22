@@ -38,7 +38,7 @@ export function derivePermissionsFromUser(user: User | null): Permissions {
   const role = user.role
   const isSuperUser = role === 'SUPERUSER'
   const isAdmin = role === 'ADMIN'
-  const isSupport = role === 'SUPPORT'
+  const isSupport = role === 'SUPPORT' || role === 'VIEWER'
   const isVendorManager = role === 'VENDOR_MANAGER'
   const isVendorAdmin = role === 'VENDOR_ADMIN'
 
@@ -293,9 +293,7 @@ export const isLicenseOwnedByUser = (user: User | null, license: License | null)
   if (isSystemAdminUser(user)) {
     return true
   }
-  if (user.vendorId && license.vendorId) {
-    return user.vendorId === license.vendorId
-  }
+  // License doesn't have vendorId, check via product ownership if needed
   if (user.vendorId) {
     // This is tricky without product vendor lookup, but assuming safe default
     return false

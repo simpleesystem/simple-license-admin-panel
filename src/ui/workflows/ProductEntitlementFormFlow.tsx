@@ -117,8 +117,6 @@ function ProductEntitlementCreateFlow(props: ProductEntitlementCreateProps) {
       return await createMutation.mutateAsync(request)
     },
     isPending: createMutation.isPending,
-    error: createMutation.error,
-    reset: createMutation.reset,
   }
 
   const blueprint = createEntitlementBlueprint('create', {
@@ -167,8 +165,6 @@ function ProductEntitlementUpdateFlow(props: ProductEntitlementUpdateProps) {
       })
     },
     isPending: updateMutation.isPending,
-    error: updateMutation.error,
-    reset: updateMutation.reset,
   }
 
   const blueprint = createEntitlementBlueprint('update', {

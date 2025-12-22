@@ -25,13 +25,12 @@ const DEFAULT_FREEZE_VALUES: FreezeLicenseRequest = {
 export function LicenseFreezeFormFlow({
   client,
   licenseKey,
-  licenseVendorId,
   currentUser,
   onSuccess,
   ...modalProps
 }: LicenseFreezeFormFlowProps) {
   const mutation = adaptMutation(useFreezeLicense(client))
-  const allowFreeze = canUpdateLicense(currentUser ?? null, { vendorId: licenseVendorId })
+  const allowFreeze = canUpdateLicense(currentUser ?? null)
 
   if (!allowFreeze) {
     return null

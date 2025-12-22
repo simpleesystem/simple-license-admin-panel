@@ -1,4 +1,4 @@
-import type { MutationAdapter } from './mutationActions'
+import type { MutationAdapter } from '../actions/mutationActions'
 
 type MutationLifecycle = {
   onClose?: () => void

@@ -81,13 +81,13 @@ export function ProductEntitlementManagementPanel({
   const currentSortState = sortState ?? localSortState
   const handleSortChange = onSortChange ?? ((columnId, direction) => setLocalSortState({ columnId, direction }))
 
-  const isVendorScoped = isVendorScopedUser(currentUser)
+  const isVendorScoped = isVendorScopedUser(currentUser ?? null)
   const visibleEntitlements = useMemo(() => {
     let list = entitlements
 
     // Vendor filtering
     if (isVendorScoped) {
-      list = list.filter((entitlement) => isEntitlementOwnedByUser(currentUser, entitlement))
+      list = list.filter((entitlement) => isEntitlementOwnedByUser(currentUser ?? null, entitlement))
     }
 
     // Search filtering

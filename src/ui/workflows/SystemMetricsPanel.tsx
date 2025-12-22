@@ -180,6 +180,10 @@ const formatMetricValue = (
     return JSON.stringify(value)
   }
 
+  if (typeof value === 'boolean') {
+    return String(value)
+  }
+
   return numberFormatter.format(value)
 }
 
@@ -260,37 +264,37 @@ export function SystemMetricsPanel({ client, title = UI_SYSTEM_METRICS_TITLE }: 
         {
           id: UI_SUMMARY_ID_SYSTEM_METRICS_RUNTIME_UPTIME,
           label: UI_SYSTEM_METRICS_LABEL_RUNTIME_UPTIME,
-          value: formatMetricValue(metrics.system.uptime, numberFormatter),
+          value: formatMetricValue('uptime', metrics.system.uptime, numberFormatter),
         },
         {
           id: UI_SUMMARY_ID_SYSTEM_METRICS_RUNTIME_MEMORY_RSS,
           label: UI_SYSTEM_METRICS_LABEL_RUNTIME_MEMORY_RSS,
-          value: formatMetricValue(metrics.system.memory.rss, numberFormatter),
+          value: formatMetricValue('memory.rss', metrics.system.memory.rss, numberFormatter),
         },
         {
           id: UI_SUMMARY_ID_SYSTEM_METRICS_RUNTIME_MEMORY_HEAP_TOTAL,
           label: UI_SYSTEM_METRICS_LABEL_RUNTIME_MEMORY_HEAP_TOTAL,
-          value: formatMetricValue(metrics.system.memory.heapTotal, numberFormatter),
+          value: formatMetricValue('memory.heapTotal', metrics.system.memory.heapTotal, numberFormatter),
         },
         {
           id: UI_SUMMARY_ID_SYSTEM_METRICS_RUNTIME_MEMORY_HEAP_USED,
           label: UI_SYSTEM_METRICS_LABEL_RUNTIME_MEMORY_HEAP_USED,
-          value: formatMetricValue(metrics.system.memory.heapUsed, numberFormatter),
+          value: formatMetricValue('memory.heapUsed', metrics.system.memory.heapUsed, numberFormatter),
         },
         {
           id: UI_SUMMARY_ID_SYSTEM_METRICS_RUNTIME_MEMORY_EXTERNAL,
           label: UI_SYSTEM_METRICS_LABEL_RUNTIME_MEMORY_EXTERNAL,
-          value: formatMetricValue(metrics.system.memory.external, numberFormatter),
+          value: formatMetricValue('memory.external', metrics.system.memory.external, numberFormatter),
         },
         {
           id: UI_SUMMARY_ID_SYSTEM_METRICS_RUNTIME_CPU_USER,
           label: UI_SYSTEM_METRICS_LABEL_RUNTIME_CPU_USER,
-          value: formatMetricValue(metrics.system.cpu.user, numberFormatter),
+          value: formatMetricValue('cpu.user', metrics.system.cpu.user, numberFormatter),
         },
         {
           id: UI_SUMMARY_ID_SYSTEM_METRICS_RUNTIME_CPU_SYSTEM,
           label: UI_SYSTEM_METRICS_LABEL_RUNTIME_CPU_SYSTEM,
-          value: formatMetricValue(metrics.system.cpu.system, numberFormatter),
+          value: formatMetricValue('cpu.system', metrics.system.cpu.system, numberFormatter),
         },
       ]
     },

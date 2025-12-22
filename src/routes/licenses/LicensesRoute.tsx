@@ -77,7 +77,7 @@ export function LicensesRouteComponent() {
 
     // Vendor Scoping
     if (isVendorScopedUser(currentUser)) {
-      list = list.filter((license) => isLicenseOwnedByUser(currentUser, { vendorId: license.vendorId }))
+      list = list.filter((license) => isLicenseOwnedByUser(currentUser, license))
     }
 
     // Search Filtering

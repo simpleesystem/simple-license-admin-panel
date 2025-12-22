@@ -150,8 +150,6 @@ export function ProductUpdateDialog({
       return result
     },
     isPending: updateMutation.isPending,
-    error: updateMutation.error,
-    reset: updateMutation.reset,
   }
 
   const wrappedMutation = wrapMutationAdapter(adapter, {

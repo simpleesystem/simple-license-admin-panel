@@ -70,11 +70,6 @@ export const createAppQueryClient = (): QueryClient => {
         const dispatch = useAppStore.getState().dispatch
         dispatch({ type: 'loading/set', scope, isLoading: false })
       },
-      onFetch: (query) => {
-        const scope = coerceScopeFromMeta(query?.meta, query?.queryKey)
-        const dispatch = useAppStore.getState().dispatch
-        dispatch({ type: 'loading/set', scope, isLoading: true })
-      },
     }),
     mutationCache: new MutationCache({
       onError: (error, _variables, _context, mutation) => {
@@ -82,12 +77,12 @@ export const createAppQueryClient = (): QueryClient => {
         dispatchError(error, scope, mutation?.meta as Record<string, unknown>)
       },
       onMutate: (_variables, _mutation, context) => {
-        const scope = coerceScopeFromMeta(context?.meta)
+        const scope = coerceScopeFromMeta((context as { meta?: Record<string, unknown> })?.meta)
         const dispatch = useAppStore.getState().dispatch
         dispatch({ type: 'loading/set', scope, isLoading: true })
       },
       onSettled: (_data, _error, _variables, context) => {
-        const scope = coerceScopeFromMeta(context?.meta)
+        const scope = coerceScopeFromMeta((context as { meta?: Record<string, unknown> })?.meta)
         const dispatch = useAppStore.getState().dispatch
         dispatch({ type: 'loading/set', scope, isLoading: false })
       },

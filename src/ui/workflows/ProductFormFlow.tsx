@@ -91,8 +91,6 @@ export function ProductFormFlow(props: ProductFormFlowProps) {
         return createMutation.mutateAsync(data)
       },
       isPending: createMutation.isPending,
-      error: createMutation.error,
-      reset: createMutation.reset,
     }
 
     return (
@@ -136,8 +134,6 @@ export function ProductFormFlow(props: ProductFormFlowProps) {
       return result
     },
     isPending: updateMutation.isPending,
-    error: updateMutation.error,
-    reset: updateMutation.reset,
   }
 
   return (

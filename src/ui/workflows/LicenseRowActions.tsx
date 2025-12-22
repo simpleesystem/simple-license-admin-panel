@@ -48,7 +48,6 @@ export function LicenseRowActions({
   client,
   licenseKey,
   licenseStatus,
-  licenseVendorId,
   currentUser,
   onEdit,
   onCompleted,
@@ -64,7 +63,7 @@ export function LicenseRowActions({
   const [showResumeConfirm, setShowResumeConfirm] = useState(false)
 
   const allowDelete = canDeleteLicense(currentUser ?? null)
-  const allowUpdate = canUpdateLicense(currentUser ?? null, { vendorId: licenseVendorId })
+  const allowUpdate = canUpdateLicense(currentUser ?? null)
   const isSuspended = licenseStatus === UI_LICENSE_STATUS_SUSPENDED
 
   if (!allowDelete && !allowUpdate) {

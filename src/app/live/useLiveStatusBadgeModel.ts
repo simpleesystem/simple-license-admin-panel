@@ -8,6 +8,7 @@ import {
   UI_LIVE_STATUS_DISCONNECTED,
   UI_LIVE_STATUS_ERROR,
 } from '../../ui/constants'
+import type { UiBadgeVariant } from '../../ui/types'
 import {
   ADMIN_SYSTEM_WS_STATUS_CONNECTED,
   ADMIN_SYSTEM_WS_STATUS_CONNECTING,
@@ -15,7 +16,7 @@ import {
 } from '../constants'
 import { useAdminSystemLiveFeed } from './useAdminSystemLiveFeed'
 
-export const useLiveStatusBadgeModel = (): { text: string; variant: string } => {
+export const useLiveStatusBadgeModel = (): { text: string; variant: UiBadgeVariant } => {
   const { state } = useAdminSystemLiveFeed()
   switch (state.connectionStatus) {
     case ADMIN_SYSTEM_WS_STATUS_CONNECTING:

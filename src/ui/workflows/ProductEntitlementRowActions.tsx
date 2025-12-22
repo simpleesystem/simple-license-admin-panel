@@ -109,11 +109,13 @@ export function ProductEntitlementRowActions({
           title={UI_PRODUCT_ENTITLEMENT_CONFIRM_DELETE_TITLE}
           body={UI_PRODUCT_ENTITLEMENT_CONFIRM_DELETE_BODY}
           primaryAction={{
+            id: 'delete-confirm',
             label: UI_PRODUCT_ENTITLEMENT_CONFIRM_DELETE_CONFIRM,
             onClick: handleDelete,
             disabled: deleteMutation.isPending,
           }}
           secondaryAction={{
+            id: 'delete-cancel',
             label: UI_PRODUCT_ENTITLEMENT_CONFIRM_DELETE_CANCEL,
             onClick: () => setShowDeleteConfirm(false),
           }}

@@ -89,13 +89,13 @@ export function ProductManagementPanel({
   const [showCreate, setShowCreate] = useState(false)
   const notificationBus = useNotificationBus()
 
-  const isVendorScoped = isVendorScopedUser(currentUser)
+  const isVendorScoped = isVendorScopedUser(currentUser ?? null)
   const visibleProducts = useMemo(
-    () => (isVendorScoped ? products.filter((product) => isProductOwnedByUser(currentUser, product)) : products),
+    () => (isVendorScoped ? products.filter((product) => isProductOwnedByUser(currentUser ?? null, product)) : products),
     [currentUser, isVendorScoped, products]
   )
-  const allowCreate = canCreateProduct(currentUser)
-  const canView = canViewProducts(currentUser)
+  const allowCreate = canCreateProduct(currentUser ?? null)
+  const canView = canViewProducts(currentUser ?? null)
 
   const statusOptions: UiSelectOption[] = [
     { value: '', label: 'Filter by Status' },
@@ -197,7 +197,6 @@ export function ProductManagementPanel({
               onEdit={setEditingProduct}
               onCompleted={onRefresh}
               currentUser={currentUser ?? null}
-              vendorId={row.vendorId ?? null}
             />
           )
         },

@@ -153,11 +153,11 @@ function QueryErrorNotifierBridge() {
         return
       }
 
-      // Also filter out explicit 403s if they are likely related to auth/permissions
+      // Filter out errors that are likely related to auth/permissions
       // that the UI will handle by redirecting or showing a gate.
-      if (payload.status === 403) {
-        return
-      }
+      // Note: ToastNotificationPayload doesn't have status property,
+      // so we rely on the error handling logic in handleQueryError
+      // to filter appropriately.
 
       notificationBus.emit(DEFAULT_NOTIFICATION_EVENT, payload)
     })

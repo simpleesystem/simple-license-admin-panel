@@ -87,7 +87,7 @@ export function TenantManagementPanel({
     [currentUser, isVendorScoped, tenants]
   )
   const allowCreate = canCreateTenant(currentUser ?? null)
-  const canView = canViewTenants(currentUser)
+  const canView = canViewTenants(currentUser ?? null)
 
   const statusOptions: UiSelectOption[] = [
     { value: '', label: 'Filter by Status' },

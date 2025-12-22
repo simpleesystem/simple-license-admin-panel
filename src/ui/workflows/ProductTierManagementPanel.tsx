@@ -119,7 +119,7 @@ export function ProductTierManagementPanel({
     return list
   }, [currentUser, tiers, searchTerm, currentSortState])
   const allowCreate = canCreateProductTier(currentUser ?? null)
-  const canView = canViewProductTiers(currentUser)
+  const canView = canViewProductTiers(currentUser ?? null)
 
   const toolbar = (
     <TableToolbar
@@ -183,7 +183,7 @@ export function ProductTierManagementPanel({
         id: UI_PRODUCT_TIER_COLUMN_ID_ACTIONS,
         header: UI_PRODUCT_TIER_COLUMN_HEADER_ACTIONS,
         cell: (row) => {
-          if (!canUpdateProductTier(currentUser, row)) {
+          if (!canUpdateProductTier(currentUser ?? null)) {
             return UI_VALUE_PLACEHOLDER
           }
           return (
@@ -247,8 +247,8 @@ export function ProductTierManagementPanel({
           submitLabel={UI_PRODUCT_TIER_FORM_SUBMIT_UPDATE}
           tierId={editingTier.id}
           defaultValues={{
-            name: editingTier.tierName,
-            code: editingTier.tierCode,
+            tier_name: editingTier.tierName,
+            tier_code: editingTier.tierCode,
           }}
           onCompleted={onRefresh}
           onSuccess={() => refreshWith('update')}
