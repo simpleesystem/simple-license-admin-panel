@@ -1,4 +1,4 @@
-import type { Client, User } from '@simple-license/react-sdk'
+import type { Client, Product, User } from '@simple-license/react-sdk'
 import { useMemo, useState } from 'react'
 import Badge from 'react-bootstrap/Badge'
 import Button from 'react-bootstrap/Button'
@@ -87,7 +87,7 @@ export function ProductEntitlementManagementPanel({
 
     // Vendor filtering
     if (isVendorScoped) {
-      list = list.filter((entitlement) => isEntitlementOwnedByUser(currentUser ?? null, entitlement))
+      list = list.filter((entitlement) => isEntitlementOwnedByUser(currentUser ?? null, entitlement as unknown as Product))
     }
 
     // Search filtering
@@ -229,7 +229,7 @@ export function ProductEntitlementManagementPanel({
         id: UI_ENTITLEMENT_COLUMN_ID_ACTIONS,
         header: UI_ENTITLEMENT_COLUMN_HEADER_ACTIONS,
         cell: (row) => {
-          if (!canUpdateEntitlement(currentUser ?? null, row as unknown as Product)) {
+          if (!canUpdateEntitlement(currentUser ?? null, null)) {
             return UI_VALUE_PLACEHOLDER
           }
           return (

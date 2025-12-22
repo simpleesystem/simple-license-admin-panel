@@ -89,7 +89,9 @@ export function ProductUpdateDialog({
         number_value: e.numberValue,
         boolean_value: e.booleanValue,
         string_value: e.stringValue,
-        productTiers: (e as unknown as { productTiers?: unknown }).productTiers,
+        productTiers: Array.isArray((e as unknown as { productTiers?: unknown }).productTiers)
+          ? ((e as unknown as { productTiers: Array<{ id: string; tierCode: string }> }).productTiers)
+          : undefined,
         metadata: (e as unknown as { metadata: Record<string, string | number | boolean | null> | undefined }).metadata,
       }))
       setEntitlements(formatted)

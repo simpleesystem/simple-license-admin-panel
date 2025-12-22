@@ -30,7 +30,7 @@ export function LicenseFreezeFormFlow({
   ...modalProps
 }: LicenseFreezeFormFlowProps) {
   const mutation = adaptMutation(useFreezeLicense(client))
-  const allowFreeze = canUpdateLicense(currentUser ?? null)
+  const allowFreeze = canUpdateLicense((currentUser as User | null) ?? null)
 
   if (!allowFreeze) {
     return null

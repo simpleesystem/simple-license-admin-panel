@@ -99,7 +99,6 @@ import {
   UI_TENANT_STATUS_LABEL_SUSPENDED,
   UI_TENANT_STATUS_SUSPENDED,
   UI_USER_FIELD_LABEL_ROLE,
-  UI_USER_FIELD_LABEL_STATUS,
   UI_USER_FIELD_LABEL_VENDOR,
   UI_USER_FORM_ID_CREATE,
   UI_USER_FORM_ID_UPDATE,
@@ -118,7 +117,7 @@ import type { UiSelectOption } from '../types'
 import { createFormBlueprint, type FormBlueprint, type FormSectionBlueprint } from './blueprint'
 import { type BlueprintConfig, type BlueprintSectionConfig, generateBlueprintFromType } from './typeIntrospection'
 
-type BlueprintCustomizer<TFieldValues extends FieldValues> = (
+export type BlueprintCustomizer<TFieldValues extends FieldValues> = (
   blueprint: FormBlueprint<TFieldValues>
 ) => FormBlueprint<TFieldValues>
 
@@ -129,7 +128,6 @@ type BaseFactoryOptions<TFieldValues extends FieldValues> = {
 type UserBlueprintOptions<TFieldValues extends FieldValues> = BaseFactoryOptions<TFieldValues> & {
   roleOptions?: readonly UiSelectOption[]
   vendorOptions?: readonly UiSelectOption[]
-  statusOptions?: readonly UiSelectOption[]
   currentUser?: User
 }
 
@@ -774,13 +772,6 @@ const USER_CREATE_SECTIONS: BlueprintSectionConfig<CreateUserRequest>[] = [
         format: UI_FORM_CONTROL_TYPE_PASSWORD,
         required: true,
       },
-      {
-        name: 'status',
-        kind: 'select',
-        label: UI_USER_FIELD_LABEL_STATUS,
-        options: [],
-        required: true,
-      },
     ],
   },
   {
@@ -829,12 +820,6 @@ const USER_UPDATE_SECTIONS: BlueprintSectionConfig<UpdateUserRequest>[] = [
         format: UI_FORM_CONTROL_TYPE_PASSWORD,
         placeholder: 'Leave blank to keep unchanged',
       },
-      {
-        name: 'status',
-        kind: 'select',
-        label: UI_USER_FIELD_LABEL_STATUS,
-        options: [],
-      },
     ],
   },
   {
@@ -868,7 +853,6 @@ export const createUserBlueprint = <TMode extends 'create' | 'update'>(
 ): FormBlueprint<UserModeValues<TMode>> => {
   const roleOptions = options?.roleOptions ?? []
   const vendorOptions = options?.vendorOptions ?? []
-  const statusOptions = options?.statusOptions ?? []
   const vendorOptionsWithPlaceholder: UiSelectOption[] =
     vendorOptions.length > 0
       ? [{ value: '', label: UI_USER_VENDOR_PLACEHOLDER, disabled: true }, ...vendorOptions]
@@ -893,9 +877,6 @@ export const createUserBlueprint = <TMode extends 'create' | 'update'>(
           }
           if (field.name === 'vendor_id') {
             return { ...field, options: vendorOptionsWithPlaceholder }
-          }
-          if (field.name === 'status') {
-            return { ...field, options: statusOptions }
           }
           return field
         }),

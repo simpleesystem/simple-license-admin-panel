@@ -122,8 +122,11 @@ function ProductTierCreateFlow(props: ProductTierCreateProps) {
 function ProductTierUpdateFlow(props: ProductTierUpdateProps) {
   const updateMutation = useUpdateProductTier(props.client)
 
-  const defaultValues: Partial<ProductTierFormValues> = {
+  const defaultValues: ProductTierFormValues = {
     ...baseUpdateDefaults,
+    tier_name: props.defaultValues?.tier_name ?? '',
+    tier_code: props.defaultValues?.tier_code ?? '',
+    description: props.defaultValues?.description ?? '',
     ...props.defaultValues,
     metadata: props.defaultValues?.metadata ? JSON.stringify(props.defaultValues.metadata, null, 2) : '',
   }

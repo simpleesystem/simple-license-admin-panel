@@ -1,3 +1,4 @@
+import type { License } from '@simple-license/react-sdk'
 import { useAdminLicenses, useAdminProducts } from '@simple-license/react-sdk'
 import { useEffect, useMemo, useState } from 'react'
 
@@ -77,7 +78,10 @@ export function LicensesRouteComponent() {
 
     // Vendor Scoping
     if (isVendorScopedUser(currentUser)) {
-      list = list.filter((license) => isLicenseOwnedByUser(currentUser, license))
+      list = list.filter((license) => {
+        // LicenseListItem is compatible with License for ownership checks
+        return isLicenseOwnedByUser(currentUser, license as unknown as License)
+      })
     }
 
     // Search Filtering

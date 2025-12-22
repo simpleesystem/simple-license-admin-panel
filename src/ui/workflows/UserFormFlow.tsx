@@ -6,6 +6,10 @@ import { isVendorScopedUser } from '../../app/auth/permissions'
 import { useAuth } from '../../app/auth/useAuth'
 import type { MutationAdapter } from '../actions/mutationActions'
 import { adaptMutation } from '../actions/mutationAdapter'
+import type { FormBlueprint } from '../formBuilder/blueprint'
+import type { BlueprintCustomizer } from '../formBuilder/factories'
+
+type UserModeValues<TMode extends 'create' | 'update'> = TMode extends 'create' ? CreateUserRequest : UpdateUserRequest
 import {
   UI_USER_FORM_SUBMIT_CREATE,
   UI_USER_FORM_SUBMIT_UPDATE,
@@ -23,14 +27,7 @@ import {
   UI_USER_ROLE_VENDOR_ADMIN,
   UI_USER_ROLE_VENDOR_MANAGER,
   UI_USER_ROLE_VIEWER,
-  UI_USER_STATUS_ACTIVE,
-  UI_USER_STATUS_DELETED,
-  UI_USER_STATUS_DISABLED,
-  UI_USER_STATUS_LABEL_ACTIVE,
-  UI_USER_STATUS_LABEL_DELETED,
-  UI_USER_STATUS_LABEL_DISABLED,
 } from '../constants'
-import type { FormBlueprint } from '../formBuilder/blueprint'
 import { createUserBlueprint } from '../formBuilder/factories'
 import { FormModalWithMutation } from '../formBuilder/mutationBridge'
 import type { UiSelectOption } from '../types'
@@ -119,14 +116,6 @@ export function UserFormFlow(props: UserFormFlowProps) {
     })
   }, [currentUser?.role])
 
-  const statusOptions: UiSelectOption[] = useMemo(
-    () => [
-      { value: UI_USER_STATUS_ACTIVE, label: UI_USER_STATUS_LABEL_ACTIVE },
-      { value: UI_USER_STATUS_DISABLED, label: UI_USER_STATUS_LABEL_DISABLED },
-      { value: UI_USER_STATUS_DELETED, label: UI_USER_STATUS_LABEL_DELETED, disabled: true },
-    ],
-    []
-  )
 
   const vendorOptions: UiSelectOption[] = useMemo(() => {
     const tenants = Array.isArray(tenantsQuery.data) ? tenantsQuery.data : (tenantsQuery.data?.data ?? [])
@@ -136,14 +125,6 @@ export function UserFormFlow(props: UserFormFlowProps) {
     }))
   }, [tenantsQuery.data])
 
-  const removeVendorField = (
-    sections: ReadonlyArray<{ fields: ReadonlyArray<{ name: string }> }>
-  ): Array<{ fields: Array<{ name: string }> }> =>
-    sections.map((section) => ({
-      ...section,
-      fields: section.fields.filter((field) => field.name !== 'vendor_id'),
-    }))
-
   const buildBlueprint = <TMode extends 'create' | 'update'>(
     mode: TMode,
     options: Parameters<typeof createUserBlueprint<TMode>>[1]
@@ -151,10 +132,16 @@ export function UserFormFlow(props: UserFormFlowProps) {
     if (!vendorScoped) {
       return createUserBlueprint(mode, options)
     }
-    const customize = (blueprint: ReturnType<typeof createUserBlueprint<TMode>>) => ({
-      ...blueprint,
-      sections: removeVendorField(blueprint.sections) as unknown as FormBlueprint<CreateUserRequest | UpdateUserRequest>['sections'],
-    })
+    const customize: BlueprintCustomizer<UserModeValues<TMode>> = (blueprint: FormBlueprint<UserModeValues<TMode>>) => {
+      const modifiedSections = blueprint.sections.map((section) => ({
+        ...section,
+        fields: section.fields.filter((field) => field.name !== 'vendor_id'),
+      }))
+      return {
+        ...blueprint,
+        sections: modifiedSections as typeof blueprint.sections,
+      }
+    }
     return createUserBlueprint(mode, { ...options, customize })
   }
 
@@ -162,7 +149,6 @@ export function UserFormFlow(props: UserFormFlowProps) {
     const blueprint = buildBlueprint('create', {
       roleOptions,
       vendorOptions: vendorScoped ? [] : vendorOptions,
-      statusOptions,
     })
     const defaultValues: CreateUserRequest = {
       ...baseCreateDefaults,
@@ -231,7 +217,6 @@ export function UserFormFlow(props: UserFormFlowProps) {
       blueprint={buildBlueprint('update', {
         roleOptions,
         vendorOptions: vendorScoped ? [] : vendorOptions,
-        statusOptions,
       })}
       defaultValues={defaultValues}
       submitLabel={submitLabel}

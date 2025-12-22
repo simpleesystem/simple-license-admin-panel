@@ -18,6 +18,7 @@ export interface SelectFieldProps<TFieldValues extends FieldValues> extends Omit
   placeholder?: ReactNode
   multiple?: boolean
   description?: ReactNode
+  disabled?: boolean
 }
 
 export function SelectField<TFieldValues extends FieldValues>({

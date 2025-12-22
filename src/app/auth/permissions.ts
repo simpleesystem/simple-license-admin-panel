@@ -38,7 +38,7 @@ export function derivePermissionsFromUser(user: User | null): Permissions {
   const role = user.role
   const isSuperUser = role === 'SUPERUSER'
   const isAdmin = role === 'ADMIN'
-  const isSupport = role === 'SUPPORT' || role === 'VIEWER'
+  const isSupport = role === 'VIEWER'
   const isVendorManager = role === 'VENDOR_MANAGER'
   const isVendorAdmin = role === 'VENDOR_ADMIN'
 
