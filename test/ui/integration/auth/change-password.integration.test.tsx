@@ -1,13 +1,18 @@
 import type { Client } from '@simple-license/react-sdk'
+import type { ChangePasswordRequest, ChangePasswordResponse } from '@simple-license/react-sdk'
 import { fireEvent, screen, waitFor } from '@testing-library/react'
-import { describe, expect, test, vi } from 'vitest'
+import { describe, expect, test, vi, type MockedFunction } from 'vitest'
 
 import { ChangePasswordFlow } from '../../../../src/ui/auth/ChangePasswordFlow'
 import { UI_CHANGE_PASSWORD_BUTTON_UPDATE } from '../../../../src/ui/constants'
 import { renderWithProviders } from '../../utils'
 
+const mockChangePassword = vi.fn() as MockedFunction<
+  (request: ChangePasswordRequest) => Promise<ChangePasswordResponse>
+>
+
 const mockClient = {
-  changePassword: vi.fn(),
+  changePassword: mockChangePassword,
   restoreSession: vi.fn().mockResolvedValue(null),
 } as unknown as Client
 
@@ -27,7 +32,7 @@ vi.mock('../../../../src/app/auth/useAuth', () => ({
 
 describe('ChangePasswordFlow integration', () => {
   test('submits success path and shows success message', async () => {
-    (mockClient.changePassword as any).mockResolvedValue({})
+    mockChangePassword.mockResolvedValue({})
 
     renderWithProviders(<ChangePasswordFlow />, { client: mockClient })
 
@@ -43,7 +48,7 @@ describe('ChangePasswordFlow integration', () => {
   })
 
   test('shows error message on failure', async () => {
-    (mockClient.changePassword as any).mockRejectedValue(new Error('bad creds'))
+    mockChangePassword.mockRejectedValue(new Error('bad creds'))
 
     renderWithProviders(<ChangePasswordFlow />, { client: mockClient })
 
