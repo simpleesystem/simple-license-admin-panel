@@ -14,7 +14,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "type-check": "tsc --noEmit",
-    "test:mutation": "stryker run"
+    "test:mutation": "stryker run",
+    "test:mutation:ci": "stryker run --reporters json,html"
   },
   "engines": {
     "node": ">=22.0.0"

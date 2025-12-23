@@ -18,9 +18,9 @@
   "ignorePatterns": ["node_modules", "dist", "coverage", "reports"],
   "ignoreStatic": false,
   "thresholds": {
-    "high": 90,
-    "low": 80,
-    "break": 70
+    "high": 95,
+    "low": 85,
+    "break": 85
   },
   "disableTypeChecks": true,
   "timeoutMS": 15000,
