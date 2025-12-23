@@ -1,4 +1,4 @@
-import type { User } from '@simple-license/react-sdk'
+import type { User } from '@/simpleLicense'
 import {
   UI_NAV_ID_ANALYTICS,
   UI_NAV_ID_AUDIT,

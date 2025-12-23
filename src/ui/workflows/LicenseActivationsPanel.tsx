@@ -1,5 +1,5 @@
-import type { Client, LicenseActivation, User } from '@simple-license/react-sdk'
-import { useLicenseActivations } from '@simple-license/react-sdk'
+import type { Client, LicenseActivation, User } from '@/simpleLicense'
+import { useLicenseActivations } from '@/simpleLicense'
 import { useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
 import { canViewActivations, isActivationOwnedByUser, isVendorScopedUser } from '../../app/auth/permissions'

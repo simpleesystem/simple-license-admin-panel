@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { faker } from '@faker-js/faker'
-import type { Client, ActivationDistributionResponse } from '@simple-license/react-sdk'
+import type { Client, ActivationDistributionResponse } from '@/simpleLicense'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { ApiContext } from '../../../src/api/apiContext'
@@ -9,8 +9,8 @@ import { ActivationDistributionPanel } from '../../../src/ui/workflows/Activatio
 
 const useActivationDistributionMock = vi.hoisted(() => vi.fn())
 
-vi.mock('@simple-license/react-sdk', async () => {
-  const actual = await vi.importActual<typeof import('@simple-license/react-sdk')>('@simple-license/react-sdk')
+vi.mock('@/simpleLicense', async () => {
+  const actual = await vi.importActual<typeof import('@/simpleLicense')>('@/simpleLicense')
   return {
     ...actual,
     useActivationDistribution: useActivationDistributionMock,

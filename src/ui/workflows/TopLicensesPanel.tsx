@@ -1,5 +1,5 @@
-import type { Client, TopLicensesResponse } from '@simple-license/react-sdk'
-import { useTopLicenses } from '@simple-license/react-sdk'
+import type { Client, TopLicensesResponse } from '@/simpleLicense'
+import { useTopLicenses } from '@/simpleLicense'
 import { useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
 

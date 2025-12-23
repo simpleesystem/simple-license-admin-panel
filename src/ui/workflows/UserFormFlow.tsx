@@ -1,5 +1,5 @@
-import type { Client, CreateUserRequest, UpdateUserRequest } from '@simple-license/react-sdk'
-import { useAdminTenants, useCreateUser, useUpdateUser } from '@simple-license/react-sdk'
+import type { Client, CreateUserRequest, UpdateUserRequest } from '@/simpleLicense'
+import { useAdminTenants, useCreateUser, useUpdateUser } from '@/simpleLicense'
 import type { ReactNode } from 'react'
 import { useMemo } from 'react'
 import { isVendorScopedUser } from '../../app/auth/permissions'

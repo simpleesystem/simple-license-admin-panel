@@ -4,7 +4,7 @@ import {
   ERROR_CODE_AUTHENTICATION_ERROR,
   ERROR_CODE_INVALID_CREDENTIALS,
   ERROR_CODE_TOO_MANY_ATTEMPTS,
-} from '@simple-license/react-sdk'
+} from '@/simpleLicense'
 import { describe, expect, it } from 'vitest'
 import { buildAuthErrorNotification } from '@/app/auth/authErrors'
 import {

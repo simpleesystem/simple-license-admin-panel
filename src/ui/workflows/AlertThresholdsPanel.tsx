@@ -1,5 +1,5 @@
-import type { Client } from '@simple-license/react-sdk'
-import { useAlertThresholds } from '@simple-license/react-sdk'
+import type { Client } from '@/simpleLicense'
+import { useAlertThresholds } from '@/simpleLicense'
 import { useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
 

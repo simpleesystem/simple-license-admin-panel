@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import type { Client, LicenseUsageDetailsResponse } from '@simple-license/react-sdk'
+import type { Client, LicenseUsageDetailsResponse } from '@/simpleLicense'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
@@ -17,8 +17,8 @@ import { LicenseUsageDetailsPanel } from '../../../src/ui/workflows/LicenseUsage
 
 const useLicenseUsageDetailsMock = vi.hoisted(() => vi.fn())
 
-vi.mock('@simple-license/react-sdk', async () => {
-  const actual = await vi.importActual<typeof import('@simple-license/react-sdk')>('@simple-license/react-sdk')
+vi.mock('@/simpleLicense', async () => {
+  const actual = await vi.importActual<typeof import('@/simpleLicense')>('@/simpleLicense')
   return {
     ...actual,
     useLicenseUsageDetails: useLicenseUsageDetailsMock,

@@ -1,5 +1,5 @@
-import type { Client, FreezeLicenseRequest, User } from '@simple-license/react-sdk'
-import { useFreezeLicense } from '@simple-license/react-sdk'
+import type { Client, FreezeLicenseRequest, User } from '@/simpleLicense'
+import { useFreezeLicense } from '@/simpleLicense'
 import { canUpdateLicense } from '../../app/auth/permissions'
 import type { MutationAdapter } from '../actions/mutationActions'
 import { adaptMutation } from '../actions/mutationAdapter'

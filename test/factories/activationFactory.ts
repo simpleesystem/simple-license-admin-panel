@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import type { LicenseActivation } from '@simple-license/react-sdk'
+import type { LicenseActivation } from '@/simpleLicense'
 
 const ACTIVATION_STATUSES: LicenseActivation['status'][] = ['ACTIVE', 'SUSPENDED', 'REVOKED']
 

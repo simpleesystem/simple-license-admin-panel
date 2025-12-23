@@ -1,5 +1,5 @@
-import type { Client, Entitlement, User } from '@simple-license/react-sdk'
-import { useDeleteEntitlement } from '@simple-license/react-sdk'
+import type { Client, Entitlement, User } from '@/simpleLicense'
+import { useDeleteEntitlement } from '@/simpleLicense'
 import { useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import { canDeleteEntitlement, canUpdateEntitlement } from '../../app/auth/permissions'

@@ -1,4 +1,4 @@
-import type { User } from '@simple-license/react-sdk'
+import type { User } from '@/simpleLicense'
 import { QueryClient } from '@tanstack/react-query'
 import type { RouterLocation } from '@tanstack/react-router'
 import { describe, expect, it } from 'vitest'

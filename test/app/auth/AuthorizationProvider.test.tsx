@@ -6,7 +6,7 @@ import { AuthorizationProvider } from '../../../src/app/auth/AuthorizationProvid
 import { useCan, usePermissions } from '../../../src/app/auth/useAuthorization'
 import type { AuthContextValue } from '../../../src/app/auth/types'
 import { AuthContext } from '../../../src/app/auth/authContext'
-import type { User } from '@simple-license/react-sdk'
+import type { User } from '@/simpleLicense'
 
 const baseAuthValue: AuthContextValue = {
   token: null,

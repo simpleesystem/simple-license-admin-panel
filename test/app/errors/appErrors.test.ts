@@ -7,7 +7,7 @@ import {
   HTTP_INTERNAL_SERVER_ERROR,
   HTTP_UNAUTHORIZED,
   NetworkException,
-} from '@simple-license/react-sdk'
+} from '@/simpleLicense'
 import { describe, expect, it } from 'vitest'
 
 import {

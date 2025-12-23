@@ -1,5 +1,5 @@
-import type { Client } from '@simple-license/react-sdk'
-import { useHealthMetrics } from '@simple-license/react-sdk'
+import type { Client } from '@/simpleLicense'
+import { useHealthMetrics } from '@/simpleLicense'
 import { useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
 import { useAdminSystemLiveFeed } from '../../app/live/useAdminSystemLiveFeed'

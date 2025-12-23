@@ -1,5 +1,5 @@
-import type { ActivationDistributionResponse, Client } from '@simple-license/react-sdk'
-import { useActivationDistribution } from '@simple-license/react-sdk'
+import type { ActivationDistributionResponse, Client } from '@/simpleLicense'
+import { useActivationDistribution } from '@/simpleLicense'
 import { useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
 

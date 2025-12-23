@@ -13,7 +13,7 @@ import type {
   UpdateTenantRequest,
   UpdateUserRequest,
   User,
-} from '@simple-license/react-sdk'
+} from '@/simpleLicense'
 import type { FieldValues } from 'react-hook-form'
 
 // UI-specific types for Entitlement Form (abstracts the API's union types)

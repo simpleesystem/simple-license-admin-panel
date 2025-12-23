@@ -1,5 +1,5 @@
-import type { Client, User } from '@simple-license/react-sdk'
-import { useDeleteUser } from '@simple-license/react-sdk'
+import type { Client, User } from '@/simpleLicense'
+import { useDeleteUser } from '@/simpleLicense'
 import { useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import { useNotificationBus } from '../../notifications/useNotificationBus'

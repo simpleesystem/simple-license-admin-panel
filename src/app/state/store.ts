@@ -1,4 +1,4 @@
-import type { User } from '@simple-license/react-sdk'
+import type { User } from '@/simpleLicense'
 import { create } from 'zustand'
 import { derivePermissionsFromUser } from '../auth/permissions'
 import type { AppError } from '../errors/appErrors'

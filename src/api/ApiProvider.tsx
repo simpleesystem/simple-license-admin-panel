@@ -1,4 +1,4 @@
-import { AxiosHttpClient, Client as SimpleLicenseClient } from '@simple-license/react-sdk'
+import { AxiosHttpClient, Client as SimpleLicenseClient } from '@/simpleLicense'
 import type { PropsWithChildren } from 'react'
 import { useMemo } from 'react'
 

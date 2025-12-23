@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Button from 'react-bootstrap/Button'
-import type { Client, CreateTenantBackupResponse } from '@simple-license/react-sdk'
-import { useCreateTenantBackup } from '@simple-license/react-sdk'
+import type { Client, CreateTenantBackupResponse } from '@/simpleLicense'
+import { useCreateTenantBackup } from '@/simpleLicense'
 
 import {
   UI_STACK_GAP_SMALL,

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
-import type { Client } from '@simple-license/react-sdk'
-import { useQuotaConfig, useQuotaUsage } from '@simple-license/react-sdk'
+import type { Client } from '@/simpleLicense'
+import { useQuotaConfig, useQuotaUsage } from '@/simpleLicense'
 import Button from 'react-bootstrap/Button'
 
 import { SummaryList } from '../data/SummaryList'

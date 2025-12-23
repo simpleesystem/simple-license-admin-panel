@@ -1,5 +1,5 @@
-import type { Client, CreateProductTierRequest, UpdateProductTierRequest } from '@simple-license/react-sdk'
-import { useCreateProductTier, useUpdateProductTier } from '@simple-license/react-sdk'
+import type { Client, CreateProductTierRequest, UpdateProductTierRequest } from '@/simpleLicense'
+import { useCreateProductTier, useUpdateProductTier } from '@/simpleLicense'
 import type { ReactNode } from 'react'
 
 import type { MutationAdapter } from '../actions/mutationActions'

@@ -1,5 +1,5 @@
-import type { Client } from '@simple-license/react-sdk'
-import type { ChangePasswordRequest, ChangePasswordResponse } from '@simple-license/react-sdk'
+import type { Client } from '@/simpleLicense'
+import type { ChangePasswordRequest, ChangePasswordResponse } from '@/simpleLicense'
 import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { describe, expect, test, vi, type MockedFunction } from 'vitest'
 

@@ -14,7 +14,7 @@ import {
   HTTP_TOO_MANY_REQUESTS,
   HTTP_UNAUTHORIZED,
   NetworkException,
-} from '@simple-license/react-sdk'
+} from '@/simpleLicense'
 
 import {
   APP_ERROR_CODE_UNEXPECTED,

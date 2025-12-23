@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import type { User } from '@simple-license/react-sdk'
+import type { User } from '@/simpleLicense'
 
 const FACTORY_DEFAULT_ADMIN_ROLE = 'ADMIN' as const
 

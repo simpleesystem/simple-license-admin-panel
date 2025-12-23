@@ -1,4 +1,4 @@
-import type { Client, Entitlement, Product, ProductTier } from '@simple-license/react-sdk'
+import type { Client, Entitlement, Product, ProductTier } from '@/simpleLicense'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { UI_PRODUCT_FORM_TITLE_UPDATE } from '@/ui/constants'

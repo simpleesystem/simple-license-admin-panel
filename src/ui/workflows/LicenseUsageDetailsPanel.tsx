@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
-import type { Client, LicenseUsageDetailsResponse, User } from '@simple-license/react-sdk'
-import { useLicenseUsageDetails } from '@simple-license/react-sdk'
+import type { Client, LicenseUsageDetailsResponse, User } from '@/simpleLicense'
+import { useLicenseUsageDetails } from '@/simpleLicense'
 
 import {
   UI_ANALYTICS_COLUMN_ACTIVATIONS,

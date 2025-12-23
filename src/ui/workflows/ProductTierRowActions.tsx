@@ -1,5 +1,5 @@
-import type { Client, ProductTier, User } from '@simple-license/react-sdk'
-import { useDeleteProductTier } from '@simple-license/react-sdk'
+import type { Client, ProductTier, User } from '@/simpleLicense'
+import { useDeleteProductTier } from '@/simpleLicense'
 import { useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import { canDeleteProductTier, canUpdateProductTier } from '../../app/auth/permissions'

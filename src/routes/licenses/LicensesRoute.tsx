@@ -1,5 +1,5 @@
-import type { License } from '@simple-license/react-sdk'
-import { useAdminLicenses, useAdminProducts } from '@simple-license/react-sdk'
+import type { License } from '@/simpleLicense'
+import { useAdminLicenses, useAdminProducts } from '@/simpleLicense'
 import { useEffect, useMemo, useState } from 'react'
 
 import { useApiClient } from '../../api/apiContext'

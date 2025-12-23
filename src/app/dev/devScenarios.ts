@@ -1,4 +1,4 @@
-// import type { User } from '@simple-license/react-sdk'
+// import type { User } from '@/simpleLicense'
 // import {
 //   DEV_PERSONA_SUPPORT,
 //   DEV_PERSONA_SUPPORT_EXPIRY_HOURS,

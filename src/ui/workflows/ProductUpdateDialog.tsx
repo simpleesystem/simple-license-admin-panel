@@ -1,5 +1,5 @@
-import type { Client, Entitlement, Product, ProductTier, UpdateProductRequest, User } from '@simple-license/react-sdk'
-import { useUpdateProduct } from '@simple-license/react-sdk'
+import type { Client, Entitlement, Product, ProductTier, UpdateProductRequest, User } from '@/simpleLicense'
+import { useUpdateProduct } from '@/simpleLicense'
 import { useCallback, useEffect, useState } from 'react'
 import Tab from 'react-bootstrap/Tab'
 import Tabs from 'react-bootstrap/Tabs'

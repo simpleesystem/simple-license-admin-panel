@@ -1,4 +1,4 @@
-import { ApiException } from '@simple-license/react-sdk'
+import { ApiException } from '@/simpleLicense'
 
 import {
   I18N_KEY_APP_ERROR_MESSAGE,

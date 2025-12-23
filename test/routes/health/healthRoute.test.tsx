@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import type { Client } from '@simple-license/react-sdk'
+import type { Client } from '@/simpleLicense'
 
 import { I18nProvider } from '@/app/i18n/I18nProvider'
 import { i18nResources } from '@/app/i18n/resources'

@@ -1,5 +1,5 @@
-import type { Client, UpdateQuotaLimitsRequest } from '@simple-license/react-sdk'
-import { useUpdateQuotaLimits } from '@simple-license/react-sdk'
+import type { Client, UpdateQuotaLimitsRequest } from '@/simpleLicense'
+import { useUpdateQuotaLimits } from '@/simpleLicense'
 import type { ReactNode } from 'react'
 
 import { createTenantQuotaBlueprint } from '../formBuilder/factories'

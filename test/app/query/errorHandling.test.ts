@@ -1,4 +1,4 @@
-import { ApiException } from '@simple-license/react-sdk'
+import { ApiException } from '@/simpleLicense'
 import { expect, it } from 'vitest'
 
 import { handleQueryError } from '../../../src/app/query/errorHandling'
@@ -22,7 +22,7 @@ describe('handleQueryError', () => {
     expect(result).not.toBeNull()
   })
 })
-import { ApiException, NetworkException } from '@simple-license/react-sdk'
+import { ApiException, NetworkException } from '@/simpleLicense'
 import { describe, expect, it } from 'vitest'
 import { I18N_KEY_APP_ERROR_MESSAGE, I18N_KEY_APP_ERROR_TITLE } from '../../../src/app/constants'
 import { handleQueryError, isNetworkError, shouldRetryRequest } from '../../../src/app/query/errorHandling'

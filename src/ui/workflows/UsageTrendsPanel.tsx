@@ -1,5 +1,5 @@
-import type { Client } from '@simple-license/react-sdk'
-import { useUsageTrends } from '@simple-license/react-sdk'
+import type { Client } from '@/simpleLicense'
+import { useUsageTrends } from '@/simpleLicense'
 import { useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
 import {

@@ -1,4 +1,4 @@
-import type { Client, Product, ProductTier, User } from '@simple-license/react-sdk'
+import type { Client, Product, ProductTier, User } from '@/simpleLicense'
 import { useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'

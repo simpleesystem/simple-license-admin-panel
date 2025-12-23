@@ -1,4 +1,4 @@
-import type { License, LicenseActivation, Product, Tenant, User } from '@simple-license/react-sdk'
+import type { License, LicenseActivation, Product, Tenant, User } from '@/simpleLicense'
 import { isSystemAdminUser, isVendorScopedUser } from './userUtils'
 
 export type PermissionKey =

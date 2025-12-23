@@ -1,7 +1,7 @@
 import {
   ApiException,
   NetworkException,
-} from '@simple-license/react-sdk'
+} from '@/simpleLicense'
 import type { ToastNotificationPayload } from '../../notifications/constants'
 import { NOTIFICATION_VARIANT_ERROR } from '../constants'
 

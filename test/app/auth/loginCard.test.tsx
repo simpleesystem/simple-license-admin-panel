@@ -1,4 +1,4 @@
-import { ApiException } from '@simple-license/react-sdk'
+import { ApiException } from '@/simpleLicense'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import mitt from 'mitt'
 import { describe, expect, test, vi } from 'vitest'

@@ -1,5 +1,5 @@
-import type { Client, CreateLicenseRequest, UpdateLicenseRequest } from '@simple-license/react-sdk'
-import { useCreateLicense, useUpdateLicense } from '@simple-license/react-sdk'
+import type { Client, CreateLicenseRequest, UpdateLicenseRequest } from '@/simpleLicense'
+import { useCreateLicense, useUpdateLicense } from '@/simpleLicense'
 import type { ReactNode } from 'react'
 import type { MutationAdapter } from '../actions/mutationActions'
 import {

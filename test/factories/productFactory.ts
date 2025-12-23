@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import type { Product } from '@simple-license/react-sdk'
+import type { Product } from '@/simpleLicense'
 
 const PRODUCT_STATUS_ACTIVE = true as const
 

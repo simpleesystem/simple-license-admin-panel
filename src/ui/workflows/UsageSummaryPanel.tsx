@@ -1,5 +1,5 @@
-import type { Client, UsageSummaryResponse } from '@simple-license/react-sdk'
-import { useUsageSummaries } from '@simple-license/react-sdk'
+import type { Client, UsageSummaryResponse } from '@/simpleLicense'
+import { useUsageSummaries } from '@/simpleLicense'
 import { useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
 

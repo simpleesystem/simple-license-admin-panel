@@ -1,4 +1,4 @@
-import type { AdminRole } from '@simple-license/react-sdk'
+import type { AdminRole } from '@/simpleLicense'
 import { describe, expect, it } from 'vitest'
 
 import { derivePermissionsFromUser, hasPermission, PERMISSION_KEYS, type Permissions } from '../../../src/app/auth/permissions'

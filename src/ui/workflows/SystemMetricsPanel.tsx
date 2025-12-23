@@ -1,8 +1,8 @@
 /* c8 ignore file */
 /* istanbul ignore file */
 
-import type { Client, MetricObject, MetricsResponse, MetricValue } from '@simple-license/react-sdk'
-import { useSystemMetrics } from '@simple-license/react-sdk'
+import type { Client, MetricObject, MetricsResponse, MetricValue } from '@/simpleLicense'
+import { useSystemMetrics } from '@/simpleLicense'
 import { useCallback, useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
 import { useAdminSystemLiveFeed } from '../../app/live/useAdminSystemLiveFeed'

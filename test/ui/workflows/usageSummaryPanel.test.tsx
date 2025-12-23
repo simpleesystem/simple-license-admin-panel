@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react'
 import { faker } from '@faker-js/faker'
-import type { Client, UsageSummaryResponse } from '@simple-license/react-sdk'
+import type { Client, UsageSummaryResponse } from '@/simpleLicense'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { UsageSummaryPanel } from '../../../src/ui/workflows/UsageSummaryPanel'
@@ -8,8 +8,8 @@ import { renderWithProviders } from '../utils/renderWithProviders'
 
 const useUsageSummariesMock = vi.hoisted(() => vi.fn())
 
-vi.mock('@simple-license/react-sdk', async () => {
-  const actual = await vi.importActual<typeof import('@simple-license/react-sdk')>('@simple-license/react-sdk')
+vi.mock('@/simpleLicense', async () => {
+  const actual = await vi.importActual<typeof import('@/simpleLicense')>('@/simpleLicense')
   return {
     ...actual,
     useUsageSummaries: useUsageSummariesMock,

@@ -1,5 +1,5 @@
-import type { Client, User } from '@simple-license/react-sdk'
-import { useAdminTenants } from '@simple-license/react-sdk'
+import type { Client, User } from '@/simpleLicense'
+import { useAdminTenants } from '@/simpleLicense'
 import { useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'

@@ -1,4 +1,4 @@
-import type { Client } from '@simple-license/react-sdk'
+import type { Client } from '@/simpleLicense'
 import { screen } from '@testing-library/react'
 import { describe, expect, test, vi, beforeEach } from 'vitest'
 
@@ -16,8 +16,8 @@ import { renderWithProviders } from '../../utils'
 
 const useUsageTrendsMock = vi.hoisted(() => vi.fn())
 
-vi.mock('@simple-license/react-sdk', async () => {
-  const actual = await vi.importActual<typeof import('@simple-license/react-sdk')>('@simple-license/react-sdk')
+vi.mock('@/simpleLicense', async () => {
+  const actual = await vi.importActual<typeof import('@/simpleLicense')>('@/simpleLicense')
   return {
     ...actual,
     useUsageTrends: useUsageTrendsMock,

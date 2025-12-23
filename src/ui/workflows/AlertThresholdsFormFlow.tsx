@@ -1,5 +1,5 @@
-import type { Client, UpdateAlertThresholdsRequest } from '@simple-license/react-sdk'
-import { useUpdateAlertThresholds } from '@simple-license/react-sdk'
+import type { Client, UpdateAlertThresholdsRequest } from '@/simpleLicense'
+import { useUpdateAlertThresholds } from '@/simpleLicense'
 
 import { adaptMutation } from '../actions/mutationAdapter'
 import type { MutationAdapter } from '../actions/mutationActions'

@@ -1,8 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query'
 import type { PropsWithChildren } from 'react'
 import { useEffect, useMemo, useReducer, useRef } from 'react'
-import { QUERY_KEYS } from '../../../packages/react-sdk/src/hooks/queryKeys'
-import type { HealthMetricsResponse, MetricsResponse } from '../../../packages/react-sdk/src/types/api'
+import { QUERY_KEYS } from '@/simpleLicense'
+import type { HealthMetricsResponse, MetricsResponse } from '@/simpleLicense'
 import { useAppConfig } from '../config'
 import {
   ADMIN_SYSTEM_WS_HEALTH_PATH,

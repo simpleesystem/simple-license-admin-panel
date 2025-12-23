@@ -1,4 +1,4 @@
-import type { User } from '@simple-license/react-sdk'
+import type { User } from '@/simpleLicense'
 import type { LoginCredentials } from '@/types/auth'
 
 export interface AuthContextValue {

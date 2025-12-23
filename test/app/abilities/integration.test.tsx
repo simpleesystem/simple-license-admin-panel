@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react'
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import type { AdminRole, LoginResponse } from '@simple-license/react-sdk'
+import type { AdminRole, LoginResponse } from '@/simpleLicense'
 
 import { IfCan } from '@/app/abilities/IfCan'
 import { AbilityProvider } from '@/app/abilities/AbilityProvider'

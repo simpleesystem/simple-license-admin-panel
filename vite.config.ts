@@ -8,7 +8,6 @@ const CHUNK_BOOTSTRAP = 'chunk-bootstrap'
 const CHUNK_FORMS = 'chunk-forms'
 const CHUNK_I18N = 'chunk-i18n'
 const CHUNK_EVENTS = 'chunk-events'
-const CHUNK_SDK = 'chunk-sdk'
 const CHUNK_ANALYTICS = 'chunk-analytics'
 const CHUNK_TENANT = 'chunk-tenant'
 
@@ -20,8 +19,6 @@ const CHUNK_GROUPS = [
   { name: CHUNK_I18N, modules: ['i18next', 'react-i18next'] },
   { name: CHUNK_EVENTS, modules: ['mitt'] },
 ]
-
-const SDK_DEPENDENCIES = ['@simple-license/react-sdk']
 
 const WORKFLOWS_DIR = fileURLToPath(new URL('./src/ui/workflows', import.meta.url))
 const ANALYTICS_SEGMENTS = ['AnalyticsStatsPanel', 'UsageTrendsPanel']
@@ -47,7 +44,6 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
       '@test': fileURLToPath(new URL('./test', import.meta.url)),
-      '@simple-license/react-sdk': fileURLToPath(new URL('./packages/react-sdk/src', import.meta.url)),
     },
   },
   server: {
@@ -67,10 +63,6 @@ export default defineConfig({
             const chunkGroup = CHUNK_GROUPS.find(({ modules }) => modules.some((pkg) => includesModule(id, pkg)))
             if (chunkGroup) {
               return chunkGroup.name
-            }
-
-            if (SDK_DEPENDENCIES.some((pkg) => includesModule(id, pkg))) {
-              return CHUNK_SDK
             }
           }
 

@@ -1,5 +1,5 @@
-import type { Client, Tenant, User } from '@simple-license/react-sdk'
-import { useResumeTenant, useSuspendTenant } from '@simple-license/react-sdk'
+import type { Client, Tenant, User } from '@/simpleLicense'
+import { useResumeTenant, useSuspendTenant } from '@/simpleLicense'
 import { useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import { canSuspendTenant, canUpdateTenant } from '../../app/auth/permissions'

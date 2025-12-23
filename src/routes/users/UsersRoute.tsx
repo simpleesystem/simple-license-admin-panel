@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useAdminUsers } from '@simple-license/react-sdk'
+import { useAdminUsers } from '@/simpleLicense'
 
 import { useApiClient } from '../../api/apiContext'
 import { useAuth } from '../../app/auth/useAuth'

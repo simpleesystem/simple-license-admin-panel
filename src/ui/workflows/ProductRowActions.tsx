@@ -1,5 +1,5 @@
-import type { Client, User } from '@simple-license/react-sdk'
-import { useDeleteProduct, useResumeProduct, useSuspendProduct } from '@simple-license/react-sdk'
+import type { Client, User } from '@/simpleLicense'
+import { useDeleteProduct, useResumeProduct, useSuspendProduct } from '@/simpleLicense'
 import { useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import { canDeleteProduct, canUpdateProduct } from '../../app/auth/permissions'

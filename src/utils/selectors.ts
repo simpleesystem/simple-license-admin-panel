@@ -1,4 +1,4 @@
-import type { License, LicenseStatus, Product, ProductTier } from '@simple-license/react-sdk'
+import type { License, LicenseStatus, Product, ProductTier } from '@/simpleLicense'
 
 import { LICENSE_EXPIRY_WARNING_DAYS } from '../app/constants'
 

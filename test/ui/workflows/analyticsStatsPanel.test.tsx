@@ -20,8 +20,8 @@ import { ADMIN_SYSTEM_WS_STATUS_DISCONNECTED } from '../../../src/app/constants'
 
 const useSystemStatsMock = vi.hoisted(() => vi.fn())
 
-vi.mock('@simple-license/react-sdk', async () => {
-  const actual = await vi.importActual<typeof import('@simple-license/react-sdk')>('@simple-license/react-sdk')
+vi.mock('@/simpleLicense', async () => {
+  const actual = await vi.importActual<typeof import('@/simpleLicense')>('@/simpleLicense')
   return {
     ...actual,
     useSystemStats: useSystemStatsMock,

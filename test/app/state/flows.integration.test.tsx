@@ -4,7 +4,7 @@ import {
   API_ENDPOINT_AUTH_LOGIN,
   ApiException,
   ERROR_CODE_INVALID_CREDENTIALS,
-} from '@simple-license/react-sdk'
+} from '@/simpleLicense'
 import { useQuery } from '@tanstack/react-query'
 import { RouterProvider } from '@tanstack/react-router'
 import { render, screen, waitFor } from '@testing-library/react'

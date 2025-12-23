@@ -1,4 +1,4 @@
-import type { ApiException } from '@simple-license/react-sdk'
+import type { ApiException } from '@/simpleLicense'
 
 import { I18N_KEY_APP_ERROR_MESSAGE, I18N_KEY_APP_ERROR_TITLE, NOTIFICATION_VARIANT_ERROR } from '../app/constants'
 import type { NotificationVariant, ToastNotificationPayload } from '../notifications/constants'

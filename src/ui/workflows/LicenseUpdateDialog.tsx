@@ -1,5 +1,5 @@
-import type { Client, UpdateLicenseRequest, User } from '@simple-license/react-sdk'
-import { useUpdateLicense } from '@simple-license/react-sdk'
+import type { Client, UpdateLicenseRequest, User } from '@/simpleLicense'
+import { useUpdateLicense } from '@/simpleLicense'
 import { useEffect, useState } from 'react'
 import Tab from 'react-bootstrap/Tab'
 import Tabs from 'react-bootstrap/Tabs'

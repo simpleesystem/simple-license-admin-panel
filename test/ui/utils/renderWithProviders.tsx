@@ -1,4 +1,4 @@
-import type { Client } from '@simple-license/react-sdk'
+import type { Client } from '@/simpleLicense'
 import { QueryClient } from '@tanstack/react-query'
 import { render } from '@testing-library/react'
 import type { ReactElement } from 'react'

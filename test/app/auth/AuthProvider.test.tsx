@@ -1,4 +1,4 @@
-import { ApiException, ERROR_CODE_MUST_CHANGE_PASSWORD } from '@simple-license/react-sdk'
+import { ApiException, ERROR_CODE_MUST_CHANGE_PASSWORD } from '@/simpleLicense'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { useCallback } from 'react'
 import { beforeEach, vi } from 'vitest'

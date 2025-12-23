@@ -1,4 +1,4 @@
-import type { Client, Product, User } from '@simple-license/react-sdk'
+import type { Client, Product, User } from '@/simpleLicense'
 import { useMemo, useState } from 'react'
 import Badge from 'react-bootstrap/Badge'
 import Button from 'react-bootstrap/Button'

@@ -1,8 +1,8 @@
 /* c8 ignore file */
 /* istanbul ignore file */
 
-import type { Client } from '@simple-license/react-sdk'
-import { useServerStatus } from '@simple-license/react-sdk'
+import type { Client } from '@/simpleLicense'
+import { useServerStatus } from '@/simpleLicense'
 import { useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
 import { useAdminSystemLiveFeed } from '../../app/live/useAdminSystemLiveFeed'

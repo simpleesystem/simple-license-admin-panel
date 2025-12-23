@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import type { CreateLicenseRequest } from '@simple-license/react-sdk'
+import type { CreateLicenseRequest } from '@/simpleLicense'
 import { describe, expect, test, vi } from 'vitest'
 
 import {

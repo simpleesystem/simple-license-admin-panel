@@ -1,8 +1,8 @@
 import { type ChangeEvent, type FormEvent, useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
-import type { AuditLogEntry, AuditLogFilters, Client } from '@simple-license/react-sdk'
-import { useAuditLogs } from '@simple-license/react-sdk'
+import type { AuditLogEntry, AuditLogFilters, Client } from '@/simpleLicense'
+import { useAuditLogs } from '@/simpleLicense'
 
 import {
   UI_AUDIT_LOGS_COLUMN_ACTION,

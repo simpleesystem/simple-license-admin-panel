@@ -1,5 +1,5 @@
-import type { Client, CreateEntitlementRequest, UpdateEntitlementRequest } from '@simple-license/react-sdk'
-import { useCreateEntitlement, useUpdateEntitlement } from '@simple-license/react-sdk'
+import type { Client, CreateEntitlementRequest, UpdateEntitlementRequest } from '@/simpleLicense'
+import { useCreateEntitlement, useUpdateEntitlement } from '@/simpleLicense'
 import type { ReactNode } from 'react'
 
 import type { MutationAdapter } from '../actions/mutationActions'

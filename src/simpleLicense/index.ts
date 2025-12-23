@@ -1,9 +1,9 @@
 /**
- * Main SDK exports
+ * Simple License module exports.
+ *
+ * This code lives inside the `admin-panel` app and is not a standalone React SDK/package.
  */
 
-export type { Client as ClientType } from './client'
-// Client
 export { Client } from './client'
 // Constants
 export * from './constants'

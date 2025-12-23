@@ -1,4 +1,4 @@
-import type { User } from '@simple-license/react-sdk'
+import type { User } from '@/simpleLicense'
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import { useApiClient } from '@/api/apiContext'
 import type { LoginCredentials } from '@/types/auth'

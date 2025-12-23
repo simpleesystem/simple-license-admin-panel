@@ -1,4 +1,4 @@
-import { useAdminProducts, useAdminTenants } from '@simple-license/react-sdk'
+import { useAdminProducts, useAdminTenants } from '@/simpleLicense'
 import { useMemo, useState } from 'react'
 
 import { useApiClient } from '../../api/apiContext'

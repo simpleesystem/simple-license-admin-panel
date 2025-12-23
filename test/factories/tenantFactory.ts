@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import type { Tenant } from '@simple-license/react-sdk'
+import type { Tenant } from '@/simpleLicense'
 
 const TENANT_STATUS_ACTIVE = 'ACTIVE' as const
 const TENANT_STATUS_SUSPENDED = 'SUSPENDED' as const

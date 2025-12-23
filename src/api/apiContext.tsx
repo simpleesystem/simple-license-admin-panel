@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react'
-import type { Client as SimpleLicenseClient } from '@simple-license/react-sdk'
+import type { Client as SimpleLicenseClient } from '@/simpleLicense'
 
 import { ERROR_MESSAGE_API_CONTEXT_UNAVAILABLE } from '../app/constants'
 

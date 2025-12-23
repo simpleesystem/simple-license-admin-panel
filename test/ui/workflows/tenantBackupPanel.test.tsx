@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import type { Client } from '@simple-license/react-sdk'
+import type { Client } from '@/simpleLicense'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { ApiContext } from '../../../src/api/apiContext'
@@ -14,8 +14,8 @@ import { TenantBackupPanel } from '../../../src/ui/workflows/TenantBackupPanel'
 
 const useCreateTenantBackupMock = vi.hoisted(() => vi.fn())
 
-vi.mock('@simple-license/react-sdk', async () => {
-  const actual = await vi.importActual<typeof import('@simple-license/react-sdk')>('@simple-license/react-sdk')
+vi.mock('@/simpleLicense', async () => {
+  const actual = await vi.importActual<typeof import('@/simpleLicense')>('@/simpleLicense')
   return {
     ...actual,
     useCreateTenantBackup: useCreateTenantBackupMock,

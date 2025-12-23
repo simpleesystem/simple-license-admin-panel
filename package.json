@@ -25,7 +25,6 @@
     "@casl/react": "^5.0.0",
     "@hookform/resolvers": "^5.2.2",
     "@sentry/react": "^10.32.1",
-    "@simple-license/react-sdk": "file:./packages/react-sdk",
     "@tanstack/query-sync-storage-persister": "^5.90.14",
     "@tanstack/react-query": "^5.90.12",
     "@tanstack/react-query-persist-client": "^5.90.14",

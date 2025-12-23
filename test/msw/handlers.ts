@@ -1,4 +1,4 @@
-import type { LicenseStatus } from '@simple-license/react-sdk'
+import type { LicenseStatus } from '@/simpleLicense'
 import {
   API_ENDPOINT_ADMIN_ANALYTICS_DISTRIBUTION,
   API_ENDPOINT_ADMIN_ANALYTICS_LICENSE,
@@ -44,7 +44,7 @@ import {
   API_ENDPOINT_ADMIN_USERS_ME,
   API_ENDPOINT_ADMIN_USERS_UPDATE,
   API_ENDPOINT_AUTH_LOGIN,
-} from '@simple-license/react-sdk'
+} from '@/simpleLicense'
 import { HttpResponse, http } from 'msw'
 
 import { AUTH_FIELD_USERNAME } from '../../src/app/constants'

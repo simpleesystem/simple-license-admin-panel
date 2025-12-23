@@ -30,7 +30,7 @@ import { AppStateProvider } from './state/appState'
 import { SurfaceRenderer } from './state/SurfaceRenderer'
 import { useAppStore } from './state/store'
 
-import type { Client } from '@simple-license/react-sdk'
+import type { Client } from '@/simpleLicense'
 // ... existing imports ...
 
 type AppProvidersProps = PropsWithChildren<{

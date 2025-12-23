@@ -5,8 +5,8 @@ import { TenantQuotaFormFlow } from '../../../src/ui/workflows/TenantQuotaFormFl
 
 const useUpdateQuotaLimitsMock = vi.hoisted(() => vi.fn())
 
-vi.mock('@simple-license/react-sdk', async () => {
-  const actual = await vi.importActual<typeof import('@simple-license/react-sdk')>('@simple-license/react-sdk')
+vi.mock('@/simpleLicense', async () => {
+  const actual = await vi.importActual<typeof import('@/simpleLicense')>('@/simpleLicense')
   return {
     ...actual,
     useUpdateQuotaLimits: useUpdateQuotaLimitsMock,

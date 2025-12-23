@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import type { License, LicenseStatus, Product, ProductTier } from '@simple-license/react-sdk'
+import type { License, LicenseStatus, Product, ProductTier } from '@/simpleLicense'
 
 export type TestLicense = License & { vendorId?: string | null }
 export type TestProductTier = ProductTier & { vendorId?: string | null }

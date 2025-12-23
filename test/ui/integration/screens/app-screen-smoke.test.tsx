@@ -29,8 +29,8 @@ const useRevokeLicenseMock = vi.hoisted(() => vi.fn())
 const useSuspendLicenseMock = vi.hoisted(() => vi.fn())
 const useResumeLicenseMock = vi.hoisted(() => vi.fn())
 
-vi.mock('@simple-license/react-sdk', async () => {
-  const actual = await vi.importActual<typeof import('@simple-license/react-sdk')>('@simple-license/react-sdk')
+vi.mock('@/simpleLicense', async () => {
+  const actual = await vi.importActual<typeof import('@/simpleLicense')>('@/simpleLicense')
   return {
     ...actual,
     useCreateProduct: useCreateProductMock,
