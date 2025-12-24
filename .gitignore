@@ -17,6 +17,8 @@ coverage/
 *.lcov
 .nyc_output/
 .vitest/
+reports/
+.stryker-tmp/
 
 # Editor directories and files
 .vscode/*
