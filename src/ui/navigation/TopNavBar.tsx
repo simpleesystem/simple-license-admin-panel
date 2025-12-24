@@ -31,7 +31,7 @@ export function TopNavBar({
           {hasContent ? <Navbar.Toggle aria-controls="top-navbar-nav" /> : null}
           {hasContent ? (
             <Navbar.Collapse id="top-navbar-nav">
-              {navigation ? <Nav className="me-auto">{navigation}</Nav> : <Nav className="me-auto" />}
+              {navigation ? <Nav className="me-auto d-flex align-items-center gap-2">{navigation}</Nav> : <Nav className="me-auto d-flex align-items-center gap-2" />}
               {actions ? <div className="d-flex align-items-center gap-2 mt-2 mt-lg-0">{actions}</div> : null}
             </Navbar.Collapse>
           ) : null}

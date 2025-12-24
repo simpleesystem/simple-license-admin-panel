@@ -24,6 +24,7 @@ import {
 import { APP_DEFAULT_LANGUAGE, APP_I18N_DEFAULT_NAMESPACE } from '../../src/app/constants'
 import { i18nResources } from '../../src/app/i18n/resources'
 
+
 type RouteCase = {
   label: string
   Component: () => JSX.Element

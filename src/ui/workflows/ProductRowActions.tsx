@@ -3,6 +3,7 @@ import { useDeleteProduct, useResumeProduct, useSuspendProduct } from '@/simpleL
 import { useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import { canDeleteProduct, canUpdateProduct } from '../../app/auth/permissions'
+import { isSystemAdminUser } from '../../app/auth/userUtils'
 import { useNotificationBus } from '../../notifications/useNotificationBus'
 import { adaptMutation } from '../actions/mutationAdapter'
 import {
@@ -37,6 +38,7 @@ type ProductRowActionsProps = UiCommonProps & {
   client: Client
   productId: string
   isActive: boolean
+  vendorId?: string | null
   onEdit: (product: { id: string }) => void
   onCompleted?: () => void
   currentUser?: User | null
@@ -46,6 +48,7 @@ export function ProductRowActions({
   client,
   productId,
   isActive,
+  vendorId,
   onEdit,
   onCompleted,
   currentUser,
@@ -59,11 +62,14 @@ export function ProductRowActions({
   const [showSuspendConfirm, setShowSuspendConfirm] = useState(false)
   const [showResumeConfirm, setShowResumeConfirm] = useState(false)
 
-  // const productContext = { vendorId }
   const allowUpdate = canUpdateProduct(currentUser ?? null)
   const allowDelete = canDeleteProduct(currentUser ?? null)
+  const isSystemAdmin = isSystemAdminUser(currentUser ?? null)
 
-  if (!allowUpdate && !allowDelete) {
+  // Check ownership for non-admin users
+  const ownsProduct = isSystemAdmin || (vendorId && currentUser?.vendorId === vendorId)
+
+  if ((!allowUpdate && !allowDelete) || (!ownsProduct && !isSystemAdmin)) {
     return null
   }
 

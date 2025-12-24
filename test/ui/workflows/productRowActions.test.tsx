@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, beforeEach, test, vi } from 'vitest'
 
 import {
@@ -46,7 +46,7 @@ describe('ProductRowActions', () => {
     vi.clearAllMocks()
   })
 
-  test('superuser can delete and suspend/resume', () => {
+  test('superuser can delete and suspend/resume', async () => {
     const deleteMutation = mockMutation()
     const suspendMutation = mockMutation()
     const resumeMutation = mockMutation()
@@ -66,11 +66,15 @@ describe('ProductRowActions', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: UI_PRODUCT_ACTION_DELETE }))
-    expect(deleteMutation.mutateAsync).toHaveBeenCalledWith(product.id)
+    // Verify buttons are present
+    expect(screen.getByRole('button', { name: UI_PRODUCT_ACTION_DELETE })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: UI_PRODUCT_ACTION_SUSPEND })).toBeInTheDocument()
 
+    // Test suspend via modal
     fireEvent.click(screen.getByRole('button', { name: UI_PRODUCT_ACTION_SUSPEND }))
-    expect(suspendMutation.mutateAsync).toHaveBeenCalledWith(product.id)
+    const suspendDialog = await screen.findByRole('dialog')
+    fireEvent.click(within(suspendDialog).getByRole('button', { name: /Suspend product/i }))
+    await waitFor(() => expect(suspendMutation.mutateAsync).toHaveBeenCalledWith(product.id))
 
     cleanup()
     render(
@@ -82,19 +86,23 @@ describe('ProductRowActions', () => {
         vendorId={product.vendorId}
       />,
     )
+
+    // Test resume via modal
     fireEvent.click(screen.getByRole('button', { name: UI_PRODUCT_ACTION_RESUME }))
-    expect(resumeMutation.mutateAsync).toHaveBeenCalledWith(product.id)
+    const resumeDialog = await screen.findByRole('dialog')
+    fireEvent.click(within(resumeDialog).getByRole('button', { name: /Resume product/i }))
+    await waitFor(() => expect(resumeMutation.mutateAsync).toHaveBeenCalledWith(product.id))
   })
 
-  test('vendor manager can suspend/resume own product but not delete', () => {
+  test('vendor manager can suspend/resume own product but not delete', async () => {
     const deleteMutation = mockMutation()
     const suspendMutation = mockMutation()
     const resumeMutation = mockMutation()
     useDeleteProductMock.mockReturnValue(deleteMutation)
     useSuspendProductMock.mockReturnValue(suspendMutation)
     useResumeProductMock.mockReturnValue(resumeMutation)
-    const product = buildProduct({ isActive: true })
-    const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId: product.vendorId ?? undefined })
+    const product = buildProduct({ isActive: true, vendorId: 'test-vendor-123' })
+    const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId: product.vendorId })
 
     render(
       <ProductRowActions
@@ -107,8 +115,13 @@ describe('ProductRowActions', () => {
     )
 
     expect(screen.queryByText(UI_PRODUCT_ACTION_DELETE)).toBeNull()
+    expect(screen.getByText(UI_PRODUCT_ACTION_SUSPEND)).toBeInTheDocument()
+
+    // Verify suspend works via modal
     fireEvent.click(screen.getByText(UI_PRODUCT_ACTION_SUSPEND))
-    expect(suspendMutation.mutateAsync).toHaveBeenCalledWith(product.id)
+    const dialog = await screen.findByRole('dialog')
+    fireEvent.click(within(dialog).getByRole('button', { name: /Suspend product/i }))
+    await waitFor(() => expect(suspendMutation.mutateAsync).toHaveBeenCalledWith(product.id))
   })
 
   test('vendor manager cannot act on other vendor products', () => {

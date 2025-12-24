@@ -56,7 +56,7 @@ export function ProductEntitlementRowActions({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const allowUpdate = canUpdateEntitlement(currentUser ?? null, entitlement)
-  const allowDelete = canDeleteEntitlement(currentUser ?? null)
+  const allowDelete = canDeleteEntitlement(currentUser ?? null, entitlement)
 
   if (!allowUpdate && !allowDelete) {
     return null

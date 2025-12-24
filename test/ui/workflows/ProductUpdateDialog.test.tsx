@@ -1,5 +1,6 @@
 import type { Client, Entitlement, Product, ProductTier } from '@/simpleLicense'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { UI_PRODUCT_FORM_TITLE_UPDATE } from '@/ui/constants'
 import { ProductUpdateDialog } from '@/ui/workflows/ProductUpdateDialog'
@@ -32,26 +33,22 @@ vi.mock('../../../../src/ui/workflows/ProductEntitlementManagementPanel', () => 
   ProductEntitlementManagementPanel: () => <div data-testid="entitlement-panel">Entitlement Panel</div>,
 }))
 
-vi.mock('../../../../src/ui/overlay/ModalDialog', () => ({
-  ModalDialog: ({
-    show,
-    title,
-    body,
-    onClose,
-  }: {
-    show: boolean
-    title: React.ReactNode
-    body: React.ReactNode
-    onClose: () => void
-  }) =>
-    show ? (
-      <div data-testid="modal-dialog">
-        <h1>{title}</h1>
-        <button onClick={onClose}>Close</button>
-        {body}
-      </div>
-    ) : null,
-}))
+
+const renderWithQueryClient = (ui: React.ReactElement) => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  })
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      {ui}
+    </QueryClientProvider>
+  )
+}
 
 describe('ProductUpdateDialog', () => {
   const mockClient = createMockClient()
@@ -77,13 +74,13 @@ describe('ProductUpdateDialog', () => {
   })
 
   it('renders dialog when show is true', () => {
-    render(<ProductUpdateDialog {...defaultProps} />)
-    expect(screen.getByTestId('modal-dialog')).toBeInTheDocument()
+    renderWithQueryClient(<ProductUpdateDialog {...defaultProps} />)
     expect(screen.getByText(UI_PRODUCT_FORM_TITLE_UPDATE)).toBeInTheDocument()
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
   it('fetches details on mount', async () => {
-    render(<ProductUpdateDialog {...defaultProps} />)
+    renderWithQueryClient(<ProductUpdateDialog {...defaultProps} />)
 
     await waitFor(() => {
       expect(mockClient.getProduct).toHaveBeenCalledWith('product-1')
@@ -93,7 +90,7 @@ describe('ProductUpdateDialog', () => {
   })
 
   it('renders tabs and switches content', async () => {
-    render(<ProductUpdateDialog {...defaultProps} />)
+    renderWithQueryClient(<ProductUpdateDialog {...defaultProps} />)
 
     // Default tab is details
     expect(screen.getByTestId('dynamic-form')).toBeInTheDocument()
@@ -108,7 +105,7 @@ describe('ProductUpdateDialog', () => {
   })
 
   it('closes dialog', () => {
-    render(<ProductUpdateDialog {...defaultProps} />)
+    renderWithQueryClient(<ProductUpdateDialog {...defaultProps} />)
     fireEvent.click(screen.getByText('Close'))
     expect(mockOnClose).toHaveBeenCalled()
   })

@@ -206,15 +206,20 @@ export const canCreateProduct = (user: User | null): boolean => {
   return perms.manageProducts
 }
 
-export const canDeleteEntitlement = (user: User | null): boolean => {
+export const canDeleteEntitlement = (user: User | null, entitlement?: { vendorId?: string | null } | null): boolean => {
   if (!user) {
     return false
   }
   const perms = derivePermissionsFromUser(user)
-  return perms.manageProducts
+  if (!perms.manageProducts) {
+    return false
+  }
+
+  // Only system admins can delete entitlements
+  return isSystemAdminUser(user)
 }
 
-export const canUpdateEntitlement = (user: User | null, entitlement?: unknown): boolean => {
+export const canUpdateEntitlement = (user: User | null, entitlement?: { vendorId?: string | null } | null): boolean => {
   if (!user) {
     return false
   }
@@ -224,11 +229,11 @@ export const canUpdateEntitlement = (user: User | null, entitlement?: unknown): 
   }
 
   // Vendor scoping check
-  if (entitlement && isVendorScopedUser(user)) {
-    // If entitlement has vendorId (not all list items do, but fetched ones might)
-    // Or we rely on product ownership which should be checked before this
-    // For now, consistent with create:
+  if (isSystemAdminUser(user)) {
     return true
+  }
+  if (entitlement && isVendorScopedUser(user)) {
+    return entitlement.vendorId === user.vendorId
   }
   return perms.manageProducts
 }
@@ -245,8 +250,7 @@ export const canDeleteProductTier = (user: User | null): boolean => {
   if (!user) {
     return false
   }
-  const perms = derivePermissionsFromUser(user)
-  return perms.manageProducts
+  return isSystemAdminUser(user)
 }
 
 export const canUpdateProductTier = (user: User | null): boolean => {
@@ -269,7 +273,10 @@ export const canCreateProductTier = (user: User | null): boolean => {
 }
 
 export const canDeleteProduct = (user: User | null): boolean => {
-  return canViewProducts(user)
+  if (!user) {
+    return false
+  }
+  return isSystemAdminUser(user)
 }
 
 export const canUpdateProduct = (user: User | null): boolean => {

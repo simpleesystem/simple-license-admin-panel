@@ -3,6 +3,7 @@ import { useDeleteProductTier } from '@/simpleLicense'
 import { useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import { canDeleteProductTier, canUpdateProductTier } from '../../app/auth/permissions'
+import { isSystemAdminUser } from '../../app/auth/userUtils'
 import { useNotificationBus } from '../../notifications/useNotificationBus'
 import { adaptMutation } from '../actions/mutationAdapter'
 import {
@@ -35,6 +36,7 @@ type ProductTierRowActionsProps = UiCommonProps & {
 export function ProductTierRowActions({
   client,
   tier,
+  vendorId,
   onEdit,
   onCompleted,
   currentUser,
@@ -50,8 +52,12 @@ export function ProductTierRowActions({
   // const tierContext = { vendorId: vendorId ?? (tier as { vendorId?: string | null }).vendorId }
   const allowUpdate = canUpdateProductTier(currentUser ?? null)
   const allowDelete = canDeleteProductTier(currentUser ?? null)
+  const isSystemAdmin = isSystemAdminUser(currentUser ?? null)
 
-  if (!allowUpdate && !allowDelete) {
+  // Check ownership for non-admin users
+  const ownsTier = isSystemAdmin || (vendorId && currentUser?.vendorId === vendorId)
+
+  if ((!allowUpdate && !allowDelete) || (!ownsTier && !isSystemAdmin)) {
     return null
   }
 

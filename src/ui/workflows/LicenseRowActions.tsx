@@ -3,6 +3,7 @@ import { useResumeLicense, useRevokeLicense, useSuspendLicense } from '@/simpleL
 import { useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import { canDeleteLicense, canUpdateLicense } from '../../app/auth/permissions'
+import { isSystemAdminUser } from '../../app/auth/userUtils'
 import { useNotificationBus } from '../../notifications/useNotificationBus'
 import { adaptMutation } from '../actions/mutationAdapter'
 import {
@@ -48,6 +49,7 @@ export function LicenseRowActions({
   client,
   licenseKey,
   licenseStatus,
+  licenseVendorId,
   currentUser,
   onEdit,
   onCompleted,
@@ -64,9 +66,13 @@ export function LicenseRowActions({
 
   const allowDelete = canDeleteLicense(currentUser ?? null)
   const allowUpdate = canUpdateLicense(currentUser ?? null)
+  const isSystemAdmin = isSystemAdminUser(currentUser ?? null)
   const isSuspended = licenseStatus === UI_LICENSE_STATUS_SUSPENDED
 
-  if (!allowDelete && !allowUpdate) {
+  // Check ownership for non-admin users
+  const ownsLicense = isSystemAdmin || (licenseVendorId && currentUser?.vendorId === licenseVendorId)
+
+  if ((!allowDelete && !allowUpdate) || (!ownsLicense && !isSystemAdmin)) {
     return null
   }
 

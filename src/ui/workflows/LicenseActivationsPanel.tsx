@@ -3,6 +3,7 @@ import { useLicenseActivations } from '@/simpleLicense'
 import { useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
 import { canViewActivations, isActivationOwnedByUser, isVendorScopedUser } from '../../app/auth/permissions'
+import { isSystemAdminUser } from '../../app/auth/userUtils'
 import {
   UI_COLUMN_ID_LICENSE_ACTIVATION_ACTIVATED_AT,
   UI_COLUMN_ID_LICENSE_ACTIVATION_CLIENT_VERSION,
@@ -75,6 +76,7 @@ export function LicenseActivationsPanel({
   maxRows,
 }: LicenseActivationsPanelProps) {
   const allowView = canViewActivations(currentUser ?? null)
+  const isSystemAdmin = isSystemAdminUser(currentUser ?? null)
   const isVendorScoped = isVendorScopedUser(currentUser ?? null)
   const dateTimeFormatter = useMemo(
     () => new Intl.DateTimeFormat(UI_DATE_FORMAT_LOCALE, UI_DATE_TIME_FORMAT_OPTIONS),
@@ -142,7 +144,7 @@ export function LicenseActivationsPanel({
 
   if (
     !allowView ||
-    (isVendorScoped && licenseVendorId && !isActivationOwnedByUser(currentUser ?? null, { vendorId: licenseVendorId } as LicenseActivation))
+    (!isSystemAdmin && licenseVendorId && !isActivationOwnedByUser(currentUser ?? null, { vendorId: licenseVendorId } as LicenseActivation))
   ) {
     return (
       <InlineAlert variant="danger" title={UI_LICENSE_ACTIVATIONS_ERROR_TITLE}>

@@ -194,6 +194,7 @@ export function ProductManagementPanel({
               client={client}
               productId={row.id}
               isActive={row.isActive}
+              vendorId={row.vendorId}
               onEdit={setEditingProduct}
               onCompleted={onRefresh}
               currentUser={currentUser ?? null}

@@ -31,6 +31,7 @@ import {
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { canViewLicenses, isVendorScopedUser } from '../../app/auth/permissions'
+import { isSystemAdminUser } from '../../app/auth/userUtils'
 import { DataTable } from '../data/DataTable'
 import { InlineAlert } from '../feedback/InlineAlert'
 import { Stack } from '../layout/Stack'
@@ -73,6 +74,7 @@ export function LicenseUsageDetailsPanel({
   maxRows,
 }: LicenseUsageDetailsPanelProps) {
   const allowView = canViewLicenses(currentUser ?? null)
+  const isSystemAdmin = isSystemAdminUser(currentUser ?? null)
   const isVendorScoped = isVendorScopedUser(currentUser ?? null)
   const queryParams = useMemo(() => {
     if (!periodStart && !periodEnd) {
@@ -136,7 +138,7 @@ export function LicenseUsageDetailsPanel({
     return summaries.slice(0, rowLimit)
   }, [detailsQuery.data?.summaries, rowLimit])
 
-  if (!allowView || (isVendorScoped && licenseVendorId && licenseVendorId !== currentUser?.vendorId)) {
+  if (!allowView || (!isSystemAdmin && licenseVendorId && licenseVendorId !== currentUser?.vendorId)) {
     return (
       <InlineAlert variant="danger" title={UI_ANALYTICS_LICENSE_DETAILS_ERROR_TITLE}>
         {UI_ANALYTICS_LICENSE_DETAILS_ERROR_BODY}
