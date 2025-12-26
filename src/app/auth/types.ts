@@ -7,6 +7,7 @@ export interface AuthContextValue {
   currentUser: User | null
   isAuthenticated: boolean
   isLoading: boolean
+  status: string
   error: string | null
   login: (credentials: LoginCredentials) => Promise<void>
   logout: () => Promise<void>

@@ -1,7 +1,31 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import { useEffect } from 'react'
-import { vi } from 'vitest'
+import { beforeEach, vi } from 'vitest'
 import { AppProviders } from '../../src/app/AppProviders'
+import { buildUser } from '../factories/userFactory'
+
+const mockClient = {
+  restoreSession: vi.fn(),
+  getCurrentUser: vi.fn(),
+  login: vi.fn(),
+  logout: vi.fn(),
+  setToken: vi.fn((token: string | null) => {
+    if (token) {
+      mockClient.getToken.mockReturnValue(token)
+    } else {
+      mockClient.getToken.mockReturnValue(null)
+    }
+  }),
+  getToken: vi.fn(),
+}
+
+vi.mock('../../src/api/apiContext', async () => {
+  const actual = await vi.importActual<typeof import('../../src/api/apiContext')>('../../src/api/apiContext')
+  return {
+    ...actual,
+    useApiClient: () => mockClient,
+  }
+})
 import {
   APP_BRAND_NAME,
   I18N_KEY_APP_BRAND,
@@ -82,8 +106,14 @@ describe('AppProviders', () => {
   })
 
   beforeEach(() => {
+    vi.clearAllMocks()
     window.localStorage.clear()
     simulateLogin()
+    const user = buildUser({ email: 'test@example.com', role: 'SUPERUSER' })
+    mockClient.restoreSession.mockResolvedValue('test-token')
+    mockClient.getCurrentUser.mockResolvedValue({ user })
+    // Ensure getToken returns the token after restoreSession
+    mockClient.getToken.mockReturnValue('test-token')
   })
 
   afterAll(() => {
@@ -93,7 +123,11 @@ describe('AppProviders', () => {
   it('renders the dashboard heading by default', async () => {
     render(<AppProviders />)
 
-    await screen.findByText(DASHBOARD_HEADING)
+    // Wait for auth to initialize and router to navigate to dashboard
+    // The router should navigate to dashboard when user is authenticated
+    await waitFor(() => {
+      expect(screen.getByText(DASHBOARD_HEADING)).toBeInTheDocument()
+    }, { timeout: 5000 })
   })
 
   it('renders the error fallback when a child throws', async () => {

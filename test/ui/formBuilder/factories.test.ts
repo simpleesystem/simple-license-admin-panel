@@ -93,9 +93,9 @@ describe('form blueprint factories', () => {
 
   test('user update blueprint omits password field', () => {
     const blueprint = createUserBlueprint('update')
-    const section = blueprint.sections.find((candidate) => candidate.id === 'details')
-
-    expect(section?.fields.some((field) => field.name === 'password')).toBe(false)
+    // Password field should be filtered out in update mode
+    const allFields = blueprint.sections.flatMap((section) => section.fields)
+    expect(allFields.some((field) => field.name === 'password')).toBe(false)
   })
 
   test('entitlement blueprint configures value type select', () => {

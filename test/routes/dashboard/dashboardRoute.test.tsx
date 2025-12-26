@@ -1,7 +1,9 @@
 import { render, screen } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, expect, it, vi } from 'vitest'
 import type { Client } from '@/simpleLicense'
 
+import { AppConfigProvider } from '@/app/config'
 import { I18nProvider } from '@/app/i18n/I18nProvider'
 import { i18nResources } from '@/app/i18n/resources'
 import { I18N_KEY_DASHBOARD_HEADING } from '@/app/constants'
@@ -37,13 +39,24 @@ vi.mock('@/ui/workflows/AlertThresholdsPanel', () => ({
 describe('DashboardRouteComponent', () => {
   it('renders dashboard header and all analytics panels', () => {
     const client = {} as Client
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    })
 
     render(
-      <I18nProvider>
-        <ApiContext.Provider value={client}>
-          <DashboardRouteComponent />
-        </ApiContext.Provider>
-      </I18nProvider>,
+      <AppConfigProvider>
+        <QueryClientProvider client={queryClient}>
+          <I18nProvider>
+            <ApiContext.Provider value={client}>
+              <DashboardRouteComponent />
+            </ApiContext.Provider>
+          </I18nProvider>
+        </QueryClientProvider>
+      </AppConfigProvider>,
     )
 
     expect(screen.getByRole('heading', { name: DASHBOARD_HEADING })).toBeInTheDocument()

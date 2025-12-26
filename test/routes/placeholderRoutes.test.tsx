@@ -1,5 +1,5 @@
 import type { JSX } from 'react'
-import { screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import { describe, test, beforeAll } from 'vitest'
@@ -93,7 +93,7 @@ describe('placeholder routes', () => {
 
   test('SectionPlaceholder renders custom body', () => {
     const customBody = 'Custom placeholder body'
-    renderWithProviders(<SectionPlaceholder title="Custom" subtitle="Subtitle" body={customBody} />)
+    render(<SectionPlaceholder title="Custom" subtitle="Subtitle" body={customBody} testMode />)
     expect(screen.getByText('Custom')).toBeInTheDocument()
     expect(screen.getByText(customBody)).toBeInTheDocument()
   })

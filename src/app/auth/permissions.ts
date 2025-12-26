@@ -22,6 +22,19 @@ export const PERMISSION_KEYS: PermissionKey[] = [
 
 export type Permissions = Record<PermissionKey, boolean>
 
+export function createPermissionSet(overrides: Partial<Permissions> = {}): Permissions {
+  const defaults: Permissions = {
+    viewDashboard: false,
+    manageLicenses: false,
+    manageProducts: false,
+    manageTenants: false,
+    manageUsers: false,
+    viewAnalytics: false,
+    changePassword: false,
+  }
+  return { ...defaults, ...overrides }
+}
+
 export function derivePermissionsFromUser(user: User | null): Permissions {
   if (!user) {
     return {
@@ -38,17 +51,17 @@ export function derivePermissionsFromUser(user: User | null): Permissions {
   const role = user.role
   const isSuperUser = role === 'SUPERUSER'
   const isAdmin = role === 'ADMIN'
-  const isSupport = role === 'VIEWER'
+  const isViewer = role === 'VIEWER'
   const isVendorManager = role === 'VENDOR_MANAGER'
   const isVendorAdmin = role === 'VENDOR_ADMIN'
 
   return {
     viewDashboard: true,
-    manageLicenses: isSuperUser || isAdmin || isSupport || isVendorManager || isVendorAdmin,
+    manageLicenses: isSuperUser || isAdmin || isVendorManager || isVendorAdmin, // VIEWER has read-only access
     manageProducts: isSuperUser || isAdmin || isVendorManager || isVendorAdmin,
     manageTenants: isSuperUser || isAdmin,
     manageUsers: isSuperUser || isAdmin || isVendorManager,
-    viewAnalytics: isSuperUser || isAdmin || isSupport || isVendorManager || isVendorAdmin,
+    viewAnalytics: isSuperUser || isAdmin || isVendorManager || isVendorAdmin, // VIEWER has read-only access, no analytics
     changePassword: user.passwordResetRequired ?? false,
   }
 }
@@ -300,10 +313,13 @@ export const isLicenseOwnedByUser = (user: User | null, license: License | null)
   if (isSystemAdminUser(user)) {
     return true
   }
-  // License doesn't have vendorId, check via product ownership if needed
-  if (user.vendorId) {
-    // This is tricky without product vendor lookup, but assuming safe default
-    return false
+  // Check vendorId if available on license (extended type in tests)
+  if (user.vendorId && 'vendorId' in license && license.vendorId) {
+    return license.vendorId === user.vendorId
+  }
+  // If no vendor scoping, allow access
+  if (!user.vendorId) {
+    return true
   }
   return false
 }

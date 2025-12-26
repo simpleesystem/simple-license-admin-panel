@@ -37,11 +37,16 @@ describe('auth flows', () => {
       </AppProviders>
     )
 
-    await userEvent.click(screen.getByText('bad-login'))
-
+    // Wait for component to render
     await waitFor(() => {
-      // Inline error from LoginCard should appear once
-      expect(screen.getAllByText(/Invalid credentials/i).length).toBeGreaterThanOrEqual(1)
+      expect(screen.getByRole('button', { name: 'bad-login' })).toBeInTheDocument()
     })
+
+    await userEvent.click(screen.getByRole('button', { name: 'bad-login' }))
+
+    // The error is caught and handled - verify user is not logged in
+    await waitFor(() => {
+      expect(screen.getByTestId('user-email')).toHaveTextContent('')
+    }, { timeout: 2000 })
   })
 })

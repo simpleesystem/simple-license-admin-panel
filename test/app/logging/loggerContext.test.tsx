@@ -13,8 +13,14 @@ const createLogger = (): Logger => ({
 })
 
 describe('logger context', () => {
-  it('throws when used outside of the provider', () => {
-    expect(() => renderHook(() => useLogger())).toThrow(/Logger context/)
+  it('returns a fallback logger when used outside of the provider', () => {
+    const { result } = renderHook(() => useLogger())
+    // Should return a logger instance (fallback), not throw
+    expect(result.current).toBeDefined()
+    expect(typeof result.current.debug).toBe('function')
+    expect(typeof result.current.info).toBe('function')
+    expect(typeof result.current.warn).toBe('function')
+    expect(typeof result.current.error).toBe('function')
   })
 
   it('returns the injected logger instance', () => {

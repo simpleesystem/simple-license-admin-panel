@@ -9,6 +9,7 @@ import { ADMIN_SYSTEM_WS_STATUS_DISCONNECTED } from '../../../../src/app/constan
 import { buildUser } from '../../../factories/userFactory'
 
 const useSystemStatsMock = vi.hoisted(() => vi.fn())
+const mockUser = vi.hoisted(() => buildUser({ role: UI_USER_ROLE_SUPERUSER }))
 
 vi.mock('@/simpleLicense', async () => {
   const actual = await vi.importActual<typeof import('@/simpleLicense')>('@/simpleLicense')
@@ -19,11 +20,10 @@ vi.mock('@/simpleLicense', async () => {
 })
 
 vi.mock('../../../../src/app/auth/useAuth', () => {
-  const user = buildUser({ role: UI_USER_ROLE_SUPERUSER })
   return {
     useAuth: () => ({
-      user,
-      currentUser: user,
+      user: mockUser,
+      currentUser: mockUser,
       isAuthenticated: true,
     }),
   }

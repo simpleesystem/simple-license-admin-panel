@@ -23,6 +23,12 @@ const createMockClient = () => {
         summaries: [],
       })),
     },
+    restoreSession: vi.fn().mockResolvedValue(null),
+    getToken: vi.fn().mockReturnValue(null),
+    setToken: vi.fn(),
+    login: vi.fn(),
+    logout: vi.fn(),
+    getCurrentUser: vi.fn(),
   } as unknown as Client
 }
 

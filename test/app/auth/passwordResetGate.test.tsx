@@ -1,10 +1,16 @@
 import { render, screen } from '@testing-library/react'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 
 import { PasswordResetGate } from '../../../src/app/auth/PasswordResetGate'
 import { AuthContext } from '../../../src/app/auth/authContext'
 import type { AuthContextValue } from '../../../src/app/auth/types'
 import { buildUser } from '../../factories/userFactory'
+
+// Mock router hooks to avoid router context issues
+vi.mock('@tanstack/react-router', () => ({
+  useRouterState: () => ({}),
+  useNavigate: () => vi.fn(),
+}))
 
 vi.mock('../../../src/ui/auth/ChangePasswordFlow', () => ({
   ChangePasswordFlow: () => <div data-testid="change-password-flow" />,
@@ -47,13 +53,16 @@ describe('PasswordResetGate', () => {
     render(
       <AuthContext.Provider value={value}>
         <PasswordResetGate>
-          <div data-testid="app-shell">App</div>
+          <div data-testid="original-content">App</div>
         </PasswordResetGate>
       </AuthContext.Provider>,
     )
 
+    // When password reset is required, AppShell is rendered with change password flow
+    expect(screen.getByTestId('app-shell')).toBeInTheDocument()
     expect(screen.getByTestId('change-password-flow')).toBeInTheDocument()
-    expect(screen.queryByTestId('app-shell')).not.toBeInTheDocument()
+    // Original content should not be rendered
+    expect(screen.queryByTestId('original-content')).not.toBeInTheDocument()
   })
 
   test('renders children when no user is present', () => {

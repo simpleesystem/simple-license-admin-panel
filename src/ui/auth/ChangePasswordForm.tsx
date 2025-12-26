@@ -100,7 +100,7 @@ export function ChangePasswordForm({ onSuccess }: ChangePasswordFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} noValidate>
       <Stack gap="large">
         {error && (
           <div className="alert alert-danger" role="alert">
@@ -133,7 +133,7 @@ export function ChangePasswordForm({ onSuccess }: ChangePasswordFormProps) {
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
             disabled={isSubmitting}
-            required={true}
+            required={!!newPassword}
           />
         </div>
 
@@ -148,7 +148,6 @@ export function ChangePasswordForm({ onSuccess }: ChangePasswordFormProps) {
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             disabled={isSubmitting}
-            required={true}
           />
         </div>
 
@@ -163,7 +162,7 @@ export function ChangePasswordForm({ onSuccess }: ChangePasswordFormProps) {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             disabled={isSubmitting}
-            required={true}
+            required={!!newPassword}
           />
         </div>
 

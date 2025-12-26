@@ -111,6 +111,10 @@ function RouterContextBridge({ queryClient, children }: { queryClient: QueryClie
   const firstAllowedRoute = useMemo(() => computeFirstAllowedRoute(authState), [authState])
 
   useEffect(() => {
+    dispatch({ type: 'auth/setUser', payload: user })
+  }, [user, dispatch])
+
+  useEffect(() => {
     router.update({
       context: {
         queryClient,

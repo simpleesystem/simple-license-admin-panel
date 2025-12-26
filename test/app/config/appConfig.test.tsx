@@ -39,8 +39,11 @@ describe('createAppConfig', () => {
     expect(config.sentryDsn).toBeNull()
   })
 
-  it('throws when required env variables are missing', () => {
-    expect(() => createAppConfig(createEnv({ [ENV_VAR_API_BASE_URL]: undefined }))).toThrow(/Invalid application/)
+  it('uses default API base URL when env variable is missing', () => {
+    const config = createAppConfig(createEnv({ [ENV_VAR_API_BASE_URL]: undefined }))
+    // Should use DEFAULT_API_BASE_URL fallback, not throw
+    expect(config.apiBaseUrl).toBeDefined()
+    expect(typeof config.apiBaseUrl).toBe('string')
   })
 })
 

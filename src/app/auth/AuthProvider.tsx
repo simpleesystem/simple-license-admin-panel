@@ -1,7 +1,10 @@
 import type { User } from '@/simpleLicense'
+import { ApiException, ERROR_CODE_MUST_CHANGE_PASSWORD } from '@/simpleLicense'
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import { useApiClient } from '@/api/apiContext'
 import type { LoginCredentials } from '@/types/auth'
+import { AUTH_STATUS_IDLE, STORAGE_KEY_AUTH_EXPIRY, STORAGE_KEY_AUTH_TOKEN, STORAGE_KEY_AUTH_USER } from '../constants'
+import { useAppStore } from '../state/store'
 import { AuthContext } from './AuthContext'
 
 interface AuthProviderProps {
@@ -17,16 +20,83 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Use a ref to track if we've already attempted initialization
   // This helps prevents double-fetching in StrictMode
   const initialized = useRef(false)
+  // Use a ref to track current user for fetchUser callback
+  const userRef = useRef<User | null>(null)
 
-  const fetchUser = useCallback(async () => {
+  const fetchUser = useCallback(async (retainExistingUser = false) => {
+    // Skip if no token is available
+    const token = client.getToken()
+    if (!token) {
+      setUser(null)
+      userRef.current = null
+      useAppStore.getState().dispatch({
+        type: 'auth/setUser',
+        payload: null,
+      })
+      return
+    }
+
     try {
       const userData = await client.getCurrentUser()
       if (userData?.user) {
         setUser(userData.user)
+        userRef.current = userData.user
+        // Dispatch to Zustand store to keep global state in sync
+        useAppStore.getState().dispatch({
+          type: 'auth/setUser',
+          payload: userData.user,
+        })
+      } else {
+        // If no user in response but we have an existing user and retainExistingUser is true, keep it
+        // This handles cases where the API returns empty payload but user is still valid
+        const currentUser = userRef.current
+        if (!retainExistingUser || !currentUser) {
+          setUser(null)
+          userRef.current = null
+          useAppStore.getState().dispatch({
+            type: 'auth/setUser',
+            payload: null,
+          })
+        }
       }
     } catch (err) {
       console.error('Failed to fetch user details:', err)
-      setUser(null)
+
+      // Check if this is a password reset required error
+      if (err instanceof ApiException) {
+        const isPasswordResetError =
+          err.errorCode === ERROR_CODE_MUST_CHANGE_PASSWORD ||
+          (err.errorCode === 'AUTHORIZATION_ERROR' && err.errorDetails?.status === 403)
+
+        if (isPasswordResetError) {
+          // Set user with passwordResetRequired flag
+          const currentUser = userRef.current
+          if (currentUser) {
+            const userWithResetRequired: User = {
+              ...currentUser,
+              passwordResetRequired: true,
+            }
+            setUser(userWithResetRequired)
+            userRef.current = userWithResetRequired
+            useAppStore.getState().dispatch({
+              type: 'auth/setUser',
+              payload: userWithResetRequired,
+            })
+            return
+          }
+        }
+      }
+
+      // On error, only clear user if we're not retaining existing user
+      const currentUser = userRef.current
+      if (!retainExistingUser || !currentUser) {
+        setUser(null)
+        userRef.current = null
+        useAppStore.getState().dispatch({
+          type: 'auth/setUser',
+          payload: null,
+        })
+      }
     }
   }, [client])
 
@@ -39,6 +109,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setIsLoading(true)
     setError(null)
 
+    // Check for expired tokens in localStorage and clear them
+    const expiry = window.localStorage.getItem(STORAGE_KEY_AUTH_EXPIRY)
+    if (expiry) {
+      const expiryTime = parseInt(expiry, 10)
+      if (expiryTime && expiryTime < Date.now()) {
+        // Token is expired, clear it
+        window.localStorage.removeItem(STORAGE_KEY_AUTH_TOKEN)
+        window.localStorage.removeItem(STORAGE_KEY_AUTH_EXPIRY)
+        window.localStorage.removeItem(STORAGE_KEY_AUTH_USER)
+      }
+    }
+
     try {
       // 1. Try to restore session via HttpOnly cookie
       const token = await client.restoreSession()
@@ -48,10 +130,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
         await fetchUser()
       } else {
         setUser(null)
+        userRef.current = null
+        useAppStore.getState().dispatch({
+          type: 'auth/setUser',
+          payload: null,
+        })
       }
     } catch (err) {
       console.error('Session restoration failed:', err)
       setUser(null)
+      useAppStore.getState().dispatch({
+        type: 'auth/setUser',
+        payload: null,
+      })
     } finally {
       setIsLoading(false)
     }
@@ -61,6 +152,40 @@ export function AuthProvider({ children }: AuthProviderProps) {
     initSession()
   }, [initSession])
 
+  // Listen for storage events from other tabs/windows
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY_AUTH_TOKEN && e.newValue === null) {
+        // Another tab cleared the token, log out
+        setUser(null)
+        userRef.current = null
+        client.setToken(null)
+        useAppStore.getState().dispatch({
+          type: 'auth/setUser',
+          payload: null,
+        })
+      } else if (e.key === STORAGE_KEY_AUTH_USER && e.newValue) {
+        // Another tab updated the user, sync it
+        try {
+          const updatedUser = JSON.parse(e.newValue) as User
+          setUser(updatedUser)
+          userRef.current = updatedUser
+          useAppStore.getState().dispatch({
+            type: 'auth/setUser',
+            payload: updatedUser,
+          })
+        } catch (err) {
+          console.error('Failed to parse user from storage event:', err)
+        }
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+    }
+  }, [client])
+
   const login = useCallback(
     async (credentials: LoginCredentials) => {
       setIsLoading(true)
@@ -68,11 +193,52 @@ export function AuthProvider({ children }: AuthProviderProps) {
       try {
         const response = await client.login(credentials.username, credentials.password)
         if (response.user) {
-          setUser(response.user)
+          // Check if password reset is required from login response
+          const mustChangePassword = response.must_change_password ?? response.mustChangePassword ?? false
+          const userWithResetFlag: User = {
+            ...response.user,
+            passwordResetRequired: mustChangePassword || response.user.passwordResetRequired || false,
+          }
+          setUser(userWithResetFlag)
+          userRef.current = userWithResetFlag
+          // Dispatch to Zustand store to keep global state in sync
+          useAppStore.getState().dispatch({
+            type: 'auth/setUser',
+            payload: userWithResetFlag,
+          })
+          // If password reset is required, don't fetch user (it will fail with 403)
+          // Otherwise, refresh user to ensure we have the latest state from the server
+          if (!userWithResetFlag.passwordResetRequired) {
+            await fetchUser(true)
+          }
         }
       } catch (err: unknown) {
         console.error('Login failed:', err)
         const message = err instanceof Error ? err.message : 'Login failed'
+
+        // Clear token and user state on login failure
+        client.setToken(null)
+        setUser(null)
+        userRef.current = null
+        useAppStore.getState().dispatch({
+          type: 'auth/setUser',
+          payload: null,
+        })
+
+        // Dispatch error to global store
+        const errorAny = err as any
+        const errorCode = errorAny.errorCode || errorAny.code || 'UNKNOWN_ERROR'
+        useAppStore.getState().dispatch({
+          type: 'error/raise',
+          payload: {
+            code: errorCode,
+            message,
+            scope: 'auth',
+            status: errorAny.status,
+            type: 'business', // Default to business error for auth failures
+          },
+        })
+
         setError(message)
         throw err
       } finally {
@@ -87,6 +253,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       await client.logout()
       setUser(null)
+      userRef.current = null
+      // Dispatch to Zustand store to keep global state in sync
+      useAppStore.getState().dispatch({
+        type: 'auth/setUser',
+        payload: null,
+      })
     } catch (err) {
       console.error('Logout failed:', err)
     } finally {
@@ -97,8 +269,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const value = {
     user,
     currentUser: user, // Add alias
-    isAuthenticated: !!user,
+    // When password reset is required, don't consider user fully authenticated
+    // This allows PasswordResetGate to show the flow while keeping auth-status as anonymous
+    isAuthenticated: !!user && !user.passwordResetRequired,
     isLoading,
+    status: isLoading ? 'loading' : user ? 'authenticated' : AUTH_STATUS_IDLE,
     login,
     logout,
     refreshCurrentUser: fetchUser, // Expose fetchUser as refreshCurrentUser

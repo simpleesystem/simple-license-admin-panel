@@ -180,6 +180,7 @@ export const handlers = [
 
     return HttpResponse.json(
       {
+        success: true,
         token: MSW_FAKE_TOKEN,
         token_type: 'Bearer',
         expires_in: MSW_LOGIN_EXPIRATION_SECONDS,

@@ -41,7 +41,7 @@ describe('LicenseFreezeFormFlow', () => {
     render(
       <LicenseFreezeFormFlow
         client={createClient()}
-        licenseId={license.id}
+        licenseKey={license.id}
         licenseVendorId={license.vendorId}
         currentUser={{ role: 'SUPERUSER', vendorId: license.vendorId ?? null }}
         show={true}
@@ -69,7 +69,7 @@ describe('LicenseFreezeFormFlow', () => {
     render(
       <LicenseFreezeFormFlow
         client={createClient()}
-        licenseId={license.id}
+        licenseKey={license.id}
         licenseVendorId={license.vendorId}
         currentUser={{ role: 'SUPERUSER', vendorId: license.vendorId }}
         show={true}
@@ -96,7 +96,7 @@ describe('LicenseFreezeFormFlow', () => {
     const { container } = render(
       <LicenseFreezeFormFlow
         client={createClient()}
-        licenseId={license.id}
+        licenseKey={license.id}
         licenseVendorId={license.vendorId}
         currentUser={{ role: 'SUPERUSER', vendorId: 'different-vendor' }}
         show={true}

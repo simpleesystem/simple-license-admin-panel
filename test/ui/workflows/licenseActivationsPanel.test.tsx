@@ -70,9 +70,9 @@ describe('LicenseActivationsPanel', () => {
     renderWithProviders(
       <LicenseActivationsPanel
         client={client}
-        licenseId={activation.licenseId ?? 'test-id'}
+        licenseKey={activation.licenseId ?? 'test-id'}
         licenseVendorId={activation.vendorId ?? undefined}
-        currentUser={{ role: 'SUPERUSER', vendorId: activation.vendorId ?? undefined }}
+        currentUser={{ role: 'SUPERUSER', vendorId: activation.vendorId ?? undefined } as never}
       />,
       client,
     )
@@ -98,8 +98,8 @@ describe('LicenseActivationsPanel', () => {
     renderWithProviders(
       <LicenseActivationsPanel
         client={client}
-        licenseId={licenseId}
-        currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() }}
+        licenseKey={licenseId}
+        currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() } as never}
       />,
       client,
     )
@@ -120,8 +120,8 @@ describe('LicenseActivationsPanel', () => {
     renderWithProviders(
       <LicenseActivationsPanel
         client={client}
-        licenseId={licenseId}
-        currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() }}
+        licenseKey={licenseId}
+        currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() } as never}
       />,
       client,
     )
@@ -142,8 +142,8 @@ describe('LicenseActivationsPanel', () => {
     renderWithProviders(
       <LicenseActivationsPanel
         client={client}
-        licenseId={licenseId}
-        currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() }}
+        licenseKey={licenseId}
+        currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() } as never}
       />,
       client,
     )
@@ -162,8 +162,8 @@ describe('LicenseActivationsPanel', () => {
     renderWithProviders(
       <LicenseActivationsPanel
         client={client}
-        licenseId=""
-        currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() }}
+        licenseKey=""
+        currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() } as never}
       />,
       client,
     )
@@ -183,9 +183,9 @@ describe('LicenseActivationsPanel', () => {
     renderWithProviders(
       <LicenseActivationsPanel
         client={client}
-        licenseId={faker.string.uuid()}
+        licenseKey={faker.string.uuid()}
         licenseVendorId={faker.string.uuid()}
-        currentUser={{ role: 'VENDOR_MANAGER', vendorId: faker.string.uuid() }}
+        currentUser={{ role: 'VENDOR_MANAGER', vendorId: faker.string.uuid() } as never}
       />,
       client,
     )
@@ -213,9 +213,9 @@ describe('LicenseActivationsPanel', () => {
     renderWithProviders(
       <LicenseActivationsPanel
         client={client}
-        licenseId={activation.licenseId ?? 'test-id'}
+        licenseKey={activation.licenseId ?? 'test-id'}
         licenseVendorId={activation.vendorId ?? undefined}
-        currentUser={{ role: 'SUPERUSER', vendorId: activation.vendorId ?? undefined }}
+        currentUser={{ role: 'SUPERUSER', vendorId: activation.vendorId ?? undefined } as never}
       />,
       client,
     )

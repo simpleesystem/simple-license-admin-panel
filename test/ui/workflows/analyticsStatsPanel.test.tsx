@@ -15,7 +15,7 @@ import {
   UI_LIVE_STATUS_DISCONNECTED,
 } from '../../../src/ui/constants'
 import { AnalyticsStatsPanel } from '../../../src/ui/workflows/AnalyticsStatsPanel'
-import { AdminSystemLiveFeedContext } from '../../../src/app/live/AdminSystemLiveFeedContext'
+import { AdminSystemLiveFeedContext } from '../../../src/app/live/AdminSystemLiveFeedContextDef'
 import { ADMIN_SYSTEM_WS_STATUS_DISCONNECTED } from '../../../src/app/constants'
 
 const useSystemStatsMock = vi.hoisted(() => vi.fn())

@@ -247,21 +247,21 @@ export class Client {
       throw new AuthenticationException('Invalid or missing token in login response')
     }
 
-      this.setToken(token)
-      if (this.httpClient instanceof AxiosHttpClient) {
-        this.httpClient.setAuthToken(token)
-      }
+    this.setToken(token)
+    if (this.httpClient instanceof AxiosHttpClient) {
+      this.httpClient.setAuthToken(token)
+    }
 
-      return {
-        token,
-        token_type: tokenType,
-        tokenType,
-        expires_in: expiresInSeconds,
-        expiresIn: expiresInSeconds,
-        must_change_password: mustChangePassword,
-        mustChangePassword,
-        user: normalizedUser,
-      }
+    return {
+      token,
+      token_type: tokenType,
+      tokenType,
+      expires_in: expiresInSeconds,
+      expiresIn: expiresInSeconds,
+      must_change_password: mustChangePassword,
+      mustChangePassword,
+      user: normalizedUser,
+    }
   }
 
   async logout(): Promise<void> {

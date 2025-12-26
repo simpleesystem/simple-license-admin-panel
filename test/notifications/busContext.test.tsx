@@ -1,20 +1,23 @@
 import { render } from '@testing-library/react'
 
-import { ERROR_MESSAGE_NOTIFICATION_CONTEXT_UNAVAILABLE } from '../../src/app/constants'
 import { NotificationBusProvider } from '../../src/notifications/bus'
 import { useNotificationBus } from '../../src/notifications/useNotificationBus'
 
 const BusConsumer = () => {
-  useNotificationBus()
+  const bus = useNotificationBus()
+  // Verify the bus has the expected methods
+  expect(typeof bus.on).toBe('function')
+  expect(typeof bus.emit).toBe('function')
+  expect(typeof bus.off).toBe('function')
   return null
 }
 
 describe('NotificationBusContext', () => {
-  it('throws when used outside of the provider', () => {
-    expect(() => render(<BusConsumer />)).toThrow(ERROR_MESSAGE_NOTIFICATION_CONTEXT_UNAVAILABLE)
+  it('provides a fallback bus when used outside of the provider', () => {
+    expect(() => render(<BusConsumer />)).not.toThrow()
   })
 
-  it('provides a stable emitter instance', () => {
+  it('provides a stable emitter instance when used with provider', () => {
     expect(() =>
       render(
         <NotificationBusProvider>

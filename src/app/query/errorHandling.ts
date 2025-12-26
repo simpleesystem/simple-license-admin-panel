@@ -1,9 +1,11 @@
 import {
   ApiException,
+  ERROR_CODE_AUTHENTICATION_ERROR,
+  ERROR_CODE_INVALID_CREDENTIALS,
   NetworkException,
 } from '@/simpleLicense'
 import type { ToastNotificationPayload } from '../../notifications/constants'
-import { NOTIFICATION_VARIANT_ERROR } from '../constants'
+import { I18N_KEY_APP_ERROR_MESSAGE, I18N_KEY_APP_ERROR_TITLE, NOTIFICATION_VARIANT_ERROR } from '../constants'
 
 const RETRYABLE_ERROR_CODES = new Set(['err_network', 'network_error', 'econnaborted'])
 const MAX_NETWORK_RETRIES = 2
@@ -42,15 +44,25 @@ export const isNetworkError = (error: unknown): boolean => {
 }
 
 export const handleQueryError = (error: unknown): ToastNotificationPayload | null => {
-  // Simplified error handling
+  // Auth errors should be handled separately (e.g., redirect to login), not shown as notifications
   if (isApiException(error)) {
+    const errorCode = error.errorCode || error.code || ''
+    if (errorCode === ERROR_CODE_AUTHENTICATION_ERROR || errorCode === ERROR_CODE_INVALID_CREDENTIALS) {
+      return null
+    }
+    // Map ApiException to notification payload
     return {
-      titleKey: 'app.error.title',
-      message: error.message || 'An error occurred',
+      titleKey: errorCode || I18N_KEY_APP_ERROR_TITLE,
+      descriptionKey: I18N_KEY_APP_ERROR_MESSAGE,
       variant: NOTIFICATION_VARIANT_ERROR,
     }
   }
-  return null
+  // Fallback for unknown errors
+  return {
+    titleKey: I18N_KEY_APP_ERROR_TITLE,
+    descriptionKey: I18N_KEY_APP_ERROR_MESSAGE,
+    variant: NOTIFICATION_VARIANT_ERROR,
+  }
 }
 
 export const shouldRetryRequest = (failureCount: number, error: unknown): boolean => {
