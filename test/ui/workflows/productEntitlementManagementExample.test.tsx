@@ -1,4 +1,4 @@
-import { fireEvent, render, waitFor } from '@testing-library/react'
+import { fireEvent, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import {
@@ -12,6 +12,7 @@ import { ProductEntitlementManagementExample } from '../../../src/ui/workflows/P
 import { buildEntitlement } from '../../factories/entitlementFactory'
 import { buildUser } from '../../factories/userFactory'
 import { buildText } from '../../ui/factories/uiFactories'
+import { renderWithProviders } from '../utils'
 
 const useCreateEntitlementMock = vi.hoisted(() => vi.fn())
 const useUpdateEntitlementMock = vi.hoisted(() => vi.fn())
@@ -30,22 +31,32 @@ vi.mock('../../../src/ui/workflows/ProductEntitlementRowActions', async () => {
   return {
     ProductEntitlementRowActions: ({
       entitlement,
+      currentUser,
       onEdit,
       onCompleted,
     }: {
-      entitlement: { id: string }
+      entitlement: { id: string; vendorId?: string | null }
+      currentUser?: { vendorId?: string | null; role?: string } | null
       onEdit: (entitlement: { id: string }) => void
       onCompleted?: () => void
-    }) => (
-      <div>
-        <button type="button" onClick={() => onEdit(entitlement)}>
-          {UI_ENTITLEMENT_ACTION_EDIT}
-        </button>
-        <button type="button" onClick={() => onCompleted?.()}>
-          row-complete-{entitlement.id}
-        </button>
-      </div>
-    ),
+    }) => {
+      // Only show edit button if user can update (checks ownership via canUpdateEntitlement)
+      const isSystemAdmin = currentUser?.role === 'SUPERUSER' || currentUser?.role === 'ADMIN'
+      const ownsEntitlement = isSystemAdmin || (entitlement.vendorId && currentUser?.vendorId === entitlement.vendorId)
+      if (!ownsEntitlement) {
+        return null
+      }
+      return (
+        <div>
+          <button type="button" onClick={() => onEdit(entitlement)}>
+            {UI_ENTITLEMENT_ACTION_EDIT}
+          </button>
+          <button type="button" onClick={() => onCompleted?.()}>
+            row-complete-{entitlement.id}
+          </button>
+        </div>
+      )
+    },
   }
 })
 
@@ -68,17 +79,26 @@ describe('ProductEntitlementManagementExample', () => {
     const adminUser = buildUser({ role: 'ADMIN' })
     const entitlement = buildEntitlement()
 
-    const { getByText, getByRole } = render(
+    const { getByText, getByRole } = renderWithProviders(
       <ProductEntitlementManagementExample
         client={{} as never}
         productId={buildText()}
         entitlements={[entitlement]}
         currentUser={adminUser}
         onRefresh={onRefresh}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />
     )
 
+    await waitFor(() => {
+      expect(getByText(UI_ENTITLEMENT_BUTTON_CREATE)).toBeInTheDocument()
+    })
     fireEvent.click(getByText(UI_ENTITLEMENT_BUTTON_CREATE))
+    await waitFor(() => {
+      expect(getByRole('button', { name: UI_ENTITLEMENT_FORM_SUBMIT_CREATE })).toBeInTheDocument()
+    })
     fireEvent.click(getByRole('button', { name: UI_ENTITLEMENT_FORM_SUBMIT_CREATE }))
 
     await waitFor(() => expect(createMutation.mutateAsync).toHaveBeenCalled())
@@ -94,17 +114,26 @@ describe('ProductEntitlementManagementExample', () => {
     const adminUser = buildUser({ role: 'ADMIN' })
     const entitlement = buildEntitlement()
 
-    const { getByText, getByRole } = render(
+    const { getByText, getByRole } = renderWithProviders(
       <ProductEntitlementManagementExample
         client={{} as never}
         productId={buildText()}
         entitlements={[entitlement]}
         currentUser={adminUser}
         onRefresh={onRefresh}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />
     )
 
+    await waitFor(() => {
+      expect(getByText(UI_ENTITLEMENT_ACTION_EDIT)).toBeInTheDocument()
+    })
     fireEvent.click(getByText(UI_ENTITLEMENT_ACTION_EDIT))
+    await waitFor(() => {
+      expect(getByRole('button', { name: UI_ENTITLEMENT_FORM_SUBMIT_UPDATE })).toBeInTheDocument()
+    })
     fireEvent.click(getByRole('button', { name: UI_ENTITLEMENT_FORM_SUBMIT_UPDATE }))
 
     await waitFor(() =>
@@ -126,19 +155,28 @@ describe('ProductEntitlementManagementExample', () => {
     const entitlement = buildEntitlement({ vendorId })
     const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId })
 
-    const { queryByText, getByText, getByRole } = render(
+    const { queryByText, getByText, getByRole } = renderWithProviders(
       <ProductEntitlementManagementExample
         client={{} as never}
         productId={buildText()}
         entitlements={[entitlement]}
         currentUser={vendorManager}
         onRefresh={onRefresh}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />
     )
 
     expect(queryByText(UI_ENTITLEMENT_BUTTON_CREATE)).toBeNull()
 
+    await waitFor(() => {
+      expect(getByText(UI_ENTITLEMENT_ACTION_EDIT)).toBeInTheDocument()
+    })
     fireEvent.click(getByText(UI_ENTITLEMENT_ACTION_EDIT))
+    await waitFor(() => {
+      expect(getByRole('button', { name: UI_ENTITLEMENT_FORM_SUBMIT_UPDATE })).toBeInTheDocument()
+    })
     fireEvent.click(getByRole('button', { name: UI_ENTITLEMENT_FORM_SUBMIT_UPDATE }))
 
     await waitFor(() =>
@@ -159,12 +197,15 @@ describe('ProductEntitlementManagementExample', () => {
     const entitlement = buildEntitlement({ vendorId })
     const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId: `${vendorId}-other` })
 
-    const { queryByText } = render(
+    const { queryByText } = renderWithProviders(
       <ProductEntitlementManagementExample
         client={{} as never}
         productId={buildText()}
         entitlements={[entitlement]}
         currentUser={vendorManager}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />
     )
 
@@ -182,12 +223,15 @@ describe('ProductEntitlementManagementExample', () => {
     const otherEntitlement = buildEntitlement({ vendorId: 'vendor-entitlements-2' })
     const vendorUser = buildUser({ role: 'VENDOR_ADMIN', vendorId })
 
-    const { getByText, queryByText } = render(
+    const { getByText, queryByText } = renderWithProviders(
       <ProductEntitlementManagementExample
         client={{} as never}
         productId={buildText()}
         entitlements={[ownEntitlement, otherEntitlement]}
         currentUser={vendorUser}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />
     )
 
@@ -205,12 +249,15 @@ describe('ProductEntitlementManagementExample', () => {
     const vendorUser = buildUser({ role: 'VENDOR_ADMIN', vendorId: buildText() })
     const otherEntitlement = buildEntitlement({ vendorId: `${vendorUser.vendorId}-other` })
 
-    const { getByText } = render(
+    const { getByText } = renderWithProviders(
       <ProductEntitlementManagementExample
         client={{} as never}
         productId={buildText()}
         entitlements={[otherEntitlement]}
         currentUser={vendorUser}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />
     )
 
@@ -225,12 +272,15 @@ describe('ProductEntitlementManagementExample', () => {
     const entitlement = buildEntitlement()
     const viewer = buildUser({ role: 'VIEWER', vendorId: null })
 
-    const { getByText, queryByText } = render(
+    const { getByText, queryByText } = renderWithProviders(
       <ProductEntitlementManagementExample
         client={{} as never}
         productId={buildText()}
         entitlements={[entitlement]}
         currentUser={viewer}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />
     )
 
@@ -250,12 +300,15 @@ describe('ProductEntitlementManagementExample', () => {
     const otherEntitlement = buildEntitlement({ vendorId: `${vendorId}-other` })
     const vendorUser = buildUser({ role: 'VENDOR_ADMIN', vendorId })
 
-    const { getByText, queryByText } = render(
+    const { getByText, queryByText } = renderWithProviders(
       <ProductEntitlementManagementExample
         client={{} as never}
         productId={buildText()}
         entitlements={[ownEntitlement, otherEntitlement]}
         currentUser={vendorUser}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />
     )
 
@@ -273,12 +326,15 @@ describe('ProductEntitlementManagementExample', () => {
     const vendorUser = buildUser({ role: 'VENDOR_ADMIN', vendorId: buildText() })
     const otherEntitlement = buildEntitlement({ vendorId: `${vendorUser.vendorId}-other` })
 
-    const { getByText } = render(
+    const { getByText } = renderWithProviders(
       <ProductEntitlementManagementExample
         client={{} as never}
         productId={buildText()}
         entitlements={[otherEntitlement]}
         currentUser={vendorUser}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />
     )
 
@@ -300,17 +356,26 @@ describe('ProductEntitlementManagementExample', () => {
     const adminUser = buildUser({ role: 'ADMIN' })
     const entitlement = buildEntitlement()
 
-    const { getByText, getByRole } = render(
+    const { getByText, getByRole } = renderWithProviders(
       <ProductEntitlementManagementExample
         client={{} as never}
         productId={buildText()}
         entitlements={[entitlement]}
         currentUser={adminUser}
         onRefresh={onRefresh}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />
     )
 
+    await waitFor(() => {
+      expect(getByText(UI_ENTITLEMENT_BUTTON_CREATE)).toBeInTheDocument()
+    })
     fireEvent.click(getByText(UI_ENTITLEMENT_BUTTON_CREATE))
+    await waitFor(() => {
+      expect(getByRole('button', { name: UI_ENTITLEMENT_FORM_SUBMIT_CREATE })).toBeInTheDocument()
+    })
     fireEvent.click(getByRole('button', { name: UI_ENTITLEMENT_FORM_SUBMIT_CREATE }))
 
     await waitFor(() => expect(createMutation.mutateAsync).toHaveBeenCalled())

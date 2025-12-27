@@ -124,6 +124,9 @@ describe('PersistentHeader', () => {
 
   test('invokes onSuccess from ChangePasswordFlow to close modal', async () => {
     renderHeader()
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: UI_HEADER_ACTION_CHANGE_PASSWORD })).toBeInTheDocument()
+    })
     fireEvent.click(screen.getByRole('button', { name: UI_HEADER_ACTION_CHANGE_PASSWORD }))
     fireEvent.click(screen.getByTestId('complete-change-password'))
     await waitFor(() => expect(screen.queryByTestId(UI_TEST_ID_MODAL_DIALOG)).not.toBeInTheDocument())

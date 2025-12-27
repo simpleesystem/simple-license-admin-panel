@@ -7,6 +7,8 @@ import {
   UI_LICENSE_BUTTON_DELETE,
   UI_LICENSE_BUTTON_RESUME,
   UI_LICENSE_BUTTON_SUSPEND,
+  UI_LICENSE_CONFIRM_DELETE_CONFIRM,
+  UI_LICENSE_CONFIRM_RESUME_CONFIRM,
 } from '../../../../src/ui/constants'
 import { LicenseRowActions } from '../../../../src/ui/workflows/LicenseRowActions'
 import { buildLicense } from '../../../factories/licenseFactory'
@@ -58,7 +60,13 @@ describe('License RBAC & vendor scoping', () => {
     )
 
     fireEvent.click(screen.getByText(UI_LICENSE_ACTION_EDIT))
+    expect(onEdit).toHaveBeenCalledWith(license.licenseKey ?? license.id)
+
     fireEvent.click(screen.getByText(UI_LICENSE_BUTTON_DELETE))
+    await waitFor(() => {
+      expect(screen.getByText(UI_LICENSE_CONFIRM_DELETE_CONFIRM)).toBeInTheDocument()
+    })
+    fireEvent.click(screen.getByText(UI_LICENSE_CONFIRM_DELETE_CONFIRM))
 
     await waitFor(() => {
       expect(useRevokeLicenseMock().mutateAsync).toHaveBeenCalledWith(license.licenseKey ?? license.id)
@@ -87,6 +95,7 @@ describe('License RBAC & vendor scoping', () => {
     )
 
     fireEvent.click(screen.getByText(UI_LICENSE_ACTION_EDIT))
+    expect(onEdit).toHaveBeenCalledWith(license.licenseKey ?? license.id)
     expect(screen.queryByText(UI_LICENSE_BUTTON_DELETE)).toBeNull()
 
     fireEvent.click(screen.getByText(UI_LICENSE_BUTTON_SUSPEND))
@@ -164,6 +173,10 @@ describe('License RBAC & vendor scoping', () => {
     )
 
     fireEvent.click(screen.getByText(UI_LICENSE_BUTTON_RESUME))
+    await waitFor(() => {
+      expect(screen.getByText(UI_LICENSE_CONFIRM_RESUME_CONFIRM)).toBeInTheDocument()
+    })
+    fireEvent.click(screen.getByText(UI_LICENSE_CONFIRM_RESUME_CONFIRM))
     await waitFor(() => {
       expect(resume.mutateAsync).toHaveBeenCalledWith(license.licenseKey ?? license.id)
     })

@@ -13,7 +13,7 @@ describe('formatTenantCreatedAt', () => {
     expect(formatTenantCreatedAt(date)).toContain('2023')
   })
 })
-import { fireEvent, render, waitFor } from '@testing-library/react'
+import { fireEvent, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import {
@@ -26,6 +26,7 @@ import {
 import { TenantManagementExample } from '../../../src/ui/workflows/TenantManagementExample'
 import { buildTenant } from '../../factories/tenantFactory'
 import { buildUser } from '../../factories/userFactory'
+import { renderWithProviders } from '../utils'
 
 const useCreateTenantMock = vi.hoisted(() => vi.fn())
 const useUpdateTenantMock = vi.hoisted(() => vi.fn())
@@ -39,18 +40,39 @@ vi.mock('@/simpleLicense', async () => {
   }
 })
 
-vi.mock('../../../src/ui/workflows/TenantRowActions', () => ({
-  TenantRowActions: ({ tenant, onEdit, onCompleted }: { tenant: { id: string }; onEdit: (t: unknown) => void; onCompleted?: () => void }) => (
-    <div>
-      <button type="button" onClick={() => onEdit(tenant)}>
-        {UI_TENANT_ACTION_EDIT}
-      </button>
-      <button type="button" onClick={() => onCompleted?.()}>
-        suspend-resume
-      </button>
-    </div>
-  ),
-}))
+vi.mock('../../../src/ui/workflows/TenantRowActions', async () => {
+  const { UI_TENANT_ACTION_EDIT } = await import('../../../src/ui/constants')
+  return {
+    TenantRowActions: ({
+      tenant,
+      currentUser,
+      onEdit,
+      onCompleted,
+    }: {
+      tenant: { id: string; vendorId?: string | null }
+      currentUser?: { vendorId?: string | null; role?: string } | null
+      onEdit: (t: unknown) => void
+      onCompleted?: () => void
+    }) => {
+      // Only show edit button if user can update (checks ownership via canUpdateTenant)
+      const isSystemAdmin = currentUser?.role === 'SUPERUSER' || currentUser?.role === 'ADMIN'
+      const ownsTenant = isSystemAdmin || (tenant.vendorId && currentUser?.vendorId === tenant.vendorId)
+      if (!ownsTenant) {
+        return null
+      }
+      return (
+        <div>
+          <button type="button" onClick={() => onEdit(tenant)}>
+            {UI_TENANT_ACTION_EDIT}
+          </button>
+          <button type="button" onClick={() => onCompleted?.()}>
+            suspend-resume
+          </button>
+        </div>
+      )
+    },
+  }
+})
 
 const mockMutation = () => ({
   mutateAsync: vi.fn(async () => ({})),
@@ -71,7 +93,7 @@ describe('TenantManagementExample', () => {
     const adminUser = buildUser({ role: 'ADMIN' })
     const tenants = [buildTenant()]
 
-    const { getByText, getByRole } = render(
+    const { getByText, getByRole } = renderWithProviders(
       <TenantManagementExample
         client={{} as never}
         tenants={tenants}
@@ -99,7 +121,7 @@ describe('TenantManagementExample', () => {
     const adminUser = buildUser({ role: 'ADMIN' })
     const tenant = buildTenant()
 
-    const { getByText, getByRole } = render(
+    const { getByText, getByRole } = renderWithProviders(
       <TenantManagementExample
         client={{} as never}
         tenants={[tenant]}
@@ -192,7 +214,7 @@ describe('TenantManagementExample', () => {
     const ownTenant = buildTenant({ vendorId })
     const otherTenant = buildTenant({ vendorId: 'other-vendor' })
 
-    const { getByText, queryByText } = render(
+    const { getByText, queryByText } = renderWithProviders(
       <TenantManagementExample
         client={{} as never}
         tenants={[ownTenant, otherTenant]}

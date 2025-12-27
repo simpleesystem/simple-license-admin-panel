@@ -69,9 +69,8 @@ export function ProductRowActions({
   // Check ownership for non-admin users
   const ownsProduct = isSystemAdmin || (vendorId && currentUser?.vendorId === vendorId)
 
-  if ((!allowUpdate && !allowDelete) || (!ownsProduct && !isSystemAdmin)) {
-    return null
-  }
+  // Only show buttons if user has permissions and owns the product (or is system admin)
+  const canShowButtons = (allowDelete || allowUpdate) && (ownsProduct || isSystemAdmin)
 
   const handleDelete = async () => {
     try {
@@ -112,6 +111,10 @@ export function ProductRowActions({
     }
   }
 
+  if (!canShowButtons) {
+    return null
+  }
+
   return (
     <VisibilityGate
       ability={rest.ability}
@@ -119,7 +122,7 @@ export function ProductRowActions({
       permissionFallback={rest.permissionFallback}
     >
       <Stack direction="row" gap="small" {...rest}>
-        {allowUpdate ? (
+        {allowUpdate && ownsProduct ? (
           <Button
             variant={UI_BUTTON_VARIANT_GHOST}
             onClick={() => onEdit({ id: productId })}
@@ -129,7 +132,7 @@ export function ProductRowActions({
           </Button>
         ) : null}
 
-        {allowUpdate ? (
+        {allowUpdate && ownsProduct ? (
           isActive ? (
             <Button
               variant={UI_BUTTON_VARIANT_GHOST}
@@ -151,7 +154,7 @@ export function ProductRowActions({
           )
         ) : null}
 
-        {allowDelete ? (
+        {allowDelete && ownsProduct ? (
           <Button
             variant={UI_BUTTON_VARIANT_GHOST}
             onClick={() => setShowDeleteConfirm(true)}

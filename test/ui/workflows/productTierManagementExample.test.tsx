@@ -1,4 +1,4 @@
-import { fireEvent, render, waitFor } from '@testing-library/react'
+import { fireEvent, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import {
@@ -12,6 +12,7 @@ import { ProductTierManagementExample } from '../../../src/ui/workflows/ProductT
 import { buildProductTier } from '../../factories/productTierFactory'
 import { buildUser } from '../../factories/userFactory'
 import { buildText } from '../../ui/factories/uiFactories'
+import { renderWithProviders } from '../utils'
 
 const useCreateProductTierMock = vi.hoisted(() => vi.fn())
 const useUpdateProductTierMock = vi.hoisted(() => vi.fn())
@@ -25,26 +26,41 @@ vi.mock('@/simpleLicense', async () => {
   }
 })
 
-vi.mock('../../../src/ui/workflows/ProductTierRowActions', () => ({
-  ProductTierRowActions: ({
-    tier,
-    onEdit,
-    onCompleted,
-  }: {
-    tier: { id: string }
-    onEdit: (tier: { id: string }) => void
-    onCompleted?: () => void
-  }) => (
-    <div>
-      <button type="button" onClick={() => onEdit(tier)}>
-        {UI_PRODUCT_TIER_ACTION_EDIT}
-      </button>
-      <button type="button" onClick={() => onCompleted?.()}>
-        row-complete-{tier.id}
-      </button>
-    </div>
-  ),
-}))
+vi.mock('../../../src/ui/workflows/ProductTierRowActions', async () => {
+  const { UI_PRODUCT_TIER_ACTION_EDIT } = await import('../../../src/ui/constants')
+  return {
+    ProductTierRowActions: ({
+      tier,
+      vendorId,
+      currentUser,
+      onEdit,
+      onCompleted,
+    }: {
+      tier: { id: string }
+      vendorId?: string | null
+      currentUser?: { vendorId?: string | null; role?: string } | null
+      onEdit: (tier: { id: string }) => void
+      onCompleted?: () => void
+    }) => {
+      // Only show edit button if user owns the tier or is system admin
+      const isSystemAdmin = currentUser?.role === 'SUPERUSER' || currentUser?.role === 'ADMIN'
+      const ownsTier = isSystemAdmin || (vendorId && currentUser?.vendorId === vendorId)
+      if (!ownsTier) {
+        return null
+      }
+      return (
+        <div>
+          <button type="button" onClick={() => onEdit(tier)}>
+            {UI_PRODUCT_TIER_ACTION_EDIT}
+          </button>
+          <button type="button" onClick={() => onCompleted?.()}>
+            row-complete-{tier.id}
+          </button>
+        </div>
+      )
+    },
+  }
+})
 
 const mockMutation = () => ({
   mutateAsync: vi.fn(async () => ({})),
@@ -65,7 +81,7 @@ describe('ProductTierManagementExample', () => {
     const adminUser = buildUser({ role: 'ADMIN' })
     const tier = buildProductTier()
 
-    const { getByText, getByRole } = render(
+    const { getByText, getByRole } = renderWithProviders(
       <ProductTierManagementExample
         client={{} as never}
         productId={buildText()}
@@ -78,7 +94,13 @@ describe('ProductTierManagementExample', () => {
       />
     )
 
+    await waitFor(() => {
+      expect(getByText(UI_PRODUCT_TIER_BUTTON_CREATE)).toBeInTheDocument()
+    })
     fireEvent.click(getByText(UI_PRODUCT_TIER_BUTTON_CREATE))
+    await waitFor(() => {
+      expect(getByRole('button', { name: UI_PRODUCT_TIER_FORM_SUBMIT_CREATE })).toBeInTheDocument()
+    })
     fireEvent.click(getByRole('button', { name: UI_PRODUCT_TIER_FORM_SUBMIT_CREATE }))
 
     await waitFor(() => expect(createMutation.mutateAsync).toHaveBeenCalled())
@@ -94,7 +116,7 @@ describe('ProductTierManagementExample', () => {
     const adminUser = buildUser({ role: 'ADMIN' })
     const tier = buildProductTier()
 
-    const { getByText, getByRole } = render(
+    const { getByText, getByRole } = renderWithProviders(
       <ProductTierManagementExample
         client={{} as never}
         productId={buildText()}
@@ -107,7 +129,13 @@ describe('ProductTierManagementExample', () => {
       />
     )
 
+    await waitFor(() => {
+      expect(getByText(UI_PRODUCT_TIER_ACTION_EDIT)).toBeInTheDocument()
+    })
     fireEvent.click(getByText(UI_PRODUCT_TIER_ACTION_EDIT))
+    await waitFor(() => {
+      expect(getByRole('button', { name: UI_PRODUCT_TIER_FORM_SUBMIT_UPDATE })).toBeInTheDocument()
+    })
     fireEvent.click(getByRole('button', { name: UI_PRODUCT_TIER_FORM_SUBMIT_UPDATE }))
 
     await waitFor(() =>
@@ -129,7 +157,7 @@ describe('ProductTierManagementExample', () => {
     const tier = buildProductTier({ vendorId })
     const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId })
 
-    const { queryByText, getByText, getByRole } = render(
+    const { queryByText, getByText, getByRole } = renderWithProviders(
       <ProductTierManagementExample
         client={{} as never}
         productId={buildText()}
@@ -141,7 +169,13 @@ describe('ProductTierManagementExample', () => {
 
     expect(queryByText(UI_PRODUCT_TIER_BUTTON_CREATE)).toBeNull()
 
+    await waitFor(() => {
+      expect(getByText(UI_PRODUCT_TIER_ACTION_EDIT)).toBeInTheDocument()
+    })
     fireEvent.click(getByText(UI_PRODUCT_TIER_ACTION_EDIT))
+    await waitFor(() => {
+      expect(getByRole('button', { name: UI_PRODUCT_TIER_FORM_SUBMIT_UPDATE })).toBeInTheDocument()
+    })
     fireEvent.click(getByRole('button', { name: UI_PRODUCT_TIER_FORM_SUBMIT_UPDATE }))
 
     await waitFor(() =>
@@ -161,7 +195,7 @@ describe('ProductTierManagementExample', () => {
     const tier = buildProductTier()
     const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId: `${tier.vendorId}-other` })
 
-    const { queryByText } = render(
+    const { queryByText } = renderWithProviders(
       <ProductTierManagementExample
         client={{} as never}
         productId={buildText()}
@@ -187,7 +221,7 @@ describe('ProductTierManagementExample', () => {
     const otherTier = buildProductTier({ vendorId: 'vendor-2' })
     const vendorUser = buildUser({ role: 'VENDOR_ADMIN', vendorId: ownVendorId })
 
-    const { getByText, queryByText } = render(
+    const { getByText, queryByText } = renderWithProviders(
       <ProductTierManagementExample
         client={{} as never}
         productId={buildText()}
@@ -213,7 +247,7 @@ describe('ProductTierManagementExample', () => {
     const vendorUser = buildUser({ role: 'VENDOR_ADMIN', vendorId: buildText() })
     const otherTier = buildProductTier({ vendorId: `${vendorUser.vendorId}-other` })
 
-    const { getByText } = render(
+    const { getByText } = renderWithProviders(
       <ProductTierManagementExample
         client={{} as never}
         productId={buildText()}
@@ -243,7 +277,7 @@ describe('ProductTierManagementExample', () => {
     const adminUser = buildUser({ role: 'ADMIN' })
     const tier = buildProductTier()
 
-    const { getByText, getByRole } = render(
+    const { getByText, getByRole } = renderWithProviders(
       <ProductTierManagementExample
         client={{} as never}
         productId={buildText()}
@@ -272,7 +306,7 @@ describe('ProductTierManagementExample', () => {
     useUpdateProductTierMock.mockReturnValue(updateMutation)
     const tier = buildProductTier()
 
-    const { queryByText } = render(
+    const { queryByText } = renderWithProviders(
       <ProductTierManagementExample
         client={{} as never}
         productId={buildText()}
@@ -297,7 +331,7 @@ describe('ProductTierManagementExample', () => {
     const tier = buildProductTier()
     const viewer = buildUser({ role: 'VIEWER', vendorId: null })
 
-    const { getByText, queryByText } = render(
+    const { getByText, queryByText } = renderWithProviders(
       <ProductTierManagementExample
         client={{} as never}
         productId={buildText()}

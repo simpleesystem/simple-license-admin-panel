@@ -7,6 +7,10 @@ import {
   UI_PRODUCT_ACTION_EDIT,
   UI_PRODUCT_BUTTON_CREATE,
   UI_PRODUCT_BUTTON_RESUME,
+  UI_PRODUCT_CONFIRM_DELETE_CONFIRM,
+  UI_PRODUCT_CONFIRM_RESUME_CONFIRM,
+  UI_PRODUCT_FORM_SUBMIT_CREATE,
+  UI_PRODUCT_FORM_SUBMIT_UPDATE,
 } from '../../../../src/ui/constants'
 import { ProductManagementExample } from '../../../../src/ui/workflows/ProductManagementExample'
 import { buildProduct } from '../../../factories/productFactory'
@@ -73,8 +77,24 @@ describe('Product RBAC & vendor scoping', () => {
     )
 
     fireEvent.click(screen.getByText(UI_PRODUCT_BUTTON_CREATE))
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: UI_PRODUCT_FORM_SUBMIT_CREATE })).toBeInTheDocument()
+    })
+    // Close create modal
+    fireEvent.click(screen.getByLabelText('Close'))
+
     fireEvent.click(screen.getByText(UI_PRODUCT_ACTION_EDIT))
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: UI_PRODUCT_FORM_SUBMIT_UPDATE })).toBeInTheDocument()
+    })
+    // Close edit modal
+    fireEvent.click(screen.getByLabelText('Close'))
+
     fireEvent.click(screen.getByText(UI_PRODUCT_ACTION_DELETE))
+    await waitFor(() => {
+      expect(screen.getByText(UI_PRODUCT_CONFIRM_DELETE_CONFIRM)).toBeInTheDocument()
+    })
+    fireEvent.click(screen.getByText(UI_PRODUCT_CONFIRM_DELETE_CONFIRM))
 
     await waitFor(() => {
       expect(useDeleteProductMock().mutateAsync).toHaveBeenCalledWith(product.id)
@@ -104,6 +124,11 @@ describe('Product RBAC & vendor scoping', () => {
 
     expect(screen.queryByText(UI_PRODUCT_BUTTON_CREATE)).toBeNull()
     fireEvent.click(screen.getByText(UI_PRODUCT_ACTION_EDIT))
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: UI_PRODUCT_FORM_SUBMIT_UPDATE })).toBeInTheDocument()
+    })
+    // Close edit modal
+    fireEvent.click(screen.getByLabelText('Close'))
     expect(screen.queryByText(UI_PRODUCT_ACTION_DELETE)).toBeNull()
   })
 
@@ -177,6 +202,10 @@ describe('Product RBAC & vendor scoping', () => {
     )
 
     fireEvent.click(screen.getByText(UI_PRODUCT_BUTTON_RESUME))
+    await waitFor(() => {
+      expect(screen.getByText(UI_PRODUCT_CONFIRM_RESUME_CONFIRM)).toBeInTheDocument()
+    })
+    fireEvent.click(screen.getByText(UI_PRODUCT_CONFIRM_RESUME_CONFIRM))
     await waitFor(() => {
       expect(resumeMutation.mutateAsync).toHaveBeenCalledWith(product.id)
     })

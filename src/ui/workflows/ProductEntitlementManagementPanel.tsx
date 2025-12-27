@@ -229,7 +229,7 @@ export function ProductEntitlementManagementPanel({
         id: UI_ENTITLEMENT_COLUMN_ID_ACTIONS,
         header: UI_ENTITLEMENT_COLUMN_HEADER_ACTIONS,
         cell: (row) => {
-          if (!canUpdateEntitlement(currentUser ?? null, null)) {
+          if (!canUpdateEntitlement(currentUser ?? null, row)) {
             return UI_VALUE_PLACEHOLDER
           }
           return (

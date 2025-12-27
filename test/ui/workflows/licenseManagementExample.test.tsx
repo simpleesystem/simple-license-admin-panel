@@ -1,15 +1,17 @@
 import { faker } from '@faker-js/faker'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { describe, expect, beforeEach, test, vi } from 'vitest'
 
 import {
-  UI_LICENSE_ACTION_DELETE,
   UI_LICENSE_ACTION_EDIT,
+  UI_LICENSE_BUTTON_DELETE,
   UI_LICENSE_FORM_SUBMIT_UPDATE,
+  UI_LICENSE_CONFIRM_DELETE_CONFIRM,
 } from '../../../src/ui/constants'
 import { LicenseManagementExample } from '../../../src/ui/workflows/LicenseManagementExample'
 import type { UiSelectOption } from '../../../src/ui/types'
 import { buildLicense } from '../../factories/licenseFactory'
+import { renderWithProviders } from '../utils'
 
 const useCreateLicenseMock = vi.hoisted(() => vi.fn())
 const useUpdateLicenseMock = vi.hoisted(() => vi.fn())
@@ -77,7 +79,7 @@ describe('LicenseManagementExample', () => {
       vendorId: license.vendorId,
     }
 
-    render(
+    renderWithProviders(
       <LicenseManagementExample
         client={{} as never}
         licenses={[licenseListItem]}
@@ -90,7 +92,13 @@ describe('LicenseManagementExample', () => {
       />,
     )
 
+    await waitFor(() => {
+      expect(screen.getByText(UI_LICENSE_ACTION_EDIT)).toBeInTheDocument()
+    })
     fireEvent.click(screen.getByText(UI_LICENSE_ACTION_EDIT))
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: UI_LICENSE_FORM_SUBMIT_UPDATE })).toBeInTheDocument()
+    })
     fireEvent.click(screen.getByRole('button', { name: UI_LICENSE_FORM_SUBMIT_UPDATE }))
 
     await waitFor(() => {
@@ -101,7 +109,7 @@ describe('LicenseManagementExample', () => {
     })
   })
 
-  test('wires row actions to revoke mutation', () => {
+  test('wires row actions to revoke mutation', async () => {
     const license = buildLicense({ status: 'ACTIVE' })
     useCreateLicenseMock.mockReturnValue(mockMutation())
     useUpdateLicenseMock.mockReturnValue(mockMutation())
@@ -120,7 +128,7 @@ describe('LicenseManagementExample', () => {
       vendorId: license.vendorId,
     }
 
-    render(
+    renderWithProviders(
       <LicenseManagementExample
         client={{} as never}
         licenses={[licenseListItem]}
@@ -133,9 +141,18 @@ describe('LicenseManagementExample', () => {
       />,
     )
 
-    fireEvent.click(screen.getByText(UI_LICENSE_ACTION_DELETE))
+    await waitFor(() => {
+      expect(screen.getByText(UI_LICENSE_BUTTON_DELETE)).toBeInTheDocument()
+    })
+    fireEvent.click(screen.getByText(UI_LICENSE_BUTTON_DELETE))
+    await waitFor(() => {
+      expect(screen.getByText(UI_LICENSE_CONFIRM_DELETE_CONFIRM)).toBeInTheDocument()
+    })
+    fireEvent.click(screen.getByText(UI_LICENSE_CONFIRM_DELETE_CONFIRM))
 
-    expect(deleteMutation.mutateAsync).toHaveBeenCalledWith(license.id)
+    await waitFor(() => {
+      expect(deleteMutation.mutateAsync).toHaveBeenCalledWith(license.licenseKey ?? license.id)
+    })
   })
 
   test('hides management controls when vendor scoped user does not own license', () => {
@@ -156,7 +173,7 @@ describe('LicenseManagementExample', () => {
       vendorId: license.vendorId,
     }
 
-    const { queryByText } = render(
+    const { queryByText } = renderWithProviders(
       <LicenseManagementExample
         client={{} as never}
         licenses={[licenseListItem]}
@@ -171,7 +188,7 @@ describe('LicenseManagementExample', () => {
 
     // License should be filtered out, so no edit/delete buttons should be visible
     expect(queryByText(UI_LICENSE_ACTION_EDIT)).toBeNull()
-    expect(queryByText(UI_LICENSE_ACTION_DELETE)).toBeNull()
+    expect(queryByText(UI_LICENSE_BUTTON_DELETE)).toBeNull()
   })
 })
 

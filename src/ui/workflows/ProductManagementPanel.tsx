@@ -91,7 +91,7 @@ export function ProductManagementPanel({
 
   const isVendorScoped = isVendorScopedUser(currentUser ?? null)
   const visibleProducts = useMemo(
-    () => (isVendorScoped ? products.filter((product) => isProductOwnedByUser(currentUser ?? null, product as unknown as Product)) : products),
+    () => (isVendorScoped ? (products ?? []).filter((product) => isProductOwnedByUser(currentUser ?? null, product as unknown as Product)) : (products ?? [])),
     [currentUser, isVendorScoped, products]
   )
   const allowCreate = canCreateProduct(currentUser ?? null)

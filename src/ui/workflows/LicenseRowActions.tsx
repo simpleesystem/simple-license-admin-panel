@@ -72,9 +72,8 @@ export function LicenseRowActions({
   // Check ownership for non-admin users
   const ownsLicense = isSystemAdmin || (licenseVendorId && currentUser?.vendorId === licenseVendorId)
 
-  if ((!allowDelete && !allowUpdate) || (!ownsLicense && !isSystemAdmin)) {
-    return null
-  }
+  // Only show buttons if user has permissions and owns the license (or is system admin)
+  const canShowButtons = (allowDelete || allowUpdate) && (ownsLicense || isSystemAdmin)
 
   const handleRevoke = async () => {
     try {
@@ -115,6 +114,10 @@ export function LicenseRowActions({
     }
   }
 
+  if (!canShowButtons) {
+    return null
+  }
+
   return (
     <VisibilityGate
       ability={rest.ability}
@@ -122,7 +125,7 @@ export function LicenseRowActions({
       permissionFallback={rest.permissionFallback}
     >
       <Stack direction="row" gap="small" {...rest}>
-        {allowUpdate && onEdit ? (
+        {allowUpdate && onEdit && ownsLicense ? (
           <Button
             variant={UI_BUTTON_VARIANT_GHOST}
             onClick={() => onEdit(licenseKey)}
@@ -132,7 +135,7 @@ export function LicenseRowActions({
           </Button>
         ) : null}
 
-        {allowUpdate ? (
+        {allowUpdate && ownsLicense ? (
           isSuspended ? (
             <Button
               variant={UI_BUTTON_VARIANT_GHOST}
@@ -154,7 +157,7 @@ export function LicenseRowActions({
           )
         ) : null}
 
-        {allowDelete ? (
+        {allowDelete && ownsLicense ? (
           <Button
             variant={UI_BUTTON_VARIANT_GHOST}
             onClick={() => setShowRevokeConfirm(true)}

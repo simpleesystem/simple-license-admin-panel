@@ -30,7 +30,7 @@ import { composeClassNames } from '../utils/classNames'
 import { VisibilityGate } from '../utils/PermissionGate'
 
 export function DataTable<TData>({
-  data,
+  data = [] as readonly TData[],
   columns,
   rowKey,
   toolbar,

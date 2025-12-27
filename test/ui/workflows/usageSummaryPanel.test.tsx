@@ -4,7 +4,7 @@ import type { Client, UsageSummaryResponse } from '@/simpleLicense'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { UsageSummaryPanel } from '../../../src/ui/workflows/UsageSummaryPanel'
-import { renderWithProviders } from '../utils/renderWithProviders'
+import { renderWithProviders } from '../utils'
 
 const useUsageSummariesMock = vi.hoisted(() => vi.fn())
 

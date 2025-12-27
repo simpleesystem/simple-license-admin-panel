@@ -1,4 +1,4 @@
-import { fireEvent, render, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import {
@@ -7,11 +7,13 @@ import {
   UI_PRODUCT_EMPTY_STATE_MESSAGE,
   UI_PRODUCT_FORM_SUBMIT_CREATE,
   UI_PRODUCT_FORM_SUBMIT_UPDATE,
+  UI_PRODUCT_FORM_TITLE_UPDATE,
 } from '../../../src/ui/constants'
 import { ProductManagementExample } from '../../../src/ui/workflows/ProductManagementExample'
 import { buildProduct } from '../../factories/productFactory'
 import { buildUser } from '../../factories/userFactory'
 import { buildText } from '../../ui/factories/uiFactories'
+import { renderWithProviders } from '../utils'
 
 const useCreateProductMock = vi.hoisted(() => vi.fn())
 const useUpdateProductMock = vi.hoisted(() => vi.fn())
@@ -25,26 +27,41 @@ vi.mock('@/simpleLicense', async () => {
   }
 })
 
-vi.mock('../../../src/ui/workflows/ProductRowActions', () => ({
-  ProductRowActions: ({
-    productId,
-    onCompleted,
-    onEdit,
-  }: {
-    productId: string
-    onCompleted?: () => void
-    onEdit?: () => void
-  }) => (
-    <div>
-      <button type="button" onClick={() => onEdit?.()}>
-        {UI_PRODUCT_ACTION_EDIT}
-      </button>
-      <button type="button" onClick={() => onCompleted?.()}>
-        row-complete-{productId}
-      </button>
-    </div>
-  ),
-}))
+vi.mock('../../../src/ui/workflows/ProductRowActions', async () => {
+  const { UI_PRODUCT_ACTION_EDIT } = await import('../../../src/ui/constants')
+  return {
+    ProductRowActions: ({
+      productId,
+      vendorId,
+      currentUser,
+      onCompleted,
+      onEdit,
+    }: {
+      productId: string
+      vendorId?: string | null
+      currentUser?: { vendorId?: string | null; role?: string } | null
+      onCompleted?: () => void
+      onEdit?: () => void
+    }) => {
+      // Only show edit button if user owns the product or is system admin
+      const isSystemAdmin = currentUser?.role === 'SUPERUSER' || currentUser?.role === 'ADMIN'
+      const ownsProduct = isSystemAdmin || (vendorId && currentUser?.vendorId === vendorId)
+      if (!ownsProduct) {
+        return null
+      }
+      return (
+        <div>
+          <button type="button" onClick={() => onEdit?.()}>
+            {UI_PRODUCT_ACTION_EDIT}
+          </button>
+          <button type="button" onClick={() => onCompleted?.()}>
+            row-complete-{productId}
+          </button>
+        </div>
+      )
+    },
+  }
+})
 
 const mockMutation = () => ({
   mutateAsync: vi.fn(async () => ({})),
@@ -65,7 +82,7 @@ describe('ProductManagementExample', () => {
     const adminUser = buildUser({ role: 'ADMIN' })
     const products = [buildProduct()]
 
-    const { getByText, getByRole } = render(
+    const { getByText, getByRole } = renderWithProviders(
       <ProductManagementExample
         client={{} as never}
         products={products}
@@ -77,7 +94,13 @@ describe('ProductManagementExample', () => {
       />
     )
 
+    await waitFor(() => {
+      expect(getByText(UI_PRODUCT_BUTTON_CREATE)).toBeInTheDocument()
+    })
     fireEvent.click(getByText(UI_PRODUCT_BUTTON_CREATE))
+    await waitFor(() => {
+      expect(getByRole('button', { name: UI_PRODUCT_FORM_SUBMIT_CREATE })).toBeInTheDocument()
+    })
     fireEvent.click(getByRole('button', { name: UI_PRODUCT_FORM_SUBMIT_CREATE }))
 
     await waitFor(() => expect(createMutation.mutateAsync).toHaveBeenCalled())
@@ -93,7 +116,7 @@ describe('ProductManagementExample', () => {
     const adminUser = buildUser({ role: 'ADMIN' })
     const product = buildProduct()
 
-    const { getByText, getByRole } = render(
+    const { getByText, getByRole } = renderWithProviders(
       <ProductManagementExample
         client={{} as never}
         products={[product]}
@@ -106,6 +129,14 @@ describe('ProductManagementExample', () => {
     )
 
     fireEvent.click(getByText(UI_PRODUCT_ACTION_EDIT))
+    // Wait for modal to appear
+    await waitFor(() => {
+      expect(screen.getByText(UI_PRODUCT_FORM_TITLE_UPDATE)).toBeInTheDocument()
+    })
+    // Then wait for submit button
+    await waitFor(() => {
+      expect(getByRole('button', { name: UI_PRODUCT_FORM_SUBMIT_UPDATE })).toBeInTheDocument()
+    })
     fireEvent.click(getByRole('button', { name: UI_PRODUCT_FORM_SUBMIT_UPDATE }))
 
     await waitFor(() =>
@@ -126,7 +157,7 @@ describe('ProductManagementExample', () => {
     const product = buildProduct()
     const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId: product.vendorId ?? buildText() })
 
-    const { queryByText, getByText, getByRole } = render(
+    const { queryByText, getByText, getByRole } = renderWithProviders(
       <ProductManagementExample
         client={{} as never}
         products={[product]}
@@ -140,7 +171,18 @@ describe('ProductManagementExample', () => {
 
     expect(queryByText(UI_PRODUCT_BUTTON_CREATE)).toBeNull()
 
+    await waitFor(() => {
+      expect(getByText(UI_PRODUCT_ACTION_EDIT)).toBeInTheDocument()
+    })
     fireEvent.click(getByText(UI_PRODUCT_ACTION_EDIT))
+    // Wait for modal to appear
+    await waitFor(() => {
+      expect(screen.getByText(UI_PRODUCT_FORM_TITLE_UPDATE)).toBeInTheDocument()
+    })
+    // Then wait for submit button
+    await waitFor(() => {
+      expect(getByRole('button', { name: UI_PRODUCT_FORM_SUBMIT_UPDATE })).toBeInTheDocument()
+    })
     fireEvent.click(getByRole('button', { name: UI_PRODUCT_FORM_SUBMIT_UPDATE }))
 
     await waitFor(() =>
@@ -160,7 +202,7 @@ describe('ProductManagementExample', () => {
     const product = buildProduct()
     const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId: `${product.vendorId}-other` })
 
-    const { queryByText } = render(
+    const { queryByText } = renderWithProviders(
       <ProductManagementExample
         client={{} as never}
         products={[product]}
@@ -184,7 +226,7 @@ describe('ProductManagementExample', () => {
     const otherProduct = buildProduct({ vendorId: `${ownProduct.vendorId}-other` })
     const vendorUser = buildUser({ role: 'VENDOR_ADMIN', vendorId: ownProduct.vendorId ?? buildText() })
 
-    const { getByText, queryByText } = render(
+    const { getByText, queryByText } = renderWithProviders(
       <ProductManagementExample
         client={{} as never}
         products={[ownProduct, otherProduct]}
@@ -209,7 +251,7 @@ describe('ProductManagementExample', () => {
     const vendorUser = buildUser({ role: 'VENDOR_ADMIN', vendorId: buildText() })
     const otherProduct = buildProduct({ vendorId: `${vendorUser.vendorId}-other` })
 
-    const { getByText } = render(
+    const { getByText } = renderWithProviders(
       <ProductManagementExample
         client={{} as never}
         products={[otherProduct]}
@@ -238,7 +280,7 @@ describe('ProductManagementExample', () => {
     const adminUser = buildUser({ role: 'ADMIN' })
     const product = buildProduct()
 
-    const { getByText, getByRole } = render(
+    const { getByText, getByRole } = renderWithProviders(
       <ProductManagementExample
         client={{} as never}
         products={[product]}
