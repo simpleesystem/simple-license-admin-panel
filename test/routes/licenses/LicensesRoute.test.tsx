@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { normalizeLicenseStatus } from '@/routes/licenses/LicensesRoute'
+import { normalizeLicenseStatus } from '@/routes/licenses/licenseUtils'
 import { UI_LICENSE_STATUS_ACTIVE, UI_LICENSE_STATUS_SUSPENDED } from '@/ui/constants'
 
 describe('normalizeLicenseStatus', () => {

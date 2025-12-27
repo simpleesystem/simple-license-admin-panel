@@ -2,8 +2,8 @@ import { fireEvent, render, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import {
+  UI_ENTITLEMENT_ACTION_EDIT,
   UI_ENTITLEMENT_BUTTON_CREATE,
-  UI_ENTITLEMENT_BUTTON_EDIT,
   UI_ENTITLEMENT_EMPTY_STATE_MESSAGE,
   UI_ENTITLEMENT_FORM_SUBMIT_CREATE,
   UI_ENTITLEMENT_FORM_SUBMIT_UPDATE,
@@ -25,26 +25,29 @@ vi.mock('@/simpleLicense', async () => {
   }
 })
 
-vi.mock('../../../src/ui/workflows/ProductEntitlementRowActions', () => ({
-  ProductEntitlementRowActions: ({
-    entitlement,
-    onEdit,
-    onCompleted,
-  }: {
-    entitlement: { id: string }
-    onEdit: (entitlement: { id: string }) => void
-    onCompleted?: () => void
-  }) => (
-    <div>
-      <button type="button" onClick={() => onEdit(entitlement)}>
-        row-edit-{entitlement.id}
-      </button>
-      <button type="button" onClick={() => onCompleted?.()}>
-        row-complete-{entitlement.id}
-      </button>
-    </div>
-  ),
-}))
+vi.mock('../../../src/ui/workflows/ProductEntitlementRowActions', async () => {
+  const { UI_ENTITLEMENT_ACTION_EDIT } = await import('../../../src/ui/constants')
+  return {
+    ProductEntitlementRowActions: ({
+      entitlement,
+      onEdit,
+      onCompleted,
+    }: {
+      entitlement: { id: string }
+      onEdit: (entitlement: { id: string }) => void
+      onCompleted?: () => void
+    }) => (
+      <div>
+        <button type="button" onClick={() => onEdit(entitlement)}>
+          {UI_ENTITLEMENT_ACTION_EDIT}
+        </button>
+        <button type="button" onClick={() => onCompleted?.()}>
+          row-complete-{entitlement.id}
+        </button>
+      </div>
+    ),
+  }
+})
 
 const mockMutation = () => ({
   mutateAsync: vi.fn(async () => ({})),
@@ -101,7 +104,7 @@ describe('ProductEntitlementManagementExample', () => {
       />
     )
 
-    fireEvent.click(getByText(UI_ENTITLEMENT_BUTTON_EDIT))
+    fireEvent.click(getByText(UI_ENTITLEMENT_ACTION_EDIT))
     fireEvent.click(getByRole('button', { name: UI_ENTITLEMENT_FORM_SUBMIT_UPDATE }))
 
     await waitFor(() =>
@@ -135,7 +138,7 @@ describe('ProductEntitlementManagementExample', () => {
 
     expect(queryByText(UI_ENTITLEMENT_BUTTON_CREATE)).toBeNull()
 
-    fireEvent.click(getByText(UI_ENTITLEMENT_BUTTON_EDIT))
+    fireEvent.click(getByText(UI_ENTITLEMENT_ACTION_EDIT))
     fireEvent.click(getByRole('button', { name: UI_ENTITLEMENT_FORM_SUBMIT_UPDATE }))
 
     await waitFor(() =>
@@ -166,7 +169,7 @@ describe('ProductEntitlementManagementExample', () => {
     )
 
     expect(queryByText(UI_ENTITLEMENT_BUTTON_CREATE)).toBeNull()
-    expect(queryByText(UI_ENTITLEMENT_BUTTON_EDIT)).toBeNull()
+    expect(queryByText(UI_ENTITLEMENT_ACTION_EDIT)).toBeNull()
   })
 
   test('vendor-scoped user sees only own entitlements in view-only mode', () => {
@@ -191,7 +194,7 @@ describe('ProductEntitlementManagementExample', () => {
     expect(getByText(ownEntitlement.key)).toBeInTheDocument()
     expect(queryByText(otherEntitlement.key)).toBeNull()
     expect(queryByText(UI_ENTITLEMENT_BUTTON_CREATE)).toBeNull()
-    expect(queryByText(UI_ENTITLEMENT_BUTTON_EDIT)).toBeNull()
+    expect(queryByText(UI_ENTITLEMENT_ACTION_EDIT)).toBeNull()
   })
 
   test('vendor-scoped user with no own entitlements sees empty state', () => {
@@ -234,7 +237,7 @@ describe('ProductEntitlementManagementExample', () => {
     expect(queryByText(entitlement.key)).toBeNull()
     expect(getByText(UI_ENTITLEMENT_EMPTY_STATE_MESSAGE)).toBeInTheDocument()
     expect(queryByText(UI_ENTITLEMENT_BUTTON_CREATE)).toBeNull()
-    expect(queryByText(UI_ENTITLEMENT_BUTTON_EDIT)).toBeNull()
+    expect(queryByText(UI_ENTITLEMENT_ACTION_EDIT)).toBeNull()
   })
 
   test('vendor-scoped user sees only own entitlements in view-only mode', async () => {
@@ -259,7 +262,7 @@ describe('ProductEntitlementManagementExample', () => {
     expect(getByText(ownEntitlement.key)).toBeInTheDocument()
     expect(queryByText(otherEntitlement.key)).toBeNull()
     expect(queryByText(UI_ENTITLEMENT_BUTTON_CREATE)).toBeNull()
-    expect(queryByText(UI_ENTITLEMENT_BUTTON_EDIT)).toBeNull()
+    expect(queryByText(UI_ENTITLEMENT_ACTION_EDIT)).toBeNull()
   })
 
   test('vendor-scoped user with no entitlements sees empty state', async () => {

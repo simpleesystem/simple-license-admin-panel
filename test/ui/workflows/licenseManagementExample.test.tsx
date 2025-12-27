@@ -4,7 +4,7 @@ import { describe, expect, beforeEach, test, vi } from 'vitest'
 
 import {
   UI_LICENSE_ACTION_DELETE,
-  UI_LICENSE_BUTTON_EDIT,
+  UI_LICENSE_ACTION_EDIT,
   UI_LICENSE_FORM_SUBMIT_UPDATE,
 } from '../../../src/ui/constants'
 import { LicenseManagementExample } from '../../../src/ui/workflows/LicenseManagementExample'
@@ -67,19 +67,30 @@ describe('LicenseManagementExample', () => {
     useSuspendLicenseMock.mockReturnValue(mockMutation())
     useResumeLicenseMock.mockReturnValue(mockMutation())
 
+    const licenseListItem = {
+      id: license.id,
+      licenseKey: license.licenseKey,
+      productSlug: license.productSlug ?? '',
+      tierCode: license.tierCode ?? '',
+      customerEmail: license.customerEmail ?? '',
+      status: license.status,
+      vendorId: license.vendorId,
+    }
+
     render(
       <LicenseManagementExample
         client={{} as never}
-        licenseId={license.id}
-        licenseVendorId={license.vendorId}
-        licenseStatus={license.status}
+        licenses={[licenseListItem]}
         tierOptions={tierOptions}
         productOptions={productOptions}
         currentUser={{ role: 'SUPERUSER', vendorId: license.vendorId }}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />,
     )
 
-    fireEvent.click(screen.getByText(UI_LICENSE_BUTTON_EDIT))
+    fireEvent.click(screen.getByText(UI_LICENSE_ACTION_EDIT))
     fireEvent.click(screen.getByRole('button', { name: UI_LICENSE_FORM_SUBMIT_UPDATE }))
 
     await waitFor(() => {
@@ -99,15 +110,26 @@ describe('LicenseManagementExample', () => {
     useSuspendLicenseMock.mockReturnValue(mockMutation())
     useResumeLicenseMock.mockReturnValue(mockMutation())
 
+    const licenseListItem = {
+      id: license.id,
+      licenseKey: license.licenseKey,
+      productSlug: license.productSlug ?? '',
+      tierCode: license.tierCode ?? '',
+      customerEmail: license.customerEmail ?? '',
+      status: license.status,
+      vendorId: license.vendorId,
+    }
+
     render(
       <LicenseManagementExample
         client={{} as never}
-        licenseId={license.id}
-        licenseVendorId={license.vendorId}
-        licenseStatus={license.status}
+        licenses={[licenseListItem]}
         tierOptions={tierOptions}
         productOptions={productOptions}
         currentUser={{ role: 'SUPERUSER', vendorId: license.vendorId }}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />,
     )
 
@@ -124,19 +146,32 @@ describe('LicenseManagementExample', () => {
     useSuspendLicenseMock.mockReturnValue(mockMutation())
     useResumeLicenseMock.mockReturnValue(mockMutation())
 
-    const view = render(
+    const licenseListItem = {
+      id: license.id,
+      licenseKey: license.licenseKey,
+      productSlug: license.productSlug ?? '',
+      tierCode: license.tierCode ?? '',
+      customerEmail: license.customerEmail ?? '',
+      status: license.status,
+      vendorId: license.vendorId,
+    }
+
+    const { queryByText } = render(
       <LicenseManagementExample
         client={{} as never}
-        licenseId={license.id}
-        licenseVendorId={license.vendorId}
-        licenseStatus={license.status}
+        licenses={[licenseListItem]}
         tierOptions={tierOptions}
         productOptions={productOptions}
         currentUser={{ role: 'VENDOR_MANAGER', vendorId: faker.string.uuid() }}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />,
     )
 
-    expect(view.container.childElementCount).toBe(0)
+    // License should be filtered out, so no edit/delete buttons should be visible
+    expect(queryByText(UI_LICENSE_ACTION_EDIT)).toBeNull()
+    expect(queryByText(UI_LICENSE_ACTION_DELETE)).toBeNull()
   })
 })
 

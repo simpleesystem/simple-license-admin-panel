@@ -26,7 +26,7 @@ export function SessionManager(): null {
   const timeoutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastActivityRef = useRef<number>(0)
   const warningShownRef = useRef<boolean>(false)
-  
+
   // Initialize lastActivityRef in useEffect to avoid calling Date.now() during render
   useEffect(() => {
     lastActivityRef.current = Date.now()

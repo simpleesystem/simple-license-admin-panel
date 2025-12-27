@@ -258,8 +258,7 @@ export const canCreateEntitlement = (user: User | null): boolean => {
   if (!user) {
     return false
   }
-  const perms = derivePermissionsFromUser(user)
-  return perms.manageProducts
+  return isSystemAdminUser(user)
 }
 
 export const canDeleteProductTier = (user: User | null): boolean => {
