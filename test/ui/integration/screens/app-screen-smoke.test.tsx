@@ -4,14 +4,14 @@ import { useState } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 
 import {
-  UI_LICENSE_BUTTON_EDIT,
-  UI_LICENSE_ACTION_DELETE,
+  UI_LICENSE_ACTION_EDIT,
+  UI_LICENSE_BUTTON_DELETE,
+  UI_PRODUCT_ACTION_EDIT,
   UI_PRODUCT_BUTTON_CREATE,
-  UI_PRODUCT_BUTTON_EDIT,
 } from '../../../../src/ui/constants'
 import { AppShell } from '../../../../src/ui/layout/AppShell'
 import { SidebarNav } from '../../../../src/ui/navigation/SidebarNav'
-import { LicenseManagementExample } from '../../../../src/ui/workflows/LicenseManagementExample'
+import { LicenseRowActions } from '../../../../src/ui/workflows/LicenseRowActions'
 import { ProductManagementExample } from '../../../../src/ui/workflows/ProductManagementExample'
 import { buildLicense } from '../../../factories/licenseFactory'
 import { buildProduct } from '../../../factories/productFactory'
@@ -77,18 +77,20 @@ const ScreenHost = ({
           products={[product]}
           currentUser={{ role, vendorId }}
           onRefresh={onRefresh}
+          page={1}
+          totalPages={1}
+          onPageChange={vi.fn()}
         />
       ) : null}
-      {active === 'licenses' ? (
-        <LicenseManagementExample
+      {active === 'licenses' && license ? (
+        <LicenseRowActions
           client={{} as never}
-          licenseId={license.id}
+          licenseKey={license.licenseKey ?? license.id}
           licenseVendorId={license.vendorId}
           licenseStatus={license.status}
-          tierOptions={[]}
-          productOptions={[]}
           currentUser={{ role, vendorId }}
-          onRefresh={onRefresh}
+          onEdit={vi.fn()}
+          onCompleted={onRefresh}
         />
       ) : null}
     </AppShell>
@@ -115,11 +117,11 @@ describe('Screen-level navigation and flows', () => {
     const vendorId = faker.string.uuid()
     renderWithProviders(<ScreenHost role="SUPERUSER" vendorId={vendorId} />)
 
-    expect(screen.getByText(UI_PRODUCT_BUTTON_EDIT)).toBeInTheDocument()
+    expect(screen.getByText(UI_PRODUCT_ACTION_EDIT)).toBeInTheDocument()
 
     fireEvent.click(screen.getByText('Licenses'))
     await waitFor(() => {
-      expect(screen.getByText(UI_LICENSE_BUTTON_EDIT)).toBeInTheDocument()
+      expect(screen.getByText(UI_LICENSE_ACTION_EDIT)).toBeInTheDocument()
     })
   })
 
@@ -128,11 +130,11 @@ describe('Screen-level navigation and flows', () => {
     renderWithProviders(<ScreenHost role="VIEWER" vendorId={vendorId} />)
 
     expect(screen.queryByText(UI_PRODUCT_BUTTON_CREATE)).toBeNull()
-    expect(screen.queryByText(UI_PRODUCT_BUTTON_EDIT)).toBeNull()
+    expect(screen.queryByText(UI_PRODUCT_ACTION_EDIT)).toBeNull()
 
     fireEvent.click(screen.getByText('Licenses'))
-    expect(screen.queryByText(UI_LICENSE_BUTTON_EDIT)).toBeNull()
-    expect(screen.queryByText(UI_LICENSE_ACTION_DELETE)).toBeNull()
+    expect(screen.queryByText(UI_LICENSE_ACTION_EDIT)).toBeNull()
+    expect(screen.queryByText(UI_LICENSE_BUTTON_DELETE)).toBeNull()
   })
 })
 

@@ -4,14 +4,14 @@ import { useState } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 
 import {
-  UI_LICENSE_BUTTON_EDIT,
-  UI_PRODUCT_BUTTON_EDIT,
+  UI_LICENSE_ACTION_EDIT,
+  UI_PRODUCT_ACTION_EDIT,
   UI_TENANT_ACTION_EDIT,
   UI_USER_ACTION_EDIT,
 } from '../../../../src/ui/constants'
 import { AppShell } from '../../../../src/ui/layout/AppShell'
 import { SidebarNav } from '../../../../src/ui/navigation/SidebarNav'
-import { LicenseManagementExample } from '../../../../src/ui/workflows/LicenseManagementExample'
+import { LicenseRowActions } from '../../../../src/ui/workflows/LicenseRowActions'
 import { ProductManagementExample } from '../../../../src/ui/workflows/ProductManagementExample'
 import { TenantManagementExample } from '../../../../src/ui/workflows/TenantManagementExample'
 import { UserManagementPanel } from '../../../../src/ui/workflows/UserManagementPanel'
@@ -157,6 +157,9 @@ const ScreenHost = ({
           tenants={tenant ? [tenant] : []}
           currentUser={{ role, vendorId }}
           onRefresh={onRefresh}
+          page={1}
+          totalPages={1}
+          onPageChange={vi.fn()}
         />
       ) : null}
       {active === 'products' ? (
@@ -165,18 +168,20 @@ const ScreenHost = ({
           products={product ? [product] : []}
           currentUser={{ role, vendorId }}
           onRefresh={onRefresh}
+          page={1}
+          totalPages={1}
+          onPageChange={vi.fn()}
         />
       ) : null}
-      {active === 'licenses' ? (
-        <LicenseManagementExample
+      {active === 'licenses' && license ? (
+        <LicenseRowActions
           client={{} as never}
-          licenseId={license?.id}
-          licenseVendorId={license?.vendorId}
-          licenseStatus={license?.status}
-          tierOptions={[]}
-          productOptions={[]}
+          licenseKey={license.licenseKey ?? license.id}
+          licenseVendorId={license.vendorId}
+          licenseStatus={license.status}
           currentUser={{ role, vendorId }}
-          onRefresh={onRefresh}
+          onEdit={vi.fn()}
+          onCompleted={onRefresh}
         />
       ) : null}
     </AppShell>
@@ -228,13 +233,13 @@ describe('AppShell navigation across all domains', () => {
     // Products
     fireEvent.click(screen.getByText('Products'))
     await waitFor(() => {
-      expect(screen.getByText(UI_PRODUCT_BUTTON_EDIT)).toBeInTheDocument()
+      expect(screen.getByText(UI_PRODUCT_ACTION_EDIT)).toBeInTheDocument()
     })
 
     // Licenses
     fireEvent.click(screen.getByText('Licenses'))
     await waitFor(() => {
-      expect(screen.getByText(UI_LICENSE_BUTTON_EDIT)).toBeInTheDocument()
+      expect(screen.getByText(UI_LICENSE_ACTION_EDIT)).toBeInTheDocument()
     })
   })
 
@@ -246,9 +251,9 @@ describe('AppShell navigation across all domains', () => {
     fireEvent.click(screen.getByText('Tenants'))
     expect(screen.queryByText(UI_TENANT_ACTION_EDIT)).toBeNull()
     fireEvent.click(screen.getByText('Products'))
-    expect(screen.queryByText(UI_PRODUCT_BUTTON_EDIT)).toBeNull()
+    expect(screen.queryByText(UI_PRODUCT_ACTION_EDIT)).toBeNull()
     fireEvent.click(screen.getByText('Licenses'))
-    expect(screen.queryByText(UI_LICENSE_BUTTON_EDIT)).toBeNull()
+    expect(screen.queryByText(UI_LICENSE_ACTION_EDIT)).toBeNull()
   })
 })
 

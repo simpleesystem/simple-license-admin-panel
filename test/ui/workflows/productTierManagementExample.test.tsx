@@ -2,8 +2,8 @@ import { fireEvent, render, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import {
+  UI_PRODUCT_TIER_ACTION_EDIT,
   UI_PRODUCT_TIER_BUTTON_CREATE,
-  UI_PRODUCT_TIER_BUTTON_EDIT,
   UI_PRODUCT_TIER_EMPTY_STATE_MESSAGE,
   UI_PRODUCT_TIER_FORM_SUBMIT_CREATE,
   UI_PRODUCT_TIER_FORM_SUBMIT_UPDATE,
@@ -37,7 +37,7 @@ vi.mock('../../../src/ui/workflows/ProductTierRowActions', () => ({
   }) => (
     <div>
       <button type="button" onClick={() => onEdit(tier)}>
-        row-edit-{tier.id}
+        {UI_PRODUCT_TIER_ACTION_EDIT}
       </button>
       <button type="button" onClick={() => onCompleted?.()}>
         row-complete-{tier.id}
@@ -72,6 +72,9 @@ describe('ProductTierManagementExample', () => {
         tiers={[tier]}
         currentUser={adminUser}
         onRefresh={onRefresh}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />
     )
 
@@ -98,10 +101,13 @@ describe('ProductTierManagementExample', () => {
         tiers={[tier]}
         currentUser={adminUser}
         onRefresh={onRefresh}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />
     )
 
-    fireEvent.click(getByText(UI_PRODUCT_TIER_BUTTON_EDIT))
+    fireEvent.click(getByText(UI_PRODUCT_TIER_ACTION_EDIT))
     fireEvent.click(getByRole('button', { name: UI_PRODUCT_TIER_FORM_SUBMIT_UPDATE }))
 
     await waitFor(() =>
@@ -135,7 +141,7 @@ describe('ProductTierManagementExample', () => {
 
     expect(queryByText(UI_PRODUCT_TIER_BUTTON_CREATE)).toBeNull()
 
-    fireEvent.click(getByText(UI_PRODUCT_TIER_BUTTON_EDIT))
+    fireEvent.click(getByText(UI_PRODUCT_TIER_ACTION_EDIT))
     fireEvent.click(getByRole('button', { name: UI_PRODUCT_TIER_FORM_SUBMIT_UPDATE }))
 
     await waitFor(() =>
@@ -161,11 +167,14 @@ describe('ProductTierManagementExample', () => {
         productId={buildText()}
         tiers={[tier]}
         currentUser={vendorManager}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />
     )
 
     expect(queryByText(UI_PRODUCT_TIER_BUTTON_CREATE)).toBeNull()
-    expect(queryByText(UI_PRODUCT_TIER_BUTTON_EDIT)).toBeNull()
+    expect(queryByText(UI_PRODUCT_TIER_ACTION_EDIT)).toBeNull()
   })
 
   test('vendor-scoped user sees only own tiers in view-only mode', async () => {
@@ -184,13 +193,16 @@ describe('ProductTierManagementExample', () => {
         productId={buildText()}
         tiers={[ownTier, otherTier]}
         currentUser={vendorUser}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />
     )
 
     expect(getByText(ownTier.tierName)).toBeInTheDocument()
     expect(queryByText(otherTier.tierName)).toBeNull()
     expect(queryByText(UI_PRODUCT_TIER_BUTTON_CREATE)).toBeNull()
-    expect(queryByText(UI_PRODUCT_TIER_BUTTON_EDIT)).toBeNull()
+    expect(queryByText(UI_PRODUCT_TIER_ACTION_EDIT)).toBeNull()
   })
 
   test('vendor-scoped user with no tiers sees empty state', async () => {
@@ -207,6 +219,9 @@ describe('ProductTierManagementExample', () => {
         productId={buildText()}
         tiers={[otherTier]}
         currentUser={vendorUser}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />
     )
 
@@ -235,6 +250,9 @@ describe('ProductTierManagementExample', () => {
         tiers={[tier]}
         currentUser={adminUser}
         onRefresh={onRefresh}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />
     )
 
@@ -255,12 +273,20 @@ describe('ProductTierManagementExample', () => {
     const tier = buildProductTier()
 
     const { queryByText } = render(
-      <ProductTierManagementExample client={{} as never} productId={buildText()} tiers={[tier]} currentUser={null} />
+      <ProductTierManagementExample
+        client={{} as never}
+        productId={buildText()}
+        tiers={[tier]}
+        currentUser={null}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
+      />
     )
 
     expect(queryByText(tier.tierName)).toBeNull()
     expect(queryByText(UI_PRODUCT_TIER_BUTTON_CREATE)).toBeNull()
-    expect(queryByText(UI_PRODUCT_TIER_BUTTON_EDIT)).toBeNull()
+    expect(queryByText(UI_PRODUCT_TIER_ACTION_EDIT)).toBeNull()
   })
 
   test('viewer cannot see tiers and shows empty state', () => {
@@ -272,12 +298,20 @@ describe('ProductTierManagementExample', () => {
     const viewer = buildUser({ role: 'VIEWER', vendorId: null })
 
     const { getByText, queryByText } = render(
-      <ProductTierManagementExample client={{} as never} productId={buildText()} tiers={[tier]} currentUser={viewer} />
+      <ProductTierManagementExample
+        client={{} as never}
+        productId={buildText()}
+        tiers={[tier]}
+        currentUser={viewer}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
+      />
     )
 
     expect(queryByText(tier.tierName)).toBeNull()
     expect(getByText(UI_PRODUCT_TIER_EMPTY_STATE_MESSAGE)).toBeInTheDocument()
     expect(queryByText(UI_PRODUCT_TIER_BUTTON_CREATE)).toBeNull()
-    expect(queryByText(UI_PRODUCT_TIER_BUTTON_EDIT)).toBeNull()
+    expect(queryByText(UI_PRODUCT_TIER_ACTION_EDIT)).toBeNull()
   })
 })

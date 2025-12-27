@@ -4,15 +4,15 @@ import '@testing-library/jest-dom'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import {
-  UI_LICENSE_BUTTON_EDIT,
+  UI_LICENSE_ACTION_EDIT,
+  UI_PRODUCT_ACTION_EDIT,
   UI_PRODUCT_BUTTON_CREATE,
-  UI_PRODUCT_BUTTON_EDIT,
   UI_PRODUCT_FORM_SUBMIT_CREATE,
   UI_PRODUCT_TIER_BUTTON_CREATE,
 } from '../../../../src/ui/constants'
 import { AppShell } from '../../../../src/ui/layout/AppShell'
 import { SidebarNav } from '../../../../src/ui/navigation/SidebarNav'
-import { LicenseManagementExample } from '../../../../src/ui/workflows/LicenseManagementExample'
+import { LicenseRowActions } from '../../../../src/ui/workflows/LicenseRowActions'
 import { ProductManagementExample } from '../../../../src/ui/workflows/ProductManagementExample'
 import { ProductTierManagementExample } from '../../../../src/ui/workflows/ProductTierManagementExample'
 import { buildLicense } from '../../../factories/licenseFactory'
@@ -82,6 +82,9 @@ const ScreenHost = ({ vendorId }: { vendorId: string }) => {
           products={[product]}
           currentUser={currentUser}
           onRefresh={vi.fn()}
+          page={1}
+          totalPages={1}
+          onPageChange={vi.fn()}
         />
       ) : null}
       {active === 'tiers' ? (
@@ -91,18 +94,20 @@ const ScreenHost = ({ vendorId }: { vendorId: string }) => {
           tiers={[tier]}
           currentUser={currentUser}
           onRefresh={vi.fn()}
+          page={1}
+          totalPages={1}
+          onPageChange={vi.fn()}
         />
       ) : null}
       {active === 'licenses' ? (
-        <LicenseManagementExample
+        <LicenseRowActions
           client={{} as never}
-          licenseId={license.id}
+          licenseKey={license.licenseKey ?? license.id}
           licenseVendorId={product.vendorId ?? null}
           licenseStatus={license.status}
-          tierOptions={[]}
-          productOptions={[]}
           currentUser={currentUser}
-          onRefresh={vi.fn()}
+          onEdit={vi.fn()}
+          onCompleted={vi.fn()}
         />
       ) : null}
     </AppShell>
@@ -152,13 +157,13 @@ describe('Mutation to navigation refetch smoke', () => {
     // Navigate to licenses
     fireEvent.click(screen.getByText('Licenses'))
     await waitFor(() => {
-      expect(screen.getByText(UI_LICENSE_BUTTON_EDIT)).toBeInTheDocument()
+      expect(screen.getByText(UI_LICENSE_ACTION_EDIT)).toBeInTheDocument()
     })
 
     // Navigate back to products
     fireEvent.click(screen.getByText('Products'))
     await waitFor(() => {
-      expect(screen.getByText(UI_PRODUCT_BUTTON_EDIT)).toBeInTheDocument()
+      expect(screen.getByText(UI_PRODUCT_ACTION_EDIT)).toBeInTheDocument()
     })
   })
 })

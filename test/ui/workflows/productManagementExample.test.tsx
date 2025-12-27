@@ -2,8 +2,8 @@ import { fireEvent, render, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import {
+  UI_PRODUCT_ACTION_EDIT,
   UI_PRODUCT_BUTTON_CREATE,
-  UI_PRODUCT_BUTTON_EDIT,
   UI_PRODUCT_EMPTY_STATE_MESSAGE,
   UI_PRODUCT_FORM_SUBMIT_CREATE,
   UI_PRODUCT_FORM_SUBMIT_UPDATE,
@@ -37,7 +37,7 @@ vi.mock('../../../src/ui/workflows/ProductRowActions', () => ({
   }) => (
     <div>
       <button type="button" onClick={() => onEdit?.()}>
-        row-edit-{productId}
+        {UI_PRODUCT_ACTION_EDIT}
       </button>
       <button type="button" onClick={() => onCompleted?.()}>
         row-complete-{productId}
@@ -71,6 +71,9 @@ describe('ProductManagementExample', () => {
         products={products}
         currentUser={adminUser}
         onRefresh={onRefresh}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />
     )
 
@@ -96,10 +99,13 @@ describe('ProductManagementExample', () => {
         products={[product]}
         currentUser={adminUser}
         onRefresh={onRefresh}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />
     )
 
-    fireEvent.click(getByText(UI_PRODUCT_BUTTON_EDIT))
+    fireEvent.click(getByText(UI_PRODUCT_ACTION_EDIT))
     fireEvent.click(getByRole('button', { name: UI_PRODUCT_FORM_SUBMIT_UPDATE }))
 
     await waitFor(() =>
@@ -126,12 +132,15 @@ describe('ProductManagementExample', () => {
         products={[product]}
         currentUser={vendorManager}
         onRefresh={onRefresh}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />
     )
 
     expect(queryByText(UI_PRODUCT_BUTTON_CREATE)).toBeNull()
 
-    fireEvent.click(getByText(UI_PRODUCT_BUTTON_EDIT))
+    fireEvent.click(getByText(UI_PRODUCT_ACTION_EDIT))
     fireEvent.click(getByRole('button', { name: UI_PRODUCT_FORM_SUBMIT_UPDATE }))
 
     await waitFor(() =>
@@ -152,11 +161,18 @@ describe('ProductManagementExample', () => {
     const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId: `${product.vendorId}-other` })
 
     const { queryByText } = render(
-      <ProductManagementExample client={{} as never} products={[product]} currentUser={vendorManager} />
+      <ProductManagementExample
+        client={{} as never}
+        products={[product]}
+        currentUser={vendorManager}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
+      />
     )
 
     expect(queryByText(UI_PRODUCT_BUTTON_CREATE)).toBeNull()
-    expect(queryByText(UI_PRODUCT_BUTTON_EDIT)).toBeNull()
+    expect(queryByText(UI_PRODUCT_ACTION_EDIT)).toBeNull()
   })
 
   test('vendor-scoped user sees only own products in view-only mode', async () => {
@@ -169,13 +185,20 @@ describe('ProductManagementExample', () => {
     const vendorUser = buildUser({ role: 'VENDOR_ADMIN', vendorId: ownProduct.vendorId ?? buildText() })
 
     const { getByText, queryByText } = render(
-      <ProductManagementExample client={{} as never} products={[ownProduct, otherProduct]} currentUser={vendorUser} />
+      <ProductManagementExample
+        client={{} as never}
+        products={[ownProduct, otherProduct]}
+        currentUser={vendorUser}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
+      />
     )
 
     expect(getByText(ownProduct.name)).toBeInTheDocument()
     expect(queryByText(otherProduct.name)).toBeNull()
     expect(queryByText(UI_PRODUCT_BUTTON_CREATE)).toBeNull()
-    expect(queryByText(UI_PRODUCT_BUTTON_EDIT)).toBeNull()
+    expect(queryByText(UI_PRODUCT_ACTION_EDIT)).toBeNull()
   })
 
   test('vendor-scoped user with no products sees empty state', async () => {
@@ -187,7 +210,14 @@ describe('ProductManagementExample', () => {
     const otherProduct = buildProduct({ vendorId: `${vendorUser.vendorId}-other` })
 
     const { getByText } = render(
-      <ProductManagementExample client={{} as never} products={[otherProduct]} currentUser={vendorUser} />
+      <ProductManagementExample
+        client={{} as never}
+        products={[otherProduct]}
+        currentUser={vendorUser}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
+      />
     )
 
     expect(getByText(UI_PRODUCT_EMPTY_STATE_MESSAGE)).toBeInTheDocument()
@@ -214,6 +244,9 @@ describe('ProductManagementExample', () => {
         products={[product]}
         currentUser={adminUser}
         onRefresh={onRefresh}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />
     )
 

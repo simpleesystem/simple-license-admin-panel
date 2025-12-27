@@ -4,9 +4,9 @@ import { describe, expect, test, vi } from 'vitest'
 
 import {
   UI_PRODUCT_ACTION_DELETE,
-  UI_PRODUCT_ACTION_RESUME,
+  UI_PRODUCT_ACTION_EDIT,
   UI_PRODUCT_BUTTON_CREATE,
-  UI_PRODUCT_BUTTON_EDIT,
+  UI_PRODUCT_BUTTON_RESUME,
 } from '../../../../src/ui/constants'
 import { ProductManagementExample } from '../../../../src/ui/workflows/ProductManagementExample'
 import { buildProduct } from '../../../factories/productFactory'
@@ -66,11 +66,14 @@ describe('Product RBAC & vendor scoping', () => {
         products={[product]}
         currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() }}
         onRefresh={vi.fn()}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />
     )
 
     fireEvent.click(screen.getByText(UI_PRODUCT_BUTTON_CREATE))
-    fireEvent.click(screen.getByText(UI_PRODUCT_BUTTON_EDIT))
+    fireEvent.click(screen.getByText(UI_PRODUCT_ACTION_EDIT))
     fireEvent.click(screen.getByText(UI_PRODUCT_ACTION_DELETE))
 
     await waitFor(() => {
@@ -93,11 +96,14 @@ describe('Product RBAC & vendor scoping', () => {
         products={[product]}
         currentUser={{ role: 'VENDOR_MANAGER', vendorId }}
         onRefresh={vi.fn()}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />
     )
 
     expect(screen.queryByText(UI_PRODUCT_BUTTON_CREATE)).toBeNull()
-    fireEvent.click(screen.getByText(UI_PRODUCT_BUTTON_EDIT))
+    fireEvent.click(screen.getByText(UI_PRODUCT_ACTION_EDIT))
     expect(screen.queryByText(UI_PRODUCT_ACTION_DELETE)).toBeNull()
   })
 
@@ -115,10 +121,13 @@ describe('Product RBAC & vendor scoping', () => {
         products={[product]}
         currentUser={{ role: 'VENDOR_MANAGER', vendorId: faker.string.uuid() }}
         onRefresh={vi.fn()}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />
     )
 
-    expect(view.queryByText(UI_PRODUCT_BUTTON_EDIT)).toBeNull()
+    expect(view.queryByText(UI_PRODUCT_ACTION_EDIT)).toBeNull()
     expect(view.queryByText(UI_PRODUCT_ACTION_DELETE)).toBeNull()
   })
 
@@ -136,10 +145,13 @@ describe('Product RBAC & vendor scoping', () => {
         products={[product]}
         currentUser={{ role: 'VIEWER', vendorId: product.vendorId }}
         onRefresh={vi.fn()}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />
     )
 
-    expect(view.queryByText(UI_PRODUCT_BUTTON_EDIT)).toBeNull()
+    expect(view.queryByText(UI_PRODUCT_ACTION_EDIT)).toBeNull()
     expect(view.queryByText(UI_PRODUCT_ACTION_DELETE)).toBeNull()
   })
 
@@ -158,10 +170,13 @@ describe('Product RBAC & vendor scoping', () => {
         products={[product]}
         currentUser={{ role: 'SUPERUSER', vendorId: product.vendorId }}
         onRefresh={vi.fn()}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />
     )
 
-    fireEvent.click(screen.getByText(UI_PRODUCT_ACTION_RESUME))
+    fireEvent.click(screen.getByText(UI_PRODUCT_BUTTON_RESUME))
     await waitFor(() => {
       expect(resumeMutation.mutateAsync).toHaveBeenCalledWith(product.id)
     })

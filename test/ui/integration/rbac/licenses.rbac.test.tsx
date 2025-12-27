@@ -3,12 +3,12 @@ import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
 
 import {
-  UI_LICENSE_ACTION_DELETE,
-  UI_LICENSE_ACTION_RESUME,
-  UI_LICENSE_ACTION_SUSPEND,
-  UI_LICENSE_BUTTON_EDIT,
+  UI_LICENSE_ACTION_EDIT,
+  UI_LICENSE_BUTTON_DELETE,
+  UI_LICENSE_BUTTON_RESUME,
+  UI_LICENSE_BUTTON_SUSPEND,
 } from '../../../../src/ui/constants'
-import { LicenseManagementExample } from '../../../../src/ui/workflows/LicenseManagementExample'
+import { LicenseRowActions } from '../../../../src/ui/workflows/LicenseRowActions'
 import { buildLicense } from '../../../factories/licenseFactory'
 import { renderWithProviders } from '../../utils'
 
@@ -30,21 +30,6 @@ vi.mock('@/simpleLicense', async () => {
   }
 })
 
-vi.mock('../../../../src/ui/data/ActionMenu', () => ({
-  ActionMenu: ({
-    items,
-  }: {
-    items: Array<{ id: string; label: string; disabled?: boolean; onSelect: () => void }>
-  }) => (
-    <div>
-      {items.map((item) => (
-        <button key={item.id} onClick={item.onSelect} disabled={item.disabled}>
-          {item.label}
-        </button>
-      ))}
-    </div>
-  ),
-}))
 
 const mockMutation = () => ({
   mutateAsync: vi.fn(async () => ({})),
@@ -60,23 +45,23 @@ describe('License RBAC & vendor scoping', () => {
     useUpdateLicenseMock.mockReturnValue(mockMutation())
     useCreateLicenseMock.mockReturnValue(mockMutation())
 
+    const onEdit = vi.fn()
     renderWithProviders(
-      <LicenseManagementExample
+      <LicenseRowActions
         client={{} as never}
-        licenseId={license.id}
+        licenseKey={license.licenseKey ?? license.id}
         licenseVendorId={license.vendorId}
         licenseStatus={license.status}
-        tierOptions={[]}
-        productOptions={[]}
         currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() }}
+        onEdit={onEdit}
       />,
     )
 
-    fireEvent.click(screen.getByText(UI_LICENSE_BUTTON_EDIT))
-    fireEvent.click(screen.getByText(UI_LICENSE_ACTION_DELETE))
+    fireEvent.click(screen.getByText(UI_LICENSE_ACTION_EDIT))
+    fireEvent.click(screen.getByText(UI_LICENSE_BUTTON_DELETE))
 
     await waitFor(() => {
-      expect(useRevokeLicenseMock().mutateAsync).toHaveBeenCalledWith(license.id)
+      expect(useRevokeLicenseMock().mutateAsync).toHaveBeenCalledWith(license.licenseKey ?? license.id)
     })
   })
 
@@ -89,24 +74,24 @@ describe('License RBAC & vendor scoping', () => {
     useUpdateLicenseMock.mockReturnValue(mockMutation())
     useCreateLicenseMock.mockReturnValue(mockMutation())
 
+    const onEdit = vi.fn()
     renderWithProviders(
-      <LicenseManagementExample
+      <LicenseRowActions
         client={{} as never}
-        licenseId={license.id}
+        licenseKey={license.licenseKey ?? license.id}
         licenseVendorId={license.vendorId}
         licenseStatus={license.status}
-        tierOptions={[]}
-        productOptions={[]}
         currentUser={{ role: 'VENDOR_MANAGER', vendorId }}
+        onEdit={onEdit}
       />,
     )
 
-    fireEvent.click(screen.getByText(UI_LICENSE_BUTTON_EDIT))
-    expect(screen.queryByText(UI_LICENSE_ACTION_DELETE)).toBeNull()
+    fireEvent.click(screen.getByText(UI_LICENSE_ACTION_EDIT))
+    expect(screen.queryByText(UI_LICENSE_BUTTON_DELETE)).toBeNull()
 
-    fireEvent.click(screen.getByText(UI_LICENSE_ACTION_SUSPEND))
+    fireEvent.click(screen.getByText(UI_LICENSE_BUTTON_SUSPEND))
     await waitFor(() => {
-      expect(useSuspendLicenseMock().mutateAsync).toHaveBeenCalledWith(license.id)
+      expect(useSuspendLicenseMock().mutateAsync).toHaveBeenCalledWith(license.licenseKey ?? license.id)
     })
   })
 
@@ -119,21 +104,19 @@ describe('License RBAC & vendor scoping', () => {
     useCreateLicenseMock.mockReturnValue(mockMutation())
 
     renderWithProviders(
-      <LicenseManagementExample
+      <LicenseRowActions
         client={{} as never}
-        licenseId={license.id}
+        licenseKey={license.licenseKey ?? license.id}
         licenseVendorId={license.vendorId}
         licenseStatus={license.status}
-        tierOptions={[]}
-        productOptions={[]}
         currentUser={{ role: 'VENDOR_MANAGER', vendorId: faker.string.uuid() }}
       />,
     )
 
-    expect(screen.queryByText(UI_LICENSE_BUTTON_EDIT)).toBeNull()
-    expect(screen.queryByText(UI_LICENSE_ACTION_DELETE)).toBeNull()
-    expect(screen.queryByText(UI_LICENSE_ACTION_SUSPEND)).toBeNull()
-    expect(screen.queryByText(UI_LICENSE_ACTION_RESUME)).toBeNull()
+    expect(screen.queryByText(UI_LICENSE_ACTION_EDIT)).toBeNull()
+    expect(screen.queryByText(UI_LICENSE_BUTTON_DELETE)).toBeNull()
+    expect(screen.queryByText(UI_LICENSE_BUTTON_SUSPEND)).toBeNull()
+    expect(screen.queryByText(UI_LICENSE_BUTTON_RESUME)).toBeNull()
   })
 
   test('VIEWER sees nothing actionable', () => {
@@ -145,19 +128,17 @@ describe('License RBAC & vendor scoping', () => {
     useCreateLicenseMock.mockReturnValue(mockMutation())
 
     renderWithProviders(
-      <LicenseManagementExample
+      <LicenseRowActions
         client={{} as never}
-        licenseId={license.id}
+        licenseKey={license.licenseKey ?? license.id}
         licenseVendorId={license.vendorId}
         licenseStatus={license.status}
-        tierOptions={[]}
-        productOptions={[]}
         currentUser={{ role: 'VIEWER', vendorId: license.vendorId }}
       />,
     )
 
-    expect(screen.queryByText(UI_LICENSE_BUTTON_EDIT)).toBeNull()
-    expect(screen.queryByText(UI_LICENSE_ACTION_DELETE)).toBeNull()
+    expect(screen.queryByText(UI_LICENSE_ACTION_EDIT)).toBeNull()
+    expect(screen.queryByText(UI_LICENSE_BUTTON_DELETE)).toBeNull()
   })
 
   test('Resume action available only when suspended', async () => {
@@ -172,20 +153,19 @@ describe('License RBAC & vendor scoping', () => {
     useCreateLicenseMock.mockReturnValue(mockMutation())
 
     renderWithProviders(
-      <LicenseManagementExample
+      <LicenseRowActions
         client={{} as never}
-        licenseId={license.id}
+        licenseKey={license.licenseKey ?? license.id}
         licenseVendorId={license.vendorId}
         licenseStatus={license.status}
-        tierOptions={[]}
-        productOptions={[]}
         currentUser={{ role: 'SUPERUSER', vendorId: license.vendorId }}
+        onEdit={vi.fn()}
       />,
     )
 
-    fireEvent.click(screen.getByText(UI_LICENSE_ACTION_RESUME))
+    fireEvent.click(screen.getByText(UI_LICENSE_BUTTON_RESUME))
     await waitFor(() => {
-      expect(resume.mutateAsync).toHaveBeenCalledWith(license.id)
+      expect(resume.mutateAsync).toHaveBeenCalledWith(license.licenseKey ?? license.id)
     })
   })
 })

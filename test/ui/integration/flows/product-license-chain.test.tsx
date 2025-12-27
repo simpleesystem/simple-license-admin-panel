@@ -2,24 +2,22 @@ import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
 
 import {
-  UI_ACTION_MENU_TOGGLE_LABEL,
   UI_ENTITLEMENT_ACTION_DELETE,
   UI_ENTITLEMENT_BUTTON_CREATE,
   UI_ENTITLEMENT_FORM_SUBMIT_CREATE,
-  UI_LICENSE_ACTION_DELETE,
-  UI_LICENSE_ACTION_RESUME,
-  UI_LICENSE_ACTION_SUSPEND,
-  UI_LICENSE_BUTTON_EDIT,
-  UI_LICENSE_FORM_SUBMIT_UPDATE,
+  UI_LICENSE_ACTION_EDIT,
+  UI_LICENSE_BUTTON_DELETE,
+  UI_LICENSE_BUTTON_RESUME,
+  UI_LICENSE_BUTTON_SUSPEND,
+  UI_PRODUCT_ACTION_EDIT,
   UI_PRODUCT_BUTTON_CREATE,
-  UI_PRODUCT_BUTTON_EDIT,
   UI_PRODUCT_FORM_SUBMIT_CREATE,
   UI_PRODUCT_FORM_SUBMIT_UPDATE,
   UI_PRODUCT_TIER_ACTION_DELETE,
   UI_PRODUCT_TIER_BUTTON_CREATE,
   UI_PRODUCT_TIER_FORM_SUBMIT_CREATE,
 } from '../../../../src/ui/constants'
-import { LicenseManagementExample } from '../../../../src/ui/workflows/LicenseManagementExample'
+import { LicenseRowActions } from '../../../../src/ui/workflows/LicenseRowActions'
 import { ProductEntitlementManagementExample } from '../../../../src/ui/workflows/ProductEntitlementManagementExample'
 import { ProductManagementExample } from '../../../../src/ui/workflows/ProductManagementExample'
 import { ProductTierManagementExample } from '../../../../src/ui/workflows/ProductTierManagementExample'
@@ -114,6 +112,9 @@ describe('Product → Tier → Entitlement → License chain', () => {
         products={[buildProduct({ vendorId: chain.vendorId, isActive: true })]}
         currentUser={{ role: 'SUPERUSER', vendorId: chain.vendorId }}
         onRefresh={onRefresh}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />
     )
 
@@ -123,7 +124,7 @@ describe('Product → Tier → Entitlement → License chain', () => {
     fireEvent.click(screen.getByRole('button', { name: UI_PRODUCT_FORM_SUBMIT_CREATE }))
     await waitFor(() => expect(createProductMutation.mutateAsync).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByText(UI_PRODUCT_BUTTON_EDIT))
+    fireEvent.click(screen.getByText(UI_PRODUCT_ACTION_EDIT))
     fireEvent.click(screen.getByRole('button', { name: UI_PRODUCT_FORM_SUBMIT_UPDATE }))
     await waitFor(() => expect(updateProductMutation.mutateAsync).toHaveBeenCalled())
 
@@ -135,6 +136,9 @@ describe('Product → Tier → Entitlement → License chain', () => {
         tiers={[chain.tier]}
         currentUser={{ role: 'SUPERUSER', vendorId: chain.vendorId }}
         onRefresh={onRefresh}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />
     )
 
@@ -163,6 +167,9 @@ describe('Product → Tier → Entitlement → License chain', () => {
         entitlements={[chain.entitlement]}
         currentUser={{ role: 'SUPERUSER', vendorId: chain.vendorId }}
         onRefresh={onRefresh}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />
     )
 
@@ -184,79 +191,47 @@ describe('Product → Tier → Entitlement → License chain', () => {
     })
 
     // License management
+    const onEditLicense = vi.fn()
     const { rerender: rerenderLicense } = renderWithProviders(
-      <LicenseManagementExample
+      <LicenseRowActions
         client={{} as never}
-        licenseId={chain.license.id}
+        licenseKey={chain.license.licenseKey ?? chain.license.id}
         licenseVendorId={chain.vendorId}
         licenseStatus="ACTIVE"
-        tierOptions={[]}
-        productOptions={[]}
         currentUser={{ role: 'SUPERUSER', vendorId: chain.vendorId }}
-        onRefresh={onRefresh}
+        onEdit={onEditLicense}
+        onCompleted={onRefresh}
       />
     )
 
-    const licenseActionsContainer = screen
-      .getAllByTestId('ui-stack')
-      .find((element) => within(element).queryByText(UI_LICENSE_BUTTON_EDIT))
-    expect(licenseActionsContainer).toBeDefined()
-    const licenseActionToggle = within(licenseActionsContainer as HTMLElement).getByLabelText(
-      UI_ACTION_MENU_TOGGLE_LABEL
-    )
+    fireEvent.click(screen.getByText(UI_LICENSE_ACTION_EDIT))
+    expect(onEditLicense).toHaveBeenCalledWith(chain.license.licenseKey ?? chain.license.id)
 
-    fireEvent.click(screen.getByText(UI_LICENSE_BUTTON_EDIT))
-    fireEvent.click(screen.getByRole('button', { name: UI_LICENSE_FORM_SUBMIT_UPDATE }))
-    await waitFor(() => expect(useUpdateLicenseMock().mutateAsync).toHaveBeenCalled())
-
-    await act(async () => {
-      fireEvent.click(licenseActionToggle as HTMLElement)
-    })
-    const licenseSuspendAction = await screen.findByText(UI_LICENSE_ACTION_SUSPEND)
-    await act(async () => {
-      fireEvent.click(licenseSuspendAction)
-    })
+    fireEvent.click(screen.getByText(UI_LICENSE_BUTTON_SUSPEND))
     await waitFor(() => {
-      expect(suspendMutation.mutateAsync).toHaveBeenCalledWith(chain.license.id)
+      expect(suspendMutation.mutateAsync).toHaveBeenCalledWith(chain.license.licenseKey ?? chain.license.id)
     })
 
     rerenderLicense(
-      <LicenseManagementExample
+      <LicenseRowActions
         client={{} as never}
-        licenseId={chain.license.id}
+        licenseKey={chain.license.licenseKey ?? chain.license.id}
         licenseVendorId={chain.vendorId}
         licenseStatus="SUSPENDED"
-        tierOptions={[]}
-        productOptions={[]}
         currentUser={{ role: 'SUPERUSER', vendorId: chain.vendorId }}
-        onRefresh={onRefresh}
+        onEdit={onEditLicense}
+        onCompleted={onRefresh}
       />
     )
 
-    const resumeActionToggle = screen.getAllByLabelText(UI_ACTION_MENU_TOGGLE_LABEL).pop()
-    expect(resumeActionToggle).toBeDefined()
-    await act(async () => {
-      fireEvent.click(resumeActionToggle as HTMLElement)
-    })
-    const licenseResumeAction = await screen.findByText(UI_LICENSE_ACTION_RESUME)
-    await act(async () => {
-      fireEvent.click(licenseResumeAction)
-    })
+    fireEvent.click(screen.getByText(UI_LICENSE_BUTTON_RESUME))
     await waitFor(() => {
-      expect(resumeMutation.mutateAsync).toHaveBeenCalledWith(chain.license.id)
+      expect(resumeMutation.mutateAsync).toHaveBeenCalledWith(chain.license.licenseKey ?? chain.license.id)
     })
 
-    const deleteActionToggle = screen.getAllByLabelText(UI_ACTION_MENU_TOGGLE_LABEL).pop()
-    expect(deleteActionToggle).toBeDefined()
-    await act(async () => {
-      fireEvent.click(deleteActionToggle as HTMLElement)
-    })
-    const licenseDeleteAction = await screen.findByText(UI_LICENSE_ACTION_DELETE)
-    await act(async () => {
-      fireEvent.click(licenseDeleteAction)
-    })
+    fireEvent.click(screen.getByText(UI_LICENSE_BUTTON_DELETE))
     await waitFor(() => {
-      expect(revokeMutation.mutateAsync).toHaveBeenCalledWith(chain.license.id)
+      expect(revokeMutation.mutateAsync).toHaveBeenCalledWith(chain.license.licenseKey ?? chain.license.id)
     })
 
     expect(onRefresh).toHaveBeenCalled()
@@ -291,34 +266,21 @@ describe('Product → Tier → Entitlement → License chain', () => {
     useCreateLicenseMock.mockReturnValue(createLicenseMutation)
 
     renderWithProviders(
-      <LicenseManagementExample
+      <LicenseRowActions
         client={{} as never}
-        licenseId={chain.license.id}
+        licenseKey={chain.license.licenseKey ?? chain.license.id}
         licenseVendorId={chain.vendorId}
         licenseStatus="ACTIVE"
-        tierOptions={[]}
-        productOptions={[]}
         currentUser={{ role: 'VENDOR_MANAGER', vendorId: chain.vendorId }}
-        onRefresh={vi.fn()}
+        onCompleted={vi.fn()}
       />
     )
 
-    expect(screen.queryByText(UI_LICENSE_ACTION_DELETE)).toBeNull()
+    expect(screen.queryByText(UI_LICENSE_BUTTON_DELETE)).toBeNull()
 
-    const vendorLicenseActionsContainer = screen
-      .getAllByTestId('ui-stack')
-      .find((element) => within(element).queryByText(UI_LICENSE_BUTTON_EDIT))
-    expect(vendorLicenseActionsContainer).toBeDefined()
-    const vendorLicenseActionsToggle = within(vendorLicenseActionsContainer as HTMLElement).getByLabelText(
-      UI_ACTION_MENU_TOGGLE_LABEL
-    )
-    await act(async () => {
-      fireEvent.click(vendorLicenseActionsToggle as HTMLElement)
+    fireEvent.click(screen.getByText(UI_LICENSE_BUTTON_SUSPEND))
+    await waitFor(() => {
+      expect(suspendMutation.mutateAsync).toHaveBeenCalledWith(chain.license.licenseKey ?? chain.license.id)
     })
-    const licenseSuspendAction = screen.getByText(UI_LICENSE_ACTION_SUSPEND)
-    await act(async () => {
-      fireEvent.click(licenseSuspendAction)
-    })
-    expect(suspendMutation.mutateAsync).toHaveBeenCalledWith(chain.license.id)
   })
 })

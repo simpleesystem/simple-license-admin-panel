@@ -51,7 +51,6 @@ export function derivePermissionsFromUser(user: User | null): Permissions {
   const role = user.role
   const isSuperUser = role === 'SUPERUSER'
   const isAdmin = role === 'ADMIN'
-  const isViewer = role === 'VIEWER'
   const isVendorManager = role === 'VENDOR_MANAGER'
   const isVendorAdmin = role === 'VENDOR_ADMIN'
 
@@ -216,10 +215,14 @@ export const canCreateProduct = (user: User | null): boolean => {
     return false
   }
   const perms = derivePermissionsFromUser(user)
-  return perms.manageProducts
+  if (!perms.manageProducts) {
+    return false
+  }
+  // Only system admins can create products (similar to canCreateTenant)
+  return isSystemAdminUser(user)
 }
 
-export const canDeleteEntitlement = (user: User | null, entitlement?: { vendorId?: string | null } | null): boolean => {
+export const canDeleteEntitlement = (user: User | null): boolean => {
   if (!user) {
     return false
   }
@@ -282,7 +285,11 @@ export const canCreateProductTier = (user: User | null): boolean => {
     return false
   }
   const perms = derivePermissionsFromUser(user)
-  return perms.manageProducts
+  if (!perms.manageProducts) {
+    return false
+  }
+  // Only system admins can create product tiers (similar to canCreateProduct)
+  return isSystemAdminUser(user)
 }
 
 export const canDeleteProduct = (user: User | null): boolean => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { formatTenantCreatedAt } from '@/ui/workflows/TenantManagementExample'
+import { formatTenantCreatedAt } from '@/ui/utils/formatUtils'
 import { UI_VALUE_PLACEHOLDER } from '@/ui/constants'
 
 describe('formatTenantCreatedAt', () => {
@@ -19,7 +19,6 @@ import { beforeEach, describe, expect, test, vi } from 'vitest'
 import {
   UI_TENANT_ACTION_EDIT,
   UI_TENANT_BUTTON_CREATE,
-  UI_TENANT_BUTTON_EDIT,
   UI_TENANT_EMPTY_STATE_MESSAGE,
   UI_TENANT_FORM_SUBMIT_CREATE,
   UI_TENANT_FORM_SUBMIT_UPDATE,
@@ -73,7 +72,15 @@ describe('TenantManagementExample', () => {
     const tenants = [buildTenant()]
 
     const { getByText, getByRole } = render(
-      <TenantManagementExample client={{} as never} tenants={tenants} currentUser={adminUser} onRefresh={onRefresh} />,
+      <TenantManagementExample
+        client={{} as never}
+        tenants={tenants}
+        currentUser={adminUser}
+        onRefresh={onRefresh}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
+      />,
     )
 
     fireEvent.click(getByText(UI_TENANT_BUTTON_CREATE))
@@ -93,10 +100,18 @@ describe('TenantManagementExample', () => {
     const tenant = buildTenant()
 
     const { getByText, getByRole } = render(
-      <TenantManagementExample client={{} as never} tenants={[tenant]} currentUser={adminUser} onRefresh={onRefresh} />,
+      <TenantManagementExample
+        client={{} as never}
+        tenants={[tenant]}
+        currentUser={adminUser}
+        onRefresh={onRefresh}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
+      />,
     )
 
-    fireEvent.click(getByText(UI_TENANT_BUTTON_EDIT))
+    fireEvent.click(getByText(UI_TENANT_ACTION_EDIT))
     fireEvent.click(getByRole('button', { name: UI_TENANT_FORM_SUBMIT_UPDATE }))
 
     await waitFor(() =>
@@ -124,12 +139,15 @@ describe('TenantManagementExample', () => {
         tenants={[tenant]}
         currentUser={vendorManager}
         onRefresh={onRefresh}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
       />,
     )
 
     expect(queryByText(UI_TENANT_BUTTON_CREATE)).toBeNull()
 
-    fireEvent.click(getByText(UI_TENANT_BUTTON_EDIT))
+    fireEvent.click(getByText(UI_TENANT_ACTION_EDIT))
     fireEvent.click(getByRole('button', { name: UI_TENANT_FORM_SUBMIT_UPDATE }))
 
     await waitFor(() =>
@@ -150,11 +168,18 @@ describe('TenantManagementExample', () => {
     const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId: `${tenant.vendorId}-different` })
 
     const { queryByText } = render(
-      <TenantManagementExample client={{} as never} tenants={[tenant]} currentUser={vendorManager} />,
+      <TenantManagementExample
+        client={{} as never}
+        tenants={[tenant]}
+        currentUser={vendorManager}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
+      />,
     )
 
     expect(queryByText(UI_TENANT_BUTTON_CREATE)).toBeNull()
-    expect(queryByText(UI_TENANT_BUTTON_EDIT)).toBeNull()
+    expect(queryByText(UI_TENANT_ACTION_EDIT)).toBeNull()
   })
 
   test('vendor scoped user sees only their tenants in view-only mode', async () => {
@@ -168,13 +193,20 @@ describe('TenantManagementExample', () => {
     const otherTenant = buildTenant({ vendorId: 'other-vendor' })
 
     const { getByText, queryByText } = render(
-      <TenantManagementExample client={{} as never} tenants={[ownTenant, otherTenant]} currentUser={vendorUser} />,
+      <TenantManagementExample
+        client={{} as never}
+        tenants={[ownTenant, otherTenant]}
+        currentUser={vendorUser}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
+      />,
     )
 
     expect(getByText(ownTenant.name)).toBeInTheDocument()
     expect(queryByText(otherTenant.name)).toBeNull()
     expect(queryByText(UI_TENANT_BUTTON_CREATE)).toBeNull()
-    expect(queryByText(UI_TENANT_BUTTON_EDIT)).toBeNull()
+    expect(queryByText(UI_TENANT_ACTION_EDIT)).toBeNull()
   })
 
   test('vendor scoped user with no tenants sees empty state', async () => {
@@ -187,7 +219,14 @@ describe('TenantManagementExample', () => {
     const otherTenant = buildTenant({ vendorId: `${vendorId}-other` })
 
     const { getByText } = render(
-      <TenantManagementExample client={{} as never} tenants={[otherTenant]} currentUser={vendorUser} />,
+      <TenantManagementExample
+        client={{} as never}
+        tenants={[otherTenant]}
+        currentUser={vendorUser}
+        page={1}
+        totalPages={1}
+        onPageChange={vi.fn()}
+      />,
     )
 
     expect(getByText(UI_TENANT_EMPTY_STATE_MESSAGE)).toBeInTheDocument()
