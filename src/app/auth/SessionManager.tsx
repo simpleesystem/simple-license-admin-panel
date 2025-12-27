@@ -3,7 +3,7 @@
  * Shows warnings and logs out users after idle periods
  */
 
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { useAuth } from './authContext'
 import { useNotificationBus } from '@/notifications/busContext'
 import { useTracking } from '@/app/analytics/trackingContext'
@@ -24,8 +24,13 @@ export function SessionManager(): null {
 
   const warningTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const timeoutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const lastActivityRef = useRef<number>(Date.now())
+  const lastActivityRef = useRef<number>(0)
   const warningShownRef = useRef<boolean>(false)
+  
+  // Initialize lastActivityRef in useEffect to avoid calling Date.now() during render
+  useEffect(() => {
+    lastActivityRef.current = Date.now()
+  }, [])
 
   const resetTimers = () => {
     if (warningTimerRef.current) {
@@ -40,7 +45,7 @@ export function SessionManager(): null {
     warningShownRef.current = false
   }
 
-  const setupTimers = () => {
+  const setupTimers = useCallback(() => {
     if (!isAuthenticated) {
       return
     }
@@ -70,7 +75,7 @@ export function SessionManager(): null {
         logout()
       }
     }, SESSION_IDLE_TIMEOUT_MS)
-  }
+  }, [isAuthenticated, logout, notificationBus, tracking])
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -99,7 +104,7 @@ export function SessionManager(): null {
       })
       resetTimers()
     }
-  }, [isAuthenticated, logout, notificationBus, tracking])
+  }, [isAuthenticated, logout, notificationBus, tracking, setupTimers])
 
   return null
 }

@@ -30,7 +30,7 @@ import {
   UI_TEXT_ALIGN_END,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
-import { canViewLicenses, isVendorScopedUser } from '../../app/auth/permissions'
+import { canViewLicenses } from '../../app/auth/permissions'
 import { isSystemAdminUser } from '../../app/auth/userUtils'
 import { DataTable } from '../data/DataTable'
 import { InlineAlert } from '../feedback/InlineAlert'
@@ -75,7 +75,6 @@ export function LicenseUsageDetailsPanel({
 }: LicenseUsageDetailsPanelProps) {
   const allowView = canViewLicenses(currentUser ?? null)
   const isSystemAdmin = isSystemAdminUser(currentUser ?? null)
-  const isVendorScoped = isVendorScopedUser(currentUser ?? null)
   const queryParams = useMemo(() => {
     if (!periodStart && !periodEnd) {
       return undefined

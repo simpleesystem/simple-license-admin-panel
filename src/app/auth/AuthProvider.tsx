@@ -226,15 +226,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
         })
 
         // Dispatch error to global store
-        const errorAny = err as any
-        const errorCode = errorAny.errorCode || errorAny.code || 'UNKNOWN_ERROR'
+        const errorRecord = err as Record<string, unknown>
+        const errorCode = (errorRecord.errorCode as string) || (errorRecord.code as string) || 'UNKNOWN_ERROR'
         useAppStore.getState().dispatch({
           type: 'error/raise',
           payload: {
             code: errorCode,
             message,
             scope: 'auth',
-            status: errorAny.status,
+            status: errorRecord.status as number | undefined,
             type: 'business', // Default to business error for auth failures
           },
         })
@@ -245,7 +245,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setIsLoading(false)
       }
     },
-    [client]
+    [client, fetchUser]
   )
 
   const logout = useCallback(async () => {

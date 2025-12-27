@@ -1,5 +1,5 @@
 import type { Client, Entitlement, Product, ProductTier } from '@/simpleLicense'
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { UI_PRODUCT_FORM_TITLE_UPDATE } from '@/ui/constants'

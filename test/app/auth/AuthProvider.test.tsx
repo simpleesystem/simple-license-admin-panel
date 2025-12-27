@@ -289,7 +289,6 @@ describe('AuthProvider', () => {
     // Since we can't easily trigger login without AuthConsumer, we'll check the user state
     // The PasswordResetGate should render when user.passwordResetRequired is true
     // For this test, we need to verify the user is set correctly
-    const authContext = screen.queryByTestId('auth-status')
     // The test expects anonymous status, which means isAuthenticated should be false
     // when passwordResetRequired is true (we set this in AuthProvider value)
     await waitFor(() => {
