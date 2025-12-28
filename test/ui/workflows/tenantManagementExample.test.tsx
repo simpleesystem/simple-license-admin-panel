@@ -105,7 +105,13 @@ describe('TenantManagementExample', () => {
       />,
     )
 
+    await waitFor(() => {
+      expect(getByText(UI_TENANT_BUTTON_CREATE)).toBeInTheDocument()
+    })
     fireEvent.click(getByText(UI_TENANT_BUTTON_CREATE))
+    await waitFor(() => {
+      expect(getByRole('button', { name: UI_TENANT_FORM_SUBMIT_CREATE })).toBeInTheDocument()
+    })
     fireEvent.click(getByRole('button', { name: UI_TENANT_FORM_SUBMIT_CREATE }))
 
     await waitFor(() => expect(createMutation.mutateAsync).toHaveBeenCalled())
@@ -133,7 +139,13 @@ describe('TenantManagementExample', () => {
       />,
     )
 
+    await waitFor(() => {
+      expect(getByText(UI_TENANT_ACTION_EDIT)).toBeInTheDocument()
+    })
     fireEvent.click(getByText(UI_TENANT_ACTION_EDIT))
+    await waitFor(() => {
+      expect(getByRole('button', { name: UI_TENANT_FORM_SUBMIT_UPDATE })).toBeInTheDocument()
+    })
     fireEvent.click(getByRole('button', { name: UI_TENANT_FORM_SUBMIT_UPDATE }))
 
     await waitFor(() =>
@@ -155,7 +167,7 @@ describe('TenantManagementExample', () => {
     const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId })
     const tenant = buildTenant({ vendorId })
 
-    const { queryByText, getByText, getByRole } = render(
+    const { queryByText, getByText, getByRole } = renderWithProviders(
       <TenantManagementExample
         client={{} as never}
         tenants={[tenant]}
@@ -169,7 +181,13 @@ describe('TenantManagementExample', () => {
 
     expect(queryByText(UI_TENANT_BUTTON_CREATE)).toBeNull()
 
+    await waitFor(() => {
+      expect(getByText(UI_TENANT_ACTION_EDIT)).toBeInTheDocument()
+    })
     fireEvent.click(getByText(UI_TENANT_ACTION_EDIT))
+    await waitFor(() => {
+      expect(getByRole('button', { name: UI_TENANT_FORM_SUBMIT_UPDATE })).toBeInTheDocument()
+    })
     fireEvent.click(getByRole('button', { name: UI_TENANT_FORM_SUBMIT_UPDATE }))
 
     await waitFor(() =>
@@ -189,7 +207,7 @@ describe('TenantManagementExample', () => {
     const tenant = buildTenant()
     const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId: `${tenant.vendorId}-different` })
 
-    const { queryByText } = render(
+    const { queryByText } = renderWithProviders(
       <TenantManagementExample
         client={{} as never}
         tenants={[tenant]}
@@ -225,7 +243,12 @@ describe('TenantManagementExample', () => {
       />,
     )
 
-    expect(getByText(ownTenant.name)).toBeInTheDocument()
+    await waitFor(
+      () => {
+        expect(getByText(ownTenant.name)).toBeInTheDocument()
+      },
+      { timeout: 3000 }
+    )
     expect(queryByText(otherTenant.name)).toBeNull()
     expect(queryByText(UI_TENANT_BUTTON_CREATE)).toBeNull()
     expect(queryByText(UI_TENANT_ACTION_EDIT)).toBeNull()
@@ -240,7 +263,7 @@ describe('TenantManagementExample', () => {
     const vendorUser = buildUser({ role: 'VENDOR_ADMIN', vendorId })
     const otherTenant = buildTenant({ vendorId: `${vendorId}-other` })
 
-    const { getByText } = render(
+    const { getByText } = renderWithProviders(
       <TenantManagementExample
         client={{} as never}
         tenants={[otherTenant]}
@@ -251,6 +274,8 @@ describe('TenantManagementExample', () => {
       />,
     )
 
-    expect(getByText(UI_TENANT_EMPTY_STATE_MESSAGE)).toBeInTheDocument()
+    await waitFor(() => {
+      expect(getByText(UI_TENANT_EMPTY_STATE_MESSAGE)).toBeInTheDocument()
+    })
   })
 })

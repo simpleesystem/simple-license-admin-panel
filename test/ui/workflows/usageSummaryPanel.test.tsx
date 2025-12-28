@@ -1,8 +1,15 @@
-import { screen } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import { faker } from '@faker-js/faker'
 import type { Client, UsageSummaryResponse } from '@/simpleLicense'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
+import {
+  UI_ANALYTICS_SUMMARY_ERROR_BODY,
+  UI_ANALYTICS_SUMMARY_ERROR_TITLE,
+  UI_ANALYTICS_SUMMARY_LOADING_BODY,
+  UI_ANALYTICS_SUMMARY_LOADING_TITLE,
+  UI_ANALYTICS_SUMMARY_TITLE,
+} from '../../../src/ui/constants'
 import { UsageSummaryPanel } from '../../../src/ui/workflows/UsageSummaryPanel'
 import { renderWithProviders } from '../utils'
 
@@ -53,7 +60,7 @@ describe('UsageSummaryPanel', () => {
     vi.clearAllMocks()
   })
 
-  test('renders usage summaries when data is available', () => {
+  test('renders usage summaries when data is available', async () => {
     const client = createMockClient()
     const summary = buildSummary()
     useUsageSummariesMock.mockReturnValue({
@@ -62,6 +69,8 @@ describe('UsageSummaryPanel', () => {
       },
       isLoading: false,
       isError: false,
+      isFetching: false,
+      refetch: vi.fn(),
     })
 
     renderWithProviders(<UsageSummaryPanel client={client} />, { client })
@@ -71,37 +80,47 @@ describe('UsageSummaryPanel', () => {
       new Date(summary.periodEnd),
     )}`
 
-    expect(screen.getByText(/Usage Summaries/i)).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText(UI_ANALYTICS_SUMMARY_TITLE)).toBeInTheDocument()
+    })
     expect(screen.getByText(expectedPeriod)).toBeInTheDocument()
     expect(screen.getByText(summary.totalActivations.toLocaleString())).toBeInTheDocument()
   })
 
-  test('renders loading state', () => {
+  test('renders loading state', async () => {
     const client = createMockClient()
     useUsageSummariesMock.mockReturnValue({
       data: undefined,
       isLoading: true,
       isError: false,
+      isFetching: false,
+      refetch: vi.fn(),
     })
 
     renderWithProviders(<UsageSummaryPanel client={client} />, { client })
 
-    expect(screen.getByText('Loading usage summaries')).toBeInTheDocument()
-    expect(screen.getByText('Fetching the latest usage metrics…')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText(UI_ANALYTICS_SUMMARY_LOADING_TITLE)).toBeInTheDocument()
+    })
+    expect(screen.getByText(UI_ANALYTICS_SUMMARY_LOADING_BODY)).toBeInTheDocument()
   })
 
-  test('renders error state', () => {
+  test('renders error state', async () => {
     const client = createMockClient()
     useUsageSummariesMock.mockReturnValue({
       data: undefined,
       isLoading: false,
       isError: true,
+      isFetching: false,
+      refetch: vi.fn(),
     })
 
     renderWithProviders(<UsageSummaryPanel client={client} />, { client })
 
-    expect(screen.getByText('Unable to load usage summaries')).toBeInTheDocument()
-    expect(screen.getByText('Please try again after refreshing the page.')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText(UI_ANALYTICS_SUMMARY_ERROR_TITLE)).toBeInTheDocument()
+    })
+    expect(screen.getByText(UI_ANALYTICS_SUMMARY_ERROR_BODY)).toBeInTheDocument()
   })
 })
 

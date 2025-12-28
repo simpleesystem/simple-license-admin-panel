@@ -213,7 +213,7 @@ describe('ProductEntitlementManagementExample', () => {
     expect(queryByText(UI_ENTITLEMENT_ACTION_EDIT)).toBeNull()
   })
 
-  test('vendor-scoped user sees only own entitlements in view-only mode', () => {
+  test('vendor-scoped user sees only own entitlements in view-only mode', async () => {
     const createMutation = mockMutation()
     const updateMutation = mockMutation()
     useCreateEntitlementMock.mockReturnValue(createMutation)
@@ -235,13 +235,15 @@ describe('ProductEntitlementManagementExample', () => {
       />
     )
 
-    expect(getByText(ownEntitlement.key)).toBeInTheDocument()
+    await waitFor(() => {
+      expect(getByText(ownEntitlement.key)).toBeInTheDocument()
+    })
     expect(queryByText(otherEntitlement.key)).toBeNull()
     expect(queryByText(UI_ENTITLEMENT_BUTTON_CREATE)).toBeNull()
     expect(queryByText(UI_ENTITLEMENT_ACTION_EDIT)).toBeNull()
   })
 
-  test('vendor-scoped user with no own entitlements sees empty state', () => {
+  test('vendor-scoped user with no own entitlements sees empty state', async () => {
     const createMutation = mockMutation()
     const updateMutation = mockMutation()
     useCreateEntitlementMock.mockReturnValue(createMutation)
@@ -261,10 +263,12 @@ describe('ProductEntitlementManagementExample', () => {
       />
     )
 
-    expect(getByText(UI_ENTITLEMENT_EMPTY_STATE_MESSAGE)).toBeInTheDocument()
+    await waitFor(() => {
+      expect(getByText(UI_ENTITLEMENT_EMPTY_STATE_MESSAGE)).toBeInTheDocument()
+    })
   })
 
-  test('viewer cannot see entitlements and sees empty state', () => {
+  test('viewer cannot see entitlements and sees empty state', async () => {
     const createMutation = mockMutation()
     const updateMutation = mockMutation()
     useCreateEntitlementMock.mockReturnValue(createMutation)
@@ -284,36 +288,10 @@ describe('ProductEntitlementManagementExample', () => {
       />
     )
 
+    await waitFor(() => {
+      expect(getByText(UI_ENTITLEMENT_EMPTY_STATE_MESSAGE)).toBeInTheDocument()
+    })
     expect(queryByText(entitlement.key)).toBeNull()
-    expect(getByText(UI_ENTITLEMENT_EMPTY_STATE_MESSAGE)).toBeInTheDocument()
-    expect(queryByText(UI_ENTITLEMENT_BUTTON_CREATE)).toBeNull()
-    expect(queryByText(UI_ENTITLEMENT_ACTION_EDIT)).toBeNull()
-  })
-
-  test('vendor-scoped user sees only own entitlements in view-only mode', async () => {
-    const createMutation = mockMutation()
-    const updateMutation = mockMutation()
-    useCreateEntitlementMock.mockReturnValue(createMutation)
-    useUpdateEntitlementMock.mockReturnValue(updateMutation)
-    const vendorId = buildText()
-    const ownEntitlement = buildEntitlement({ vendorId })
-    const otherEntitlement = buildEntitlement({ vendorId: `${vendorId}-other` })
-    const vendorUser = buildUser({ role: 'VENDOR_ADMIN', vendorId })
-
-    const { getByText, queryByText } = renderWithProviders(
-      <ProductEntitlementManagementExample
-        client={{} as never}
-        productId={buildText()}
-        entitlements={[ownEntitlement, otherEntitlement]}
-        currentUser={vendorUser}
-        page={1}
-        totalPages={1}
-        onPageChange={vi.fn()}
-      />
-    )
-
-    expect(getByText(ownEntitlement.key)).toBeInTheDocument()
-    expect(queryByText(otherEntitlement.key)).toBeNull()
     expect(queryByText(UI_ENTITLEMENT_BUTTON_CREATE)).toBeNull()
     expect(queryByText(UI_ENTITLEMENT_ACTION_EDIT)).toBeNull()
   })

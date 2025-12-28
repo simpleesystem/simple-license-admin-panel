@@ -79,9 +79,13 @@ describe('LicenseManagementExample', () => {
       vendorId: license.vendorId,
     }
 
+    const mockClient = {
+      getLicense: vi.fn().mockResolvedValue({ license }),
+    } as never
+
     renderWithProviders(
       <LicenseManagementExample
-        client={{} as never}
+        client={mockClient}
         licenses={[licenseListItem]}
         tierOptions={tierOptions}
         productOptions={productOptions}

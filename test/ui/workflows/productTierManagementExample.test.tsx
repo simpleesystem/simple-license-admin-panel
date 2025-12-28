@@ -233,7 +233,9 @@ describe('ProductTierManagementExample', () => {
       />
     )
 
-    expect(getByText(ownTier.tierName)).toBeInTheDocument()
+    await waitFor(() => {
+      expect(getByText(ownTier.tierName)).toBeInTheDocument()
+    })
     expect(queryByText(otherTier.tierName)).toBeNull()
     expect(queryByText(UI_PRODUCT_TIER_BUTTON_CREATE)).toBeNull()
     expect(queryByText(UI_PRODUCT_TIER_ACTION_EDIT)).toBeNull()
@@ -259,7 +261,9 @@ describe('ProductTierManagementExample', () => {
       />
     )
 
-    expect(getByText(UI_PRODUCT_TIER_EMPTY_STATE_MESSAGE)).toBeInTheDocument()
+    await waitFor(() => {
+      expect(getByText(UI_PRODUCT_TIER_EMPTY_STATE_MESSAGE)).toBeInTheDocument()
+    })
   })
 
   test('does not refresh when create mutation fails', async () => {
@@ -323,7 +327,7 @@ describe('ProductTierManagementExample', () => {
     expect(queryByText(UI_PRODUCT_TIER_ACTION_EDIT)).toBeNull()
   })
 
-  test('viewer cannot see tiers and shows empty state', () => {
+  test('viewer cannot see tiers and shows empty state', async () => {
     const createMutation = mockMutation()
     const updateMutation = mockMutation()
     useCreateProductTierMock.mockReturnValue(createMutation)
@@ -343,8 +347,10 @@ describe('ProductTierManagementExample', () => {
       />
     )
 
+    await waitFor(() => {
+      expect(getByText(UI_PRODUCT_TIER_EMPTY_STATE_MESSAGE)).toBeInTheDocument()
+    })
     expect(queryByText(tier.tierName)).toBeNull()
-    expect(getByText(UI_PRODUCT_TIER_EMPTY_STATE_MESSAGE)).toBeInTheDocument()
     expect(queryByText(UI_PRODUCT_TIER_BUTTON_CREATE)).toBeNull()
     expect(queryByText(UI_PRODUCT_TIER_ACTION_EDIT)).toBeNull()
   })

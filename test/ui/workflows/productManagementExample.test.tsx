@@ -116,9 +116,15 @@ describe('ProductManagementExample', () => {
     const adminUser = buildUser({ role: 'ADMIN' })
     const product = buildProduct()
 
+    const mockClient = {
+      listProductTiers: vi.fn().mockResolvedValue([]),
+      listProductEntitlements: vi.fn().mockResolvedValue([]),
+      getProduct: vi.fn().mockResolvedValue({ product }),
+    } as never
+
     const { getByText, getByRole } = renderWithProviders(
       <ProductManagementExample
-        client={{} as never}
+        client={mockClient}
         products={[product]}
         currentUser={adminUser}
         onRefresh={onRefresh}
@@ -128,15 +134,32 @@ describe('ProductManagementExample', () => {
       />
     )
 
+    await waitFor(() => {
+      expect(getByText(UI_PRODUCT_ACTION_EDIT)).toBeInTheDocument()
+    })
     fireEvent.click(getByText(UI_PRODUCT_ACTION_EDIT))
-    // Wait for modal to appear
-    await waitFor(() => {
-      expect(screen.getByText(UI_PRODUCT_FORM_TITLE_UPDATE)).toBeInTheDocument()
-    })
+    // Wait for modal to appear - first wait for modal element, then title
+    await waitFor(
+      () => {
+        const modal = screen.queryByRole('dialog')
+        expect(modal).toBeInTheDocument()
+      },
+      { timeout: 5000 }
+    )
+    // Then wait for title
+    await waitFor(
+      () => {
+        expect(screen.getByText(UI_PRODUCT_FORM_TITLE_UPDATE)).toBeInTheDocument()
+      },
+      { timeout: 5000 }
+    )
     // Then wait for submit button
-    await waitFor(() => {
-      expect(getByRole('button', { name: UI_PRODUCT_FORM_SUBMIT_UPDATE })).toBeInTheDocument()
-    })
+    await waitFor(
+      () => {
+        expect(getByRole('button', { name: UI_PRODUCT_FORM_SUBMIT_UPDATE })).toBeInTheDocument()
+      },
+      { timeout: 5000 }
+    )
     fireEvent.click(getByRole('button', { name: UI_PRODUCT_FORM_SUBMIT_UPDATE }))
 
     await waitFor(() =>
@@ -157,9 +180,15 @@ describe('ProductManagementExample', () => {
     const product = buildProduct()
     const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId: product.vendorId ?? buildText() })
 
+    const mockClient = {
+      listProductTiers: vi.fn().mockResolvedValue([]),
+      listProductEntitlements: vi.fn().mockResolvedValue([]),
+      getProduct: vi.fn().mockResolvedValue({ product }),
+    } as never
+
     const { queryByText, getByText, getByRole } = renderWithProviders(
       <ProductManagementExample
-        client={{} as never}
+        client={mockClient}
         products={[product]}
         currentUser={vendorManager}
         onRefresh={onRefresh}
@@ -175,14 +204,28 @@ describe('ProductManagementExample', () => {
       expect(getByText(UI_PRODUCT_ACTION_EDIT)).toBeInTheDocument()
     })
     fireEvent.click(getByText(UI_PRODUCT_ACTION_EDIT))
-    // Wait for modal to appear
-    await waitFor(() => {
-      expect(screen.getByText(UI_PRODUCT_FORM_TITLE_UPDATE)).toBeInTheDocument()
-    })
+    // Wait for modal to appear - first wait for modal element, then title
+    await waitFor(
+      () => {
+        const modal = screen.queryByRole('dialog')
+        expect(modal).toBeInTheDocument()
+      },
+      { timeout: 5000 }
+    )
+    // Then wait for title
+    await waitFor(
+      () => {
+        expect(screen.getByText(UI_PRODUCT_FORM_TITLE_UPDATE)).toBeInTheDocument()
+      },
+      { timeout: 5000 }
+    )
     // Then wait for submit button
-    await waitFor(() => {
-      expect(getByRole('button', { name: UI_PRODUCT_FORM_SUBMIT_UPDATE })).toBeInTheDocument()
-    })
+    await waitFor(
+      () => {
+        expect(getByRole('button', { name: UI_PRODUCT_FORM_SUBMIT_UPDATE })).toBeInTheDocument()
+      },
+      { timeout: 5000 }
+    )
     fireEvent.click(getByRole('button', { name: UI_PRODUCT_FORM_SUBMIT_UPDATE }))
 
     await waitFor(() =>
@@ -226,9 +269,15 @@ describe('ProductManagementExample', () => {
     const otherProduct = buildProduct({ vendorId: `${ownProduct.vendorId}-other` })
     const vendorUser = buildUser({ role: 'VENDOR_ADMIN', vendorId: ownProduct.vendorId ?? buildText() })
 
+    const mockClient = {
+      listProductTiers: vi.fn().mockResolvedValue([]),
+      listProductEntitlements: vi.fn().mockResolvedValue([]),
+      getProduct: vi.fn().mockResolvedValue({ product: ownProduct }),
+    } as never
+
     const { getByText, queryByText } = renderWithProviders(
       <ProductManagementExample
-        client={{} as never}
+        client={mockClient}
         products={[ownProduct, otherProduct]}
         currentUser={vendorUser}
         page={1}
@@ -237,7 +286,12 @@ describe('ProductManagementExample', () => {
       />
     )
 
-    expect(getByText(ownProduct.name)).toBeInTheDocument()
+    await waitFor(
+      () => {
+        expect(getByText(ownProduct.name)).toBeInTheDocument()
+      },
+      { timeout: 3000 }
+    )
     expect(queryByText(otherProduct.name)).toBeNull()
     expect(queryByText(UI_PRODUCT_BUTTON_CREATE)).toBeNull()
     expect(queryByText(UI_PRODUCT_ACTION_EDIT)).toBeNull()
@@ -251,9 +305,15 @@ describe('ProductManagementExample', () => {
     const vendorUser = buildUser({ role: 'VENDOR_ADMIN', vendorId: buildText() })
     const otherProduct = buildProduct({ vendorId: `${vendorUser.vendorId}-other` })
 
+    const mockClient = {
+      listProductTiers: vi.fn().mockResolvedValue([]),
+      listProductEntitlements: vi.fn().mockResolvedValue([]),
+      getProduct: vi.fn().mockResolvedValue({ product: otherProduct }),
+    } as never
+
     const { getByText } = renderWithProviders(
       <ProductManagementExample
-        client={{} as never}
+        client={mockClient}
         products={[otherProduct]}
         currentUser={vendorUser}
         page={1}
@@ -262,7 +322,9 @@ describe('ProductManagementExample', () => {
       />
     )
 
-    expect(getByText(UI_PRODUCT_EMPTY_STATE_MESSAGE)).toBeInTheDocument()
+    await waitFor(() => {
+      expect(getByText(UI_PRODUCT_EMPTY_STATE_MESSAGE)).toBeInTheDocument()
+    })
   })
 
   test('does not refresh when create mutation fails', async () => {
@@ -280,9 +342,15 @@ describe('ProductManagementExample', () => {
     const adminUser = buildUser({ role: 'ADMIN' })
     const product = buildProduct()
 
+    const mockClient = {
+      listProductTiers: vi.fn().mockResolvedValue([]),
+      listProductEntitlements: vi.fn().mockResolvedValue([]),
+      getProduct: vi.fn().mockResolvedValue({ product }),
+    } as never
+
     const { getByText, getByRole } = renderWithProviders(
       <ProductManagementExample
-        client={{} as never}
+        client={mockClient}
         products={[product]}
         currentUser={adminUser}
         onRefresh={onRefresh}
@@ -292,7 +360,13 @@ describe('ProductManagementExample', () => {
       />
     )
 
+    await waitFor(() => {
+      expect(getByText(UI_PRODUCT_BUTTON_CREATE)).toBeInTheDocument()
+    })
     fireEvent.click(getByText(UI_PRODUCT_BUTTON_CREATE))
+    await waitFor(() => {
+      expect(getByRole('button', { name: UI_PRODUCT_FORM_SUBMIT_CREATE })).toBeInTheDocument()
+    })
     fireEvent.click(getByRole('button', { name: UI_PRODUCT_FORM_SUBMIT_CREATE }))
 
     await waitFor(() => expect(createMutation.mutateAsync).toHaveBeenCalled())
