@@ -28,6 +28,7 @@ vi.mock('@/simpleLicense', async () => {
 
 vi.mock('../../../src/ui/workflows/ProductEntitlementRowActions', async () => {
   const { UI_ENTITLEMENT_ACTION_EDIT } = await import('../../../src/ui/constants')
+  const { canUpdateEntitlement } = await import('../../../src/app/auth/permissions')
   return {
     ProductEntitlementRowActions: ({
       entitlement,
@@ -40,10 +41,9 @@ vi.mock('../../../src/ui/workflows/ProductEntitlementRowActions', async () => {
       onEdit: (entitlement: { id: string }) => void
       onCompleted?: () => void
     }) => {
-      // Only show edit button if user can update (checks ownership via canUpdateEntitlement)
-      const isSystemAdmin = currentUser?.role === 'SUPERUSER' || currentUser?.role === 'ADMIN'
-      const ownsEntitlement = isSystemAdmin || (entitlement.vendorId && currentUser?.vendorId === entitlement.vendorId)
-      if (!ownsEntitlement) {
+      // Use actual permission check to match component behavior
+      const allowUpdate = canUpdateEntitlement(currentUser ?? null, entitlement)
+      if (!allowUpdate) {
         return null
       }
       return (
@@ -221,7 +221,8 @@ describe('ProductEntitlementManagementExample', () => {
     const vendorId = 'vendor-entitlements-1'
     const ownEntitlement = buildEntitlement({ vendorId })
     const otherEntitlement = buildEntitlement({ vendorId: 'vendor-entitlements-2' })
-    const vendorUser = buildUser({ role: 'VENDOR_ADMIN', vendorId })
+    // Use VIEWER role for true view-only mode (VENDOR_ADMIN can edit their own)
+    const vendorUser = buildUser({ role: 'VIEWER', vendorId })
 
     const { getByText, queryByText } = renderWithProviders(
       <ProductEntitlementManagementExample
