@@ -4,8 +4,8 @@
  */
 
 import { useCallback, useEffect, useRef } from 'react'
-import { useAuth } from './authContext'
-import { useNotificationBus } from '@/notifications/busContext'
+import { useAuth } from './useAuth'
+import { useNotificationBus } from '@/notifications/useNotificationBus'
 import { useTracking } from '@/app/analytics/trackingContext'
 import {
   I18N_KEY_SESSION_EXPIRED_TITLE,

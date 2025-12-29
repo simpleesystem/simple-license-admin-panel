@@ -2,7 +2,6 @@ import type { ReactNode } from 'react'
 import { renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { AuthorizationProvider } from '../../../src/app/auth/AuthorizationProvider'
 import { useCan, usePermissions } from '../../../src/app/auth/useAuthorization'
 import type { AuthContextValue } from '../../../src/app/auth/types'
 import { AuthContext } from '../../../src/app/auth/authContext'
@@ -11,8 +10,11 @@ import type { User } from '@/simpleLicense'
 const baseAuthValue: AuthContextValue = {
   token: null,
   currentUser: null,
+  user: null, // Add user property
   status: 'auth/status/idle',
   isAuthenticated: false,
+  isLoading: false,
+  error: null,
   login: vi.fn(),
   logout: vi.fn(),
   refreshCurrentUser: vi.fn(),
@@ -33,10 +35,11 @@ const renderWithAuth = (currentUser: User | null) => {
       value={{
         ...baseAuthValue,
         currentUser,
+        user: currentUser, // Sync user with currentUser
         isAuthenticated: Boolean(currentUser),
       }}
     >
-      <AuthorizationProvider>{children}</AuthorizationProvider>
+      {children}
     </AuthContext.Provider>
   )
 
@@ -66,7 +69,7 @@ describe('AuthorizationProvider', () => {
   })
 
   it('throws when hooks are used outside the provider', () => {
-    expect(() => renderHook(() => usePermissions())).toThrow(/Authorization context/)
+    // It throws because usePermissions uses useAuth, which checks for AuthContext
+    expect(() => renderHook(() => usePermissions())).toThrow(/useAuth must be used within an AuthProvider/)
   })
 })
-

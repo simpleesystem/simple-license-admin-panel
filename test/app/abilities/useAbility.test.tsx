@@ -7,16 +7,16 @@ import {
   ABILITY_SUBJECT_DASHBOARD,
   ERROR_MESSAGE_ABILITY_CONTEXT_UNAVAILABLE,
 } from '@/app/constants'
-import { AbilityProvider } from '@/app/abilities/AbilityProvider'
+import { AbilityContext } from '@/app/abilities/abilityContext'
+import { buildAbilityFromPermissions } from '@/app/abilities/factory'
 import { useAbility, useCanAbility } from '@/app/abilities/useAbility'
-import { AuthorizationContext } from '@/app/auth/authorizationContext'
 import { buildPermissions } from '@test/factories/permissionFactory'
 
 const withProviders = (permissions = buildPermissions({ viewDashboard: true })) => {
+  const ability = buildAbilityFromPermissions(permissions)
+
   return ({ children }: { children: ReactNode }) => (
-    <AuthorizationContext.Provider value={permissions}>
-      <AbilityProvider>{children}</AbilityProvider>
-    </AuthorizationContext.Provider>
+    <AbilityContext.Provider value={ability}>{children}</AbilityContext.Provider>
   )
 }
 

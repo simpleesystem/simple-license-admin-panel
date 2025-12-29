@@ -1,5 +1,5 @@
 import type { Client, ProductTier, User } from '@/simpleLicense'
-import { useDeleteProductTier } from '@/simpleLicense'
+import { useUpdateProductTier } from '@/simpleLicense'
 import { useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import { canDeleteProductTier, canUpdateProductTier } from '../../app/auth/permissions'
@@ -42,14 +42,11 @@ export function ProductTierRowActions({
   currentUser,
   ...rest
 }: ProductTierRowActionsProps) {
-  const deleteMutation = adaptMutation(useDeleteProductTier(client))
+  // Hooks must be called before any early returns (React rules of hooks)
+  const updateMutation = adaptMutation(useUpdateProductTier(client))
   const notificationBus = useNotificationBus()
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
-  // tierContext is unused in original code too? No, it was used.
-  // Wait, I am editing ProductTierRowActions but looking at ProductRowActions logic?
-  // Ah, the error was in ProductTierRowActions about tierContext being unused.
-  // const tierContext = { vendorId: vendorId ?? (tier as { vendorId?: string | null }).vendorId }
   const allowUpdate = canUpdateProductTier(currentUser ?? null)
   const allowDelete = canDeleteProductTier(currentUser ?? null)
   const isSystemAdmin = isSystemAdminUser(currentUser ?? null)
@@ -63,7 +60,8 @@ export function ProductTierRowActions({
 
   const handleDelete = async () => {
     try {
-      await deleteMutation.mutateAsync(tier.id)
+      // Soft delete: set is_active to false
+      await updateMutation.mutateAsync({ id: tier.id, data: { is_active: false } })
       notifyProductTierSuccess(notificationBus, 'delete')
       onCompleted?.()
     } catch (error) {
@@ -95,7 +93,7 @@ export function ProductTierRowActions({
           <Button
             variant={UI_BUTTON_VARIANT_GHOST}
             onClick={() => setShowDeleteConfirm(true)}
-            disabled={deleteMutation.isPending}
+            disabled={updateMutation.isPending}
             aria-label={UI_PRODUCT_TIER_ACTION_DELETE}
           >
             {UI_PRODUCT_TIER_BUTTON_DELETE}
@@ -111,7 +109,7 @@ export function ProductTierRowActions({
             id: 'delete-confirm',
             label: UI_PRODUCT_TIER_CONFIRM_DELETE_CONFIRM,
             onClick: handleDelete,
-            disabled: deleteMutation.isPending,
+            disabled: updateMutation.isPending,
           }}
           secondaryAction={{
             id: 'delete-cancel',

@@ -317,7 +317,9 @@ describe('ProductEntitlementManagementExample', () => {
       />
     )
 
-    expect(getByText(UI_ENTITLEMENT_EMPTY_STATE_MESSAGE)).toBeInTheDocument()
+    await waitFor(() => {
+      expect(getByText(UI_ENTITLEMENT_EMPTY_STATE_MESSAGE)).toBeInTheDocument()
+    })
   })
 
   test('does not refresh when create mutation fails', async () => {

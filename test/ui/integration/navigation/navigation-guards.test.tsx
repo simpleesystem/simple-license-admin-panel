@@ -6,6 +6,7 @@ import { AppShell } from '../../../../src/ui/layout/AppShell'
 import { SidebarNav } from '../../../../src/ui/navigation/SidebarNav'
 import { TopNavBar } from '../../../../src/ui/navigation/TopNavBar'
 import { buildSidebarNavItem } from '../../factories/uiFactories'
+import { buildUser } from '../../../factories/userFactory'
 import { renderWithProviders } from '../../utils'
 
 vi.mock('../../../../src/app/auth/AuthProvider', () => ({
@@ -33,7 +34,7 @@ describe('Navigation guards and visibility', () => {
       <AppShell
         sidebar={<SidebarNav items={navItems} />}
         topBar={<TopNavBar brand="Brand" userMenu={null} />}
-        currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() }}
+        currentUser={buildUser({ role: 'SUPERUSER', vendorId: faker.string.uuid() })}
       >
         content
       </AppShell>,
@@ -51,7 +52,7 @@ describe('Navigation guards and visibility', () => {
       <AppShell
         sidebar={<SidebarNav items={restrictedItems} />}
         topBar={<TopNavBar brand="Brand" userMenu={null} />}
-        currentUser={{ role: 'VIEWER', vendorId: faker.string.uuid() }}
+        currentUser={buildUser({ role: 'VIEWER', vendorId: faker.string.uuid() })}
       >
         content
       </AppShell>,

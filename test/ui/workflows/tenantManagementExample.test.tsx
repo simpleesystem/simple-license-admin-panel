@@ -54,6 +54,10 @@ vi.mock('../../../src/ui/workflows/TenantRowActions', async () => {
       onEdit: (t: unknown) => void
       onCompleted?: () => void
     }) => {
+      // VIEWERs cannot update tenants
+      if (currentUser?.role === 'VIEWER') {
+        return null
+      }
       // Only show edit button if user can update (checks ownership via canUpdateTenant)
       const isSystemAdmin = currentUser?.role === 'SUPERUSER' || currentUser?.role === 'ADMIN'
       const ownsTenant = isSystemAdmin || (tenant.vendorId && currentUser?.vendorId === tenant.vendorId)
@@ -228,7 +232,7 @@ describe('TenantManagementExample', () => {
     useCreateTenantMock.mockReturnValue(createMutation)
     useUpdateTenantMock.mockReturnValue(updateMutation)
     const vendorId = buildTenant().vendorId
-    const vendorUser = buildUser({ role: 'VENDOR_ADMIN', vendorId })
+    const vendorUser = buildUser({ role: 'VIEWER', vendorId })
     const ownTenant = buildTenant({ vendorId })
     const otherTenant = buildTenant({ vendorId: 'other-vendor' })
 

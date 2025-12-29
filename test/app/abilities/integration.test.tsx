@@ -5,7 +5,6 @@ import type { AdminRole, LoginResponse } from '@/simpleLicense'
 
 import { IfCan } from '@/app/abilities/IfCan'
 import { AbilityProvider } from '@/app/abilities/AbilityProvider'
-import { AuthorizationProvider } from '@/app/auth/AuthorizationProvider'
 import { AuthContext } from '@/app/auth/authContext'
 import type { AuthContextValue } from '@/app/auth/types'
 import { AUTH_STATUS_IDLE, ABILITY_ACTION_MANAGE, ABILITY_SUBJECT_LICENSE } from '@/app/constants'
@@ -21,6 +20,7 @@ const createAuthValue = (userRole: AdminRole | null): AuthContextValue => {
   return {
     token: null,
     currentUser: user,
+    user,
     status: AUTH_STATUS_IDLE,
     isAuthenticated: Boolean(user),
     login: vi.fn(async () => loginResponse),
@@ -33,9 +33,7 @@ const renderAbilityTree = (ui: ReactElement, role: AdminRole | null) => {
   const authValue = createAuthValue(role)
   return render(
     <AuthContext.Provider value={authValue}>
-      <AuthorizationProvider>
-        <AbilityProvider>{ui}</AbilityProvider>
-      </AuthorizationProvider>
+      <AbilityProvider>{ui}</AbilityProvider>
     </AuthContext.Provider>,
   )
 }

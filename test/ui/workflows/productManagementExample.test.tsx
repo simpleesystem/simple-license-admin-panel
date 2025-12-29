@@ -43,6 +43,10 @@ vi.mock('../../../src/ui/workflows/ProductRowActions', async () => {
       onCompleted?: () => void
       onEdit?: () => void
     }) => {
+      // VIEWERs cannot update products
+      if (currentUser?.role === 'VIEWER') {
+        return null
+      }
       // Only show edit button if user owns the product or is system admin
       const isSystemAdmin = currentUser?.role === 'SUPERUSER' || currentUser?.role === 'ADMIN'
       const ownsProduct = isSystemAdmin || (vendorId && currentUser?.vendorId === vendorId)
@@ -51,7 +55,7 @@ vi.mock('../../../src/ui/workflows/ProductRowActions', async () => {
       }
       return (
         <div>
-          <button type="button" onClick={() => onEdit?.()}>
+          <button type="button" onClick={() => onEdit?.({ id: productId })}>
             {UI_PRODUCT_ACTION_EDIT}
           </button>
           <button type="button" onClick={() => onCompleted?.()}>
@@ -119,6 +123,7 @@ describe('ProductManagementExample', () => {
     const mockClient = {
       listProductTiers: vi.fn().mockResolvedValue([]),
       listProductEntitlements: vi.fn().mockResolvedValue([]),
+      listEntitlements: vi.fn().mockResolvedValue([]),
       getProduct: vi.fn().mockResolvedValue({ product }),
     } as never
 
@@ -146,10 +151,11 @@ describe('ProductManagementExample', () => {
       },
       { timeout: 5000 }
     )
-    // Then wait for title
+    // Then wait for title - use getAllByText since there might be multiple instances (modal title and form heading)
     await waitFor(
       () => {
-        expect(screen.getByText(UI_PRODUCT_FORM_TITLE_UPDATE)).toBeInTheDocument()
+        const titles = screen.getAllByText(UI_PRODUCT_FORM_TITLE_UPDATE)
+        expect(titles.length).toBeGreaterThan(0)
       },
       { timeout: 5000 }
     )
@@ -183,6 +189,7 @@ describe('ProductManagementExample', () => {
     const mockClient = {
       listProductTiers: vi.fn().mockResolvedValue([]),
       listProductEntitlements: vi.fn().mockResolvedValue([]),
+      listEntitlements: vi.fn().mockResolvedValue([]),
       getProduct: vi.fn().mockResolvedValue({ product }),
     } as never
 
@@ -212,10 +219,11 @@ describe('ProductManagementExample', () => {
       },
       { timeout: 5000 }
     )
-    // Then wait for title
+    // Then wait for title - use getAllByText since there might be multiple instances (modal title and form heading)
     await waitFor(
       () => {
-        expect(screen.getByText(UI_PRODUCT_FORM_TITLE_UPDATE)).toBeInTheDocument()
+        const titles = screen.getAllByText(UI_PRODUCT_FORM_TITLE_UPDATE)
+        expect(titles.length).toBeGreaterThan(0)
       },
       { timeout: 5000 }
     )
@@ -267,7 +275,7 @@ describe('ProductManagementExample', () => {
     useUpdateProductMock.mockReturnValue(updateMutation)
     const ownProduct = buildProduct()
     const otherProduct = buildProduct({ vendorId: `${ownProduct.vendorId}-other` })
-    const vendorUser = buildUser({ role: 'VENDOR_ADMIN', vendorId: ownProduct.vendorId ?? buildText() })
+    const vendorUser = buildUser({ role: 'VIEWER', vendorId: ownProduct.vendorId ?? buildText() })
 
     const mockClient = {
       listProductTiers: vi.fn().mockResolvedValue([]),

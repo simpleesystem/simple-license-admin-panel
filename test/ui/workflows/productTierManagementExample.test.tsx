@@ -42,6 +42,10 @@ vi.mock('../../../src/ui/workflows/ProductTierRowActions', async () => {
       onEdit: (tier: { id: string }) => void
       onCompleted?: () => void
     }) => {
+      // VIEWERs cannot update product tiers
+      if (currentUser?.role === 'VIEWER') {
+        return null
+      }
       // Only show edit button if user owns the tier or is system admin
       const isSystemAdmin = currentUser?.role === 'SUPERUSER' || currentUser?.role === 'ADMIN'
       const ownsTier = isSystemAdmin || (vendorId && currentUser?.vendorId === vendorId)
@@ -219,7 +223,7 @@ describe('ProductTierManagementExample', () => {
     const ownVendorId = 'vendor-1'
     const ownTier = buildProductTier({ vendorId: ownVendorId })
     const otherTier = buildProductTier({ vendorId: 'vendor-2' })
-    const vendorUser = buildUser({ role: 'VENDOR_ADMIN', vendorId: ownVendorId })
+    const vendorUser = buildUser({ role: 'VIEWER', vendorId: ownVendorId })
 
     const { getByText, queryByText } = renderWithProviders(
       <ProductTierManagementExample
@@ -294,6 +298,9 @@ describe('ProductTierManagementExample', () => {
       />
     )
 
+    await waitFor(() => {
+      expect(getByText(UI_PRODUCT_TIER_BUTTON_CREATE)).toBeInTheDocument()
+    })
     fireEvent.click(getByText(UI_PRODUCT_TIER_BUTTON_CREATE))
     fireEvent.click(getByRole('button', { name: UI_PRODUCT_TIER_FORM_SUBMIT_CREATE }))
 

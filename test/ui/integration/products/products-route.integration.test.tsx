@@ -48,10 +48,8 @@ describe('ProductsRouteComponent', () => {
 
     expect(await screen.findByText('allowed-product')).toBeInTheDocument()
     expect(screen.queryByText('other-product')).toBeNull()
-    // Vendor manager can create products?
-    // According to permissions.ts: manageProducts: isSuperUser || isAdmin || isVendorManager || isVendorAdmin
-    // So yes, they should see the create button.
-    expect(screen.getByText(UI_PRODUCT_BUTTON_CREATE)).toBeInTheDocument()
+    // Vendor manager cannot create products - only system admins can
+    expect(screen.queryByText(UI_PRODUCT_BUTTON_CREATE)).toBeNull()
   })
 
   test('shows create action for superuser', async () => {

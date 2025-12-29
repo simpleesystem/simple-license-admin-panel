@@ -13,8 +13,8 @@ import {
   SESSION_IDLE_TIMEOUT_MS,
   SESSION_IDLE_WARNING_MS,
 } from '../../../src/app/constants'
-import { NotificationBusContext } from '../../../src/notifications/busContext'
-import type { NotificationEventMap } from '../../../src/notifications/types'
+import { NotificationBusProvider } from '@/notifications/busContext'
+import type { NotificationEventMap } from '@/notifications/types'
 import { TrackingContext } from '../../../src/app/analytics/trackingContext'
 import type { TrackingClient } from '../../../src/app/analytics/tracking'
 import { TRACKING_EVENT_SESSION_TIMEOUT, TRACKING_EVENT_SESSION_WARNING } from '../../../src/app/constants'
@@ -42,9 +42,9 @@ const renderManager = (authOverrides: Partial<AuthContextValue> = {}) => {
 
   const wrapper = ({ children }: { children: ReactNode }) => (
     <TrackingContext.Provider value={trackingClient}>
-      <NotificationBusContext.Provider value={notificationBus}>
+      <NotificationBusProvider bus={notificationBus}>
         <AuthContext.Provider value={authValue}>{children}</AuthContext.Provider>
-      </NotificationBusContext.Provider>
+      </NotificationBusProvider>
     </TrackingContext.Provider>
   )
 

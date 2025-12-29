@@ -14,6 +14,7 @@ import {
 import { LicenseActivationsPanel } from '../../../../src/ui/workflows/LicenseActivationsPanel'
 import { LicenseUsageDetailsPanel } from '../../../../src/ui/workflows/LicenseUsageDetailsPanel'
 import { SystemStatusPanel } from '../../../../src/ui/workflows/SystemStatusPanel'
+import { buildUser } from '../../../factories/userFactory'
 import { renderWithProviders } from '../../utils'
 
 const useLicenseActivationsMock = vi.hoisted(() => vi.fn())
@@ -66,7 +67,7 @@ describe('Panel states: loading, error, empty', () => {
   test('LicenseActivationsPanel loading and error states', () => {
     const client = {} as never
     const licenseKey = faker.string.uuid()
-    const currentUser = { role: 'SUPERUSER', vendorId: faker.string.uuid() }
+    const currentUser = buildUser({ role: 'SUPERUSER', vendorId: faker.string.uuid() })
 
     useLicenseActivationsMock.mockReturnValue({ data: undefined, isLoading: true, isError: false })
 
@@ -87,7 +88,7 @@ describe('Panel states: loading, error, empty', () => {
   test('LicenseActivationsPanel empty state', async () => {
     const client = {} as never
     const licenseKey = faker.string.uuid()
-    const currentUser = { role: 'SUPERUSER', vendorId: faker.string.uuid() }
+    const currentUser = buildUser({ role: 'SUPERUSER', vendorId: faker.string.uuid() })
     useLicenseActivationsMock.mockReturnValue({
       data: { activations: [] },
       isLoading: false,
@@ -120,7 +121,7 @@ describe('Panel states: loading, error, empty', () => {
 
   test('SystemStatusPanel handles websocket error state', async () => {
     const client = {} as never
-    const currentUser = { role: 'SUPERUSER', vendorId: faker.string.uuid() }
+    const currentUser = buildUser({ role: 'SUPERUSER', vendorId: faker.string.uuid() })
     useHealthWebSocketMock.mockReturnValue({
       connected: false,
       connectionInfo: { state: 'error' as const },

@@ -572,17 +572,6 @@ const buildCreateEntitlementBlueprint = (options?: EntitlementBlueprintOptions<E
           required: true,
         },
         {
-          name: 'value_type',
-          kind: 'select',
-          label: 'Value Type',
-          options: [
-            { value: 'number', label: 'Number' },
-            { value: 'boolean', label: 'Boolean' },
-            { value: 'string', label: 'String' },
-          ],
-          required: true,
-        },
-        {
           name: 'number_value',
           kind: 'number',
           label: 'Number Value (Optional)',

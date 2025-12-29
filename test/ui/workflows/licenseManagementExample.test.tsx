@@ -107,7 +107,7 @@ describe('LicenseManagementExample', () => {
 
     await waitFor(() => {
       expect(updateMutation.mutateAsync).toHaveBeenCalledWith({
-        id: license.id,
+        id: license.licenseKey ?? license.id,
         data: expect.any(Object),
       })
     })

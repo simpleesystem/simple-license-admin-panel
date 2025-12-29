@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import { fireEvent, screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
 
 import {
@@ -14,6 +14,7 @@ import {
 } from '../../../../src/ui/constants'
 import { ProductManagementExample } from '../../../../src/ui/workflows/ProductManagementExample'
 import { buildProduct } from '../../../factories/productFactory'
+import { buildUser } from '../../../factories/userFactory'
 import { renderWithProviders } from '../../utils'
 
 const useDeleteProductMock = vi.hoisted(() => vi.fn())
@@ -58,6 +59,11 @@ const mockMutation = () => ({
 describe('Product RBAC & vendor scoping', () => {
   test('SUPERUSER can create/edit/delete any vendor product', async () => {
     const product = buildProduct({ status: 'ACTIVE' })
+    const mockClient = {
+      getProduct: vi.fn().mockResolvedValue(product),
+      listProductTiers: vi.fn().mockResolvedValue([]),
+      listEntitlements: vi.fn().mockResolvedValue([]),
+    }
     useDeleteProductMock.mockReturnValue(mockMutation())
     useSuspendProductMock.mockReturnValue(mockMutation())
     useResumeProductMock.mockReturnValue(mockMutation())
@@ -66,9 +72,9 @@ describe('Product RBAC & vendor scoping', () => {
 
     renderWithProviders(
       <ProductManagementExample
-        client={{} as never}
+        client={mockClient as never}
         products={[product]}
-        currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() }}
+        currentUser={buildUser({ role: 'SUPERUSER' })}
         onRefresh={vi.fn()}
         page={1}
         totalPages={1}
@@ -76,20 +82,30 @@ describe('Product RBAC & vendor scoping', () => {
       />
     )
 
+    await waitFor(() => {
+      expect(screen.getByText(UI_PRODUCT_BUTTON_CREATE)).toBeInTheDocument()
+    })
     fireEvent.click(screen.getByText(UI_PRODUCT_BUTTON_CREATE))
     await waitFor(() => {
       expect(screen.getByRole('button', { name: UI_PRODUCT_FORM_SUBMIT_CREATE })).toBeInTheDocument()
     })
     // Close create modal
-    fireEvent.click(screen.getByLabelText('Close'))
+    const createDialog = await screen.findByRole('dialog')
+    fireEvent.click(within(createDialog).getByLabelText('Close'))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
 
     fireEvent.click(screen.getByText(UI_PRODUCT_ACTION_EDIT))
     await waitFor(() => {
       expect(screen.getByRole('button', { name: UI_PRODUCT_FORM_SUBMIT_UPDATE })).toBeInTheDocument()
     })
     // Close edit modal
-    fireEvent.click(screen.getByLabelText('Close'))
+    const editDialog = await screen.findByRole('dialog')
+    fireEvent.click(within(editDialog).getByLabelText('Close'))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
 
+    await waitFor(() => {
+      expect(screen.getByText(UI_PRODUCT_ACTION_DELETE)).toBeInTheDocument()
+    })
     fireEvent.click(screen.getByText(UI_PRODUCT_ACTION_DELETE))
     await waitFor(() => {
       expect(screen.getByText(UI_PRODUCT_CONFIRM_DELETE_CONFIRM)).toBeInTheDocument()
@@ -104,6 +120,11 @@ describe('Product RBAC & vendor scoping', () => {
   test('VENDOR_MANAGER can edit own vendor product, cannot delete', async () => {
     const vendorId = faker.string.uuid()
     const product = buildProduct({ status: 'ACTIVE', vendorId })
+    const mockClient = {
+      getProduct: vi.fn().mockResolvedValue(product),
+      listProductTiers: vi.fn().mockResolvedValue([]),
+      listEntitlements: vi.fn().mockResolvedValue([]),
+    }
     useDeleteProductMock.mockReturnValue(mockMutation())
     useSuspendProductMock.mockReturnValue(mockMutation())
     useResumeProductMock.mockReturnValue(mockMutation())
@@ -112,9 +133,9 @@ describe('Product RBAC & vendor scoping', () => {
 
     renderWithProviders(
       <ProductManagementExample
-        client={{} as never}
+        client={mockClient as never}
         products={[product]}
-        currentUser={{ role: 'VENDOR_MANAGER', vendorId }}
+        currentUser={buildUser({ role: 'VENDOR_MANAGER', vendorId })}
         onRefresh={vi.fn()}
         page={1}
         totalPages={1}
@@ -123,12 +144,17 @@ describe('Product RBAC & vendor scoping', () => {
     )
 
     expect(screen.queryByText(UI_PRODUCT_BUTTON_CREATE)).toBeNull()
+    await waitFor(() => {
+      expect(screen.getByText(UI_PRODUCT_ACTION_EDIT)).toBeInTheDocument()
+    })
     fireEvent.click(screen.getByText(UI_PRODUCT_ACTION_EDIT))
     await waitFor(() => {
       expect(screen.getByRole('button', { name: UI_PRODUCT_FORM_SUBMIT_UPDATE })).toBeInTheDocument()
     })
     // Close edit modal
-    fireEvent.click(screen.getByLabelText('Close'))
+    const editDialog = await screen.findByRole('dialog')
+    fireEvent.click(within(editDialog).getByLabelText('Close'))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     expect(screen.queryByText(UI_PRODUCT_ACTION_DELETE)).toBeNull()
   })
 
@@ -144,7 +170,7 @@ describe('Product RBAC & vendor scoping', () => {
       <ProductManagementExample
         client={{} as never}
         products={[product]}
-        currentUser={{ role: 'VENDOR_MANAGER', vendorId: faker.string.uuid() }}
+        currentUser={buildUser({ role: 'VENDOR_MANAGER', vendorId: faker.string.uuid() })}
         onRefresh={vi.fn()}
         page={1}
         totalPages={1}
@@ -168,7 +194,7 @@ describe('Product RBAC & vendor scoping', () => {
       <ProductManagementExample
         client={{} as never}
         products={[product]}
-        currentUser={{ role: 'VIEWER', vendorId: product.vendorId }}
+        currentUser={buildUser({ role: 'VIEWER', vendorId: product.vendorId })}
         onRefresh={vi.fn()}
         page={1}
         totalPages={1}
@@ -193,7 +219,7 @@ describe('Product RBAC & vendor scoping', () => {
       <ProductManagementExample
         client={{} as never}
         products={[product]}
-        currentUser={{ role: 'SUPERUSER', vendorId: product.vendorId }}
+        currentUser={buildUser({ role: 'SUPERUSER' })}
         onRefresh={vi.fn()}
         page={1}
         totalPages={1}
@@ -201,6 +227,9 @@ describe('Product RBAC & vendor scoping', () => {
       />
     )
 
+    await waitFor(() => {
+      expect(screen.getByText(UI_PRODUCT_BUTTON_RESUME)).toBeInTheDocument()
+    })
     fireEvent.click(screen.getByText(UI_PRODUCT_BUTTON_RESUME))
     await waitFor(() => {
       expect(screen.getByText(UI_PRODUCT_CONFIRM_RESUME_CONFIRM)).toBeInTheDocument()

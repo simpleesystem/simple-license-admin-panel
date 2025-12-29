@@ -11,6 +11,32 @@ export function LoginForm() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [validationErrors, setValidationErrors] = useState<{ username?: string; password?: string }>({})
+
+  const validateForm = (newUsername: string, newPassword: string) => {
+    const newErrors: { username?: string; password?: string } = {}
+    if (!newUsername.trim() && newPassword.trim()) {
+      newErrors.username = 'Username is required'
+    }
+    if (!newPassword.trim() && newUsername.trim()) {
+      newErrors.password = 'Password is required'
+    }
+    setValidationErrors(newErrors)
+  }
+
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setUsername(value)
+    validateForm(value, password)
+  }
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setPassword(value)
+    validateForm(username, value)
+  }
+
+  const isFormValid = username.trim() !== '' && password.trim() !== '' && Object.keys(validationErrors).length === 0
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -46,10 +72,13 @@ export function LoginForm() {
             id="username"
             className="form-control"
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={handleUsernameChange}
             disabled={isSubmitting}
             required={true}
           />
+          {validationErrors.username && (
+            <div className="text-danger small mt-1">{validationErrors.username}</div>
+          )}
         </div>
 
         <div>
@@ -61,13 +90,16 @@ export function LoginForm() {
             type="password"
             className="form-control"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={handlePasswordChange}
             disabled={isSubmitting}
             required={true}
           />
+          {validationErrors.password && (
+            <div className="text-danger small mt-1">{validationErrors.password}</div>
+          )}
         </div>
 
-        <button type="submit" className="btn btn-primary w-100" disabled={isSubmitting}>
+        <button type="submit" className="btn btn-primary w-100" disabled={isSubmitting || !isFormValid}>
           {isSubmitting ? 'Logging in...' : 'Login'}
         </button>
       </Stack>

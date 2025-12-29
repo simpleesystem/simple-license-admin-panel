@@ -131,18 +131,19 @@ const ScreenHost = ({
   const [active, setActive] = useState<'users' | 'tenants' | 'products' | 'licenses'>('users')
   const items = createNavItems(setActive)
 
+  const currentUser = role === 'VIEWER' ? buildUser({ role, vendorId }) : buildUser({ role, vendorId })
   const user = role === 'VIEWER' ? null : buildUser({ vendorId })
   const tenant = role === 'VIEWER' ? null : buildTenant({ vendorId })
   const product = role === 'VIEWER' ? null : buildProduct({ vendorId, status: 'ACTIVE' })
   const license = role === 'VIEWER' ? null : buildLicense({ vendorId, status: 'ACTIVE' })
 
   return (
-    <AppShell sidebar={<SidebarNav items={items} />} topBar={null} currentUser={{ role, vendorId }}>
+    <AppShell sidebar={<SidebarNav items={items} />} topBar={null} currentUser={currentUser}>
       {active === 'users' ? (
         <UserManagementPanel
           client={{} as never}
           users={user ? [user] : []}
-          currentUser={{ role, vendorId }}
+          currentUser={currentUser}
           onRefresh={onRefresh}
           page={1}
           totalPages={1}
@@ -155,7 +156,7 @@ const ScreenHost = ({
         <TenantManagementExample
           client={{} as never}
           tenants={tenant ? [tenant] : []}
-          currentUser={{ role, vendorId }}
+          currentUser={currentUser}
           onRefresh={onRefresh}
           page={1}
           totalPages={1}
@@ -166,7 +167,7 @@ const ScreenHost = ({
         <ProductManagementExample
           client={{} as never}
           products={product ? [product] : []}
-          currentUser={{ role, vendorId }}
+          currentUser={currentUser}
           onRefresh={onRefresh}
           page={1}
           totalPages={1}
@@ -179,7 +180,7 @@ const ScreenHost = ({
           licenseKey={license.licenseKey ?? license.id}
           licenseVendorId={license.vendorId}
           licenseStatus={license.status}
-          currentUser={{ role, vendorId }}
+          currentUser={currentUser}
           onEdit={vi.fn()}
           onCompleted={onRefresh}
         />
@@ -247,13 +248,30 @@ describe('AppShell navigation across all domains', () => {
     const vendorId = faker.string.uuid()
     renderWithProviders(<ScreenHost role="VIEWER" vendorId={vendorId} />)
 
-    expect(screen.queryByText(UI_USER_ACTION_EDIT)).toBeNull()
+    await waitFor(() => {
+      expect(screen.queryByText(UI_USER_ACTION_EDIT)).toBeNull()
+    })
+    await waitFor(() => {
+      expect(screen.getByText('Tenants')).toBeInTheDocument()
+    })
     fireEvent.click(screen.getByText('Tenants'))
-    expect(screen.queryByText(UI_TENANT_ACTION_EDIT)).toBeNull()
+    await waitFor(() => {
+      expect(screen.queryByText(UI_TENANT_ACTION_EDIT)).toBeNull()
+    })
+    await waitFor(() => {
+      expect(screen.getByText('Products')).toBeInTheDocument()
+    })
     fireEvent.click(screen.getByText('Products'))
-    expect(screen.queryByText(UI_PRODUCT_ACTION_EDIT)).toBeNull()
+    await waitFor(() => {
+      expect(screen.queryByText(UI_PRODUCT_ACTION_EDIT)).toBeNull()
+    })
+    await waitFor(() => {
+      expect(screen.getByText('Licenses')).toBeInTheDocument()
+    })
     fireEvent.click(screen.getByText('Licenses'))
-    expect(screen.queryByText(UI_LICENSE_ACTION_EDIT)).toBeNull()
+    await waitFor(() => {
+      expect(screen.queryByText(UI_LICENSE_ACTION_EDIT)).toBeNull()
+    })
   })
 })
 

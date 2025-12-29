@@ -30,14 +30,16 @@ describe('devScenarios', () => {
     [ENV_VAR_DEV_PERSONA_SUPERUSER_EMAIL]: 'superuser@example.dev',
   }
 
-  it('persists auth artifacts for a selected persona when configured in env', () => {
+  it('does not persist auth artifacts (dev persona is a no-op with HttpOnly cookies)', () => {
     const persistAuthSpy = vi.spyOn(persistedAuth, 'persistAuth')
     const persistAuthUserSpy = vi.spyOn(persistedAuth, 'persistAuthUser')
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
     applyDevPersona(DEV_PERSONA_SUPERUSER, 'development', personaEnv)
 
-    expect(persistAuthSpy).toHaveBeenCalledTimes(1)
-    expect(persistAuthUserSpy).toHaveBeenCalledTimes(1)
+    expect(persistAuthSpy).not.toHaveBeenCalled()
+    expect(persistAuthUserSpy).not.toHaveBeenCalled()
+    expect(warnSpy).toHaveBeenCalled()
   })
 
   it('does not persist persona data when required env values are missing', () => {

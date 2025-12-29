@@ -3,7 +3,7 @@ import { ApiException, ERROR_CODE_MUST_CHANGE_PASSWORD } from '@/simpleLicense'
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import { useApiClient } from '@/api/apiContext'
 import type { LoginCredentials } from '@/types/auth'
-import { AUTH_STATUS_IDLE, STORAGE_KEY_AUTH_EXPIRY, STORAGE_KEY_AUTH_TOKEN, STORAGE_KEY_AUTH_USER } from '../constants'
+import { APP_ERROR_TYPE_AUTH, AUTH_STATUS_IDLE, STORAGE_KEY_AUTH_EXPIRY, STORAGE_KEY_AUTH_TOKEN, STORAGE_KEY_AUTH_USER } from '../constants'
 import { useAppStore } from '../state/store'
 import { AuthContext } from './AuthContext'
 
@@ -235,7 +235,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             message,
             scope: 'auth',
             status: errorRecord.status as number | undefined,
-            type: 'business', // Default to business error for auth failures
+            type: APP_ERROR_TYPE_AUTH, // Default to auth error for auth failures
           },
         })
 

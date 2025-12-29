@@ -10,7 +10,9 @@ export const adaptMutation = <
   mutateAsync: async (payload: TPayload) => {
     return await mutation.mutateAsync(payload)
   },
-  isPending: mutation.isPending,
+  get isPending() {
+    return mutation.isPending
+  },
 })
 
 

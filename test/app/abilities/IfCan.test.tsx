@@ -9,18 +9,37 @@ import {
   ABILITY_SUBJECT_DASHBOARD,
   ABILITY_SUBJECT_LICENSE,
 } from '@/app/constants'
-import { AbilityProvider } from '@/app/abilities/AbilityProvider'
-import { AuthorizationContext } from '@/app/auth/authorizationContext'
+import { AbilityContext } from '@/app/abilities/abilityContext'
+import { buildAbilityFromPermissions } from '@/app/abilities/factory'
+import { AuthContext } from '@/app/auth/authContext'
+import type { AuthContextValue } from '@/app/auth/types'
+import { buildUser } from '@test/factories/userFactory'
 import { buildPermissions } from '@test/factories/permissionFactory'
 
 const renderWithProviders = (
   ui: ReactNode,
   permissions = buildPermissions({ viewDashboard: true, manageLicenses: true }),
 ) => {
+  const ability = buildAbilityFromPermissions(permissions)
+  const userHasManageLicenses = permissions.manageLicenses ?? false
+  const user = userHasManageLicenses ? buildUser({ role: 'SUPERUSER' }) : buildUser({ role: 'VIEWER' })
+  const authValue: AuthContextValue = {
+    token: null,
+    currentUser: user,
+    user,
+    status: 'auth/status/idle',
+    isAuthenticated: true,
+    isLoading: false,
+    error: null,
+    login: vi.fn(),
+    logout: vi.fn(),
+    refreshCurrentUser: vi.fn(),
+  }
+
   return render(
-    <AuthorizationContext.Provider value={permissions}>
-      <AbilityProvider>{ui}</AbilityProvider>
-    </AuthorizationContext.Provider>,
+    <AuthContext.Provider value={authValue}>
+      <AbilityContext.Provider value={ability}>{ui}</AbilityContext.Provider>
+    </AuthContext.Provider>,
   )
 }
 
@@ -44,7 +63,7 @@ describe('IfCan', () => {
       >
         <span data-testid="denied-child">Should not render</span>
       </IfCan>,
-      buildPermissions(),
+      buildPermissions(), // Empty permissions
     )
 
     expect(screen.queryByTestId('denied-child')).toBeNull()
@@ -126,5 +145,3 @@ describe('IfPermission', () => {
     expect(fallbackFn).toHaveBeenCalled()
   })
 })
-
-

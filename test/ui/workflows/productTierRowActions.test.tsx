@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import {
@@ -11,14 +11,15 @@ import {
 import { ProductTierRowActions } from '../../../src/ui/workflows/ProductTierRowActions'
 import { buildProductTier } from '../../factories/productTierFactory'
 import { buildUser } from '../../factories/userFactory'
+import { renderWithProviders } from '../utils'
 
-const useDeleteProductTierMock = vi.hoisted(() => vi.fn())
+const useUpdateProductTierMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/simpleLicense', async () => {
   const actual = await vi.importActual<typeof import('@/simpleLicense')>('@/simpleLicense')
   return {
     ...actual,
-    useDeleteProductTier: useDeleteProductTierMock,
+    useUpdateProductTier: useUpdateProductTierMock,
   }
 })
 
@@ -49,13 +50,13 @@ describe('ProductTierRowActions', () => {
   })
 
   test('superuser can edit and delete tier', async () => {
-    const deleteMutation = mockMutation()
-    useDeleteProductTierMock.mockReturnValue(deleteMutation)
+    const updateMutation = mockMutation()
+    useUpdateProductTierMock.mockReturnValue(updateMutation)
     const onEdit = vi.fn()
     const tier = buildProductTier()
     const superuser = buildUser({ role: UI_USER_ROLE_SUPERUSER })
 
-    render(
+    renderWithProviders(
       <ProductTierRowActions
         client={{} as never}
         tier={tier as never}
@@ -65,25 +66,34 @@ describe('ProductTierRowActions', () => {
       />
     )
 
+    await waitFor(() => {
+      expect(screen.getByText(UI_PRODUCT_TIER_ACTION_EDIT)).toBeInTheDocument()
+    })
     fireEvent.click(screen.getByText(UI_PRODUCT_TIER_ACTION_EDIT))
     await waitFor(() => expect(onEdit).toHaveBeenCalledWith(tier))
 
     fireEvent.click(screen.getByText(UI_PRODUCT_TIER_ACTION_DELETE))
 
     const dialog = await screen.findByRole('dialog')
-    fireEvent.click(within(dialog).getByRole('button', { name: /Delete tier/i }))
+    const confirmButton = within(dialog).getByRole('button', { name: /Delete tier/i })
+    fireEvent.click(confirmButton)
 
-    await waitFor(() => expect(deleteMutation.mutateAsync).toHaveBeenCalledWith(tier.id))
+    await waitFor(() =>
+      expect(updateMutation.mutateAsync).toHaveBeenCalledWith({
+        id: tier.id,
+        data: { is_active: false },
+      })
+    )
   })
 
   test('vendor manager can edit own tier but not delete', async () => {
-    const deleteMutation = mockMutation()
-    useDeleteProductTierMock.mockReturnValue(deleteMutation)
+    const updateMutation = mockMutation()
+    useUpdateProductTierMock.mockReturnValue(updateMutation)
     const vendorId = faker.string.uuid()
     const tier = buildProductTier({ vendorId })
     const vendorManager = buildUser({ role: UI_USER_ROLE_VENDOR_MANAGER, vendorId })
 
-    render(
+    renderWithProviders(
       <ProductTierRowActions
         client={{} as never}
         tier={tier as never}
@@ -93,18 +103,21 @@ describe('ProductTierRowActions', () => {
       />
     )
 
-    expect(screen.queryByText(UI_PRODUCT_TIER_ACTION_DELETE)).toBeNull()
+    await waitFor(() => {
+      expect(screen.queryByText(UI_PRODUCT_TIER_ACTION_DELETE)).toBeNull()
+      expect(screen.getByText(UI_PRODUCT_TIER_ACTION_EDIT)).toBeInTheDocument()
+    })
     fireEvent.click(screen.getByText(UI_PRODUCT_TIER_ACTION_EDIT))
-    await waitFor(() => expect(deleteMutation.mutateAsync).not.toHaveBeenCalled())
+    await waitFor(() => expect(updateMutation.mutateAsync).not.toHaveBeenCalled())
   })
 
   test('vendor manager cannot act on other vendor tiers', async () => {
-    const deleteMutation = mockMutation()
-    useDeleteProductTierMock.mockReturnValue(deleteMutation)
+    const updateMutation = mockMutation()
+    useUpdateProductTierMock.mockReturnValue(updateMutation)
     const tier = buildProductTier()
     const vendorManager = buildUser({ role: UI_USER_ROLE_VENDOR_MANAGER, vendorId: `${tier.vendorId}-other` })
 
-    const { container } = render(
+    const { container } = renderWithProviders(
       <ProductTierRowActions
         client={{} as never}
         tier={tier as never}

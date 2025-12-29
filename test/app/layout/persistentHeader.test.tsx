@@ -2,11 +2,21 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import type { Mock } from 'vitest'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
+vi.mock('../../../src/ui/navigation/TopNavBar', () => ({
+  TopNavBar: ({ brand, navigation, actions, testId }: { brand?: React.ReactNode; navigation?: React.ReactNode; actions?: React.ReactNode; testId?: string }) => (
+    <div data-testid={testId ?? 'top-nav'}>
+      <div data-testid="top-nav-brand">{brand}</div>
+      <div data-testid="top-nav-navigation">{navigation}</div>
+      <div data-testid="top-nav-actions">{actions}</div>
+    </div>
+  ),
+}))
+
 import { PersistentHeader } from '../../../src/app/layout/PersistentHeader'
-import { AuthContext } from '../../../src/app/auth/authContext'
+import { AuthContext } from '../../../src/app/auth/AuthContext'
 import type { AuthContextValue } from '../../../src/app/auth/types'
 import { AuthorizationContext } from '../../../src/app/auth/authorizationContext'
-import { AUTH_STATUS_IDLE, ROUTE_PATH_DASHBOARD } from '../../../src/app/constants'
+import { APP_BRAND_NAME, AUTH_STATUS_IDLE, ROUTE_PATH_DASHBOARD } from '../../../src/app/constants'
 import {
   UI_HEADER_ACTION_CHANGE_PASSWORD,
   UI_HEADER_ACTION_SIGN_OUT,
@@ -16,10 +26,14 @@ import {
 import { UI_NAV_LABEL_HEALTH, UI_NAV_LABEL_TENANTS, UI_NAV_LABEL_USERS } from '../../../src/ui/navigation/navConstants'
 import { buildUser } from '../../factories/userFactory'
 import { buildPermissions } from '../../factories/permissionFactory'
+import * as UseAuthorization from '../../../src/app/auth/useAuthorization'
+import { AbilityContext } from '../../../src/app/abilities/abilityContext'
+import { buildAbilityFromPermissions } from '../../../src/app/abilities/factory'
 
 const mockUseRouterState = vi.hoisted(() => vi.fn()) as Mock
 const mockChangePasswordFlowRender = vi.hoisted(() => vi.fn())
 const mockUseNavigate = vi.hoisted(() => vi.fn())
+const mockUseAuth = vi.hoisted(() => vi.fn())
 
 vi.mock('@tanstack/react-router', () => ({
   Link: ({
@@ -36,12 +50,21 @@ vi.mock('@tanstack/react-router', () => ({
       {children}
     </a>
   ),
-  useRouterState: mockUseRouterState,
+  useRouterState: (options?: { select?: (state: { location: { pathname: string } }) => { pathname: string } }) => {
+    if (options?.select) {
+      return options.select({ location: { pathname: mockUseRouterState()?.pathname ?? ROUTE_PATH_DASHBOARD } })
+    }
+    return mockUseRouterState()
+  },
   useNavigate: () => mockUseNavigate,
 }))
 
-vi.mock('../../../src/ui/auth/ChangePasswordFlow', () => ({
-  ChangePasswordFlow: (props: { onSuccess?: () => void }) => {
+vi.mock('../../../src/app/auth/useAuth', () => ({
+  useAuth: () => mockUseAuth(),
+}))
+
+vi.mock('../../../src/ui/auth/ChangePasswordForm', () => ({
+  ChangePasswordForm: (props: { onSuccess?: () => void }) => {
     mockChangePasswordFlowRender(props)
     return (
       <div data-testid="change-password-flow">
@@ -61,7 +84,7 @@ describe('PersistentHeader', () => {
 
   test('renders brand only when unauthenticated', () => {
     renderHeader({ isAuthenticated: false })
-    expect(screen.getByText('Simple License Admin')).toBeInTheDocument()
+    expect(screen.getByText(APP_BRAND_NAME)).toBeInTheDocument()
     expect(screen.queryByTestId('ui-header-nav')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: UI_HEADER_ACTION_CHANGE_PASSWORD })).not.toBeInTheDocument()
   })
@@ -146,21 +169,35 @@ const renderHeader = ({
   isAuthenticated = true,
   logoutMock,
 }: RenderHeaderOptions = {}) => {
+  const usePermissionsSpy = vi.spyOn(UseAuthorization, 'usePermissions')
+  usePermissionsSpy.mockReturnValue(permissions)
+
   const authValue: AuthContextValue = {
     token: isAuthenticated ? 'token' : null,
+    user: isAuthenticated ? user : null,
     currentUser: isAuthenticated ? user : null,
     status: AUTH_STATUS_IDLE,
     isAuthenticated,
+    isLoading: false,
+    error: null,
     login: vi.fn(),
     logout: logoutMock ?? vi.fn(),
     refreshCurrentUser: vi.fn(),
   }
 
-  return render(
+  mockUseAuth.mockReturnValue(authValue)
+
+  const ability = buildAbilityFromPermissions(permissions)
+
+  const result = render(
     <AuthContext.Provider value={authValue}>
       <AuthorizationContext.Provider value={permissions}>
-        <PersistentHeader />
+        <AbilityContext.Provider value={ability}>
+          <PersistentHeader />
+        </AbilityContext.Provider>
       </AuthorizationContext.Provider>
     </AuthContext.Provider>,
   )
+
+  return result
 }

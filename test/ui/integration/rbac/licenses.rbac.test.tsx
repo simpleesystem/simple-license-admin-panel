@@ -9,9 +9,11 @@ import {
   UI_LICENSE_BUTTON_SUSPEND,
   UI_LICENSE_CONFIRM_DELETE_CONFIRM,
   UI_LICENSE_CONFIRM_RESUME_CONFIRM,
+  UI_LICENSE_CONFIRM_SUSPEND_CONFIRM,
 } from '../../../../src/ui/constants'
 import { LicenseRowActions } from '../../../../src/ui/workflows/LicenseRowActions'
 import { buildLicense } from '../../../factories/licenseFactory'
+import { buildUser } from '../../../factories/userFactory'
 import { renderWithProviders } from '../../utils'
 
 const useRevokeLicenseMock = vi.hoisted(() => vi.fn())
@@ -48,20 +50,27 @@ describe('License RBAC & vendor scoping', () => {
     useCreateLicenseMock.mockReturnValue(mockMutation())
 
     const onEdit = vi.fn()
+    const superuser = buildUser({ role: 'SUPERUSER' })
     renderWithProviders(
       <LicenseRowActions
         client={{} as never}
         licenseKey={license.licenseKey ?? license.id}
         licenseVendorId={license.vendorId}
         licenseStatus={license.status}
-        currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() }}
+        currentUser={superuser}
         onEdit={onEdit}
       />,
     )
 
+    await waitFor(() => {
+      expect(screen.getByText(UI_LICENSE_ACTION_EDIT)).toBeInTheDocument()
+    })
     fireEvent.click(screen.getByText(UI_LICENSE_ACTION_EDIT))
     expect(onEdit).toHaveBeenCalledWith(license.licenseKey ?? license.id)
 
+    await waitFor(() => {
+      expect(screen.getByText(UI_LICENSE_BUTTON_DELETE)).toBeInTheDocument()
+    })
     fireEvent.click(screen.getByText(UI_LICENSE_BUTTON_DELETE))
     await waitFor(() => {
       expect(screen.getByText(UI_LICENSE_CONFIRM_DELETE_CONFIRM)).toBeInTheDocument()
@@ -89,16 +98,26 @@ describe('License RBAC & vendor scoping', () => {
         licenseKey={license.licenseKey ?? license.id}
         licenseVendorId={license.vendorId}
         licenseStatus={license.status}
-        currentUser={{ role: 'VENDOR_MANAGER', vendorId }}
+        currentUser={buildUser({ role: 'VENDOR_MANAGER', vendorId })}
         onEdit={onEdit}
       />,
     )
 
+    await waitFor(() => {
+      expect(screen.getByText(UI_LICENSE_ACTION_EDIT)).toBeInTheDocument()
+    })
     fireEvent.click(screen.getByText(UI_LICENSE_ACTION_EDIT))
     expect(onEdit).toHaveBeenCalledWith(license.licenseKey ?? license.id)
     expect(screen.queryByText(UI_LICENSE_BUTTON_DELETE)).toBeNull()
 
+    await waitFor(() => {
+      expect(screen.getByText(UI_LICENSE_BUTTON_SUSPEND)).toBeInTheDocument()
+    })
     fireEvent.click(screen.getByText(UI_LICENSE_BUTTON_SUSPEND))
+    await waitFor(() => {
+      expect(screen.getByText(UI_LICENSE_CONFIRM_SUSPEND_CONFIRM)).toBeInTheDocument()
+    })
+    fireEvent.click(screen.getByText(UI_LICENSE_CONFIRM_SUSPEND_CONFIRM))
     await waitFor(() => {
       expect(useSuspendLicenseMock().mutateAsync).toHaveBeenCalledWith(license.licenseKey ?? license.id)
     })
@@ -118,7 +137,7 @@ describe('License RBAC & vendor scoping', () => {
         licenseKey={license.licenseKey ?? license.id}
         licenseVendorId={license.vendorId}
         licenseStatus={license.status}
-        currentUser={{ role: 'VENDOR_MANAGER', vendorId: faker.string.uuid() }}
+        currentUser={buildUser({ role: 'VENDOR_MANAGER', vendorId: faker.string.uuid() })}
       />,
     )
 
@@ -142,7 +161,7 @@ describe('License RBAC & vendor scoping', () => {
         licenseKey={license.licenseKey ?? license.id}
         licenseVendorId={license.vendorId}
         licenseStatus={license.status}
-        currentUser={{ role: 'VIEWER', vendorId: license.vendorId }}
+        currentUser={buildUser({ role: 'VIEWER', vendorId: license.vendorId })}
       />,
     )
 
@@ -167,11 +186,14 @@ describe('License RBAC & vendor scoping', () => {
         licenseKey={license.licenseKey ?? license.id}
         licenseVendorId={license.vendorId}
         licenseStatus={license.status}
-        currentUser={{ role: 'SUPERUSER', vendorId: license.vendorId }}
+        currentUser={buildUser({ role: 'SUPERUSER' })}
         onEdit={vi.fn()}
       />,
     )
 
+    await waitFor(() => {
+      expect(screen.getByText(UI_LICENSE_BUTTON_RESUME)).toBeInTheDocument()
+    })
     fireEvent.click(screen.getByText(UI_LICENSE_BUTTON_RESUME))
     await waitFor(() => {
       expect(screen.getByText(UI_LICENSE_CONFIRM_RESUME_CONFIRM)).toBeInTheDocument()

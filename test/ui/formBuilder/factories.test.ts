@@ -98,12 +98,16 @@ describe('form blueprint factories', () => {
     expect(allFields.some((field) => field.name === 'password')).toBe(false)
   })
 
-  test('entitlement blueprint configures value type select', () => {
+  test('entitlement blueprint includes value fields', () => {
     const blueprint = createEntitlementBlueprint('create')
-    const valueTypeField = findField('value_type', UI_ENTITLEMENT_FORM_SECTION_DETAILS, blueprint)
+    const numberValueField = findField('number_value', UI_ENTITLEMENT_FORM_SECTION_DETAILS, blueprint)
+    const booleanValueField = findField('boolean_value', UI_ENTITLEMENT_FORM_SECTION_DETAILS, blueprint)
+    const stringValueField = findField('string_value', UI_ENTITLEMENT_FORM_SECTION_DETAILS, blueprint)
 
-    expect(valueTypeField.component).toBe('select')
-    expect(Array.isArray(valueTypeField.options)).toBe(true)
+    expect(numberValueField.component).toBe('text')
+    expect(booleanValueField.component).toBe('select')
+    expect(Array.isArray(booleanValueField.options)).toBe(true)
+    expect(stringValueField.component).toBe('text')
   })
 
   test('tenant quota blueprint exposes number fields for each limit', () => {

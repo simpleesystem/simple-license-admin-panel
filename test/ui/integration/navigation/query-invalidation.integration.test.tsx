@@ -139,6 +139,9 @@ describe('Mutation to navigation refetch smoke', () => {
     renderWithProviders(<ScreenHost vendorId={vendorId} />)
 
     // Products first
+    await waitFor(() => {
+      expect(screen.getByText(UI_PRODUCT_BUTTON_CREATE)).toBeInTheDocument()
+    })
     fireEvent.click(screen.getByText(UI_PRODUCT_BUTTON_CREATE))
     const newProduct = buildProduct({ vendorId })
     fireEvent.change(screen.getByLabelText(/name/i), { target: { value: newProduct.name } })

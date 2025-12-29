@@ -15,6 +15,7 @@ import { LicenseRowActions } from '../../../../src/ui/workflows/LicenseRowAction
 import { ProductManagementExample } from '../../../../src/ui/workflows/ProductManagementExample'
 import { buildLicense } from '../../../factories/licenseFactory'
 import { buildProduct } from '../../../factories/productFactory'
+import { buildUser } from '../../../factories/userFactory'
 import { renderWithProviders } from '../../utils'
 
 const useCreateProductMock = vi.hoisted(() => vi.fn())
@@ -65,17 +66,18 @@ const ScreenHost = ({
 }) => {
   const product = buildProduct({ vendorId, status: 'ACTIVE' })
   const license = buildLicense({ vendorId, status: 'ACTIVE' })
+  const currentUser = buildUser({ role, vendorId })
   const onRefresh = vi.fn()
   const [active, setActive] = useState<'products' | 'licenses'>('products')
   const items = createNavItems(setActive)
 
   return (
-    <AppShell sidebar={<SidebarNav items={items} />} topBar={null} currentUser={{ role, vendorId }}>
+    <AppShell sidebar={<SidebarNav items={items} />} topBar={null} currentUser={currentUser}>
       {active === 'products' ? (
         <ProductManagementExample
           client={{} as never}
           products={[product]}
-          currentUser={{ role, vendorId }}
+          currentUser={currentUser}
           onRefresh={onRefresh}
           page={1}
           totalPages={1}
@@ -88,7 +90,7 @@ const ScreenHost = ({
           licenseKey={license.licenseKey ?? license.id}
           licenseVendorId={license.vendorId}
           licenseStatus={license.status}
-          currentUser={{ role, vendorId }}
+          currentUser={currentUser}
           onEdit={vi.fn()}
           onCompleted={onRefresh}
         />
@@ -117,24 +119,36 @@ describe('Screen-level navigation and flows', () => {
     const vendorId = faker.string.uuid()
     renderWithProviders(<ScreenHost role="SUPERUSER" vendorId={vendorId} />)
 
-    expect(screen.getByText(UI_PRODUCT_ACTION_EDIT)).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText(UI_PRODUCT_ACTION_EDIT)).toBeInTheDocument()
+    })
 
+    await waitFor(() => {
+      expect(screen.getByText('Licenses')).toBeInTheDocument()
+    })
     fireEvent.click(screen.getByText('Licenses'))
     await waitFor(() => {
       expect(screen.getByText(UI_LICENSE_ACTION_EDIT)).toBeInTheDocument()
     })
   })
 
-  test('VIEWER sees read-only views with no create/delete actions', () => {
+  test('VIEWER sees read-only views with no create/delete actions', async () => {
     const vendorId = faker.string.uuid()
     renderWithProviders(<ScreenHost role="VIEWER" vendorId={vendorId} />)
 
-    expect(screen.queryByText(UI_PRODUCT_BUTTON_CREATE)).toBeNull()
-    expect(screen.queryByText(UI_PRODUCT_ACTION_EDIT)).toBeNull()
+    await waitFor(() => {
+      expect(screen.queryByText(UI_PRODUCT_BUTTON_CREATE)).toBeNull()
+      expect(screen.queryByText(UI_PRODUCT_ACTION_EDIT)).toBeNull()
+    })
 
+    await waitFor(() => {
+      expect(screen.getByText('Licenses')).toBeInTheDocument()
+    })
     fireEvent.click(screen.getByText('Licenses'))
-    expect(screen.queryByText(UI_LICENSE_ACTION_EDIT)).toBeNull()
-    expect(screen.queryByText(UI_LICENSE_BUTTON_DELETE)).toBeNull()
+    await waitFor(() => {
+      expect(screen.queryByText(UI_LICENSE_ACTION_EDIT)).toBeNull()
+      expect(screen.queryByText(UI_LICENSE_BUTTON_DELETE)).toBeNull()
+    })
   })
 })
 

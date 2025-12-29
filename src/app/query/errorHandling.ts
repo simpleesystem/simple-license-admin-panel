@@ -46,7 +46,7 @@ export const isNetworkError = (error: unknown): boolean => {
 export const handleQueryError = (error: unknown): ToastNotificationPayload | null => {
   // Auth errors should be handled separately (e.g., redirect to login), not shown as notifications
   if (isApiException(error)) {
-    const errorCode = error.errorCode || error.code || ''
+    const errorCode = error.errorCode || ''
     if (errorCode === ERROR_CODE_AUTHENTICATION_ERROR || errorCode === ERROR_CODE_INVALID_CREDENTIALS) {
       return null
     }

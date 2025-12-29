@@ -32,6 +32,7 @@ const mockLiveContext = {
 
 const defaultMockClient = {
   restoreSession: vi.fn().mockResolvedValue(null),
+  changePassword: vi.fn().mockResolvedValue({}),
 } as unknown as Client
 
 export const renderWithProviders = (ui: ReactElement, options?: RenderWithProvidersOptions) => {

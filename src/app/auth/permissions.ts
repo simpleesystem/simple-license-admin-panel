@@ -87,7 +87,8 @@ export const canViewProducts = (user: User | null): boolean => {
     return false
   }
   const perms = derivePermissionsFromUser(user)
-  return perms.manageProducts
+  // Allow vendor-scoped users (including VIEWERs) to see their vendor's products
+  return perms.manageProducts || isVendorScopedUser(user)
 }
 
 export const canViewTenants = (user: User | null): boolean => {
@@ -299,7 +300,12 @@ export const canDeleteProduct = (user: User | null): boolean => {
 }
 
 export const canUpdateProduct = (user: User | null): boolean => {
-  return canViewProducts(user)
+  if (!user) {
+    return false
+  }
+  const perms = derivePermissionsFromUser(user)
+  // VIEWERs can view but not update
+  return perms.manageProducts
 }
 
 export const canCreateTenant = (user: User | null): boolean => {

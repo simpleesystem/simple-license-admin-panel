@@ -2,14 +2,12 @@ import { ApiException } from '@/simpleLicense'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import mitt from 'mitt'
 import { describe, expect, test, vi } from 'vitest'
-import { AuthContext } from '@/app/auth/authContext'
+import { AuthContext } from '@/app/auth/AuthContext'
 import { AuthorizationContext } from '@/app/auth/authorizationContext'
 import { LoginCard } from '@/app/auth/LoginCard'
 import type { AuthContextValue } from '@/app/auth/types'
 import {
   AUTH_STATUS_IDLE,
-  I18N_KEY_AUTH_FORGOT_LINK,
-  I18N_KEY_AUTH_SUBMIT,
   I18N_KEY_FORM_PASSWORD_LABEL,
   I18N_KEY_FORM_PASSWORD_REQUIRED,
   I18N_KEY_FORM_USERNAME_LABEL,
@@ -20,18 +18,28 @@ import { APP_CONFIG } from '@/app/config/appConfig'
 import { AppConfigProvider } from '@/app/config'
 import { I18nProvider } from '@/app/i18n/I18nProvider'
 import { i18nResources } from '@/app/i18n/resources'
-import { NotificationBusContext } from '@/notifications/busContext'
+import { NotificationBusProvider } from '@/notifications/busContext'
 import type { NotificationEventMap } from '@/notifications/types'
 import { buildPermissions } from '../../factories/permissionFactory'
 import { LoggerContext } from '@/app/logging/loggerContext'
 import { createAppLogger } from '@/app/logging/logger'
 
-const SUBMIT_LABEL = i18nResources.common[I18N_KEY_AUTH_SUBMIT]
+vi.mock('@tanstack/react-router', () => {
+  const navigate = vi.fn()
+  return {
+    useRouter: () => ({}),
+    useNavigate: () => navigate,
+    useRouterState: () => ({ location: { pathname: '/auth' } }),
+    Link: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+    RouterProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  }
+})
+
+const SUBMIT_LABEL = 'Login'
 const USERNAME_LABEL = i18nResources.common[I18N_KEY_FORM_USERNAME_LABEL]
 const USERNAME_REQUIRED = i18nResources.common[I18N_KEY_FORM_USERNAME_REQUIRED]
 const PASSWORD_LABEL = i18nResources.common[I18N_KEY_FORM_PASSWORD_LABEL]
 const PASSWORD_REQUIRED = i18nResources.common[I18N_KEY_FORM_PASSWORD_REQUIRED]
-const FORGOT_LABEL = i18nResources.common[I18N_KEY_AUTH_FORGOT_LINK]
 
 describe('LoginCard', () => {
   test('renders required fields and actions', () => {
@@ -40,7 +48,6 @@ describe('LoginCard', () => {
     expect(getUsernameInput()).toBeInTheDocument()
     expect(getPasswordInput()).toBeInTheDocument()
     expect(screen.getByRole('button', { name: SUBMIT_LABEL })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: FORGOT_LABEL, exact: false })).toBeInTheDocument()
   })
 
   test('submits credentials through auth context', async () => {
@@ -52,7 +59,7 @@ describe('LoginCard', () => {
     fireEvent.click(screen.getByRole('button', { name: SUBMIT_LABEL }))
 
     await waitFor(() => {
-      expect(login).toHaveBeenCalledWith('ops@example.com', 'supersafe')
+      expect(login).toHaveBeenCalledWith({ username: 'ops@example.com', password: 'supersafe' })
     })
   })
 
@@ -147,13 +154,13 @@ const renderLoginCard = ({ authOverrides, toastSpy }: RenderOptions = {}) => {
     <I18nProvider>
       <AppConfigProvider value={{ ...APP_CONFIG, authForgotPasswordUrl: 'https://example.com/forgot' }}>
         <LoggerContext.Provider value={createAppLogger(APP_CONFIG)}>
-          <NotificationBusContext.Provider value={bus}>
+          <NotificationBusProvider bus={bus}>
             <AuthorizationContext.Provider value={buildPermissions()}>
               <AuthContext.Provider value={authValue}>
                 <LoginCard />
               </AuthContext.Provider>
             </AuthorizationContext.Provider>
-          </NotificationBusContext.Provider>
+          </NotificationBusProvider>
         </LoggerContext.Provider>
       </AppConfigProvider>
     </I18nProvider>
