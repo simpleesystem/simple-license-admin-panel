@@ -1,6 +1,12 @@
 import { faker } from '@faker-js/faker'
+import type { FieldValues } from 'react-hook-form'
 import { describe, expect, test } from 'vitest'
-
+import {
+  UI_ENTITLEMENT_FORM_SECTION_DETAILS,
+  UI_LICENSE_FORM_SECTION_DETAILS,
+  UI_PRODUCT_FORM_SECTION_DETAILS,
+} from '../../../src/ui/constants'
+import type { FormBlueprint, FormFieldBlueprint, SelectFieldBlueprint } from '../../../src/ui/formBuilder/blueprint'
 import {
   createEntitlementBlueprint,
   createLicenseBlueprint,
@@ -8,11 +14,6 @@ import {
   createTenantQuotaBlueprint,
   createUserBlueprint,
 } from '../../../src/ui/formBuilder/factories'
-import {
-  UI_ENTITLEMENT_FORM_SECTION_DETAILS,
-  UI_LICENSE_FORM_SECTION_DETAILS,
-  UI_PRODUCT_FORM_SECTION_DETAILS,
-} from '../../../src/ui/constants'
 import type { UiSelectOption } from '../../../src/ui/types'
 
 const createOptions = (count = 2): readonly UiSelectOption[] =>
@@ -21,7 +22,11 @@ const createOptions = (count = 2): readonly UiSelectOption[] =>
     label: `${faker.commerce.productName()}-${index}`,
   }))
 
-const findField = (blueprintFieldName: string, sectionId: string, blueprint: { sections: readonly { id: string; fields: readonly { name: string }[] }[] }) => {
+const findField = <TFieldValues extends FieldValues>(
+  blueprintFieldName: string,
+  sectionId: string,
+  blueprint: FormBlueprint<TFieldValues>
+): FormFieldBlueprint<TFieldValues> => {
   const section = blueprint.sections.find((candidate) => candidate.id === sectionId)
   if (!section) {
     throw new Error(`Missing section ${sectionId}`)
@@ -31,6 +36,12 @@ const findField = (blueprintFieldName: string, sectionId: string, blueprint: { s
     throw new Error(`Missing field ${blueprintFieldName}`)
   }
   return field
+}
+
+const isSelectField = <TFieldValues extends FieldValues>(
+  field: FormFieldBlueprint<TFieldValues>
+): field is SelectFieldBlueprint<TFieldValues> => {
+  return field.component === 'select'
 }
 
 describe('form blueprint factories', () => {
@@ -53,9 +64,13 @@ describe('form blueprint factories', () => {
     const tierField = findField('tier_code', UI_LICENSE_FORM_SECTION_DETAILS, blueprint)
 
     expect(productField.component).toBe('select')
-    expect(Array.isArray(productField.options)).toBe(true)
+    if (isSelectField(productField)) {
+      expect(Array.isArray(productField.options)).toBe(true)
+    }
     expect(tierField.component).toBe('select')
-    expect(Array.isArray(tierField.options)).toBe(true)
+    if (isSelectField(tierField)) {
+      expect(Array.isArray(tierField.options)).toBe(true)
+    }
   })
 
   test('license update blueprint defaults tier options to empty array', () => {
@@ -106,7 +121,9 @@ describe('form blueprint factories', () => {
 
     expect(numberValueField.component).toBe('text')
     expect(booleanValueField.component).toBe('select')
-    expect(Array.isArray(booleanValueField.options)).toBe(true)
+    if (isSelectField(booleanValueField)) {
+      expect(Array.isArray(booleanValueField.options)).toBe(true)
+    }
     expect(stringValueField.component).toBe('text')
   })
 
@@ -122,10 +139,8 @@ describe('form blueprint factories', () => {
       'quota_warning_threshold',
     ]
 
-    fields.forEach((fieldName) => {
+    for (const fieldName of fields) {
       expect(findField(fieldName, 'limits', blueprint)).toMatchObject({ component: 'text' })
-    })
+    }
   })
 })
-
-
