@@ -1,8 +1,8 @@
-import { screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
 
 import { UsersRouteComponent } from '../../../../src/routes/users/UsersRoute'
-import { UI_USER_BUTTON_CREATE, UI_USER_STATUS_ERROR_TITLE } from '../../../../src/ui/constants'
+import { UI_USER_BUTTON_CREATE, UI_USER_STATUS_ERROR_TITLE, UI_USER_STATUS_LOADING_TITLE } from '../../../../src/ui/constants'
 import { renderWithProviders } from '../../utils'
 import { buildUser } from '../../../factories/userFactory'
 
