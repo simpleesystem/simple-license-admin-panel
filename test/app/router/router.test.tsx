@@ -48,4 +48,3 @@ describe('router configuration', () => {
     expect(screen.getByText(NOT_FOUND_BODY)).toBeInTheDocument()
   })
 })
-

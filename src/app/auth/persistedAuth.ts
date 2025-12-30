@@ -20,4 +20,3 @@ export function persistAuth(token: string, expiry: number): void {
 export function persistAuthUser(user: User): void {
   window.localStorage.setItem(STORAGE_KEY_AUTH_USER, JSON.stringify(user))
 }
-

@@ -71,4 +71,3 @@ export const defaultResources = {
   [APP_DEFAULT_LANGUAGE]: i18nResources,
   [APP_SECONDARY_LANGUAGE]: i18nResources,
 }
-

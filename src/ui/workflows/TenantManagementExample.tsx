@@ -4,4 +4,3 @@
  */
 
 export { TenantManagementPanel as TenantManagementExample } from './TenantManagementPanel'
-

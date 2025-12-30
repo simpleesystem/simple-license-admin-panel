@@ -64,6 +64,3 @@ export function SidebarNav({
     </VisibilityGate>
   )
 }
-
-
-

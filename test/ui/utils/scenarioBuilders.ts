@@ -24,4 +24,3 @@ export const buildProductChain = (overrides?: Partial<VendorScopedIds>) => {
 export const buildCrossVendorChains = (count: number) => {
   return Array.from({ length: count }).map(() => buildProductChain())
 }
-

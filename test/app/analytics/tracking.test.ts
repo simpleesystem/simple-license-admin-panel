@@ -9,5 +9,3 @@ describe('tracking client', () => {
     expect(() => client.track('event-id', { foo: 'bar' })).not.toThrow()
   })
 })
-
-

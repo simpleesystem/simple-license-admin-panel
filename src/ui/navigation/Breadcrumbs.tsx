@@ -45,6 +45,3 @@ export function Breadcrumbs({
     </VisibilityGate>
   )
 }
-
-
-

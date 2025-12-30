@@ -119,5 +119,3 @@ describe('ProductFormFlow', () => {
     expect(onClose).not.toHaveBeenCalled()
   })
 })
-
-

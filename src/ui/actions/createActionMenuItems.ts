@@ -34,5 +34,3 @@ export const createActionMenuItems = <PayloadMap extends UiActionPayloadMap>(
       definition.onSelect(payload)
     },
   }))
-
-

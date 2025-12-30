@@ -161,5 +161,3 @@ export const createCrudActions = <
 
   return createTypedActionMenuItems(definitions)
 }
-
-

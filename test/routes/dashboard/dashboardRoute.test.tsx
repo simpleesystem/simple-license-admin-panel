@@ -68,4 +68,3 @@ describe('DashboardRouteComponent', () => {
     expect(screen.getByTestId('alert-thresholds-panel')).toBeInTheDocument()
   })
 })
-

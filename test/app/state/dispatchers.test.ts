@@ -19,18 +19,9 @@ vi.mock('@/app/errors/appErrors', async () => {
 
 describe('dispatchers', () => {
   let mockDispatch: AppStore['dispatch']
-  let mockState: AppStore
 
   beforeEach(() => {
     mockDispatch = vi.fn()
-    mockState = {
-      user: null,
-      permissions: { viewDashboard: false, viewLicenses: false, viewProducts: false, viewUsers: false, viewTenants: false, canEdit: false, canDelete: false, canCreate: false, vendorId: null },
-      data: {},
-      surface: { errors: {}, lastScope: null, loading: {} },
-      navigationIntent: null,
-      dispatch: mockDispatch,
-    }
   })
 
   describe('raiseError', () => {
@@ -141,6 +132,44 @@ describe('dispatchers', () => {
       expect(mapUnknownToAppError).toHaveBeenCalledWith(unknownError, scope)
       expect(result).toEqual(mappedError)
     })
+
+    it('handles null error', () => {
+      const mappedError = {
+        type: APP_ERROR_TYPE_UNEXPECTED,
+        code: APP_ERROR_CODE_UNEXPECTED,
+        message: faker.lorem.sentence(),
+        scope: 'global' as const,
+      }
+
+      vi.mocked(mapUnknownToAppError).mockReturnValue(mappedError)
+
+      const result = raiseErrorFromUnknown({
+        error: null,
+        dispatch: mockDispatch,
+      })
+
+      expect(mapUnknownToAppError).toHaveBeenCalledWith(null, 'global')
+      expect(result).toEqual(mappedError)
+    })
+
+    it('handles undefined error', () => {
+      const mappedError = {
+        type: APP_ERROR_TYPE_UNEXPECTED,
+        code: APP_ERROR_CODE_UNEXPECTED,
+        message: faker.lorem.sentence(),
+        scope: 'data' as const,
+      }
+
+      vi.mocked(mapUnknownToAppError).mockReturnValue(mappedError)
+
+      const result = raiseErrorFromUnknown({
+        error: undefined,
+        dispatch: mockDispatch,
+        scope: 'data',
+      })
+
+      expect(mapUnknownToAppError).toHaveBeenCalledWith(undefined, 'data')
+      expect(result).toEqual(mappedError)
+    })
   })
 })
-

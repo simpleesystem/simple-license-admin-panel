@@ -4,4 +4,3 @@ import { UI_PAGE_SUBTITLE_ANALYTICS, UI_PAGE_TITLE_ANALYTICS } from '../../ui/co
 export function AnalyticsRouteComponent() {
   return <SectionPlaceholder title={UI_PAGE_TITLE_ANALYTICS} subtitle={UI_PAGE_SUBTITLE_ANALYTICS} />
 }
-

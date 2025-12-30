@@ -7,4 +7,3 @@ import { router } from '../../src/app/router'
 export const renderWithRouter = (ui: ReactElement) => {
   return render(<RouterProvider router={router}>{ui}</RouterProvider>)
 }
-

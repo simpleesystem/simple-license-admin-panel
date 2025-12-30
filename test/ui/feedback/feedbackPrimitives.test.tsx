@@ -77,5 +77,3 @@ describe('Feedback primitives', () => {
     expect(getByText('Acknowledge')).toBeInTheDocument()
   })
 })
-
-

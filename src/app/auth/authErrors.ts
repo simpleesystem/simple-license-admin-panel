@@ -51,4 +51,3 @@ export function buildAuthErrorNotification(error: unknown): AuthErrorNotificatio
     variant: NOTIFICATION_VARIANT_ERROR,
   }
 }
-

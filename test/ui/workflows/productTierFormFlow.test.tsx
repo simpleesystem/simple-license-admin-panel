@@ -121,5 +121,3 @@ describe('ProductTierFormFlow', () => {
     expect(onClose).not.toHaveBeenCalled()
   })
 })
-
-

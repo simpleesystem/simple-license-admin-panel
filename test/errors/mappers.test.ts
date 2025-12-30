@@ -40,4 +40,3 @@ describe('error notification mappers', () => {
     })
   })
 })
-

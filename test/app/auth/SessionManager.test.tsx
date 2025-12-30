@@ -109,5 +109,3 @@ describe('SessionManager', () => {
     expect(trackingClient.track).not.toHaveBeenCalled()
   })
 })
-
-

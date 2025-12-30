@@ -57,5 +57,3 @@ export const createSentryLogger = (dsn: string): Logger => {
     },
   }
 }
-
-

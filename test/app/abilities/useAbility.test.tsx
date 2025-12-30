@@ -57,5 +57,3 @@ describe('useCanAbility', () => {
     expect(result.current).toBe(false)
   })
 })
-
-

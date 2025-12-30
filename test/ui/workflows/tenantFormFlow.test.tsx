@@ -119,5 +119,3 @@ describe('TenantFormFlow', () => {
     expect(onClose).not.toHaveBeenCalled()
   })
 })
-
-

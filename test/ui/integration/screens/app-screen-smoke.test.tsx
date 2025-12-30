@@ -151,4 +151,3 @@ describe('Screen-level navigation and flows', () => {
     })
   })
 })
-

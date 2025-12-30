@@ -40,6 +40,3 @@ export function FormSection({
     </VisibilityGate>
   )
 }
-
-
-

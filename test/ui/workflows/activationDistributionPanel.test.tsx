@@ -92,4 +92,3 @@ describe('ActivationDistributionPanel', () => {
     expect(screen.getByText('Please verify your analytics access and refresh the page.')).toBeInTheDocument()
   })
 })
-

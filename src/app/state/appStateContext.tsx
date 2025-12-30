@@ -26,4 +26,3 @@ export const useTheme = (): ThemeName => {
   const { theme } = useAppState()
   return theme ?? APP_THEME_LIGHT
 }
-

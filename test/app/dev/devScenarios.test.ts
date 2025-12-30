@@ -88,5 +88,3 @@ describe('devScenarios', () => {
     expect(canUseDevTools(true, 'production')).toBe(false)
   })
 })
-
-

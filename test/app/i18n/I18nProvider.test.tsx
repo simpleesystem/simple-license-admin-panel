@@ -43,4 +43,3 @@ describe('I18nProvider', () => {
     expect(await screen.findByTestId(TRANSLATION_TEST_ID)).toHaveTextContent(APP_BRAND_NAME)
   })
 })
-

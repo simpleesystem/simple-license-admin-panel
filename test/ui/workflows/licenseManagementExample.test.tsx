@@ -195,5 +195,3 @@ describe('LicenseManagementExample', () => {
     expect(queryByText(UI_LICENSE_BUTTON_DELETE)).toBeNull()
   })
 })
-
-

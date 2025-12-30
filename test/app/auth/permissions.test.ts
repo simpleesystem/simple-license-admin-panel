@@ -69,4 +69,3 @@ describe('hasPermission', () => {
     expect(hasPermission(permissions, 'manageLicenses')).toBe(false)
   })
 })
-

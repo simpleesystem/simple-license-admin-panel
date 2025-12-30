@@ -66,5 +66,3 @@ describe('Ability pipeline integration', () => {
     expect(screen.getByTestId('no-access')).toBeInTheDocument()
   })
 })
-
-

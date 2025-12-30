@@ -24,5 +24,3 @@ export const buildAbilityFromPermissions = (permissions: Permissions): AppAbilit
     detectSubjectType: (subject: AbilitySubject) => subject,
   })
 }
-
-

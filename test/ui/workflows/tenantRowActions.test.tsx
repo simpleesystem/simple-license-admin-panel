@@ -159,5 +159,3 @@ describe('TenantRowActions', () => {
     expect(screen.queryByText(UI_TENANT_ACTION_RESUME)).toBeNull()
   })
 })
-
-

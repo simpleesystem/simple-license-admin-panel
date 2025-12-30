@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { APP_CONFIG, AppConfigProvider, createAppConfig, useAppConfig, useFeatureFlag } from '../../../src/app/config'
 import {
   ENV_VAR_API_BASE_URL,
+  ENV_VAR_AUTH_FORGOT_PASSWORD_URL,
   ENV_VAR_FEATURE_DEV_TOOLS,
   ENV_VAR_FEATURE_EXPERIMENTAL_FILTERS,
   ENV_VAR_FEATURE_QUERY_CACHE_PERSISTENCE,
@@ -167,4 +168,3 @@ describe('AppConfig hooks', () => {
     expect(experimentalFlag.current).toBe(false)
   })
 })
-

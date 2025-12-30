@@ -64,4 +64,3 @@ describe('Navigation guards and visibility', () => {
     })
   })
 })
-

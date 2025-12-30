@@ -44,4 +44,3 @@ export const DEV_PERSONA_VIEWER_FALLBACK = {
   username: 'dev.viewer',
   email: 'viewer@example.dev',
 } as const
-

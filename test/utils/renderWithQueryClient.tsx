@@ -15,4 +15,3 @@ export const renderWithQueryClient = (ui: ReactElement, options?: { queryClient?
 
   return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>)
 }
-

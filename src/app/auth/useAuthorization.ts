@@ -10,4 +10,3 @@ export function useCan(permission: PermissionKey): boolean {
   const permissions = usePermissions()
   return permissions[permission] ?? false
 }
-

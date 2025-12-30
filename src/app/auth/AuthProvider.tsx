@@ -1,7 +1,7 @@
-import type { User } from '@/simpleLicense'
-import { ApiException, ERROR_CODE_MUST_CHANGE_PASSWORD } from '@/simpleLicense'
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import { useApiClient } from '@/api/apiContext'
+import type { User } from '@/simpleLicense'
+import { ApiException, ERROR_CODE_MUST_CHANGE_PASSWORD } from '@/simpleLicense'
 import type { LoginCredentials } from '@/types/auth'
 import { APP_ERROR_TYPE_AUTH, AUTH_STATUS_IDLE, STORAGE_KEY_AUTH_EXPIRY, STORAGE_KEY_AUTH_TOKEN, STORAGE_KEY_AUTH_USER } from '../constants'
 import { useAppStore } from '../state/store'
@@ -112,7 +112,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Check for expired tokens in localStorage and clear them
     const expiry = window.localStorage.getItem(STORAGE_KEY_AUTH_EXPIRY)
     if (expiry) {
-      const expiryTime = parseInt(expiry, 10)
+      const expiryTime = Number.parseInt(expiry, 10)
       if (expiryTime && expiryTime < Date.now()) {
         // Token is expired, clear it
         window.localStorage.removeItem(STORAGE_KEY_AUTH_TOKEN)

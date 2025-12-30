@@ -1,7 +1,7 @@
+import { useState } from 'react'
+import { Button } from 'react-bootstrap'
 import type { Client, Entitlement, User } from '@/simpleLicense'
 import { useDeleteEntitlement } from '@/simpleLicense'
-import { useState } from 'react'
-import Button from 'react-bootstrap/Button'
 import { canDeleteEntitlement, canUpdateEntitlement } from '../../app/auth/permissions'
 import { useNotificationBus } from '../../notifications/useNotificationBus'
 import { adaptMutation } from '../actions/mutationAdapter'
@@ -124,4 +124,3 @@ export function ProductEntitlementRowActions({
     </VisibilityGate>
   )
 }
-

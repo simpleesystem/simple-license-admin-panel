@@ -54,6 +54,3 @@ export function CheckboxField<TFieldValues extends FieldValues>({
     </VisibilityGate>
   )
 }
-
-
-

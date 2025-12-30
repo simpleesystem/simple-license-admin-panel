@@ -64,4 +64,3 @@ export function I18nProvider({ children, language }: I18nProviderProps) {
 
   return <I18nextProvider i18n={contextValue}>{children}</I18nextProvider>
 }
-

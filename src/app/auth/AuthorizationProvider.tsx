@@ -4,4 +4,3 @@
  */
 
 export { AuthProvider as AuthorizationProvider } from './AuthProvider'
-

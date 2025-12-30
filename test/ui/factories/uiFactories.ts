@@ -74,5 +74,3 @@ export const buildTableColumn = <TData,>(
   cell: () => buildText(),
   ...overrides,
 })
-
-

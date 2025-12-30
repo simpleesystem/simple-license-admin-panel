@@ -15,4 +15,3 @@ export const buildTenant = (overrides?: Partial<Tenant>): Tenant => ({
   updatedAt: faker.date.recent().toISOString(),
   ...overrides,
 })
-

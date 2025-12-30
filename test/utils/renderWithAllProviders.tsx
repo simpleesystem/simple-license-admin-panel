@@ -12,4 +12,3 @@ export const renderWithAllProviders = (ui: ReactElement) => {
     </AppProviders>
   )
 }
-

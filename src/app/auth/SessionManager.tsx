@@ -4,8 +4,6 @@
  */
 
 import { useCallback, useEffect, useRef } from 'react'
-import { useAuth } from './useAuth'
-import { useNotificationBus } from '@/notifications/useNotificationBus'
 import { useTracking } from '@/app/analytics/trackingContext'
 import {
   I18N_KEY_SESSION_EXPIRED_TITLE,
@@ -16,6 +14,8 @@ import {
   TRACKING_EVENT_SESSION_TIMEOUT,
   TRACKING_EVENT_SESSION_WARNING,
 } from '@/app/constants'
+import { useNotificationBus } from '@/notifications/useNotificationBus'
+import { useAuth } from './useAuth'
 
 export function SessionManager(): null {
   const { isAuthenticated, logout } = useAuth()
@@ -75,7 +75,7 @@ export function SessionManager(): null {
         logout()
       }
     }, SESSION_IDLE_TIMEOUT_MS)
-  }, [isAuthenticated, logout, notificationBus, tracking])
+  }, [isAuthenticated, logout, notificationBus, tracking, resetTimers])
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -104,8 +104,7 @@ export function SessionManager(): null {
       })
       resetTimers()
     }
-  }, [isAuthenticated, logout, notificationBus, tracking, setupTimers])
+  }, [isAuthenticated, setupTimers])
 
   return null
 }
-

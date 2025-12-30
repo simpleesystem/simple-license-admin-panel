@@ -18,4 +18,3 @@ export const buildProduct = (overrides?: Partial<Product>): Product => ({
   updatedAt: faker.date.recent().toISOString(),
   ...overrides,
 })
-

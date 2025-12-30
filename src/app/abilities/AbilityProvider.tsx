@@ -14,5 +14,3 @@ export function AbilityProvider({ children }: AbilityProviderProps) {
 
   return <AbilityContext.Provider value={ability}>{children}</AbilityContext.Provider>
 }
-
-

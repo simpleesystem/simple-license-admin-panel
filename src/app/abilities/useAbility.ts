@@ -17,5 +17,3 @@ export const useCanAbility = (action: AbilityAction, subject: AbilitySubject): b
   const ability = useAbility()
   return ability.can(action, subject)
 }
-
-

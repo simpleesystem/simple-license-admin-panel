@@ -109,4 +109,3 @@ describe('AlertThresholdsPanel integration', () => {
     expect(screen.getByText(UI_ANALYTICS_ALERT_THRESHOLDS_ERROR_BODY)).toBeInTheDocument()
   })
 })
-

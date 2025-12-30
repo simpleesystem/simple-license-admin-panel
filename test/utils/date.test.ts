@@ -30,4 +30,3 @@ describe('date utilities', () => {
     expect(formatDateTime(timestamp)).toBe(`${expectedPrefix} ${expectedSuffix}`)
   })
 })
-

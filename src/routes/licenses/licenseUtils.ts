@@ -9,4 +9,3 @@ export function normalizeLicenseStatus(status: string | undefined): string {
   }
   return 'ACTIVE'
 }
-

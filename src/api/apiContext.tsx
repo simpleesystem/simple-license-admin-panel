@@ -12,4 +12,3 @@ export const useApiClient = (): SimpleLicenseClient => {
   }
   return context
 }
-

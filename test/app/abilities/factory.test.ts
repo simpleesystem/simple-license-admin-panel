@@ -34,5 +34,3 @@ describe('buildAbilityFromPermissions', () => {
     expect(ability.can(ABILITY_ACTION_MANAGE, ABILITY_SUBJECT_LICENSE)).toBe(false)
   })
 })
-
-

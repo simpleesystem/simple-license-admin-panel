@@ -1,7 +1,7 @@
-import { ApiException } from '@/simpleLicense'
-import { expect, it } from 'vitest'
-
-import { handleQueryError } from '../../../src/app/query/errorHandling'
+import { ApiException, NetworkException } from '@/simpleLicense'
+import { describe, expect, it } from 'vitest'
+import { I18N_KEY_APP_ERROR_MESSAGE, I18N_KEY_APP_ERROR_TITLE } from '../../../src/app/constants'
+import { handleQueryError, isNetworkError, shouldRetryRequest } from '../../../src/app/query/errorHandling'
 
 describe('handleQueryError', () => {
   it('returns null for auth 401 errors (AUTHENTICATION_ERROR)', () => {
@@ -16,29 +16,51 @@ describe('handleQueryError', () => {
     expect(result).toBeNull()
   })
 
+  it('maps ApiException instances with error code', () => {
+    const exception = new ApiException('failure', 'ERROR_CODE')
+    const payload = handleQueryError(exception)
+    expect(payload).not.toBeNull()
+    expect(payload?.titleKey).toBe('ERROR_CODE')
+    expect(payload?.descriptionKey).toBe(I18N_KEY_APP_ERROR_MESSAGE)
+  })
+
+  it('handles ApiException with empty error code', () => {
+    const exception = new ApiException('failure', '', { status: 500 })
+    const payload = handleQueryError(exception)
+    expect(payload).not.toBeNull()
+    expect(payload?.titleKey).toBe(I18N_KEY_APP_ERROR_TITLE)
+  })
+
+  it('handles ApiException with empty error code', () => {
+    const exception = new ApiException('failure', '', { status: 500 })
+    const payload = handleQueryError(exception)
+    expect(payload).not.toBeNull()
+    expect(payload?.titleKey).toBe(I18N_KEY_APP_ERROR_TITLE)
+  })
+
   it('returns payload for non-auth errors', () => {
     const error = new ApiException('Other error', 'SOME_ERROR', { status: 500 })
     const result = handleQueryError(error)
     expect(result).not.toBeNull()
   })
-})
-import { ApiException, NetworkException } from '@/simpleLicense'
-import { describe, expect, it } from 'vitest'
-import { I18N_KEY_APP_ERROR_MESSAGE, I18N_KEY_APP_ERROR_TITLE } from '../../../src/app/constants'
-import { handleQueryError, isNetworkError, shouldRetryRequest } from '../../../src/app/query/errorHandling'
-
-describe('handleQueryError', () => {
-  it('maps ApiException instances with mapApiException', () => {
-    const exception = new ApiException('failure', 'ERROR_CODE')
-    const payload = handleQueryError(exception)
-    expect(payload.titleKey).toBe('ERROR_CODE')
-    expect(payload.descriptionKey).toBe(I18N_KEY_APP_ERROR_MESSAGE)
-  })
 
   it('falls back to generic notifications for unknown errors', () => {
     const payload = handleQueryError(new Error('boom'))
-    expect(payload.titleKey).toBe(I18N_KEY_APP_ERROR_TITLE)
-    expect(payload.descriptionKey).toBe(I18N_KEY_APP_ERROR_MESSAGE)
+    expect(payload).not.toBeNull()
+    expect(payload?.titleKey).toBe(I18N_KEY_APP_ERROR_TITLE)
+    expect(payload?.descriptionKey).toBe(I18N_KEY_APP_ERROR_MESSAGE)
+  })
+
+  it('handles null errors', () => {
+    const payload = handleQueryError(null)
+    expect(payload).not.toBeNull()
+    expect(payload?.titleKey).toBe(I18N_KEY_APP_ERROR_TITLE)
+  })
+
+  it('handles undefined errors', () => {
+    const payload = handleQueryError(undefined)
+    expect(payload).not.toBeNull()
+    expect(payload?.titleKey).toBe(I18N_KEY_APP_ERROR_TITLE)
   })
 })
 
@@ -47,12 +69,43 @@ describe('isNetworkError', () => {
     expect(isNetworkError(new NetworkException('Offline'))).toBe(true)
   })
 
-  it('detects axios-style network errors', () => {
+  it('detects axios-style network errors with ERR_NETWORK', () => {
     expect(isNetworkError({ code: 'ERR_NETWORK' })).toBe(true)
+  })
+
+  it('detects axios-style network errors with network_error', () => {
+    expect(isNetworkError({ code: 'network_error' })).toBe(true)
+  })
+
+  it('detects axios-style network errors with econnaborted', () => {
+    expect(isNetworkError({ code: 'ECONNABORTED' })).toBe(true)
+  })
+
+  it('handles code with whitespace', () => {
+    expect(isNetworkError({ code: '  ERR_NETWORK  ' })).toBe(true)
+  })
+
+  it('handles case-insensitive code matching', () => {
+    expect(isNetworkError({ code: 'err_network' })).toBe(true)
+  })
+
+  it('returns false for non-retryable codes', () => {
+    expect(isNetworkError({ code: 'OTHER_ERROR' })).toBe(false)
+  })
+
+  it('handles non-string code values', () => {
+    expect(isNetworkError({ code: 123 })).toBe(false)
+    expect(isNetworkError({ code: null })).toBe(false)
+    expect(isNetworkError({ code: undefined })).toBe(false)
+  })
+
+  it('handles objects without code property', () => {
+    expect(isNetworkError({ message: 'test' })).toBe(false)
   })
 
   it('detects generic errors with network messaging', () => {
     expect(isNetworkError(new Error('Network request failed'))).toBe(true)
+    expect(isNetworkError(new Error('network error occurred'))).toBe(true)
   })
 
   it('returns false for non-network errors', () => {
@@ -61,6 +114,14 @@ describe('isNetworkError', () => {
 
   it('returns false for falsy inputs', () => {
     expect(isNetworkError(undefined)).toBe(false)
+    expect(isNetworkError(null)).toBe(false)
+    expect(isNetworkError(false)).toBe(false)
+    expect(isNetworkError(0)).toBe(false)
+  })
+
+  it('returns false for non-object errors', () => {
+    expect(isNetworkError('string error')).toBe(false)
+    expect(isNetworkError(123)).toBe(false)
   })
 })
 

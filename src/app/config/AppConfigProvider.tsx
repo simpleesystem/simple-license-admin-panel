@@ -14,4 +14,3 @@ export function AppConfigProvider({ value, children }: AppConfigProviderProps) {
 
   return <AppConfigContext.Provider value={contextValue}>{children}</AppConfigContext.Provider>
 }
-

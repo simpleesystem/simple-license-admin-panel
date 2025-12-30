@@ -81,5 +81,3 @@ describe('UsageTrendsPanel', () => {
     expect(screen.getByText('No usage trends yet')).toBeInTheDocument()
   })
 })
-
-

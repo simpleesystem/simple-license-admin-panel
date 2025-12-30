@@ -13,4 +13,3 @@ export interface AuthContextValue {
   logout: () => Promise<void>
   refreshCurrentUser: () => Promise<void>
 }
-

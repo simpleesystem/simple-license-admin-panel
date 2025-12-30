@@ -105,5 +105,3 @@ export const selectProductTiersByProduct = (
     return true
   })
 }
-
-

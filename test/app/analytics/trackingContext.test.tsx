@@ -25,5 +25,3 @@ describe('tracking context', () => {
     expect(result.current).toBe(trackingClient)
   })
 })
-
-

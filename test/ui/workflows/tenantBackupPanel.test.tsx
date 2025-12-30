@@ -118,4 +118,3 @@ describe('TenantBackupPanel', () => {
     expect(screen.getByRole('button', { name: UI_TENANT_BACKUP_PENDING_LABEL })).toBeDisabled()
   })
 })
-

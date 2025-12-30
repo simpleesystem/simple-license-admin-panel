@@ -82,5 +82,3 @@ export function SelectField<TFieldValues extends FieldValues>({
     </VisibilityGate>
   )
 }
-
-

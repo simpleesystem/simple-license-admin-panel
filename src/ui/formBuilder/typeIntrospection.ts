@@ -208,5 +208,3 @@ export const generateBlueprintFromType = <TFieldValues extends FieldValues>(
     sections: resolvedSections,
   })
 }
-
-

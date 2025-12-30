@@ -66,5 +66,3 @@ describe('permission to ability mapping', () => {
     expect(abilities).toContainEqual([ABILITY_ACTION_VIEW, ABILITY_SUBJECT_ANALYTICS])
   })
 })
-
-

@@ -11,4 +11,3 @@ export const THEME_CLASS_MAP: Record<string, string> = {
 }
 
 export const THEME_DEFAULT_CLASS = THEME_CLASS_MAP[APP_THEME_DEFAULT]
-

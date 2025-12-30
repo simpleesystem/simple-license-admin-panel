@@ -49,5 +49,3 @@ describe('TenantQuotaFormFlow', () => {
     expect(onClose).toHaveBeenCalled()
   })
 })
-
-

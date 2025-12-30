@@ -88,5 +88,3 @@ describe('Typography primitives', () => {
     expect(getByText(iconText).parentElement).toHaveClass(UI_CLASS_EMPTY_STATE_ICON, { exact: false })
   })
 })
-
-

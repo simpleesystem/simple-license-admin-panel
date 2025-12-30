@@ -18,4 +18,3 @@ export const buildActivation = (overrides?: Partial<LicenseActivation>): License
   vendorId: faker.string.uuid(),
   ...overrides,
 })
-

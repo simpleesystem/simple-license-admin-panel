@@ -7,4 +7,3 @@ import { ChangePasswordFlow } from '@/ui/auth/ChangePasswordFlow'
 export function ChangePasswordRouteComponent() {
   return <ChangePasswordFlow />
 }
-

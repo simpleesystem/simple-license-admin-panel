@@ -170,5 +170,3 @@ describe('ProductRowActions', () => {
     expect(container).toBeEmptyDOMElement()
   })
 })
-
-

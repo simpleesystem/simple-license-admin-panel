@@ -4,4 +4,3 @@
  */
 
 export { LicenseManagementPanel as LicenseManagementExample } from './LicenseManagementPanel'
-

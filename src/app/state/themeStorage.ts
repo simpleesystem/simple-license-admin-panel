@@ -38,4 +38,3 @@ export const applyThemeClass = (theme: ThemeName): void => {
   body.classList.remove(...Object.values(THEME_CLASS_MAP))
   body.classList.add(THEME_CLASS_MAP[theme] ?? THEME_DEFAULT_CLASS)
 }
-

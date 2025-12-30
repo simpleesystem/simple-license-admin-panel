@@ -6,4 +6,3 @@ import { AppProviders } from '../../src/app/AppProviders'
 export const renderWithProviders = (ui: ReactElement) => {
   return render(<AppProviders>{ui}</AppProviders>)
 }
-

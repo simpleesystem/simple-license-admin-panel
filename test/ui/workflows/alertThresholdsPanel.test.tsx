@@ -129,4 +129,3 @@ describe('AlertThresholdsPanel', () => {
     expect(screen.getByText('Unable to load alert thresholds')).toBeInTheDocument()
   })
 })
-

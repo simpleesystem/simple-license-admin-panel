@@ -9,5 +9,3 @@ const noopTrackingClient: TrackingClient = {
 }
 
 export const createTrackingClient = (): TrackingClient => noopTrackingClient
-
-

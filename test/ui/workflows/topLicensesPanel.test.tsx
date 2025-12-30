@@ -95,4 +95,3 @@ describe('TopLicensesPanel', () => {
     expect(screen.getByText('Please retry after refreshing the dashboard.')).toBeInTheDocument()
   })
 })
-

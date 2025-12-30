@@ -54,4 +54,3 @@ const buildAuthContextValue = (overrides: Partial<AuthContextValue> = {}): AuthC
   refreshCurrentUser: vi.fn(),
   ...overrides,
 })
-

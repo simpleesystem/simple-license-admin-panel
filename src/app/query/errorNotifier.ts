@@ -16,5 +16,3 @@ export const registerQueryErrorNotifier = (notifier: QueryErrorNotifier): (() =>
 export const notifyQueryError = (payload: ToastNotificationPayload): void => {
   currentNotifier?.(payload)
 }
-
-

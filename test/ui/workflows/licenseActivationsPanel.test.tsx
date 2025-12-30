@@ -227,4 +227,3 @@ describe('LicenseActivationsPanel', () => {
     expect(screen.getAllByText(UI_VALUE_PLACEHOLDER).length).toBeGreaterThan(0)
   })
 })
-

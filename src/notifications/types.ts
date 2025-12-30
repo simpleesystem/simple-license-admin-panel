@@ -8,4 +8,3 @@ export type NotificationEventMap = {
 }
 
 export type NotificationBus = Emitter<NotificationEventMap>
-

@@ -175,5 +175,3 @@ describe('mutation-backed action helpers', () => {
     expect(actions).toEqual([])
   })
 })
-
-

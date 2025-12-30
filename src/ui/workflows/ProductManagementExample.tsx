@@ -4,4 +4,3 @@
  */
 
 export { ProductManagementPanel as ProductManagementExample } from './ProductManagementPanel'
-

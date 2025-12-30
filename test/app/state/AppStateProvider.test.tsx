@@ -160,4 +160,3 @@ describe('AppStateProvider', () => {
     expect(screen.getByTestId('sidebar-display')).toHaveTextContent('collapsed')
   })
 })
-

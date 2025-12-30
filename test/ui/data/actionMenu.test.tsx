@@ -74,5 +74,3 @@ describe('ActionMenu', () => {
     expect(getByTestId(testId)).toHaveAttribute('data-testid', testId)
   })
 })
-
-

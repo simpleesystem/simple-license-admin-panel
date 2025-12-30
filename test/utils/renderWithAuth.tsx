@@ -14,4 +14,3 @@ export const renderWithAuth = (ui: ReactElement, currentUser: User | null = null
 
   return render(<AuthContext.Provider value={value}>{ui}</AuthContext.Provider>)
 }
-

@@ -71,4 +71,3 @@ describe('SelectField', () => {
     expect(handleSubmit).toHaveBeenCalledWith({ selection: 'tagline' })
   })
 })
-

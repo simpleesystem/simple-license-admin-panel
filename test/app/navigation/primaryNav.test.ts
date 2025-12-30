@@ -19,4 +19,3 @@ describe('buildPrimaryNavigation', () => {
     expect(licenseNav?.active).toBe(true)
   })
 })
-

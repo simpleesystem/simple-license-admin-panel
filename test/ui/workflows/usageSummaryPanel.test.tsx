@@ -123,4 +123,3 @@ describe('UsageSummaryPanel', () => {
     expect(screen.getByText(UI_ANALYTICS_SUMMARY_ERROR_BODY)).toBeInTheDocument()
   })
 })
-

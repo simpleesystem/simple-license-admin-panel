@@ -34,5 +34,3 @@ describe('logger context', () => {
     expect(result.current).toBe(logger)
   })
 })
-
-

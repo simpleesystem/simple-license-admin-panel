@@ -28,5 +28,3 @@ export function FormModalWithMutation<TFieldValues extends FieldValues, TData = 
 
   return <FormModal {...modalProps} onSubmit={handleSubmit} />
 }
-
-

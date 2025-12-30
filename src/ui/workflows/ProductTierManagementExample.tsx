@@ -4,4 +4,3 @@
  */
 
 export { ProductTierManagementPanel as ProductTierManagementExample } from './ProductTierManagementPanel'
-

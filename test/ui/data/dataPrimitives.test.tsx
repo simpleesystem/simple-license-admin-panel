@@ -300,5 +300,3 @@ describe('Data primitives', () => {
     expect(handleRemove).toHaveBeenCalled()
   })
 })
-
-

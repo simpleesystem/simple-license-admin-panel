@@ -11,4 +11,3 @@ export const formatDateTime = (value: Date | string | number): string => {
   const date = typeof value === 'string' || typeof value === 'number' ? new Date(value) : value
   return `${formatDate(date)} ${format(date, DATE_FORMAT_TIME)}`
 }
-

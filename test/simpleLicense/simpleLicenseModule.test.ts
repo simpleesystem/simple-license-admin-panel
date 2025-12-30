@@ -11,5 +11,3 @@ describe('simpleLicense module', () => {
     expect(typeof AxiosHttpClient).toBe('function')
   })
 })
-
-

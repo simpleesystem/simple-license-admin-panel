@@ -16,4 +16,3 @@ export const useFeatureFlag = (flag: FeatureFlagKey): boolean => {
   const config = useAppConfig()
   return config.features[flag]
 }
-

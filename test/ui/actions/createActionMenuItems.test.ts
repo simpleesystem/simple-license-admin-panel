@@ -37,5 +37,3 @@ describe('createActionMenuItems', () => {
     expect(items[1].disabled).toBe(true)
   })
 })
-
-

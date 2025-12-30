@@ -29,5 +29,3 @@ export function IfPermission({ permission, children, fallback }: IfPermissionPro
 
   return <>{renderFallback(fallback)}</>
 }
-
-

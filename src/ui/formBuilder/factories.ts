@@ -1,3 +1,4 @@
+import type { FieldValues } from 'react-hook-form'
 import type {
   CreateLicenseRequest,
   CreateProductRequest,
@@ -14,7 +15,6 @@ import type {
   UpdateUserRequest,
   User,
 } from '@/simpleLicense'
-import type { FieldValues } from 'react-hook-form'
 
 // UI-specific types for Entitlement Form (abstracts the API's union types)
 export interface EntitlementFormValues {

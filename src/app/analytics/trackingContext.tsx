@@ -12,5 +12,3 @@ export const useTracking = (): TrackingClient => {
   }
   return context
 }
-
-

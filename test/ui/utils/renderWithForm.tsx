@@ -33,5 +33,3 @@ export const renderWithForm = <TFieldValues extends FieldValues>(
     form: methodsRef.current,
   }
 }
-
-

@@ -53,4 +53,3 @@ describe('HealthRouteComponent', () => {
     expect(screen.getByTestId('system-metrics-panel')).toBeInTheDocument()
   })
 })
-

@@ -17,4 +17,3 @@ describe('normalizeLicenseStatus', () => {
     expect(normalizeLicenseStatus(UNKNOWN_STATUS)).toBe(UI_LICENSE_STATUS_ACTIVE)
   })
 })
-

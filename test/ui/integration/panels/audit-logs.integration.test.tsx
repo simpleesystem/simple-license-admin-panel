@@ -95,4 +95,3 @@ describe('AuditLogsPanel integration', () => {
     expect(screen.getByText(UI_AUDIT_LOGS_ERROR_BODY)).toBeInTheDocument()
   })
 })
-

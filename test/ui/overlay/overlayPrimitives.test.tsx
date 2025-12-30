@@ -98,5 +98,3 @@ describe('Overlay primitives', () => {
     expect(panel).toHaveClass('w-50', { exact: false })
   })
 })
-
-

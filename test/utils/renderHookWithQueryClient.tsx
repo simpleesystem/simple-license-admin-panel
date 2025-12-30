@@ -25,4 +25,3 @@ export const renderHookWithQueryClient = <T,>(
 
   return renderHook(hook, { wrapper })
 }
-

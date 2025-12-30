@@ -52,5 +52,3 @@ export const PERMISSION_TO_ABILITIES: PermissionAbilityMap = {
 export const getAbilitiesForPermission = (permission: PermissionKey): readonly AbilityTuple[] => {
   return PERMISSION_TO_ABILITIES[permission]
 }
-
-

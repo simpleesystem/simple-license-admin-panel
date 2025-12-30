@@ -4,4 +4,3 @@
  */
 
 export { ProductEntitlementManagementPanel as ProductEntitlementManagementExample } from './ProductEntitlementManagementPanel'
-

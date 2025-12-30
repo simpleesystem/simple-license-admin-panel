@@ -94,5 +94,3 @@ describe('createAppLogger', () => {
     expect(() => logger.error(new Error('noop-error'))).not.toThrow()
   })
 })
-
-

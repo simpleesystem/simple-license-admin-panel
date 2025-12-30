@@ -45,6 +45,3 @@ export function PageHeader({
     </VisibilityGate>
   )
 }
-
-
-

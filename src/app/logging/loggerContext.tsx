@@ -12,5 +12,3 @@ export const useLogger = (): Logger => {
   }
   return context
 }
-
-

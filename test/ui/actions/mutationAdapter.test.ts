@@ -17,5 +17,3 @@ describe('adaptMutation', () => {
     expect(adapter.isPending).toBe(true)
   })
 })
-
-

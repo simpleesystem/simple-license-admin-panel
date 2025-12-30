@@ -60,5 +60,3 @@ describe('DevToolbar', () => {
     expect(mockClearDevPersona).toHaveBeenCalledTimes(1)
   })
 })
-
-

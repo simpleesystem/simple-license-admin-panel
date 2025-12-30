@@ -139,6 +139,3 @@ describe('list state helpers', () => {
     expect(parsed.filters).toEqual({})
   })
 })
-
-
-

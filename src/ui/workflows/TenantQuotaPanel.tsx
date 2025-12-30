@@ -96,5 +96,3 @@ export function TenantQuotaPanel({ client, tenantId, title = 'Quota Limits', onU
     </Stack>
   )
 }
-
-

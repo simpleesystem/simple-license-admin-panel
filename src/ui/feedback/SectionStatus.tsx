@@ -75,6 +75,3 @@ export function SectionStatus({
     </VisibilityGate>
   )
 }
-
-
-

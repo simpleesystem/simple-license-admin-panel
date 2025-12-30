@@ -434,6 +434,116 @@ describe('useAppStore', () => {
       const selectedData = selectData(state)
       expect(selectedData.key).toBe(testData.key)
     })
+
+    it('selectErrorByScope returns null for non-existent scope', () => {
+      const state = useAppStore.getState()
+      const error = selectErrorByScope('data')(state)
+      expect(error).toBeNull()
+    })
+
+    it('selectErrorViewModel returns null when no error exists', () => {
+      const state = useAppStore.getState()
+      const viewModel = selectErrorViewModel('data')(state)
+      expect(viewModel).toBeNull()
+    })
+
+    it('selectErrorViewModel uses correlationId as id when available', () => {
+      const store = useAppStore.getState()
+      const error = {
+        type: APP_ERROR_TYPE_SERVER,
+        code: 'TEST_ERROR',
+        message: faker.lorem.sentence(),
+        scope: 'data' as const,
+        correlationId: faker.string.uuid(),
+        requestId: faker.string.uuid(),
+      }
+      store.dispatch({ type: 'error/raise', payload: error })
+
+      const state = useAppStore.getState()
+      const viewModel = selectErrorViewModel('data')(state)
+      expect(viewModel?.id).toBe(error.correlationId)
+    })
+
+    it('selectErrorViewModel falls back to requestId when correlationId is missing', () => {
+      const store = useAppStore.getState()
+      const error = {
+        type: APP_ERROR_TYPE_SERVER,
+        code: 'TEST_ERROR',
+        message: faker.lorem.sentence(),
+        scope: 'data' as const,
+        requestId: faker.string.uuid(),
+      }
+      store.dispatch({ type: 'error/raise', payload: error })
+
+      const state = useAppStore.getState()
+      const viewModel = selectErrorViewModel('data')(state)
+      expect(viewModel?.id).toBe(error.requestId)
+    })
+
+    it('selectErrorViewModel falls back to code when both ids are missing', () => {
+      const store = useAppStore.getState()
+      const error = {
+        type: APP_ERROR_TYPE_SERVER,
+        code: 'TEST_ERROR',
+        message: faker.lorem.sentence(),
+        scope: 'data' as const,
+      }
+      store.dispatch({ type: 'error/raise', payload: error })
+
+      const state = useAppStore.getState()
+      const viewModel = selectErrorViewModel('data')(state)
+      expect(viewModel?.id).toBe(error.code)
+    })
+
+    it('selectLatestError returns null when no errors exist', () => {
+      const state = useAppStore.getState()
+      const latestError = selectLatestError(state)
+      expect(latestError).toBeNull()
+    })
+
+    it('selectLatestError returns last scope error when lastScope is set', () => {
+      const store = useAppStore.getState()
+      const error1 = {
+        type: APP_ERROR_TYPE_SERVER,
+        code: 'ERROR_1',
+        message: faker.lorem.sentence(),
+        scope: 'data' as const,
+      }
+      const error2 = {
+        type: APP_ERROR_TYPE_VALIDATION,
+        code: 'ERROR_2',
+        message: faker.lorem.sentence(),
+        scope: 'global' as const,
+      }
+      store.dispatch({ type: 'error/raise', payload: error1 })
+      store.dispatch({ type: 'error/raise', payload: error2 })
+
+      const state = useAppStore.getState()
+      const latestError = selectLatestError(state)
+      expect(latestError).toEqual({ ...error2, scope: 'global' })
+    })
+
+    it('selectLatestError returns last error by key order when lastScope is null', () => {
+      const store = useAppStore.getState()
+      const error1 = {
+        type: APP_ERROR_TYPE_SERVER,
+        code: 'ERROR_1',
+        message: faker.lorem.sentence(),
+        scope: 'data' as const,
+      }
+      const error2 = {
+        type: APP_ERROR_TYPE_VALIDATION,
+        code: 'ERROR_2',
+        message: faker.lorem.sentence(),
+        scope: 'global' as const,
+      }
+      store.dispatch({ type: 'error/raise', payload: error1 })
+      store.dispatch({ type: 'error/raise', payload: error2 })
+      store.dispatch({ type: 'error/clear', scope: 'global' })
+
+      const state = useAppStore.getState()
+      const latestError = selectLatestError(state)
+      expect(latestError).toEqual({ ...error1, scope: 'data' })
+    })
   })
 })
-

@@ -52,5 +52,3 @@ export const buildProductTier = (overrides: Partial<TestProductTier> = {}): Test
   updatedAt: faker.date.recent(),
   ...overrides,
 })
-
-

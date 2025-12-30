@@ -60,5 +60,3 @@ export function IfCan({ action, subject, fallback, mode = 'hide', children }: If
     </ContextualCan>
   )
 }
-
-

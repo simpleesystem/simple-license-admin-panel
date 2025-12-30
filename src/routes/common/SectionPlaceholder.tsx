@@ -42,4 +42,3 @@ export function SectionPlaceholder({ title, subtitle, body, testMode }: SectionP
     </Page>
   )
 }
-

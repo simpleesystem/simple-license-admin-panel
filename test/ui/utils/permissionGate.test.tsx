@@ -88,5 +88,3 @@ describe('VisibilityGate', () => {
     expect(getByText('ability-fallback')).toBeInTheDocument()
   })
 })
-
-

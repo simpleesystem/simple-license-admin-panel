@@ -47,4 +47,3 @@ describe('appStateContext hooks', () => {
     expect(handleTheme).toHaveBeenCalledWith(APP_THEME_LIGHT)
   })
 })
-

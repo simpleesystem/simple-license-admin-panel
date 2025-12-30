@@ -185,5 +185,3 @@ describe('Layout primitives', () => {
     expect(sidebar).toHaveClass(...UI_CLASS_SIDEBAR_STICKY.split(' '), { exact: false })
   })
 })
-
-

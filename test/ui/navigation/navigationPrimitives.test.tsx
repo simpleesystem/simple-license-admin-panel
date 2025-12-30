@@ -97,5 +97,3 @@ describe('Navigation primitives', () => {
     expect(getByText('products').closest('li')).toHaveClass('active')
   })
 })
-
-

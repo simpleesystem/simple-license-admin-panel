@@ -212,16 +212,16 @@ export function ProductEntitlementManagementPanel({
         id: 'tiers',
         header: 'Tiers',
         cell: (row) => {
-           if (!row.productTiers || row.productTiers.length === 0) return UI_VALUE_PLACEHOLDER
-           return (
-             <div className="d-flex flex-wrap gap-1">
-               {row.productTiers.map(t => (
-                 <Badge key={t.id} bg="light" text="dark" className="border">
-                   {t.tierCode}
-                 </Badge>
-               ))}
-             </div>
-           )
+          if (!row.productTiers || row.productTiers.length === 0) return UI_VALUE_PLACEHOLDER
+          return (
+            <div className="d-flex flex-wrap gap-1">
+              {row.productTiers.map(t => (
+                <Badge key={t.id} bg="light" text="dark" className="border">
+                  {t.tierCode}
+                </Badge>
+              ))}
+            </div>
+          )
         },
         sortable: false,
       },

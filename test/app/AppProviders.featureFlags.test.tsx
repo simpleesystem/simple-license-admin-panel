@@ -50,5 +50,3 @@ describe('AppProviders feature flags', () => {
     expect(enableQueryCachePersistenceMock).not.toHaveBeenCalled()
   })
 })
-
-

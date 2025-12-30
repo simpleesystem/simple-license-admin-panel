@@ -29,5 +29,3 @@ describe('useAuth', () => {
     expect(result.current).toBe(value)
   })
 })
-
-

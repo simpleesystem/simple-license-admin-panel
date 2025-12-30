@@ -44,6 +44,3 @@ export function Heading({
     </VisibilityGate>
   )
 }
-
-
-

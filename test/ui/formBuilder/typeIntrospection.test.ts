@@ -228,5 +228,3 @@ describe('typeIntrospection utilities', () => {
     })
   })
 })
-
-

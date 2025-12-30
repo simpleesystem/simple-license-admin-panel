@@ -274,4 +274,3 @@ describe('AppShell navigation across all domains', () => {
     })
   })
 })
-

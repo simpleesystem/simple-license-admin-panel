@@ -14,5 +14,3 @@ export const adaptMutation = <
     return mutation.isPending
   },
 })
-
-

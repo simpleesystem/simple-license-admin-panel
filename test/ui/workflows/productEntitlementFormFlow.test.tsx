@@ -121,5 +121,3 @@ describe('ProductEntitlementFormFlow', () => {
     expect(onClose).not.toHaveBeenCalled()
   })
 })
-
-

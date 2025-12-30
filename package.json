@@ -15,7 +15,11 @@
     "test:coverage": "vitest run --coverage",
     "type-check": "tsc --noEmit",
     "test:mutation": "stryker run",
-    "test:mutation:ci": "stryker run --reporters json,html"
+    "test:mutation:ci": "stryker run --reporters json,html",
+    "postinstall": "bash scripts/install-pre-commit-hooks.sh || true",
+    "pre-commit": "pre-commit run --all-files",
+    "pre-commit:hooks": "pre-commit run --all-files",
+    "pre-commit:install": "bash scripts/install-pre-commit-hooks.sh"
   },
   "engines": {
     "node": ">=22.0.0"

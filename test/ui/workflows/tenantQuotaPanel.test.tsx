@@ -171,5 +171,3 @@ describe('TenantQuotaPanel', () => {
     expect(onUpdated).toHaveBeenCalled()
   })
 })
-
-

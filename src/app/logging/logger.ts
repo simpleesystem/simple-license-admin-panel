@@ -72,5 +72,3 @@ export const createAppLogger = (config: AppConfig, options?: LoggerOptions): Log
 
   return createCompositeLogger(transports)
 }
-
-

@@ -46,4 +46,3 @@ export function AppStateProvider({ children }: PropsWithChildren) {
     </AppStateContext.Provider>
   )
 }
-

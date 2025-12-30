@@ -149,5 +149,3 @@ export const buildListQueryOptions = (state: ListState) => {
     filters: state.filters ?? {},
   }
 }
-
-

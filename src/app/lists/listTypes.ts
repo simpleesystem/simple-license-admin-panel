@@ -42,5 +42,3 @@ export const DEFAULT_LIST_STATE: ListState = {
   search: null,
   filters: {},
 }
-
-

@@ -420,4 +420,3 @@ describe('useAdminLicenses hooks', () => {
     })
   })
 })
-

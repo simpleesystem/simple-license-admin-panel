@@ -24,5 +24,3 @@ export const composeClassNames = (...classes: Array<string | false | null | unde
 
   return tokens.join(' ')
 }
-
-

@@ -94,5 +94,3 @@ describe('form mutation bridge', () => {
     expect(onClose).toHaveBeenCalled()
   })
 })
-
-

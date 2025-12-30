@@ -194,6 +194,3 @@ export function DataTable<TData>({
     </VisibilityGate>
   )
 }
-
-
-

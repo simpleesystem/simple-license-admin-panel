@@ -17,4 +17,3 @@ export const UI_NAV_LABEL_ANALYTICS = 'Analytics' as const
 export const UI_NAV_LABEL_HEALTH = 'Health' as const
 export const UI_NAV_LABEL_AUDIT = 'Audit' as const
 export const UI_NAV_LABEL_CHANGE_PASSWORD = 'Change password' as const
-

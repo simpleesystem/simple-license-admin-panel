@@ -30,5 +30,3 @@ export function VisibilityGate({
 
   return <>{children}</>
 }
-
-

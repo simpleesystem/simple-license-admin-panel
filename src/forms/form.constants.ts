@@ -5,4 +5,3 @@ export const FORM_INPUT_TYPE_TEXT = 'text' as const
 export const FORM_INPUT_TYPE_PASSWORD = 'password' as const
 export const FORM_SELECT_PLACEHOLDER_VALUE = '' as const
 export const FORM_LABEL_FOR_ID_PREFIX = 'form-control-' as const
-

@@ -141,5 +141,3 @@ describe('DynamicForm', () => {
     expect(onClose).toHaveBeenCalled()
   })
 })
-
-

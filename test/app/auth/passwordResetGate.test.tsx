@@ -82,5 +82,3 @@ describe('PasswordResetGate', () => {
     expect(screen.queryByTestId('change-password-flow')).not.toBeInTheDocument()
   })
 })
-
-
