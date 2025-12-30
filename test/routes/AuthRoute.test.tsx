@@ -3,8 +3,7 @@ import mitt from 'mitt'
 import { vi } from 'vitest'
 
 import { I18nProvider } from '@/app/i18n/I18nProvider'
-import { i18nResources } from '@/app/i18n/resources'
-import { AUTH_STATUS_IDLE, I18N_KEY_AUTH_HEADING } from '@/app/constants'
+import { AUTH_STATUS_IDLE } from '@/app/constants'
 import { AuthRouteComponent } from '@/routes/auth/AuthRoute'
 import { AuthContext } from '@/app/auth/authContext'
 import type { AuthContextValue } from '@/app/auth/types'
@@ -22,8 +21,6 @@ vi.mock('@tanstack/react-router', () => {
     RouterProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   }
 })
-
-const AUTH_HEADING_TEXT = i18nResources.common[I18N_KEY_AUTH_HEADING]
 
 describe('AuthRouteComponent', () => {
   it('renders the localized authentication heading', () => {
