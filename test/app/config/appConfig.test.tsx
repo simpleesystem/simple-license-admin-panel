@@ -45,6 +45,84 @@ describe('createAppConfig', () => {
     expect(config.apiBaseUrl).toBeDefined()
     expect(typeof config.apiBaseUrl).toBe('string')
   })
+
+  it('parses boolean feature flags correctly', () => {
+    const config1 = createAppConfig(createEnv({ [ENV_VAR_FEATURE_DEV_TOOLS]: 'true' }))
+    expect(config1.features.enableDevTools).toBe(true)
+
+    const config2 = createAppConfig(createEnv({ [ENV_VAR_FEATURE_DEV_TOOLS]: '1' }))
+    expect(config2.features.enableDevTools).toBe(true)
+
+    const config3 = createAppConfig(createEnv({ [ENV_VAR_FEATURE_DEV_TOOLS]: 'yes' }))
+    expect(config3.features.enableDevTools).toBe(true)
+
+    const config4 = createAppConfig(createEnv({ [ENV_VAR_FEATURE_DEV_TOOLS]: 'on' }))
+    expect(config4.features.enableDevTools).toBe(true)
+
+    const config5 = createAppConfig(createEnv({ [ENV_VAR_FEATURE_DEV_TOOLS]: 'false' }))
+    expect(config5.features.enableDevTools).toBe(false)
+
+    const config6 = createAppConfig(createEnv({ [ENV_VAR_FEATURE_DEV_TOOLS]: undefined }))
+    expect(config6.features.enableDevTools).toBe(false)
+  })
+
+  it('parses HTTP timeout with defaults', () => {
+    const config = createAppConfig(createEnv())
+    expect(config.httpTimeoutMs).toBeGreaterThan(0)
+    expect(typeof config.httpTimeoutMs).toBe('number')
+  })
+
+  it('parses HTTP retry attempts with defaults', () => {
+    const config = createAppConfig(createEnv())
+    expect(config.httpRetryAttempts).toBeGreaterThanOrEqual(0)
+    expect(typeof config.httpRetryAttempts).toBe('number')
+  })
+
+  it('parses HTTP retry delay with defaults', () => {
+    const config = createAppConfig(createEnv())
+    expect(config.httpRetryDelayMs).toBeGreaterThan(0)
+    expect(typeof config.httpRetryDelayMs).toBe('number')
+  })
+
+  it('allows empty string for API base URL', () => {
+    const config = createAppConfig(createEnv({ [ENV_VAR_API_BASE_URL]: '' }))
+    expect(config.apiBaseUrl).toBe('')
+  })
+
+  it('normalizes optional URLs correctly', () => {
+    const config1 = createAppConfig(createEnv({ [ENV_VAR_AUTH_FORGOT_PASSWORD_URL]: 'https://example.com/reset' }))
+    expect(config1.authForgotPasswordUrl).toBe('https://example.com/reset')
+
+    const config2 = createAppConfig(createEnv({ [ENV_VAR_AUTH_FORGOT_PASSWORD_URL]: '' }))
+    expect(config2.authForgotPasswordUrl).toBeNull()
+
+    const config3 = createAppConfig(createEnv({ [ENV_VAR_AUTH_FORGOT_PASSWORD_URL]: undefined }))
+    expect(config3.authForgotPasswordUrl).toBeNull()
+  })
+
+  it('throws error for invalid API base URL format', () => {
+    expect(() => {
+      createAppConfig(createEnv({ [ENV_VAR_API_BASE_URL]: 'invalid-url' }))
+    }).toThrow()
+  })
+
+  it('throws error for invalid HTTP timeout', () => {
+    expect(() => {
+      createAppConfig(createEnv({ [ENV_VAR_HTTP_TIMEOUT_MS]: '-1' }))
+    }).toThrow()
+  })
+
+  it('throws error for invalid HTTP retry attempts', () => {
+    expect(() => {
+      createAppConfig(createEnv({ [ENV_VAR_HTTP_RETRY_ATTEMPTS]: '-1' }))
+    }).toThrow()
+  })
+
+  it('throws error for invalid HTTP retry delay', () => {
+    expect(() => {
+      createAppConfig(createEnv({ [ENV_VAR_HTTP_RETRY_DELAY_MS]: '-1' }))
+    }).toThrow()
+  })
 })
 
 describe('AppConfig hooks', () => {
