@@ -3,4 +3,4 @@
  * Exported for test compatibility
  */
 
-export { AuthContext as AuthorizationContext } from './AuthContext'
+export { AuthContext as AuthorizationContext } from './authContext'

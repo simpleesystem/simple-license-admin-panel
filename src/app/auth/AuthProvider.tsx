@@ -5,7 +5,7 @@ import { ApiException, ERROR_CODE_MUST_CHANGE_PASSWORD } from '@/simpleLicense'
 import type { LoginCredentials } from '@/types/auth'
 import { APP_ERROR_TYPE_AUTH, AUTH_STATUS_IDLE, STORAGE_KEY_AUTH_EXPIRY, STORAGE_KEY_AUTH_TOKEN, STORAGE_KEY_AUTH_USER } from '../constants'
 import { useAppStore } from '../state/store'
-import { AuthContext } from './AuthContext'
+import { AuthContext } from './authContext'
 
 interface AuthProviderProps {
   children: ReactNode
