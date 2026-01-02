@@ -27,6 +27,8 @@ const TENANT_SEGMENTS = ['TenantQuotaPanel', 'TenantQuotaFormFlow', 'TenantFormF
 const includesModule = (id: string, pkg: string) => id.includes(`/node_modules/${pkg}/`)
 const matchesSegment = (id: string, segment: string) => id.startsWith(`${WORKFLOWS_DIR}/${segment}`)
 
+export const PREVIEW_ALLOWED_HOST_LICENSE_ADMIN = 'license-admin.simpleaisystem.com'
+
 const selectWorkflowChunk = (id: string) => {
   if (ANALYTICS_SEGMENTS.some((segment) => matchesSegment(id, segment))) {
     return CHUNK_ANALYTICS
@@ -45,6 +47,9 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
       '@test': fileURLToPath(new URL('./test', import.meta.url)),
     },
+  },
+  preview: {
+    allowedHosts: [PREVIEW_ALLOWED_HOST_LICENSE_ADMIN],
   },
   server: {
     proxy: {

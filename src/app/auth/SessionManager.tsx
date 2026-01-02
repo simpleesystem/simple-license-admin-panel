@@ -32,7 +32,7 @@ export function SessionManager(): null {
     lastActivityRef.current = Date.now()
   }, [])
 
-  const resetTimers = () => {
+  const resetTimers = useCallback(() => {
     if (warningTimerRef.current) {
       clearTimeout(warningTimerRef.current)
       warningTimerRef.current = null
@@ -43,7 +43,7 @@ export function SessionManager(): null {
     }
     lastActivityRef.current = Date.now()
     warningShownRef.current = false
-  }
+  }, [])
 
   const setupTimers = useCallback(() => {
     if (!isAuthenticated) {
@@ -104,7 +104,7 @@ export function SessionManager(): null {
       })
       resetTimers()
     }
-  }, [isAuthenticated, setupTimers])
+  }, [isAuthenticated, resetTimers, setupTimers])
 
   return null
 }
