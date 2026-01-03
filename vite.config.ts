@@ -4,7 +4,6 @@ import { defineConfig } from 'vite'
 
 const CHUNK_REACT = 'chunk-react'
 const CHUNK_REACT_QUERY = 'chunk-react-query'
-const CHUNK_BOOTSTRAP = 'chunk-bootstrap'
 const CHUNK_FORMS = 'chunk-forms'
 const CHUNK_I18N = 'chunk-i18n'
 const CHUNK_EVENTS = 'chunk-events'
@@ -12,9 +11,8 @@ const CHUNK_ANALYTICS = 'chunk-analytics'
 const CHUNK_TENANT = 'chunk-tenant'
 
 const CHUNK_GROUPS = [
-  { name: CHUNK_REACT, modules: ['react', 'react-dom'] },
+  { name: CHUNK_REACT, modules: ['react', 'react-dom', 'react-bootstrap'] },
   { name: CHUNK_REACT_QUERY, modules: ['@tanstack/react-query'] },
-  { name: CHUNK_BOOTSTRAP, modules: ['react-bootstrap'] },
   { name: CHUNK_FORMS, modules: ['react-hook-form', 'joi'] },
   { name: CHUNK_I18N, modules: ['i18next', 'react-i18next'] },
   { name: CHUNK_EVENTS, modules: ['mitt'] },
