@@ -30,6 +30,17 @@ vi.mock('../../../../src/app/auth/useAuth', () => ({
   }),
 }))
 
+vi.mock('../../../../src/app/router', async () => {
+  const actual = await vi.importActual<typeof import('../../../../src/app/router')>('../../../../src/app/router')
+  return {
+    ...actual,
+    router: {
+      ...actual.router,
+      navigate: vi.fn().mockResolvedValue(undefined),
+    },
+  }
+})
+
 describe('ChangePasswordFlow integration', () => {
   test('submits success path and shows success message', async () => {
     mockChangePassword.mockResolvedValue({})

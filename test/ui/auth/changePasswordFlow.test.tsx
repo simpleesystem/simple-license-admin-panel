@@ -4,7 +4,8 @@ import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { ApiContext } from '../../../src/api/apiContext'
 import { AuthContext } from '../../../src/app/auth/authContext'
 import type { AuthContextValue } from '../../../src/app/auth/types'
-import { APP_ERROR_MESSAGE_NON_ERROR_THROWABLE, AUTH_STATUS_IDLE } from '../../../src/app/constants'
+import { APP_ERROR_MESSAGE_NON_ERROR_THROWABLE, AUTH_STATUS_IDLE, ROUTE_PATH_DASHBOARD } from '../../../src/app/constants'
+import { useAppStore } from '../../../src/app/state/store'
 import { NotificationBusProvider } from '../../../src/notifications/bus'
 import { ChangePasswordFlow } from '../../../src/ui/auth/ChangePasswordFlow'
 import {
@@ -60,6 +61,8 @@ const renderWithProviders = (ui: React.ReactElement, authOverrides?: Partial<Aut
 describe('ChangePasswordFlow', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // Reset navigation intent before each test
+    useAppStore.setState({ navigationIntent: null })
   })
 
   test('submits change password request', async () => {
@@ -83,6 +86,15 @@ describe('ChangePasswordFlow', () => {
         new_password: 'new-pass',
       })
     )
+
+    // Verify navigation intent is dispatched after successful password change
+    await waitFor(() => {
+      const state = useAppStore.getState()
+      expect(state.navigationIntent).toEqual({
+        to: ROUTE_PATH_DASHBOARD,
+        replace: true,
+      })
+    })
   })
 
   test('submits email-only change', async () => {
