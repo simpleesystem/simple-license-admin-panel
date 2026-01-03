@@ -129,16 +129,25 @@ function RouterContextBridge({ queryClient, children }: { queryClient: QueryClie
     })
   }, [queryClient, authState, firstAllowedRoute, logger])
 
+  // Process navigation intent AFTER router context is updated
+  // This ensures navigation happens with the correct auth state in router context
+  // The effect depends on both navigationIntent and authState to ensure router context
+  // is updated before navigation is attempted
   useEffect(() => {
     if (navigationIntent) {
+      // Navigate with the updated router context (which includes current authState)
       navigate({
         to: navigationIntent.to,
         replace: navigationIntent.replace,
       })
       dispatch({ type: 'nav/clearIntent' })
-      logger.info('router:navigation-intent', { to: navigationIntent.to, replace: navigationIntent.replace })
+      logger.info('router:navigation-intent', {
+        to: navigationIntent.to,
+        replace: navigationIntent.replace,
+        isAuthenticated: authState.isAuthenticated,
+      })
     }
-  }, [navigationIntent, navigate, dispatch, logger])
+  }, [navigationIntent, authState, navigate, dispatch, logger])
 
   return <>{children}</>
 }

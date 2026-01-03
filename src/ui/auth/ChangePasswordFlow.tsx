@@ -1,6 +1,6 @@
-import { useNavigate } from '@tanstack/react-router'
 import { Heading } from '@/ui/typography/Heading'
 import { ROUTE_PATH_DASHBOARD } from '@/app/constants'
+import { useAppStore } from '@/app/state/store'
 import {
   UI_CHANGE_PASSWORD_HEADING,
   UI_CHANGE_PASSWORD_DESCRIPTION,
@@ -8,10 +8,14 @@ import {
 import { ChangePasswordForm } from './ChangePasswordForm'
 
 export function ChangePasswordFlow() {
-  const navigate = useNavigate()
+  const dispatch = useAppStore((state) => state.dispatch)
 
-  const handlePasswordChangeSuccess = async () => {
-    await navigate({ to: ROUTE_PATH_DASHBOARD })
+  const handlePasswordChangeSuccess = () => {
+    // Use navigation intent system to ensure router context is updated before navigation
+    dispatch({
+      type: 'nav/intent',
+      payload: { to: ROUTE_PATH_DASHBOARD, replace: true },
+    })
   }
 
   return (

@@ -1,13 +1,13 @@
-import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useAuth } from '@/app/auth/useAuth'
 import { ROUTE_PATH_DASHBOARD } from '@/app/constants'
+import { useAppStore } from '@/app/state/store'
 import { Stack } from '@/ui/layout/Stack'
 import { Heading } from '@/ui/typography/Heading'
 
 export function LoginForm() {
   const { login } = useAuth()
-  const navigate = useNavigate()
+  const dispatch = useAppStore((state) => state.dispatch)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -46,7 +46,11 @@ export function LoginForm() {
 
     try {
       await login({ username, password })
-      await navigate({ to: ROUTE_PATH_DASHBOARD })
+      // Use navigation intent system to ensure router context is updated before navigation
+      dispatch({
+        type: 'nav/intent',
+        payload: { to: ROUTE_PATH_DASHBOARD, replace: true },
+      })
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Login failed'
       setError(message)
