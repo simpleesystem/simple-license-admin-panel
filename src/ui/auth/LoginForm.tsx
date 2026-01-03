@@ -1,6 +1,7 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useAuth } from '@/app/auth/useAuth'
+import { ROUTE_PATH_DASHBOARD } from '@/app/constants'
 import { Stack } from '@/ui/layout/Stack'
 import { Heading } from '@/ui/typography/Heading'
 
@@ -45,7 +46,7 @@ export function LoginForm() {
 
     try {
       await login({ username, password })
-      await navigate({ to: '/' })
+      await navigate({ to: ROUTE_PATH_DASHBOARD })
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Login failed'
       setError(message)
