@@ -1,6 +1,6 @@
+import type { ReactNode } from 'react'
 import type { Client, CreateProductTierRequest, UpdateProductTierRequest } from '@/simpleLicense'
 import { useCreateProductTier, useUpdateProductTier } from '@/simpleLicense'
-import type { ReactNode } from 'react'
 
 import type { MutationAdapter } from '../actions/mutationActions'
 import {
@@ -61,8 +61,12 @@ const baseUpdateDefaults: Partial<ProductTierFormValues> = {
 
 // Helper to convert empty strings to null/undefined
 const sanitizeNumber = (value: number | string | null | undefined): number | null | undefined => {
-  if (value === '' || value === null) return null // Explicitly return null for backend to handle as nullable
-  if (value === undefined) return undefined
+  if (value === '' || value === null) {
+    return null // Explicitly return null for backend to handle as nullable
+  }
+  if (value === undefined) {
+    return undefined
+  }
   const num = Number(value)
   return Number.isNaN(num) ? undefined : num
 }
@@ -89,11 +93,13 @@ function ProductTierCreateFlow(props: ProductTierCreateProps) {
 
   const adapter: MutationAdapter<ProductTierFormValues> = {
     mutateAsync: async (values) => {
+      const metadataStr = values.metadata?.trim()
+      const metadata = metadataStr ? JSON.parse(metadataStr) : undefined
       const data: CreateProductTierRequest = {
         ...values,
         max_activations: sanitizeNumber(values.max_activations),
         license_term_days: sanitizeNumber(values.license_term_days),
-        metadata: values.metadata ? JSON.parse(values.metadata) : undefined,
+        metadata,
       }
       return await createMutation.mutateAsync(data)
     },
@@ -135,11 +141,13 @@ function ProductTierUpdateFlow(props: ProductTierUpdateProps) {
 
   const adapter: MutationAdapter<ProductTierFormValues> = {
     mutateAsync: async (values) => {
+      const metadataStr = values.metadata?.trim()
+      const metadata = metadataStr ? JSON.parse(metadataStr) : undefined
       const data: UpdateProductTierRequest = {
         ...values,
         max_activations: sanitizeNumber(values.max_activations),
         license_term_days: sanitizeNumber(values.license_term_days),
-        metadata: values.metadata ? JSON.parse(values.metadata) : undefined,
+        metadata,
       }
       return await updateMutation.mutateAsync({
         id: props.tierId,

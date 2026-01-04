@@ -57,11 +57,13 @@ const baseFormDefaults: EntitlementFormValues = {
 const mapFormToApi = (
   values: EntitlementFormValues
 ): Omit<CreateEntitlementRequest, 'tier_ids'> & { tier_ids?: string[] } => {
+  const metadataStr = values.metadata?.trim()
+  const metadata = metadataStr ? JSON.parse(metadataStr) : undefined
   const result: Partial<CreateEntitlementRequest> & { tier_ids?: string[] } = {
     key: values.key,
     description: values.description,
     tier_ids: values.tier_ids || [], // Form might not have this field yet, but API requires it for create. Controller handles empty check.
-    metadata: values.metadata ? JSON.parse(values.metadata) : undefined,
+    metadata,
   }
 
   // Handle number_value
@@ -133,7 +135,6 @@ function ProductEntitlementCreateFlow(props: ProductEntitlementCreateProps) {
       pendingLabel={pendingLabel}
       secondaryActions={props.secondaryActions}
       mutation={wrapMutationAdapter(adapter, {
-        onClose: props.onClose,
         onCompleted: props.onCompleted,
         onSuccess: props.onSuccess,
         onError: props.onError,
@@ -181,7 +182,6 @@ function ProductEntitlementUpdateFlow(props: ProductEntitlementUpdateProps) {
       pendingLabel={pendingLabel}
       secondaryActions={props.secondaryActions}
       mutation={wrapMutationAdapter(adapter, {
-        onClose: props.onClose,
         onCompleted: props.onCompleted,
         onSuccess: props.onSuccess,
         onError: props.onError,

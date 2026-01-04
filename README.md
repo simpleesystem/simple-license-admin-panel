@@ -144,22 +144,22 @@ Routes are defined in `src/routes/` using TanStack Router's file-based routing:
 
 ```typescript
 // src/routes/licenses.tsx
-import { createFileRoute } from '@tanstack/react-router'
-import { IfCan } from '@/app/abilities'
-import { useLicenses } from '@/api/licenses'
+import { createFileRoute } from "@tanstack/react-router";
+import { IfCan } from "@/app/abilities";
+import { useLicenses } from "@/api/licenses";
 
-export const Route = createFileRoute('/licenses')({
+export const Route = createFileRoute("/licenses")({
   component: LicensesPage,
-})
+});
 
 function LicensesPage() {
-  const { data, isLoading } = useLicenses()
+  const { data, isLoading } = useLicenses();
 
   return (
     <IfCan action="read" subject="License">
       {/* License list UI */}
     </IfCan>
-  )
+  );
 }
 ```
 
@@ -169,15 +169,15 @@ API queries use React Query with standardized error handling:
 
 ```typescript
 // src/api/licenses.ts
-import { useQuery } from '@tanstack/react-query'
-import { apiClient } from './client'
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "./client";
 
 export function useLicenses() {
   return useQuery({
-    queryKey: ['licenses'],
-    queryFn: () => apiClient.get('/admin/licenses'),
+    queryKey: ["licenses"],
+    queryFn: () => apiClient.get("/admin/licenses"),
     retry: 2,
-  })
+  });
 }
 ```
 
@@ -187,18 +187,18 @@ Permissions are defined in CASL ability definitions:
 
 ```typescript
 // src/app/abilities/definitions.ts
-import { defineAbility } from '@casl/ability'
+import { defineAbility } from "@casl/ability";
 
 export function defineAbilitiesFor(user: User) {
   return defineAbility((can, cannot) => {
-    if (user.role === 'SUPERUSER') {
-      can('manage', 'all')
-    } else if (user.role === 'ADMIN') {
-      can('read', 'License')
-      can('create', 'License')
-      can('update', 'License')
+    if (user.role === "SUPERUSER") {
+      can("manage", "all");
+    } else if (user.role === "ADMIN") {
+      can("read", "License");
+      can("create", "License");
+      can("update", "License");
     }
-  })
+  });
 }
 ```
 
@@ -207,7 +207,7 @@ export function defineAbilitiesFor(user: User) {
 Use `IfCan` and `IfPermission` components for UI gating:
 
 ```typescript
-import { IfCan } from '@/app/abilities'
+import { IfCan } from "@/app/abilities";
 
 function LicenseActions({ license }: { license: License }) {
   return (
@@ -219,7 +219,7 @@ function LicenseActions({ license }: { license: License }) {
         <button>Revoke License</button>
       </IfCan>
     </>
-  )
+  );
 }
 ```
 
@@ -246,19 +246,19 @@ Follow the Arrange-Act-Assert pattern:
 Use React Hook Form with Joi validation:
 
 ```typescript
-import { useForm } from 'react-hook-form'
-import { joiResolver } from '@hookform/resolvers/joi'
-import Joi from 'joi'
+import { useForm } from "react-hook-form";
+import { joiResolver } from "@hookform/resolvers/joi";
+import Joi from "joi";
 
 const schema = Joi.object({
   email: Joi.string().email().required(),
   domain: Joi.string().required(),
-})
+});
 
 function LicenseForm() {
   const { register, handleSubmit } = useForm({
     resolver: joiResolver(schema),
-  })
+  });
 
   // ...
 }
@@ -269,18 +269,18 @@ function LicenseForm() {
 Tests use Vitest, React Testing Library, and MSW:
 
 ```typescript
-import { render, screen } from '@testing-library/react'
-import { describe, it, expect } from 'vitest'
-import { createLicense } from '@test/factories'
-import { LicenseCard } from './LicenseCard'
+import { render, screen } from "@testing-library/react";
+import { describe, it, expect } from "vitest";
+import { createLicense } from "@test/factories";
+import { LicenseCard } from "./LicenseCard";
 
-describe('LicenseCard', () => {
-  it('displays license information', () => {
-    const license = createLicense()
-    render(<LicenseCard license={license} />)
-    expect(screen.getByText(license.customerEmail)).toBeInTheDocument()
-  })
-})
+describe("LicenseCard", () => {
+  it("displays license information", () => {
+    const license = createLicense();
+    render(<LicenseCard license={license} />);
+    expect(screen.getByText(license.customerEmail)).toBeInTheDocument();
+  });
+});
 ```
 
 ### Constants and Test Data
