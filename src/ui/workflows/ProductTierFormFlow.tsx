@@ -110,7 +110,6 @@ function ProductTierCreateFlow(props: ProductTierCreateProps) {
       pendingLabel={pendingLabel}
       secondaryActions={props.secondaryActions}
       mutation={wrapMutationAdapter(adapter, {
-        onClose: props.onClose,
         onCompleted: props.onCompleted,
         onSuccess: props.onSuccess,
         onError: props.onError,
@@ -160,7 +159,6 @@ function ProductTierUpdateFlow(props: ProductTierUpdateProps) {
       pendingLabel={pendingLabel}
       secondaryActions={props.secondaryActions}
       mutation={wrapMutationAdapter(adapter, {
-        onClose: props.onClose,
         onCompleted: props.onCompleted,
         onSuccess: props.onSuccess,
         onError: props.onError,

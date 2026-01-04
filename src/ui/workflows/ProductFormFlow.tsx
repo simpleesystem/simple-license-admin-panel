@@ -103,7 +103,6 @@ export function ProductFormFlow(props: ProductFormFlowProps) {
         pendingLabel={pendingLabel}
         secondaryActions={props.secondaryActions}
         mutation={wrapMutationAdapter(adapter, {
-          onClose: props.onClose,
           onCompleted: props.onCompleted,
           onSuccess: props.onSuccess,
           onError: props.onError,
@@ -137,20 +136,19 @@ export function ProductFormFlow(props: ProductFormFlowProps) {
   }
 
   return (
-    <FormModalWithMutation
-      show={props.show}
-      onClose={props.onClose}
-      blueprint={blueprint}
-      defaultValues={defaultValues}
-      submitLabel={submitLabel}
-      pendingLabel={pendingLabel}
-      secondaryActions={props.secondaryActions}
-      mutation={wrapMutationAdapter(adapter, {
-        onClose: props.onClose,
-        onCompleted: props.onCompleted,
-        onSuccess: props.onSuccess,
-        onError: props.onError,
-      })}
-    />
+      <FormModalWithMutation
+        show={props.show}
+        onClose={props.onClose}
+        blueprint={blueprint}
+        defaultValues={defaultValues}
+        submitLabel={submitLabel}
+        pendingLabel={pendingLabel}
+        secondaryActions={props.secondaryActions}
+        mutation={wrapMutationAdapter(adapter, {
+          onCompleted: props.onCompleted,
+          onSuccess: props.onSuccess,
+          onError: props.onError,
+        })}
+      />
   )
 }
