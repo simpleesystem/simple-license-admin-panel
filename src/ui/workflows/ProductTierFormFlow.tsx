@@ -98,7 +98,7 @@ function ProductTierCreateFlow(props: ProductTierCreateProps) {
       const data: CreateProductTierRequest = {
         ...values,
         max_activations: sanitizeNumber(values.max_activations),
-        license_term_days: sanitizeNumber(values.license_term_days),
+        license_term_days: values.does_not_expire ? null : sanitizeNumber(values.license_term_days),
         metadata,
       }
       return await createMutation.mutateAsync(data)
@@ -146,7 +146,7 @@ function ProductTierUpdateFlow(props: ProductTierUpdateProps) {
       const data: UpdateProductTierRequest = {
         ...values,
         max_activations: sanitizeNumber(values.max_activations),
-        license_term_days: sanitizeNumber(values.license_term_days),
+        license_term_days: values.does_not_expire ? null : sanitizeNumber(values.license_term_days),
         metadata,
       }
       return await updateMutation.mutateAsync({
