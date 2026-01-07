@@ -67,12 +67,14 @@ export function ProductUpdateDialog({
         id: t.id,
         tierCode: t.tierCode,
         tierName: t.tierName,
-        vendorId: product?.vendorId, // Use fetched product vendorId
+        vendorId: product?.vendorId ?? null, // Use fetched product vendorId, default to null if not fetched yet
       }))
 
       setTiers(formatted)
     } catch (e) {
       console.error('Failed to fetch tiers', e)
+      // Set empty array on error to prevent stale data
+      setTiers([])
     }
   }, [client, productId, product?.vendorId])
 

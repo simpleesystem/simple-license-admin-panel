@@ -159,7 +159,7 @@ import type {
   ValidationError,
   ChangePasswordResponse,
 } from './types/api'
-import type { User } from './types/license'
+import type { ProductTier, User } from './types/license'
 import axios from 'axios'
 
 export class Client {
@@ -552,9 +552,15 @@ export class Client {
   // Admin API - Product Tiers
   async listProductTiers(productId: string): Promise<ListProductTiersResponse> {
     const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}/tiers`
-    const response = await this.httpClient.get<ApiResponse<ListProductTiersResponse>>(url)
+    const response = await this.httpClient.get<ApiResponse<ProductTier[]>>(url)
 
-    return this.handleApiResponse(response.data, {} as ListProductTiersResponse)
+    // Backend returns { success: true, data: ProductTier[] }
+    // Frontend expects PaginatedResponse<ProductTier> but backend doesn't paginate
+    // So we wrap the array in the expected format
+    const result = this.handleApiResponse<ProductTier[]>(response.data, [])
+
+    // Return as array directly (frontend code handles both array and PaginatedResponse)
+    return result as unknown as ListProductTiersResponse
   }
 
   async createProductTier(productId: string, request: CreateProductTierRequest): Promise<CreateProductTierResponse> {
