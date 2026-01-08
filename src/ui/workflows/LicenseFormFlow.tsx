@@ -95,13 +95,11 @@ export function LicenseFormFlow(props: LicenseFormFlowProps) {
 
     const adapter: MutationAdapter<FormValuesCreate> = {
       mutateAsync: async (values) => {
-        console.log('LicenseFormFlow: Submitting with values:', values)
         let metadata = {}
         if (values.metadata && values.metadata.trim()) {
           try {
             metadata = JSON.parse(values.metadata.trim())
-          } catch (e) {
-            console.error('Failed to parse metadata JSON:', e, values.metadata)
+          } catch {
             throw new Error('Invalid metadata JSON format')
           }
         }
@@ -111,15 +109,7 @@ export function LicenseFormFlow(props: LicenseFormFlowProps) {
           expires_days: sanitizeNumber(values.expires_days),
           metadata,
         }
-        console.log('LicenseFormFlow: Calling createMutation with data:', data)
-        try {
-          const result = await createMutation.mutateAsync(data)
-          console.log('LicenseFormFlow: Create mutation succeeded:', result)
-          return result
-        } catch (error) {
-          console.error('LicenseFormFlow: Create mutation failed:', error)
-          throw error
-        }
+        return await createMutation.mutateAsync(data)
       },
       isPending: createMutation.isPending,
     }
@@ -138,8 +128,7 @@ export function LicenseFormFlow(props: LicenseFormFlowProps) {
           onSuccess: () => {
             // No custom action needed, completed covers refresh
           },
-          onError: (error) => {
-            console.error('License creation error:', error)
+          onError: () => {
             // Error is logged, user will see toast notification from mutation
           },
         })}

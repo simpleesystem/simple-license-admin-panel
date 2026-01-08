@@ -441,20 +441,11 @@ export class Client {
   }
 
   async createLicense(request: CreateLicenseRequest): Promise<CreateLicenseResponse> {
-    console.log('Client.createLicense: Sending POST to', API_ENDPOINT_ADMIN_LICENSES_CREATE, 'with request:', request)
-    try {
-      const response = await this.httpClient.post<ApiResponse<CreateLicenseResponse>>(
-        API_ENDPOINT_ADMIN_LICENSES_CREATE,
-        request
-      )
-      console.log('Client.createLicense: Response received:', response)
-      const result = this.handleApiResponse(response.data, {} as CreateLicenseResponse)
-      console.log('Client.createLicense: Processed result:', result)
-      return result
-    } catch (error) {
-      console.error('Client.createLicense: Request failed:', error)
-      throw error
-    }
+    const response = await this.httpClient.post<ApiResponse<CreateLicenseResponse>>(
+      API_ENDPOINT_ADMIN_LICENSES_CREATE,
+      request
+    )
+    return this.handleApiResponse(response.data, {} as CreateLicenseResponse)
   }
 
   async getLicense(idOrKey: string): Promise<GetLicenseResponse> {
