@@ -46,10 +46,11 @@ repos:
   hooks:
   - id: admin-panel-lint
     name: Lint (Frontend - matches CI)
-    entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && npm run lint' --
+    entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && npm run lint -- --fix' --
     language: system
     pass_filenames: false
     require_serial: true
+    always_run: true
   - id: admin-panel-type-check
     name: Type check (Frontend - matches CI)
     entry: bash -c 'cd "$(git rev-parse --show-toplevel)" && npm run type-check' --
