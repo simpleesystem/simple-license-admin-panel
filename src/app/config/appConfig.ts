@@ -35,7 +35,9 @@ const normalizeOptionalUrl = (value: string | undefined): string | null => {
 
 // Custom validators
 const positiveNumberValidator = (value: string, helpers: Joi.CustomHelpers) => {
-  if (value === undefined || value === '') return value
+  if (value === undefined || value === '') {
+    return value
+  }
   const num = Number(value)
   if (Number.isNaN(num) || num <= 0) {
     return helpers.error('any.invalid')
@@ -44,7 +46,9 @@ const positiveNumberValidator = (value: string, helpers: Joi.CustomHelpers) => {
 }
 
 const nonNegativeIntegerValidator = (value: string, helpers: Joi.CustomHelpers) => {
-  if (value === undefined || value === '') return value
+  if (value === undefined || value === '') {
+    return value
+  }
   const num = Number(value)
   if (Number.isNaN(num) || num < 0) {
     return helpers.error('any.invalid')
@@ -52,8 +56,43 @@ const nonNegativeIntegerValidator = (value: string, helpers: Joi.CustomHelpers) 
   return value
 }
 
+const apiBaseUrlValidator = (value: string, helpers: Joi.CustomHelpers) => {
+  if (value === undefined || value === '') {
+    return value
+  }
+  // Allow empty strings, valid URIs (http:// or https://), or relative paths starting with /
+  const trimmed = value.trim()
+  if (trimmed === '') {
+    return value
+  }
+  // If it's a relative path starting with /, allow it
+  if (/^\//.test(trimmed)) {
+    return value
+  }
+  // If it looks like a URI, validate it's actually a valid URI
+  if (/^https?:\/\//i.test(trimmed)) {
+    try {
+      // Use URL constructor to validate it's a proper URI
+      new URL(trimmed)
+      return value
+    } catch {
+      return helpers.error('string.uri', {
+        message: 'must be a valid URI (http:// or https://), a relative path starting with /, or empty',
+      })
+    }
+  }
+  // Anything else is invalid
+  return helpers.error('string.base', {
+    message: 'must be a valid URI (http:// or https://), a relative path starting with /, or empty',
+  })
+}
+
 const envSchema = Joi.object({
-  [ENV_VAR_API_BASE_URL]: Joi.string().uri().allow('').optional(),
+  [ENV_VAR_API_BASE_URL]: Joi.string()
+    .allow('')
+    .optional()
+    .custom(apiBaseUrlValidator)
+    .message('API base URL must be a valid URI (http:// or https://), a relative path starting with /, or empty'),
   [ENV_VAR_SENTRY_DSN]: Joi.string().uri().allow('').optional(),
   [ENV_VAR_AUTH_FORGOT_PASSWORD_URL]: Joi.string().uri().allow('').optional(),
   [ENV_VAR_HTTP_TIMEOUT_MS]: Joi.string()
@@ -119,9 +158,15 @@ export const createAppConfig = (env: EnvRecord = import.meta.env as EnvRecord): 
       ? value[ENV_VAR_API_BASE_URL]
       : DEFAULT_API_BASE_URL
 
-  // Allow empty string for relative paths (proxy usage)
-  if (apiBaseUrl !== '' && !/^https?:\/\//i.test(apiBaseUrl)) {
-    throw new Error(`${ERROR_PREFIX}: API base URL must use http or https or be empty`)
+  // Allow empty string, valid URIs (http:// or https://), or relative paths starting with /
+  if (
+    apiBaseUrl !== '' &&
+    !/^https?:\/\//i.test(apiBaseUrl) &&
+    !/^\//.test(apiBaseUrl)
+  ) {
+    throw new Error(
+      `${ERROR_PREFIX}: API base URL must be a valid URI (http:// or https://), a relative path starting with /, or empty`
+    )
   }
 
   const flags: FeatureFlags = {

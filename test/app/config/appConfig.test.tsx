@@ -9,6 +9,9 @@ import {
   ENV_VAR_FEATURE_DEV_TOOLS,
   ENV_VAR_FEATURE_EXPERIMENTAL_FILTERS,
   ENV_VAR_FEATURE_QUERY_CACHE_PERSISTENCE,
+  ENV_VAR_HTTP_RETRY_ATTEMPTS,
+  ENV_VAR_HTTP_RETRY_DELAY_MS,
+  ENV_VAR_HTTP_TIMEOUT_MS,
   ENV_VAR_SENTRY_DSN,
 } from '../../../src/app/constants'
 
@@ -90,6 +93,26 @@ describe('createAppConfig', () => {
     expect(config.apiBaseUrl).toBe('')
   })
 
+  it('allows relative paths starting with / for API base URL', () => {
+    const config = createAppConfig(createEnv({ [ENV_VAR_API_BASE_URL]: '/api/v1' }))
+    expect(config.apiBaseUrl).toBe('/api/v1')
+  })
+
+  it('allows relative paths with trailing slash for API base URL', () => {
+    const config = createAppConfig(createEnv({ [ENV_VAR_API_BASE_URL]: '/api/v1/' }))
+    expect(config.apiBaseUrl).toBe('/api/v1/')
+  })
+
+  it('allows valid HTTP URLs for API base URL', () => {
+    const config = createAppConfig(createEnv({ [ENV_VAR_API_BASE_URL]: 'http://localhost:3000/api/v1' }))
+    expect(config.apiBaseUrl).toBe('http://localhost:3000/api/v1')
+  })
+
+  it('allows valid HTTPS URLs for API base URL', () => {
+    const config = createAppConfig(createEnv({ [ENV_VAR_API_BASE_URL]: 'https://api.example.com' }))
+    expect(config.apiBaseUrl).toBe('https://api.example.com')
+  })
+
   it('normalizes optional URLs correctly', () => {
     const config1 = createAppConfig(createEnv({ [ENV_VAR_AUTH_FORGOT_PASSWORD_URL]: 'https://example.com/reset' }))
     expect(config1.authForgotPasswordUrl).toBe('https://example.com/reset')
@@ -104,7 +127,19 @@ describe('createAppConfig', () => {
   it('throws error for invalid API base URL format', () => {
     expect(() => {
       createAppConfig(createEnv({ [ENV_VAR_API_BASE_URL]: 'invalid-url' }))
-    }).toThrow()
+    }).toThrow('Invalid application environment configuration')
+  })
+
+  it('throws error for invalid URI format (missing protocol)', () => {
+    expect(() => {
+      createAppConfig(createEnv({ [ENV_VAR_API_BASE_URL]: 'api.example.com' }))
+    }).toThrow('Invalid application environment configuration')
+  })
+
+  it('throws error for invalid URI format (malformed URL)', () => {
+    expect(() => {
+      createAppConfig(createEnv({ [ENV_VAR_API_BASE_URL]: 'http://' }))
+    }).toThrow('Invalid application environment configuration')
   })
 
   it('throws error for invalid HTTP timeout', () => {
