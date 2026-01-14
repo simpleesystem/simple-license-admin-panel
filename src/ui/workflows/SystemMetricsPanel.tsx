@@ -141,6 +141,49 @@ const formatConnectionPool = (candidate: unknown, numberFormatter: Intl.NumberFo
   return parts.join(' | ')
 }
 
+const parseRedisInfoString = (infoString: string): Array<{ key: string; value: string }> => {
+  const lines = infoString.split('\n')
+  const result: Array<{ key: string; value: string }> = []
+  let currentSection = ''
+
+  for (const line of lines) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) {
+      if (trimmed.startsWith('# ')) {
+        currentSection = trimmed.substring(2).trim()
+      }
+      continue
+    }
+
+    const colonIndex = trimmed.indexOf(':')
+    if (colonIndex === -1) {
+      continue
+    }
+
+    const key = trimmed.substring(0, colonIndex).trim()
+    const value = trimmed.substring(colonIndex + 1).trim()
+
+    if (key && value) {
+      result.push({ key: currentSection ? `${currentSection}.${key}` : key, value })
+    }
+  }
+
+  return result
+}
+
+const formatCacheInfo = (info: string | unknown): string => {
+  if (typeof info !== 'string') {
+    return UI_VALUE_PLACEHOLDER
+  }
+
+  const parsed = parseRedisInfoString(info)
+  if (parsed.length === 0) {
+    return info
+  }
+
+  return parsed.map(({ key, value }) => `${key}: ${value}`).join('\n')
+}
+
 const formatMetricValue = (
   key: string,
   value: MetricValue | MetricObject | undefined,
@@ -162,6 +205,9 @@ const formatMetricValue = (
         // ignore parse errors and fall back to raw string
       }
     }
+    if (key === 'info') {
+      return formatCacheInfo(value)
+    }
     return value
   }
 
@@ -172,12 +218,37 @@ const formatMetricValue = (
     }
   }
 
+  if (key === 'info') {
+    if (typeof value === 'object' && value !== null) {
+      if ('info' in value && typeof (value as { info: unknown }).info === 'string') {
+        return formatCacheInfo((value as { info: string }).info)
+      }
+      // If it's an object with nested info, try to extract it
+      const objValue = value as Record<string, unknown>
+      if (typeof objValue.info === 'string') {
+        return formatCacheInfo(objValue.info)
+      }
+    }
+  }
+
   if (Array.isArray(value)) {
     return value.map((entry) => (typeof entry === 'number' ? numberFormatter.format(entry) : String(entry))).join(', ')
   }
 
-  if (typeof value === 'object') {
-    return JSON.stringify(value)
+  if (typeof value === 'object' && value !== null) {
+    // For connection pool objects, try to format them
+    if ('connection_pool' in value || 'connectionPool' in value) {
+      const formatted = formatConnectionPool(value, numberFormatter)
+      if (formatted) {
+        return formatted
+      }
+    }
+    // For other objects, stringify but format nicely
+    try {
+      return JSON.stringify(value, null, 2)
+    } catch {
+      return String(value)
+    }
   }
 
   if (typeof value === 'boolean') {

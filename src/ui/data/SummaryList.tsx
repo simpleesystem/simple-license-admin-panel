@@ -40,7 +40,23 @@ export function SummaryList({
                 </span>
                 {item.icon}
               </div>
-              <strong className={UI_CLASS_SUMMARY_VALUE}>{item.value}</strong>
+              {typeof item.value === 'string' && item.value.includes('\n') ? (
+                <pre
+                  className="mb-0 bg-light p-2 rounded border"
+                  style={{
+                    fontSize: '0.875rem',
+                    lineHeight: '1.5',
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                    maxHeight: '400px',
+                    overflowY: 'auto',
+                  }}
+                >
+                  <code className="text-dark">{item.value}</code>
+                </pre>
+              ) : (
+                <strong className={UI_CLASS_SUMMARY_VALUE}>{item.value}</strong>
+              )}
               {item.trend ? <div className={UI_CLASS_TEXT_MUTED}>{item.trend}</div> : null}
             </article>
           </div>
