@@ -9,6 +9,9 @@ const CHUNK_EVENTS = 'chunk-events'
 const CHUNK_ANALYTICS = 'chunk-analytics'
 const CHUNK_TENANT = 'chunk-tenant'
 
+export const VITE_HTML_ENTRY_INDEX = 'index.html'
+export const VITE_HTML_ENTRY_NOT_FOUND = '404.html'
+
 const CHUNK_GROUPS = [
   { name: CHUNK_REACT, modules: ['react', 'react-dom', 'react-bootstrap', 'react-hook-form', 'react-i18next', '@tanstack/react-query'] },
   { name: CHUNK_FORMS, modules: ['joi'] },
@@ -19,6 +22,8 @@ const CHUNK_GROUPS = [
 const WORKFLOWS_DIR = fileURLToPath(new URL('./src/ui/workflows', import.meta.url))
 const ANALYTICS_SEGMENTS = ['AnalyticsStatsPanel', 'UsageTrendsPanel']
 const TENANT_SEGMENTS = ['TenantQuotaPanel', 'TenantQuotaFormFlow', 'TenantFormFlow', 'TenantManagementExample']
+const HTML_ENTRY_INDEX_PATH = `./${VITE_HTML_ENTRY_INDEX}`
+const HTML_ENTRY_NOT_FOUND_PATH = `./${VITE_HTML_ENTRY_NOT_FOUND}`
 
 const includesModule = (id: string, pkg: string) => id.includes(`/node_modules/${pkg}/`)
 const matchesSegment = (id: string, segment: string) => id.startsWith(`${WORKFLOWS_DIR}/${segment}`)
@@ -58,6 +63,10 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
+      input: {
+        app: fileURLToPath(new URL(HTML_ENTRY_INDEX_PATH, import.meta.url)),
+        notFound: fileURLToPath(new URL(HTML_ENTRY_NOT_FOUND_PATH, import.meta.url)),
+      },
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
