@@ -30,7 +30,7 @@ type ProductTierRowActionsProps = UiCommonProps & {
   onEdit: (tier: ProductTierSummary) => void
   onCompleted?: () => void
   currentUser?: User | null
-  vendorId?: string | null
+  vendorId: string
 }
 
 export function ProductTierRowActions({
@@ -52,7 +52,7 @@ export function ProductTierRowActions({
   const isSystemAdmin = isSystemAdminUser(currentUser ?? null)
 
   // Check ownership for non-admin users
-  const ownsTier = isSystemAdmin || (vendorId && currentUser?.vendorId === vendorId)
+  const ownsTier = isSystemAdmin || currentUser?.vendorId === vendorId
 
   if ((!allowUpdate && !allowDelete) || (!ownsTier && !isSystemAdmin)) {
     return null

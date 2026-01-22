@@ -50,7 +50,7 @@ export type ProductListItem = {
   slug: string
   description?: string
   isActive: boolean
-  vendorId?: string | null
+  vendorId: string
   vendorName?: string
 }
 
@@ -58,6 +58,7 @@ type ProductManagementPanelProps = {
   client: Client
   products: readonly ProductListItem[]
   currentUser?: User | null
+  vendorOptions?: readonly UiSelectOption[]
   onRefresh?: () => void
   page: number
   totalPages: number
@@ -74,6 +75,7 @@ export function ProductManagementPanel({
   client,
   products,
   currentUser,
+  vendorOptions,
   onRefresh,
   page,
   totalPages,
@@ -179,7 +181,7 @@ export function ProductManagementPanel({
       {
         id: UI_PRODUCT_COLUMN_ID_VENDOR,
         header: UI_PRODUCT_COLUMN_HEADER_VENDOR,
-        cell: (row) => row.vendorName ?? row.vendorId ?? UI_VALUE_PLACEHOLDER,
+        cell: (row) => row.vendorName ?? row.vendorId,
         sortable: true,
       },
       {
@@ -237,6 +239,8 @@ export function ProductManagementPanel({
           show={showCreate}
           onClose={() => setShowCreate(false)}
           submitLabel={UI_PRODUCT_FORM_SUBMIT_CREATE}
+          vendorOptions={vendorOptions}
+          currentUser={currentUser ?? undefined}
           onCompleted={onRefresh}
           onSuccess={() => refreshWith('create')}
           onError={handleMutationError}
@@ -250,6 +254,7 @@ export function ProductManagementPanel({
           show={Boolean(productToEdit)}
           onClose={() => setEditingProduct(null)}
           currentUser={currentUser}
+          vendorOptions={vendorOptions}
           initialValues={{
             name: productToEdit.name,
             slug: productToEdit.slug,

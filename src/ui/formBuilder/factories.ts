@@ -57,6 +57,9 @@ import {
   UI_FIELD_METADATA,
   UI_FORM_CONTROL_TYPE_EMAIL,
   UI_FORM_CONTROL_TYPE_PASSWORD,
+  UI_FORM_SELECT_PLACEHOLDER_DISABLED,
+  UI_FORM_SELECT_PLACEHOLDER_HIDDEN,
+  UI_FORM_SELECT_PLACEHOLDER_VALUE,
   UI_FORM_SECTION_METADATA,
   UI_FORM_TEXTAREA_MIN_ROWS,
   UI_LICENSE_FORM_DESCRIPTION_CREATE,
@@ -138,6 +141,11 @@ type LicenseBlueprintOptions<TFieldValues extends FieldValues> = BaseFactoryOpti
 
 type EntitlementBlueprintOptions<TFieldValues extends FieldValues> = BaseFactoryOptions<TFieldValues> & {
   tierOptions?: readonly UiSelectOption[]
+}
+
+type ProductBlueprintOptions<TFieldValues extends FieldValues> = BaseFactoryOptions<TFieldValues> & {
+  vendorOptions?: readonly UiSelectOption[]
+  currentUser?: User
 }
 
 const applyCustomize = <TFieldValues extends FieldValues>(
@@ -385,33 +393,117 @@ const PRODUCT_SECTION_BLUEPRINT: BlueprintSectionConfig<CreateProductRequest>[] 
 
 const PRODUCT_SECTIONS_UPDATE = PRODUCT_SECTION_BLUEPRINT as unknown as BlueprintSectionConfig<UpdateProductRequest>[]
 
+const buildUpdateProductBlueprint = (options?: ProductBlueprintOptions<UpdateProductRequest>) => {
+  const vendorOptions = options?.vendorOptions ?? []
+  const vendorOptionsWithPlaceholder: UiSelectOption[] =
+    vendorOptions.length > 0
+      ? [
+          {
+            value: UI_FORM_SELECT_PLACEHOLDER_VALUE,
+            label: UI_USER_VENDOR_PLACEHOLDER,
+            disabled: UI_FORM_SELECT_PLACEHOLDER_DISABLED,
+            hidden: UI_FORM_SELECT_PLACEHOLDER_HIDDEN,
+          },
+          ...vendorOptions,
+        ]
+      : vendorOptions.slice()
+  const shouldShowVendorField = !(
+    options?.currentUser?.role === UI_USER_ROLE_VENDOR_MANAGER || options?.currentUser?.vendorId
+  )
+
+  const sections: BlueprintSectionConfig<UpdateProductRequest>[] = PRODUCT_SECTIONS_UPDATE.map((section) => {
+    if (section.id !== UI_PRODUCT_FORM_SECTION_DETAILS || !shouldShowVendorField) {
+      return section
+    }
+    return {
+      ...section,
+      fields: [
+        {
+          name: 'vendor_id',
+          kind: 'select',
+          label: UI_USER_FIELD_LABEL_VENDOR,
+          options: vendorOptionsWithPlaceholder,
+          required: true,
+        },
+        ...section.fields,
+      ],
+    }
+  })
+
+  return buildConfig<UpdateProductRequest>(
+    {
+      id: UI_PRODUCT_FORM_ID_UPDATE,
+      title: UI_PRODUCT_FORM_TITLE_UPDATE,
+      sections,
+    },
+    options?.customize as BlueprintCustomizer<UpdateProductRequest> | undefined
+  )
+}
+
+const buildCreateProductBlueprint = (options?: ProductBlueprintOptions<CreateProductRequest>) => {
+  const vendorOptions = options?.vendorOptions ?? []
+  const vendorOptionsWithPlaceholder: UiSelectOption[] =
+    vendorOptions.length > 0
+      ? [
+          {
+            value: UI_FORM_SELECT_PLACEHOLDER_VALUE,
+            label: UI_USER_VENDOR_PLACEHOLDER,
+            disabled: UI_FORM_SELECT_PLACEHOLDER_DISABLED,
+            hidden: UI_FORM_SELECT_PLACEHOLDER_HIDDEN,
+          },
+          ...vendorOptions,
+        ]
+      : vendorOptions.slice()
+  const shouldShowVendorField = !(
+    options?.currentUser?.role === UI_USER_ROLE_VENDOR_MANAGER || options?.currentUser?.vendorId
+  )
+
+  const sections: BlueprintSectionConfig<CreateProductRequest>[] = PRODUCT_SECTION_BLUEPRINT.map((section) => {
+    if (section.id !== UI_PRODUCT_FORM_SECTION_DETAILS || !shouldShowVendorField) {
+      return section
+    }
+    return {
+      ...section,
+      fields: [
+        {
+          name: 'vendor_id',
+          kind: 'select',
+          label: UI_USER_FIELD_LABEL_VENDOR,
+          options: vendorOptionsWithPlaceholder,
+          required: true,
+        },
+        ...section.fields,
+      ],
+    }
+  })
+
+  return buildConfig<CreateProductRequest>(
+    {
+      id: UI_PRODUCT_FORM_ID_CREATE,
+      title: UI_PRODUCT_FORM_TITLE_CREATE,
+      description: UI_PRODUCT_FORM_DESCRIPTION_CREATE,
+      sections,
+    },
+    options?.customize as BlueprintCustomizer<CreateProductRequest> | undefined
+  )
+}
+
 type ProductModeValues<TMode extends 'create' | 'update'> = TMode extends 'create'
   ? CreateProductRequest
   : UpdateProductRequest
 
 export const createProductBlueprint = <TMode extends 'create' | 'update'>(
   mode: TMode,
-  options?: BaseFactoryOptions<ProductModeValues<TMode>>
+  options?: ProductBlueprintOptions<ProductModeValues<TMode>>
 ): FormBlueprint<ProductModeValues<TMode>> => {
   if (mode === 'create') {
-    return buildConfig<CreateProductRequest>(
-      {
-        id: UI_PRODUCT_FORM_ID_CREATE,
-        title: UI_PRODUCT_FORM_TITLE_CREATE,
-        description: UI_PRODUCT_FORM_DESCRIPTION_CREATE,
-        sections: PRODUCT_SECTION_BLUEPRINT,
-      },
-      options?.customize as BlueprintCustomizer<CreateProductRequest> | undefined
+    return buildCreateProductBlueprint(
+      options as ProductBlueprintOptions<CreateProductRequest> | undefined
     ) as FormBlueprint<ProductModeValues<TMode>>
   }
 
-  return buildConfig<UpdateProductRequest>(
-    {
-      id: UI_PRODUCT_FORM_ID_UPDATE,
-      title: UI_PRODUCT_FORM_TITLE_UPDATE,
-      sections: PRODUCT_SECTIONS_UPDATE,
-    },
-    options?.customize as BlueprintCustomizer<UpdateProductRequest> | undefined
+  return buildUpdateProductBlueprint(
+    options as ProductBlueprintOptions<UpdateProductRequest> | undefined
   ) as FormBlueprint<ProductModeValues<TMode>>
 }
 

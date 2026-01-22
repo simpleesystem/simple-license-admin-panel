@@ -6,6 +6,7 @@ import Tabs from 'react-bootstrap/Tabs'
 
 import type { MutationAdapter } from '../actions/mutationActions'
 import {
+  UI_FORM_SELECT_PLACEHOLDER_VALUE,
   UI_MODAL_SIZE_XL,
   UI_PRODUCT_FORM_PENDING_UPDATE,
   UI_PRODUCT_FORM_SUBMIT_UPDATE,
@@ -16,6 +17,7 @@ import { DynamicForm } from '../formBuilder/DynamicForm'
 import { createProductBlueprint } from '../formBuilder/factories'
 import { useFormMutation } from '../formBuilder/useFormMutation'
 import { ModalDialog } from '../overlay/ModalDialog'
+import type { UiSelectOption } from '../types'
 import { wrapMutationAdapter } from './mutationHelpers'
 import { ProductEntitlementManagementPanel } from './ProductEntitlementManagementPanel'
 import type { ProductEntitlementListItem } from './ProductEntitlementRowActions'
@@ -31,9 +33,17 @@ type ProductUpdateDialogProps = {
   onError?: (error: unknown) => void
   initialValues?: Partial<UpdateProductRequest>
   currentUser?: User | null
+  vendorOptions?: readonly UiSelectOption[]
 }
 
 type FormValuesUpdate = Omit<UpdateProductRequest, 'metadata'> & { metadata: string }
+
+const sanitizeSelectValue = (value: string | undefined): string | undefined => {
+  if (!value || value === UI_FORM_SELECT_PLACEHOLDER_VALUE) {
+    return undefined
+  }
+  return value
+}
 
 export function ProductUpdateDialog({
   client,
@@ -45,6 +55,7 @@ export function ProductUpdateDialog({
   onError,
   initialValues,
   currentUser,
+  vendorOptions,
 }: ProductUpdateDialogProps) {
   const [activeTab, setActiveTab] = useState('details')
   const [tiers, setTiers] = useState<ProductTierListItem[]>([])
@@ -55,6 +66,10 @@ export function ProductUpdateDialog({
   // Data Fetching
   const fetchTiers = useCallback(async () => {
     try {
+      if (!product) {
+        setTiers([])
+        return
+      }
       const response = await client.listProductTiers(productId)
 
       // Runtime fix: client.listProductTiers returns the array directly (unwrapped),
@@ -67,7 +82,7 @@ export function ProductUpdateDialog({
         id: t.id,
         tierCode: t.tierCode,
         tierName: t.tierName,
-        vendorId: product?.vendorId ?? null, // Use fetched product vendorId, default to null if not fetched yet
+        vendorId: product.vendorId,
       }))
 
       setTiers(formatted)
@@ -76,10 +91,14 @@ export function ProductUpdateDialog({
       // Set empty array on error to prevent stale data
       setTiers([])
     }
-  }, [client, productId, product?.vendorId])
+  }, [client, productId, product])
 
   const fetchEntitlements = useCallback(async () => {
     try {
+      if (!product) {
+        setEntitlements([])
+        return
+      }
       const response = await client.listEntitlements(productId)
       // Runtime fix: client.listEntitlements returns the array directly (unwrapped)
       const rawData = response as unknown
@@ -91,6 +110,7 @@ export function ProductUpdateDialog({
         number_value: e.numberValue,
         boolean_value: e.booleanValue,
         string_value: e.stringValue,
+        vendorId: product.vendorId,
         productTiers: Array.isArray((e as unknown as { productTiers?: unknown }).productTiers)
           ? ((e as unknown as { productTiers: Array<{ id: string; tierCode: string }> }).productTiers)
           : undefined,
@@ -100,7 +120,7 @@ export function ProductUpdateDialog({
     } catch (e) {
       console.error('Failed to fetch entitlements', e)
     }
-  }, [client, productId])
+  }, [client, productId, product])
 
   const fetchProductDetails = useCallback(async () => {
     try {
@@ -148,6 +168,7 @@ export function ProductUpdateDialog({
     mutateAsync: async (values) => {
       const data: UpdateProductRequest = {
         ...values,
+        vendor_id: sanitizeSelectValue(values.vendor_id),
         metadata: values.metadata ? JSON.parse(values.metadata) : undefined,
       }
       const result = await updateMutation.mutateAsync({ id: productId, data })
@@ -173,12 +194,16 @@ export function ProductUpdateDialog({
     onError,
   })
 
-  const blueprint = createProductBlueprint('update') as unknown as FormBlueprint<FormValuesUpdate>
+  const blueprint = createProductBlueprint('update', {
+    vendorOptions,
+    currentUser: currentUser ?? undefined,
+  }) as unknown as FormBlueprint<FormValuesUpdate>
   const defaultValues: FormValuesUpdate = {
     name: initialValues?.name,
     slug: initialValues?.slug,
     description: initialValues?.description,
     metadata: metadataString || (initialValues?.metadata ? JSON.stringify(initialValues.metadata, null, 2) : ''),
+    vendor_id: product?.vendorId ?? initialValues?.vendor_id,
   }
 
   // Effect to update default values when metadata is fetched

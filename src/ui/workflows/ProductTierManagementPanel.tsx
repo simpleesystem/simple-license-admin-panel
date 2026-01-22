@@ -37,7 +37,7 @@ import { ProductTierFormFlow } from './ProductTierFormFlow'
 import { ProductTierRowActions } from './ProductTierRowActions'
 
 export type ProductTierListItem = Pick<ProductTier, 'id' | 'tierCode' | 'tierName'> & {
-  vendorId?: string | null
+  vendorId: string
 }
 
 type ProductTierManagementPanelProps = {
@@ -190,10 +190,10 @@ export function ProductTierManagementPanel({
             <ProductTierRowActions
               client={client}
               tier={row}
-              onEdit={setEditingTier}
+              onEdit={(tier) => setEditingTier({ ...tier, vendorId: row.vendorId })}
               onCompleted={onRefresh}
               currentUser={currentUser ?? null}
-              vendorId={row.vendorId ?? null}
+              vendorId={row.vendorId}
             />
           )
         },

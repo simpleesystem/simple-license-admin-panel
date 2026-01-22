@@ -20,7 +20,7 @@ import {
 import { SectionStatus } from '../../ui/feedback/SectionStatus'
 import { Page } from '../../ui/layout/Page'
 import { PageHeader } from '../../ui/layout/PageHeader'
-import type { UiDataTableSortState, UiSortDirection } from '../../ui/types'
+import type { UiDataTableSortState, UiSelectOption, UiSortDirection } from '../../ui/types'
 import { ProductManagementPanel } from '../../ui/workflows/ProductManagementPanel'
 
 export function ProductsRouteComponent() {
@@ -41,7 +41,7 @@ export function ProductsRouteComponent() {
     // Map vendor names
     list = list.map((product) => ({
       ...product,
-      vendorName: product.vendorId ? tenantMap.get(product.vendorId) : undefined,
+      vendorName: tenantMap.get(product.vendorId),
     }))
 
     // Vendor Scoping
@@ -91,6 +91,14 @@ export function ProductsRouteComponent() {
 
     return list
   }, [currentUser, data, tenantsData, searchTerm, statusFilter, sortState])
+
+  const vendorOptions = useMemo((): UiSelectOption[] => {
+    const tenants = Array.isArray(tenantsData) ? tenantsData : (tenantsData?.data ?? [])
+    return tenants.map((tenant) => ({
+      value: tenant.id,
+      label: tenant.name,
+    }))
+  }, [tenantsData])
 
   const paginatedProducts = useMemo(() => {
     const startIndex = (page - 1) * UI_TABLE_PAGE_SIZE_DEFAULT
@@ -149,6 +157,7 @@ export function ProductsRouteComponent() {
           client={client}
           products={paginatedProducts}
           currentUser={currentUser ?? undefined}
+          vendorOptions={vendorOptions}
           onRefresh={handleRefresh}
           searchTerm={searchTerm}
           onSearchChange={handleSearch}

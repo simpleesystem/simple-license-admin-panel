@@ -182,6 +182,7 @@ export type UiSelectOption = UiVisibilityProps & {
   value: string
   label: ReactNode
   disabled?: boolean
+  hidden?: boolean
 }
 
 export type UiKeyValueItem = {

@@ -30,7 +30,7 @@ export type ProductEntitlementListItem = ProductEntitlementSummary & {
   boolean_value?: boolean | null
   string_value?: string | null
   usageLimit?: number | null
-  vendorId?: string | null
+  vendorId: string
   productTiers?: { id: string; tierCode: string }[]
   metadata?: Record<string, string | number | boolean | null>
 }

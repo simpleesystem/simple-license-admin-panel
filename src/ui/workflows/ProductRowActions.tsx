@@ -38,7 +38,7 @@ type ProductRowActionsProps = UiCommonProps & {
   client: Client
   productId: string
   isActive: boolean
-  vendorId?: string | null
+  vendorId: string
   onEdit: (product: { id: string }) => void
   onCompleted?: () => void
   currentUser?: User | null
@@ -67,7 +67,7 @@ export function ProductRowActions({
   const isSystemAdmin = isSystemAdminUser(currentUser ?? null)
 
   // Check ownership for non-admin users
-  const ownsProduct = isSystemAdmin || (vendorId && currentUser?.vendorId === vendorId)
+  const ownsProduct = isSystemAdmin || currentUser?.vendorId === vendorId
 
   // Only show buttons if user has permissions and owns the product (or is system admin)
   const canShowButtons = (allowDelete || allowUpdate) && (ownsProduct || isSystemAdmin)

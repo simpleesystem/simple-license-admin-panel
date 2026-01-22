@@ -74,7 +74,7 @@ export interface Product {
   slug: string
   name: string
   description?: string
-  vendorId?: string | null
+  vendorId: string
   isActive: boolean
   suspendedAt?: Date | string | null
   suspensionReason?: string | null

@@ -225,6 +225,7 @@ export interface CreateProductRequest {
   name: string
   slug: string
   description?: string
+  vendor_id?: string
   is_active?: boolean
   default_license_term_days?: number | null
   default_max_activations?: number | null
@@ -235,6 +236,7 @@ export interface UpdateProductRequest {
   name?: string
   slug?: string
   description?: string
+  vendor_id?: string
   is_active?: boolean
   default_license_term_days?: number | null
   default_max_activations?: number | null
