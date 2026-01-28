@@ -80,7 +80,22 @@ export function ProductTierManagementPanel({
 
     // Vendor filtering
     if (currentUser?.vendorId && !isSuperUser) {
-      list = list.filter((tier) => isProductTierOwnedByUser(currentUser ?? null, tier as unknown as Product))
+      list = list.filter((tier) => isProductTierOwnedByUser(currentUser ?? null, {
+        ...tier,
+        productId,
+        // Mock missing fields for ProductTier type compatibility
+        slug: 'mock-slug',
+        name: 'mock-name',
+        vendorId: currentUser.vendorId!,
+        description: undefined,
+        isActive: true,
+        suspendedAt: null,
+        suspensionReason: null,
+        defaultLicenseTermDays: null,
+        defaultMaxActivations: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      } as unknown as Product))
     }
 
     // Search filtering
@@ -117,7 +132,7 @@ export function ProductTierManagementPanel({
     }
 
     return list
-  }, [currentUser, tiers, searchTerm, currentSortState])
+  }, [currentUser, tiers, searchTerm, currentSortState, productId])
   const allowCreate = canCreateProductTier(currentUser ?? null)
   const canView = canViewProductTiers(currentUser ?? null)
 
