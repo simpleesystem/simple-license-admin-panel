@@ -1,7 +1,7 @@
-import type { Client, License, LicenseStatus, User } from '@/simpleLicense'
 import { useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
+import type { Client, License, LicenseStatus, User } from '@/simpleLicense'
 import {
   canCreateLicense,
   canUpdateLicense,
@@ -94,7 +94,10 @@ export function LicenseManagementPanel({
 
   const isVendorScoped = isVendorScopedUser(currentUser ?? null)
   const visibleLicenses = useMemo(
-    () => (isVendorScoped ? (licenses ?? []).filter((license) => isLicenseOwnedByUser(currentUser ?? null, license as unknown as License)) : (licenses ?? [])),
+    () =>
+      isVendorScoped
+        ? (licenses ?? []).filter((license) => isLicenseOwnedByUser(currentUser ?? null, license as unknown as License))
+        : (licenses ?? []),
     [currentUser, isVendorScoped, licenses]
   )
   const allowCreate = canCreateLicense(currentUser ?? null)

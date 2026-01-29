@@ -1,11 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, beforeEach, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
-import {
-  UI_USER_ACTION_DELETE,
-  UI_USER_ACTION_EDIT,
-  UI_USER_CONFIRM_DELETE_CONFIRM,
-} from '../../../src/ui/constants'
+import { UI_USER_ACTION_DELETE, UI_USER_ACTION_EDIT, UI_USER_CONFIRM_DELETE_CONFIRM } from '../../../src/ui/constants'
 import { UserRowActions } from '../../../src/ui/workflows/UserRowActions'
 import { buildUser } from '../../factories/userFactory'
 

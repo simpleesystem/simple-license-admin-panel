@@ -3,8 +3,11 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import { AppProviders } from './app/AppProviders'
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <AppProviders />
-  </StrictMode>,
-)
+const rootEl = document.getElementById('root')
+if (rootEl) {
+  createRoot(rootEl).render(
+    <StrictMode>
+      <AppProviders />
+    </StrictMode>
+  )
+}

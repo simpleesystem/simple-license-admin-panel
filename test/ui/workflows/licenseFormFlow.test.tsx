@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker'
 import { fireEvent, render, waitFor } from '@testing-library/react'
-import { describe, expect, beforeEach, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { UI_LICENSE_FORM_SUBMIT_CREATE, UI_LICENSE_FORM_SUBMIT_UPDATE } from '../../../src/ui/constants'
 import type { UiSelectOption } from '../../../src/ui/types'

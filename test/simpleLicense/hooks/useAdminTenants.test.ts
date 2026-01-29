@@ -1,20 +1,20 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { faker } from '@faker-js/faker'
+import { buildTenant } from '@test/factories/tenantFactory'
+import { renderHookWithQueryClient } from '@test/utils/renderHookWithQueryClient'
 import { waitFor } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Client } from '@/simpleLicense'
 import {
   useAdminTenants,
   useCreateTenant,
-  useUpdateTenant,
-  useSuspendTenant,
-  useResumeTenant,
   useCreateTenantBackup,
-  useQuotaUsage,
   useQuotaConfig,
+  useQuotaUsage,
+  useResumeTenant,
+  useSuspendTenant,
   useUpdateQuotaLimits,
+  useUpdateTenant,
 } from '@/simpleLicense/hooks/useAdminTenants'
-import { buildTenant } from '@test/factories/tenantFactory'
-import { renderHookWithQueryClient } from '@test/utils/renderHookWithQueryClient'
-import { faker } from '@faker-js/faker'
 
 describe('useAdminTenants hooks', () => {
   let mockClient: Client
@@ -303,9 +303,7 @@ describe('useAdminTenants hooks', () => {
       }
       ;(mockClient.getQuotaUsage as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse)
 
-      const { result } = renderHookWithQueryClient(() =>
-        useQuotaUsage(mockClient, mockTenantId)
-      )
+      const { result } = renderHookWithQueryClient(() => useQuotaUsage(mockClient, mockTenantId))
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true)
@@ -338,9 +336,7 @@ describe('useAdminTenants hooks', () => {
       }
       ;(mockClient.getQuotaConfig as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse)
 
-      const { result } = renderHookWithQueryClient(() =>
-        useQuotaConfig(mockClient, mockTenantId)
-      )
+      const { result } = renderHookWithQueryClient(() => useQuotaConfig(mockClient, mockTenantId))
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true)

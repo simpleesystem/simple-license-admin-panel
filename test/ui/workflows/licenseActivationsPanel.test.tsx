@@ -1,8 +1,8 @@
-import { render, screen, waitFor } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { faker } from '@faker-js/faker'
-import type { Client, LicenseActivation } from '@/simpleLicense'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
+import type { Client, LicenseActivation } from '@/simpleLicense'
 
 import { ApiContext } from '../../../src/api/apiContext'
 import {
@@ -47,7 +47,7 @@ const renderWithProviders = (ui: React.ReactElement, client: Client) => {
   return render(
     <QueryClientProvider client={queryClient}>
       <ApiContext.Provider value={{ client }}>{ui}</ApiContext.Provider>
-    </QueryClientProvider>,
+    </QueryClientProvider>
   )
 }
 
@@ -74,7 +74,7 @@ describe('LicenseActivationsPanel', () => {
         licenseVendorId={activation.vendorId ?? undefined}
         currentUser={{ role: 'SUPERUSER', vendorId: activation.vendorId ?? undefined } as never}
       />,
-      client,
+      client
     )
 
     await waitFor(() => {
@@ -101,7 +101,7 @@ describe('LicenseActivationsPanel', () => {
         licenseKey={licenseId}
         currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() } as never}
       />,
-      client,
+      client
     )
 
     expect(screen.getByText(UI_LICENSE_ACTIVATIONS_LOADING_TITLE)).toBeInTheDocument()
@@ -123,7 +123,7 @@ describe('LicenseActivationsPanel', () => {
         licenseKey={licenseId}
         currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() } as never}
       />,
-      client,
+      client
     )
 
     expect(screen.getByText(UI_LICENSE_ACTIVATIONS_ERROR_TITLE)).toBeInTheDocument()
@@ -145,7 +145,7 @@ describe('LicenseActivationsPanel', () => {
         licenseKey={licenseId}
         currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() } as never}
       />,
-      client,
+      client
     )
 
     expect(screen.getByText(UI_LICENSE_ACTIVATIONS_EMPTY_STATE)).toBeInTheDocument()
@@ -165,7 +165,7 @@ describe('LicenseActivationsPanel', () => {
         licenseKey=""
         currentUser={{ role: 'SUPERUSER', vendorId: faker.string.uuid() } as never}
       />,
-      client,
+      client
     )
 
     expect(screen.getByText(UI_LICENSE_ACTIVATIONS_ERROR_TITLE)).toBeInTheDocument()
@@ -187,7 +187,7 @@ describe('LicenseActivationsPanel', () => {
         licenseVendorId={faker.string.uuid()}
         currentUser={{ role: 'VENDOR_MANAGER', vendorId: faker.string.uuid() } as never}
       />,
-      client,
+      client
     )
 
     expect(screen.getByText(UI_LICENSE_ACTIVATIONS_ERROR_TITLE)).toBeInTheDocument()
@@ -217,7 +217,7 @@ describe('LicenseActivationsPanel', () => {
         licenseVendorId={activation.vendorId ?? undefined}
         currentUser={{ role: 'SUPERUSER', vendorId: activation.vendorId ?? undefined } as never}
       />,
-      client,
+      client
     )
 
     await waitFor(() => {

@@ -1,15 +1,15 @@
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import type { Client } from '@/simpleLicense'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
+import type { Client } from '@/simpleLicense'
 
 import { ApiContext } from '../../../src/api/apiContext'
-import { AlertThresholdsPanel } from '../../../src/ui/workflows/AlertThresholdsPanel'
 import {
   UI_ALERT_THRESHOLD_FORM_SUBMIT_LABEL,
   UI_ALERT_THRESHOLD_LABEL_HIGH_ACTIVATIONS,
   UI_BUTTON_LABEL_EDIT_ALERT_THRESHOLDS,
 } from '../../../src/ui/constants'
+import { AlertThresholdsPanel } from '../../../src/ui/workflows/AlertThresholdsPanel'
 
 const useAlertThresholdsMock = vi.hoisted(() => vi.fn())
 const useUpdateAlertThresholdsMock = vi.hoisted(() => vi.fn())
@@ -37,7 +37,7 @@ const renderWithProviders = (ui: React.ReactElement, client: Client) => {
   return render(
     <QueryClientProvider client={queryClient}>
       <ApiContext.Provider value={{ client }}>{ui}</ApiContext.Provider>
-    </QueryClientProvider>,
+    </QueryClientProvider>
   )
 }
 
@@ -93,8 +93,8 @@ describe('AlertThresholdsPanel', () => {
       expect(mutateAsync).toHaveBeenCalledWith(
         expect.objectContaining({
           high_activations: 120,
-        }),
-      ),
+        })
+      )
     )
     expect(refetch).toHaveBeenCalled()
   })

@@ -71,10 +71,14 @@ vi.mock('@/simpleLicense', async () => {
 })
 
 vi.mock('../../../../src/ui/data/ActionMenu', () => ({
-  ActionMenu: ({ items }: { items: Array<{ id: string; label: string; onSelect: () => void; disabled?: boolean }> }) => (
+  ActionMenu: ({
+    items,
+  }: {
+    items: Array<{ id: string; label: string; onSelect: () => void; disabled?: boolean }>
+  }) => (
     <div>
       {items.map((item) => (
-        <button key={item.id} onClick={item.onSelect} disabled={item.disabled}>
+        <button type="button" key={item.id} onClick={item.onSelect} disabled={item.disabled}>
           {item.label}
         </button>
       ))}
@@ -91,7 +95,12 @@ beforeEach(() => {
   vi.clearAllMocks()
   const vendorId = 'vendor-1'
   const seededUser = buildUser({ vendorId })
-  useListUsersMock.mockReturnValue({ data: { users: [seededUser] }, isLoading: false, isError: false, refetch: vi.fn() })
+  useListUsersMock.mockReturnValue({
+    data: { users: [seededUser] },
+    isLoading: false,
+    isError: false,
+    refetch: vi.fn(),
+  })
   const mutation = mockMutation()
   useCreateUserMock.mockReturnValue(mutation)
   useUpdateUserMock.mockReturnValue(mutation)
@@ -121,21 +130,22 @@ const createNavItems = (onSelect: (id: string) => void) => [
 ]
 
 const ScreenHost = ({
-  role,
+  userRole,
   vendorId,
 }: {
-  role: 'SUPERUSER' | 'ADMIN' | 'VENDOR_MANAGER' | 'VIEWER'
+  userRole: 'SUPERUSER' | 'ADMIN' | 'VENDOR_MANAGER' | 'VIEWER'
   vendorId: string
 }) => {
   const onRefresh = vi.fn()
   const [active, setActive] = useState<'users' | 'tenants' | 'products' | 'licenses'>('users')
   const items = createNavItems(setActive)
 
-  const currentUser = role === 'VIEWER' ? buildUser({ role, vendorId }) : buildUser({ role, vendorId })
-  const user = role === 'VIEWER' ? null : buildUser({ vendorId })
-  const tenant = role === 'VIEWER' ? null : buildTenant({ vendorId })
-  const product = role === 'VIEWER' ? null : buildProduct({ vendorId, status: 'ACTIVE' })
-  const license = role === 'VIEWER' ? null : buildLicense({ vendorId, status: 'ACTIVE' })
+  const currentUser =
+    userRole === 'VIEWER' ? buildUser({ role: userRole, vendorId }) : buildUser({ role: userRole, vendorId })
+  const user = userRole === 'VIEWER' ? null : buildUser({ vendorId })
+  const tenant = userRole === 'VIEWER' ? null : buildTenant({ vendorId })
+  const product = userRole === 'VIEWER' ? null : buildProduct({ vendorId, status: 'ACTIVE' })
+  const license = userRole === 'VIEWER' ? null : buildLicense({ vendorId, status: 'ACTIVE' })
 
   return (
     <AppShell sidebar={<SidebarNav items={items} />} topBar={null} currentUser={currentUser}>
@@ -218,7 +228,7 @@ describe('AppShell navigation across all domains', () => {
 
   test('SUPERUSER can see edit actions across domains when navigating', async () => {
     const vendorId = faker.string.uuid()
-    renderWithProviders(<ScreenHost role="SUPERUSER" vendorId={vendorId} />)
+    renderWithProviders(<ScreenHost userRole="SUPERUSER" vendorId={vendorId} />)
 
     // Users
     await waitFor(() => {
@@ -246,7 +256,7 @@ describe('AppShell navigation across all domains', () => {
 
   test('VIEWER sees read-only across navigation', async () => {
     const vendorId = faker.string.uuid()
-    renderWithProviders(<ScreenHost role="VIEWER" vendorId={vendorId} />)
+    renderWithProviders(<ScreenHost userRole="VIEWER" vendorId={vendorId} />)
 
     await waitFor(() => {
       expect(screen.queryByText(UI_USER_ACTION_EDIT)).toBeNull()

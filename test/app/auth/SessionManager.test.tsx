@@ -1,10 +1,13 @@
-import type { ReactNode } from 'react'
 import { render } from '@testing-library/react'
 import mitt from 'mitt'
+import type { ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-
-import { SessionManager } from '../../../src/app/auth/SessionManager'
+import { NotificationBusProvider } from '@/notifications/busContext'
+import type { NotificationEventMap } from '@/notifications/types'
+import type { TrackingClient } from '../../../src/app/analytics/tracking'
+import { TrackingContext } from '../../../src/app/analytics/trackingContext'
 import { AuthContext } from '../../../src/app/auth/authContext'
+import { SessionManager } from '../../../src/app/auth/SessionManager'
 import type { AuthContextValue } from '../../../src/app/auth/types'
 import {
   I18N_KEY_SESSION_EXPIRED_TITLE,
@@ -12,12 +15,9 @@ import {
   NOTIFICATION_EVENT_TOAST,
   SESSION_IDLE_TIMEOUT_MS,
   SESSION_IDLE_WARNING_MS,
+  TRACKING_EVENT_SESSION_TIMEOUT,
+  TRACKING_EVENT_SESSION_WARNING,
 } from '../../../src/app/constants'
-import { NotificationBusProvider } from '@/notifications/busContext'
-import type { NotificationEventMap } from '@/notifications/types'
-import { TrackingContext } from '../../../src/app/analytics/trackingContext'
-import type { TrackingClient } from '../../../src/app/analytics/tracking'
-import { TRACKING_EVENT_SESSION_TIMEOUT, TRACKING_EVENT_SESSION_WARNING } from '../../../src/app/constants'
 
 const createAuthValue = (overrides: Partial<AuthContextValue>): AuthContextValue => ({
   token: null,
@@ -70,7 +70,7 @@ describe('SessionManager', () => {
     expect(toastSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         titleKey: I18N_KEY_SESSION_WARNING_TITLE,
-      }),
+      })
     )
     expect(trackingClient.track).toHaveBeenCalledWith(TRACKING_EVENT_SESSION_WARNING)
   })
@@ -85,7 +85,7 @@ describe('SessionManager', () => {
     expect(toastSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         titleKey: I18N_KEY_SESSION_EXPIRED_TITLE,
-      }),
+      })
     )
     expect(trackingClient.track).toHaveBeenNthCalledWith(2, TRACKING_EVENT_SESSION_TIMEOUT)
   })

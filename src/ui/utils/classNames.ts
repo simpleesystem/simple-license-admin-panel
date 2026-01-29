@@ -2,25 +2,23 @@ export const composeClassNames = (...classes: Array<string | false | null | unde
   const seen = new Set<string>()
   const tokens: string[] = []
 
-  classes.forEach((entry) => {
+  for (const entry of classes) {
     if (!entry) {
-      return
+      continue
     }
     const normalized = entry.trim()
     if (!normalized) {
-      return
+      continue
     }
-    normalized
-      .split(/\s+/u)
-      .filter(Boolean)
-      .forEach((token) => {
-        if (seen.has(token)) {
-          return
-        }
-        seen.add(token)
-        tokens.push(token)
-      })
-  })
+    const tokenList = normalized.split(/\s+/u).filter(Boolean)
+    for (const token of tokenList) {
+      if (seen.has(token)) {
+        continue
+      }
+      seen.add(token)
+      tokens.push(token)
+    }
+  }
 
   return tokens.join(' ')
 }

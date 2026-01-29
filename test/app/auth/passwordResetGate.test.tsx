@@ -1,8 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
-
-import { PasswordResetGate } from '../../../src/app/auth/PasswordResetGate'
 import { AuthContext } from '../../../src/app/auth/authContext'
+import { PasswordResetGate } from '../../../src/app/auth/PasswordResetGate'
 import type { AuthContextValue } from '../../../src/app/auth/types'
 import { buildUser } from '../../factories/userFactory'
 
@@ -38,7 +37,7 @@ describe('PasswordResetGate', () => {
         <PasswordResetGate>
           <div data-testid="app-shell">App</div>
         </PasswordResetGate>
-      </AuthContext.Provider>,
+      </AuthContext.Provider>
     )
 
     expect(screen.getByTestId('app-shell')).toBeInTheDocument()
@@ -55,7 +54,7 @@ describe('PasswordResetGate', () => {
         <PasswordResetGate>
           <div data-testid="original-content">App</div>
         </PasswordResetGate>
-      </AuthContext.Provider>,
+      </AuthContext.Provider>
     )
 
     // When password reset is required, AppShell is rendered with change password flow
@@ -75,7 +74,7 @@ describe('PasswordResetGate', () => {
         <PasswordResetGate>
           <div data-testid="app-shell">App</div>
         </PasswordResetGate>
-      </AuthContext.Provider>,
+      </AuthContext.Provider>
     )
 
     expect(screen.getByTestId('app-shell')).toBeInTheDocument()

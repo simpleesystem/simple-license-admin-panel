@@ -1,12 +1,12 @@
 import { faker } from '@faker-js/faker'
 import { screen } from '@testing-library/react'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 
 import { AppShell } from '../../../../src/ui/layout/AppShell'
 import { SidebarNav } from '../../../../src/ui/navigation/SidebarNav'
 import { TopNavBar } from '../../../../src/ui/navigation/TopNavBar'
-import { buildSidebarNavItem } from '../../factories/uiFactories'
 import { buildUser } from '../../../factories/userFactory'
+import { buildSidebarNavItem } from '../../factories/uiFactories'
 import { renderWithProviders } from '../../utils'
 
 vi.mock('../../../../src/app/auth/AuthProvider', () => ({
@@ -37,12 +37,12 @@ describe('Navigation guards and visibility', () => {
         currentUser={buildUser({ role: 'SUPERUSER', vendorId: faker.string.uuid() })}
       >
         content
-      </AppShell>,
+      </AppShell>
     )
 
-    navItems.forEach((item) => {
+    for (const item of navItems) {
       expect(screen.getByText(item.label)).toBeInTheDocument()
-    })
+    }
   })
 
   test('VIEWER sees limited nav', () => {
@@ -55,12 +55,12 @@ describe('Navigation guards and visibility', () => {
         currentUser={buildUser({ role: 'VIEWER', vendorId: faker.string.uuid() })}
       >
         content
-      </AppShell>,
+      </AppShell>
     )
 
     expect(screen.queryByText('Users')).toBeNull()
-    restrictedItems.forEach((item) => {
+    for (const item of restrictedItems) {
       expect(screen.getByText(item.label)).toBeInTheDocument()
-    })
+    }
   })
 })

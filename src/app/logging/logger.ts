@@ -41,16 +41,24 @@ export const createConsoleLogger = (): Logger => ({
 
 export const createCompositeLogger = (loggers: Logger[]): Logger => ({
   debug: (message, metadata) => {
-    loggers.forEach((logger) => logger.debug(message, metadata))
+    for (const logger of loggers) {
+      logger.debug(message, metadata)
+    }
   },
   info: (message, metadata) => {
-    loggers.forEach((logger) => logger.info(message, metadata))
+    for (const logger of loggers) {
+      logger.info(message, metadata)
+    }
   },
   warn: (message, metadata) => {
-    loggers.forEach((logger) => logger.warn(message, metadata))
+    for (const logger of loggers) {
+      logger.warn(message, metadata)
+    }
   },
   error: (error, metadata) => {
-    loggers.forEach((logger) => logger.error(error, metadata))
+    for (const logger of loggers) {
+      logger.error(error, metadata)
+    }
   },
 })
 

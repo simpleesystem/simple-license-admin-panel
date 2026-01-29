@@ -1,8 +1,8 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { faker } from '@faker-js/faker'
-import type { AuditLogEntry, Client } from '@/simpleLicense'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
+import type { AuditLogEntry, Client } from '@/simpleLicense'
 
 import { ApiContext } from '../../../src/api/apiContext'
 import {
@@ -41,7 +41,7 @@ const renderWithProviders = (ui: React.ReactElement, client: Client) => {
   return render(
     <QueryClientProvider client={queryClient}>
       <ApiContext.Provider value={{ client }}>{ui}</ApiContext.Provider>
-    </QueryClientProvider>,
+    </QueryClientProvider>
   )
 }
 

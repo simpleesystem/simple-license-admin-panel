@@ -1,38 +1,32 @@
 import { faker } from '@faker-js/faker'
 import { fireEvent, render } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
-
+import {
+  UI_ARIA_LABEL_CARD_LIST,
+  UI_ARIA_LABEL_REMOVE_CHIP,
+  UI_ARIA_LABEL_SUMMARY_LIST,
+  UI_ARIA_LABEL_TABLE_TOOLBAR,
+  UI_ARIA_LABEL_TAG_LIST,
+  UI_CLASS_CARD_LIST_GRID,
+  UI_CLASS_SUMMARY_LIST,
+  UI_CLASS_TABLE,
+  UI_CLASS_TABLE_TOOLBAR,
+  UI_CLASS_TAG_LIST,
+  UI_ICON_SORT_ASCENDING,
+  UI_ICON_SORT_DEFAULT,
+  UI_SORT_BUTTON_LABEL_PREFIX,
+  UI_TAG_VARIANT_NEUTRAL,
+  UI_TEST_ID_CARD_LIST,
+  UI_TEST_ID_CHIP,
+  UI_TEST_ID_DATA_TABLE,
+} from '../../../src/ui/constants'
 import { CardList } from '../../../src/ui/data/CardList'
 import { Chip } from '../../../src/ui/data/Chip'
 import { DataTable } from '../../../src/ui/data/DataTable'
 import { SummaryList } from '../../../src/ui/data/SummaryList'
 import { TableToolbar } from '../../../src/ui/data/TableToolbar'
 import { TagList } from '../../../src/ui/data/TagList'
-import {
-  UI_ARIA_LABEL_SUMMARY_LIST,
-  UI_ARIA_LABEL_CARD_LIST,
-  UI_ARIA_LABEL_TABLE_TOOLBAR,
-  UI_ARIA_LABEL_TAG_LIST,
-  UI_ARIA_LABEL_REMOVE_CHIP,
-  UI_CLASS_CARD_LIST_GRID,
-  UI_CLASS_SUMMARY_LIST,
-  UI_CLASS_TABLE,
-  UI_CLASS_TABLE_TOOLBAR,
-  UI_CLASS_TAG_LIST,
-  UI_TAG_VARIANT_NEUTRAL,
-  UI_ICON_SORT_ASCENDING,
-  UI_ICON_SORT_DEFAULT,
-  UI_SORT_BUTTON_LABEL_PREFIX,
-  UI_TEST_ID_CARD_LIST,
-  UI_TEST_ID_CHIP,
-  UI_TEST_ID_DATA_TABLE,
-} from '../../../src/ui/constants'
-import {
-  buildCardListItem,
-  buildSummaryCardItem,
-  buildTag,
-  buildText,
-} from '../../ui/factories/uiFactories'
+import { buildCardListItem, buildSummaryCardItem, buildTag, buildText } from '../../ui/factories/uiFactories'
 
 type SampleRow = {
   id: string
@@ -54,9 +48,7 @@ describe('Data primitives', () => {
         cell: (row: SampleRow) => row.name,
       },
     ]
-    const { getByTestId } = render(
-      <DataTable data={rows} columns={columns} rowKey={(row) => row.id} />
-    )
+    const { getByTestId } = render(<DataTable data={rows} columns={columns} rowKey={(row) => row.id} />)
 
     expect(getByTestId(UI_TEST_ID_DATA_TABLE)).toHaveClass(UI_CLASS_TABLE, { exact: false })
   })
@@ -171,9 +163,7 @@ describe('Data primitives', () => {
         cell: (row: SampleRow) => row.name,
       },
     ]
-    const { container } = render(
-      <DataTable data={rows} columns={columns} rowKey={(row) => row.id} isLoading />
-    )
+    const { container } = render(<DataTable data={rows} columns={columns} rowKey={(row) => row.id} isLoading={true} />)
 
     expect(container.querySelector('.spinner-border')).toBeInTheDocument()
   })
@@ -217,9 +207,7 @@ describe('Data primitives', () => {
 
   test('TableToolbar renders children fallback when start slot omitted', () => {
     const childLabel = faker.lorem.word()
-    const { getByText } = render(
-      <TableToolbar end={<span>actions</span>}>{childLabel}</TableToolbar>
-    )
+    const { getByText } = render(<TableToolbar end={<span>actions</span>}>{childLabel}</TableToolbar>)
 
     expect(getByText(childLabel)).toBeInTheDocument()
   })
@@ -255,9 +243,7 @@ describe('Data primitives', () => {
 
   test('CardList invokes item onClick handlers', () => {
     const onClick = vi.fn()
-    const items = [
-      buildCardListItem({ id: 'clickable', title: 'clickable', onClick }),
-    ]
+    const items = [buildCardListItem({ id: 'clickable', title: 'clickable', onClick })]
     const { getByRole } = render(<CardList items={items} columns={1} />)
 
     const buttonCard = getByRole('button')

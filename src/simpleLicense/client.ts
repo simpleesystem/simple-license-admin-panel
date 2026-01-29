@@ -2,6 +2,7 @@
  * Main Client class for Simple License System API
  */
 
+import axios from 'axios'
 import {
   API_ENDPOINT_ADMIN_ANALYTICS_DISTRIBUTION,
   API_ENDPOINT_ADMIN_ANALYTICS_LICENSE,
@@ -88,6 +89,7 @@ import type {
   AuditVerificationParams,
   AuditVerificationResponse,
   ChangePasswordRequest,
+  ChangePasswordResponse,
   CheckUpdateRequest,
   CheckUpdateResponse,
   CreateEntitlementRequest,
@@ -109,6 +111,7 @@ import type {
   FreezeLicenseRequest,
   FreezeLicenseResponse,
   GetAuditLogsResponse,
+  GetCurrentUserResponse,
   GetEntitlementResponse,
   GetLicenseActivationsResponse,
   GetLicenseResponse,
@@ -117,7 +120,6 @@ import type {
   GetQuotaConfigResponse,
   GetQuotaUsageResponse,
   GetUserResponse,
-  GetCurrentUserResponse,
   HealthMetricsResponse,
   LicenseDataResponse,
   LicenseFeaturesResponse,
@@ -157,10 +159,8 @@ import type {
   ValidateLicenseRequest,
   ValidateLicenseResponse,
   ValidationError,
-  ChangePasswordResponse,
 } from './types/api'
 import type { ProductTier, User } from './types/license'
-import axios from 'axios'
 
 export class Client {
   private readonly httpClient: HttpClientInterface
@@ -173,11 +173,7 @@ export class Client {
 
     const onRefreshToken = async (): Promise<string | null> => {
       try {
-        const response = await axios.post(
-          `${this.baseUrl}${API_ENDPOINT_AUTH_REFRESH}`,
-          {},
-          { withCredentials: true }
-        )
+        const response = await axios.post(`${this.baseUrl}${API_ENDPOINT_AUTH_REFRESH}`, {}, { withCredentials: true })
         const data = response.data
         if (data?.success && data?.token) {
           this.setToken(data.token)
@@ -238,10 +234,7 @@ export class Client {
     const tokenType = loginData.tokenType ?? loginData.token_type ?? 'Bearer'
     const normalizedUser = this.normalizeUser(loginData.user)
     const mustChangePassword =
-      loginData.mustChangePassword ??
-      loginData.must_change_password ??
-      normalizedUser.passwordResetRequired ??
-      false
+      loginData.mustChangePassword ?? loginData.must_change_password ?? normalizedUser.passwordResetRequired ?? false
 
     if (!token || typeof token !== 'string') {
       throw new AuthenticationException('Invalid or missing token in login response')
@@ -1018,7 +1011,11 @@ export class Client {
       return defaultData
     }
 
-    throw new ApiException('API response missing data', 'INVALID_RESPONSE', this.parseErrorDetails(parsed.error?.details))
+    throw new ApiException(
+      'API response missing data',
+      'INVALID_RESPONSE',
+      this.parseErrorDetails(parsed.error?.details)
+    )
   }
 
   private handleError(errorCode: string, errorMessage: string, errorDetails?: ErrorDetails): never {
@@ -1040,7 +1037,9 @@ export class Client {
     }
     const typedUser = user as User
     const passwordResetRequired =
-      typedUser.passwordResetRequired ?? (user as { password_reset_required?: boolean }).password_reset_required ?? false
+      typedUser.passwordResetRequired ??
+      (user as { password_reset_required?: boolean }).password_reset_required ??
+      false
 
     return {
       ...typedUser,

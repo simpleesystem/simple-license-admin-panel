@@ -12,9 +12,15 @@ const TestApp = () => {
   const { login, logout, currentUser } = useAuth()
   return (
     <div>
-      <button onClick={() => login('admin', 'badpass').catch(() => {})}>bad-login</button>
-      <button onClick={() => login('admin', 'goodpass').catch(() => {})}>good-login</button>
-      <button onClick={() => logout()}>logout</button>
+      <button type="button" onClick={() => login('admin', 'badpass').catch(() => {})}>
+        bad-login
+      </button>
+      <button type="button" onClick={() => login('admin', 'goodpass').catch(() => {})}>
+        good-login
+      </button>
+      <button type="button" onClick={() => logout()}>
+        logout
+      </button>
       <div data-testid="user-email">{currentUser?.email ?? ''}</div>
       <RouterProvider router={router} />
     </div>
@@ -45,8 +51,11 @@ describe('auth flows', () => {
     await userEvent.click(screen.getByRole('button', { name: 'bad-login' }))
 
     // The error is caught and handled - verify user is not logged in
-    await waitFor(() => {
-      expect(screen.getByTestId('user-email')).toHaveTextContent('')
-    }, { timeout: 2000 })
+    await waitFor(
+      () => {
+        expect(screen.getByTestId('user-email')).toHaveTextContent('')
+      },
+      { timeout: 2000 }
+    )
   })
 })

@@ -1,7 +1,8 @@
-import type { Client } from '@/simpleLicense'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
-
+import type { Client } from '@/simpleLicense'
+import { ADMIN_SYSTEM_WS_STATUS_DISCONNECTED } from '../../../src/app/constants'
+import { AdminSystemLiveFeedContext } from '../../../src/app/live/AdminSystemLiveFeedContextDef'
 import {
   UI_LIVE_STATUS_DISCONNECTED,
   UI_SYSTEM_STATUS_EMPTY_BODY,
@@ -19,8 +20,6 @@ import {
   UI_SYSTEM_STATUS_VALUE_HEALTHY,
 } from '../../../src/ui/constants'
 import { SystemStatusPanel } from '../../../src/ui/workflows/SystemStatusPanel'
-import { AdminSystemLiveFeedContext } from '../../../src/app/live/AdminSystemLiveFeedContextDef'
-import { ADMIN_SYSTEM_WS_STATUS_DISCONNECTED } from '../../../src/app/constants'
 import { buildUser } from '../../factories/userFactory'
 
 const useServerStatusMock = vi.hoisted(() => vi.fn())
@@ -60,11 +59,7 @@ const mockLiveContext = {
 }
 
 const renderWithContext = (ui: React.ReactElement) => {
-  return render(
-    <AdminSystemLiveFeedContext.Provider value={mockLiveContext}>
-      {ui}
-    </AdminSystemLiveFeedContext.Provider>
-  )
+  return render(<AdminSystemLiveFeedContext.Provider value={mockLiveContext}>{ui}</AdminSystemLiveFeedContext.Provider>)
 }
 
 describe('SystemStatusPanel', () => {

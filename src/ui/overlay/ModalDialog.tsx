@@ -2,11 +2,11 @@ import Button from 'react-bootstrap/Button'
 import Modal from 'react-bootstrap/Modal'
 
 import {
+  UI_BUTTON_VARIANT_PRIMARY,
   UI_CLASS_MODAL_ACTIONS,
   UI_CLASS_MODAL_BODY,
   UI_MODAL_SIZE_LG,
   UI_TEST_ID_MODAL_DIALOG,
-  UI_BUTTON_VARIANT_PRIMARY,
 } from '../constants'
 import type { ModalDialogProps } from '../types'
 import { VisibilityGate } from '../utils/PermissionGate'
@@ -58,7 +58,7 @@ export function ModalDialog({
         data-testid={testId ?? UI_TEST_ID_MODAL_DIALOG}
       >
         {title ? (
-          <Modal.Header closeButton>
+          <Modal.Header closeButton={true}>
             <Modal.Title>{title}</Modal.Title>
           </Modal.Header>
         ) : null}

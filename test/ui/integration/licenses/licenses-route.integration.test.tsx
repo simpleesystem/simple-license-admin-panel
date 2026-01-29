@@ -2,10 +2,13 @@ import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
 
 import { LicensesRouteComponent } from '../../../../src/routes/licenses/LicensesRoute'
-import { UI_LICENSE_STATUS_ERROR_TITLE, UI_USER_ROLE_SUPERUSER, UI_USER_ROLE_VENDOR_MANAGER, UI_USER_ROLE_VIEWER } from '../../../../src/ui/constants'
-import { buildLicense } from '../../../factories/licenseFactory'
-import { buildProduct } from '../../../factories/licenseFactory'
-import { buildProductTier } from '../../../factories/licenseFactory'
+import {
+  UI_LICENSE_STATUS_ERROR_TITLE,
+  UI_USER_ROLE_SUPERUSER,
+  UI_USER_ROLE_VENDOR_MANAGER,
+  UI_USER_ROLE_VIEWER,
+} from '../../../../src/ui/constants'
+import { buildLicense, buildProduct, buildProductTier } from '../../../factories/licenseFactory'
 import { buildUser } from '../../../factories/userFactory'
 import { renderWithProviders } from '../../utils'
 
@@ -169,9 +172,12 @@ describe('LicensesRouteComponent', () => {
     fireEvent.change(statusFilter, { target: { value: 'ACTIVE' } })
 
     // Wait for filter to apply - active license should still be visible
-    await waitFor(() => {
-      expect(screen.getByText('active@example.com')).toBeInTheDocument()
-    }, { timeout: 1000 })
+    await waitFor(
+      () => {
+        expect(screen.getByText('active@example.com')).toBeInTheDocument()
+      },
+      { timeout: 1000 }
+    )
 
     // After filter is applied, only active license should be visible
     // The suspended license might still be in DOM but filtered out
@@ -212,9 +218,7 @@ describe('LicensesRouteComponent', () => {
   test('handles missing customerEmail in search', async () => {
     const superuser = buildUser({ role: UI_USER_ROLE_SUPERUSER, vendorId: null })
     useAuthMock.mockReturnValue({ user: superuser, currentUser: superuser, isAuthenticated: true })
-    const licenses = [
-      buildLicense({ customerEmail: undefined, productSlug: 'product-test' }),
-    ]
+    const licenses = [buildLicense({ customerEmail: undefined, productSlug: 'product-test' })]
     useAdminLicensesMock.mockReturnValue({ data: licenses, isLoading: false, isError: false, refetch: vi.fn() })
 
     renderWithProviders(<LicensesRouteComponent />)
@@ -323,9 +327,7 @@ describe('LicensesRouteComponent', () => {
   test('handles search with missing customerEmail', async () => {
     const superuser = buildUser({ role: UI_USER_ROLE_SUPERUSER, vendorId: null })
     useAuthMock.mockReturnValue({ user: superuser, currentUser: superuser, isAuthenticated: true })
-    const licenses = [
-      buildLicense({ customerEmail: undefined, productSlug: 'product-test' }),
-    ]
+    const licenses = [buildLicense({ customerEmail: undefined, productSlug: 'product-test' })]
     useAdminLicensesMock.mockReturnValue({ data: licenses, isLoading: false, isError: false, refetch: vi.fn() })
 
     renderWithProviders(<LicensesRouteComponent />)
@@ -345,9 +347,7 @@ describe('LicensesRouteComponent', () => {
   test('handles search with missing productSlug', async () => {
     const superuser = buildUser({ role: UI_USER_ROLE_SUPERUSER, vendorId: null })
     useAuthMock.mockReturnValue({ user: superuser, currentUser: superuser, isAuthenticated: true })
-    const licenses = [
-      buildLicense({ customerEmail: 'test@example.com', productSlug: undefined }),
-    ]
+    const licenses = [buildLicense({ customerEmail: 'test@example.com', productSlug: undefined })]
     useAdminLicensesMock.mockReturnValue({ data: licenses, isLoading: false, isError: false, refetch: vi.fn() })
 
     renderWithProviders(<LicensesRouteComponent />)
@@ -367,9 +367,7 @@ describe('LicensesRouteComponent', () => {
   test('handles pagination with multiple pages', async () => {
     const superuser = buildUser({ role: UI_USER_ROLE_SUPERUSER, vendorId: null })
     useAuthMock.mockReturnValue({ user: superuser, currentUser: superuser, isAuthenticated: true })
-    const licenses = Array.from({ length: 25 }, (_, i) =>
-      buildLicense({ customerEmail: `user${i + 1}@example.com` })
-    )
+    const licenses = Array.from({ length: 25 }, (_, i) => buildLicense({ customerEmail: `user${i + 1}@example.com` }))
     useAdminLicensesMock.mockReturnValue({ data: licenses, isLoading: false, isError: false, refetch: vi.fn() })
 
     renderWithProviders(<LicensesRouteComponent />)
@@ -511,7 +509,9 @@ describe('LicensesRouteComponent', () => {
     const mockListProductTiers = vi.fn().mockRejectedValue(new Error('Failed to fetch tiers'))
     const mockClient = {
       listProductTiers: mockListProductTiers,
-    } as unknown as Parameters<typeof renderWithProviders>[1] extends { client?: unknown } ? Parameters<typeof renderWithProviders>[1]['client'] : never
+    } as unknown as Parameters<typeof renderWithProviders>[1] extends { client?: unknown }
+      ? Parameters<typeof renderWithProviders>[1]['client']
+      : never
 
     renderWithProviders(<LicensesRouteComponent />, { client: mockClient })
 
@@ -533,7 +533,9 @@ describe('LicensesRouteComponent', () => {
     const mockListProductTiers = vi.fn().mockResolvedValue([mockTier])
     const mockClient = {
       listProductTiers: mockListProductTiers,
-    } as unknown as Parameters<typeof renderWithProviders>[1] extends { client?: unknown } ? Parameters<typeof renderWithProviders>[1]['client'] : never
+    } as unknown as Parameters<typeof renderWithProviders>[1] extends { client?: unknown }
+      ? Parameters<typeof renderWithProviders>[1]['client']
+      : never
 
     renderWithProviders(<LicensesRouteComponent />, { client: mockClient })
 
@@ -559,7 +561,9 @@ describe('LicensesRouteComponent', () => {
     const mockListProductTiers = vi.fn().mockResolvedValue({ data: [mockTier] })
     const mockClient = {
       listProductTiers: mockListProductTiers,
-    } as unknown as Parameters<typeof renderWithProviders>[1] extends { client?: unknown } ? Parameters<typeof renderWithProviders>[1]['client'] : never
+    } as unknown as Parameters<typeof renderWithProviders>[1] extends { client?: unknown }
+      ? Parameters<typeof renderWithProviders>[1]['client']
+      : never
 
     renderWithProviders(<LicensesRouteComponent />, { client: mockClient })
 
@@ -621,7 +625,9 @@ describe('LicensesRouteComponent', () => {
     const mockListProductTiers = vi.fn().mockResolvedValue([])
     const mockClient = {
       listProductTiers: mockListProductTiers,
-    } as unknown as Parameters<typeof renderWithProviders>[1] extends { client?: unknown } ? Parameters<typeof renderWithProviders>[1]['client'] : never
+    } as unknown as Parameters<typeof renderWithProviders>[1] extends { client?: unknown }
+      ? Parameters<typeof renderWithProviders>[1]['client']
+      : never
 
     renderWithProviders(<LicensesRouteComponent />, { client: mockClient })
 
@@ -643,7 +649,9 @@ describe('LicensesRouteComponent', () => {
     const mockListProductTiers = vi.fn().mockResolvedValue([mockTier])
     const mockClient = {
       listProductTiers: mockListProductTiers,
-    } as unknown as Parameters<typeof renderWithProviders>[1] extends { client?: unknown } ? Parameters<typeof renderWithProviders>[1]['client'] : never
+    } as unknown as Parameters<typeof renderWithProviders>[1] extends { client?: unknown }
+      ? Parameters<typeof renderWithProviders>[1]['client']
+      : never
 
     renderWithProviders(<LicensesRouteComponent />, { client: mockClient })
 
@@ -669,7 +677,9 @@ describe('LicensesRouteComponent', () => {
     const mockListProductTiers = vi.fn().mockResolvedValue({ data: [mockTier] })
     const mockClient = {
       listProductTiers: mockListProductTiers,
-    } as unknown as Parameters<typeof renderWithProviders>[1] extends { client?: unknown } ? Parameters<typeof renderWithProviders>[1]['client'] : never
+    } as unknown as Parameters<typeof renderWithProviders>[1] extends { client?: unknown }
+      ? Parameters<typeof renderWithProviders>[1]['client']
+      : never
 
     renderWithProviders(<LicensesRouteComponent />, { client: mockClient })
 
@@ -690,7 +700,9 @@ describe('LicensesRouteComponent', () => {
     const mockListProductTiers = vi.fn().mockRejectedValue(new Error('Failed to fetch'))
     const mockClient = {
       listProductTiers: mockListProductTiers,
-    } as unknown as Parameters<typeof renderWithProviders>[1] extends { client?: unknown } ? Parameters<typeof renderWithProviders>[1]['client'] : never
+    } as unknown as Parameters<typeof renderWithProviders>[1] extends { client?: unknown }
+      ? Parameters<typeof renderWithProviders>[1]['client']
+      : never
 
     renderWithProviders(<LicensesRouteComponent />, { client: mockClient })
 
@@ -735,9 +747,7 @@ describe('LicensesRouteComponent', () => {
   test('handles pagination with exactly one page of data', async () => {
     const superuser = buildUser({ role: UI_USER_ROLE_SUPERUSER, vendorId: null })
     useAuthMock.mockReturnValue({ user: superuser, currentUser: superuser, isAuthenticated: true })
-    const licenses = Array.from({ length: 10 }, (_, i) =>
-      buildLicense({ customerEmail: `user${i + 1}@example.com` })
-    )
+    const licenses = Array.from({ length: 10 }, (_, i) => buildLicense({ customerEmail: `user${i + 1}@example.com` }))
     useAdminLicensesMock.mockReturnValue({ data: licenses, isLoading: false, isError: false, refetch: vi.fn() })
 
     renderWithProviders(<LicensesRouteComponent />)

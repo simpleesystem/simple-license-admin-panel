@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react'
 
 import { UI_PAGE_PLACEHOLDER_BODY, UI_PAGE_PLACEHOLDER_TITLE, UI_STACK_GAP_MEDIUM } from '../../ui/constants'
-import { EmptyState } from '../../ui/typography/EmptyState'
 import { Page } from '../../ui/layout/Page'
 import { PageHeader } from '../../ui/layout/PageHeader'
 import { Stack } from '../../ui/layout/Stack'
+import { EmptyState } from '../../ui/typography/EmptyState'
 
 type SectionPlaceholderProps = {
   title: ReactNode

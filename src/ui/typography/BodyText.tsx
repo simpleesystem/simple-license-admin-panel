@@ -1,10 +1,6 @@
 import type { JSX } from 'react'
 
-import {
-  UI_CLASS_BODY_TEXT,
-  UI_CLASS_BODY_TEXT_LEAD,
-  UI_TEST_ID_BODY_TEXT,
-} from '../constants'
+import { UI_CLASS_BODY_TEXT, UI_CLASS_BODY_TEXT_LEAD, UI_TEST_ID_BODY_TEXT } from '../constants'
 import type { BodyTextProps } from '../types'
 import { composeClassNames } from '../utils/classNames'
 import { VisibilityGate } from '../utils/PermissionGate'

@@ -4,8 +4,8 @@ import {
   UI_ARIA_LABEL_REMOVE_CHIP,
   UI_CLASS_CHIP,
   UI_CLASS_CHIP_REMOVE_BUTTON,
-  UI_TEST_ID_CHIP,
   UI_TAG_VARIANT_NEUTRAL,
+  UI_TEST_ID_CHIP,
 } from '../constants'
 import type { ChipProps } from '../types'
 import { composeClassNames } from '../utils/classNames'
@@ -33,12 +33,7 @@ export function Chip({
         {icon}
         <span>{label}</span>
         {onRemove ? (
-          <button
-            type="button"
-            className={UI_CLASS_CHIP_REMOVE_BUTTON}
-            onClick={onRemove}
-            aria-label={removeLabel}
-          />
+          <button type="button" className={UI_CLASS_CHIP_REMOVE_BUTTON} onClick={onRemove} aria-label={removeLabel} />
         ) : null}
       </Badge>
     </VisibilityGate>

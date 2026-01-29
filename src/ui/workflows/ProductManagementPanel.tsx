@@ -1,7 +1,7 @@
-import type { Client, Product, User } from '@/simpleLicense'
 import { useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
+import type { Client, Product, User } from '@/simpleLicense'
 import {
   canCreateProduct,
   canUpdateProduct,
@@ -93,7 +93,10 @@ export function ProductManagementPanel({
 
   const isVendorScoped = isVendorScopedUser(currentUser ?? null)
   const visibleProducts = useMemo(
-    () => (isVendorScoped ? (products ?? []).filter((product) => isProductOwnedByUser(currentUser ?? null, product as unknown as Product)) : (products ?? [])),
+    () =>
+      isVendorScoped
+        ? (products ?? []).filter((product) => isProductOwnedByUser(currentUser ?? null, product as unknown as Product))
+        : (products ?? []),
     [currentUser, isVendorScoped, products]
   )
   const allowCreate = canCreateProduct(currentUser ?? null)

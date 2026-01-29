@@ -54,6 +54,15 @@ describe('selectors', () => {
     expect(result).toEqual([matching])
   })
 
+  it('excludes licenses whose status is not in the filter', () => {
+    const activeLicense = buildLicense({ status: STATUS_ACTIVE })
+    const revokedLicense = buildLicense({ status: STATUS_REVOKED })
+
+    const result = selectFilteredLicenses([activeLicense, revokedLicense], { statuses: [STATUS_ACTIVE] })
+
+    expect(result).toEqual([activeLicense])
+  })
+
   it('returns all licenses when no filters are provided', () => {
     const licenses = [buildLicense(), buildLicense()]
     expect(selectFilteredLicenses(licenses)).toEqual(licenses)
@@ -72,6 +81,15 @@ describe('selectors', () => {
     })
 
     expect(result).toEqual([withinWindow])
+  })
+
+  it('coerces string expiry dates when selecting expiring licenses', () => {
+    const expiryString = '2024-01-05T00:00:00.000Z'
+    const withinWindowString = buildLicense({ expiresAt: expiryString })
+
+    const result = selectExpiringLicenses([withinWindowString], { withinDays: 10, now: EXPIRY_NOW })
+
+    expect(result).toEqual([withinWindowString])
   })
 
   it('filters licenses belonging to a product', () => {

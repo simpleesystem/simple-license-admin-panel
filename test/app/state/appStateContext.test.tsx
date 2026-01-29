@@ -2,10 +2,7 @@ import { render } from '@testing-library/react'
 import { useEffect } from 'react'
 import { vi } from 'vitest'
 
-import {
-  ERROR_MESSAGE_APP_STATE_CONTEXT_UNAVAILABLE,
-  APP_THEME_LIGHT,
-} from '../../../src/app/constants'
+import { APP_THEME_LIGHT, ERROR_MESSAGE_APP_STATE_CONTEXT_UNAVAILABLE } from '../../../src/app/constants'
 import { AppStateProvider } from '../../../src/app/state/appState'
 import { useAppDispatch, useAppState, useTheme } from '../../../src/app/state/appStateContext'
 
@@ -41,7 +38,7 @@ describe('appStateContext hooks', () => {
     render(
       <AppStateProvider>
         <ThemeHookConsumer onTheme={handleTheme} />
-      </AppStateProvider>,
+      </AppStateProvider>
     )
 
     expect(handleTheme).toHaveBeenCalledWith(APP_THEME_LIGHT)

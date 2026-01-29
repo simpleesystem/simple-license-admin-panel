@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
 import type { PropsWithChildren } from 'react'
+import { useMemo } from 'react'
 
 import type { AppConfig } from './appConfig'
 import { APP_CONFIG } from './appConfig'

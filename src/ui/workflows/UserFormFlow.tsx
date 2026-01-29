@@ -1,7 +1,7 @@
-import type { Client, CreateUserRequest, UpdateUserRequest } from '@/simpleLicense'
-import { useAdminTenants, useCreateUser, useUpdateUser } from '@/simpleLicense'
 import type { ReactNode } from 'react'
 import { useMemo } from 'react'
+import type { Client, CreateUserRequest, UpdateUserRequest } from '@/simpleLicense'
+import { useAdminTenants, useCreateUser, useUpdateUser } from '@/simpleLicense'
 import { isVendorScopedUser } from '../../app/auth/permissions'
 import { useAuth } from '../../app/auth/useAuth'
 import type { MutationAdapter } from '../actions/mutationActions'
@@ -10,6 +10,7 @@ import type { FormBlueprint } from '../formBuilder/blueprint'
 import type { BlueprintCustomizer } from '../formBuilder/factories'
 
 type UserModeValues<TMode extends 'create' | 'update'> = TMode extends 'create' ? CreateUserRequest : UpdateUserRequest
+
 import {
   UI_USER_FORM_SUBMIT_CREATE,
   UI_USER_FORM_SUBMIT_UPDATE,
@@ -115,7 +116,6 @@ export function UserFormFlow(props: UserFormFlowProps) {
       return true
     })
   }, [currentUser?.role])
-
 
   const vendorOptions: UiSelectOption[] = useMemo(() => {
     const tenants = Array.isArray(tenantsQuery.data) ? tenantsQuery.data : (tenantsQuery.data?.data ?? [])

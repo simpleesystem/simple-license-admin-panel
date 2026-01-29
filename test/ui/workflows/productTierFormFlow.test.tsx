@@ -1,5 +1,5 @@
 import { fireEvent, render, waitFor } from '@testing-library/react'
-import { describe, expect, beforeEach, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { UI_PRODUCT_TIER_FORM_SUBMIT_CREATE, UI_PRODUCT_TIER_FORM_SUBMIT_UPDATE } from '../../../src/ui/constants'
 import { ProductTierFormFlow } from '../../../src/ui/workflows/ProductTierFormFlow'
@@ -41,11 +41,11 @@ describe('ProductTierFormFlow', () => {
         client={{} as never}
         mode="create"
         productId={buildText()}
-        show
+        show={true}
         onClose={onClose}
         submitLabel={UI_PRODUCT_TIER_FORM_SUBMIT_CREATE}
         onCompleted={onCompleted}
-      />,
+      />
     )
 
     fireEvent.click(getByRole('button', { name: UI_PRODUCT_TIER_FORM_SUBMIT_CREATE }))
@@ -67,12 +67,12 @@ describe('ProductTierFormFlow', () => {
       <ProductTierFormFlow
         client={{} as never}
         mode="update"
-        show
+        show={true}
         onClose={() => {}}
         submitLabel={UI_PRODUCT_TIER_FORM_SUBMIT_UPDATE}
         tierId={tier.id}
         onCompleted={onCompleted}
-      />,
+      />
     )
 
     fireEvent.click(getByRole('button', { name: UI_PRODUCT_TIER_FORM_SUBMIT_UPDATE }))
@@ -81,7 +81,7 @@ describe('ProductTierFormFlow', () => {
       expect(updateMutation.mutateAsync).toHaveBeenCalledWith({
         id: tier.id,
         data: expect.any(Object),
-      }),
+      })
     )
     expect(onCompleted).toHaveBeenCalled()
   })
@@ -105,11 +105,11 @@ describe('ProductTierFormFlow', () => {
         client={{} as never}
         mode="create"
         productId={buildText()}
-        show
+        show={true}
         onClose={onClose}
         submitLabel={UI_PRODUCT_TIER_FORM_SUBMIT_CREATE}
         onCompleted={onCompleted}
-      />,
+      />
     )
 
     fireEvent.click(getByRole('button', { name: UI_PRODUCT_TIER_FORM_SUBMIT_CREATE }))

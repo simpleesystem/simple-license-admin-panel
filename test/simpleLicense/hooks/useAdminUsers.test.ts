@@ -1,18 +1,18 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { waitFor } from '@testing-library/react'
-import type { Client } from '@/simpleLicense'
-import {
-  useAdminUsers,
-  useAdminUser,
-  useCurrentUser,
-  useCreateUser,
-  useUpdateUser,
-  useDeleteUser,
-  useChangePassword,
-} from '@/simpleLicense/hooks/useAdminUsers'
+import { faker } from '@faker-js/faker'
 import { buildUser } from '@test/factories/userFactory'
 import { renderHookWithQueryClient } from '@test/utils/renderHookWithQueryClient'
-import { faker } from '@faker-js/faker'
+import { waitFor } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { Client } from '@/simpleLicense'
+import {
+  useAdminUser,
+  useAdminUsers,
+  useChangePassword,
+  useCreateUser,
+  useCurrentUser,
+  useDeleteUser,
+  useUpdateUser,
+} from '@/simpleLicense/hooks/useAdminUsers'
 
 describe('useAdminUsers hooks', () => {
   let mockClient: Client

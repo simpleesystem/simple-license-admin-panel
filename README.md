@@ -96,6 +96,12 @@ npm run build
 # Preview production build
 npm run preview
 
+# Lint (Biome - same as license-server)
+npm run lint
+npm run lint:fix   # Apply safe fixes
+npm run format    # Check format only
+npm run format:write   # Apply format
+
 # Run tests
 npm test
 

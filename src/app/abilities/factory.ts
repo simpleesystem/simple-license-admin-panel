@@ -9,16 +9,16 @@ import type { AppAbility } from './types'
 export const buildAbilityFromPermissions = (permissions: Permissions): AppAbility => {
   const { can, build } = new AbilityBuilder<AppAbility>(createMongoAbility)
 
-  PERMISSION_KEYS.forEach((permission) => {
+  for (const permission of PERMISSION_KEYS) {
     if (!permissions[permission]) {
-      return
+      continue
     }
 
     const abilityTuples = getAbilitiesForPermission(permission)
-    abilityTuples.forEach(([action, subject]) => {
+    for (const [action, subject] of abilityTuples) {
       can(action, subject)
-    })
-  })
+    }
+  }
 
   return build({
     detectSubjectType: (subject: AbilitySubject) => subject,

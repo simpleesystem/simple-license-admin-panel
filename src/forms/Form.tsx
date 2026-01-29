@@ -1,13 +1,10 @@
+import { joiResolver } from '@hookform/resolvers/joi'
+import type { ObjectSchema } from 'joi'
 import type { PropsWithChildren } from 'react'
 import type { DefaultValues, FieldValues } from 'react-hook-form'
 import { FormProvider, useForm } from 'react-hook-form'
-import type { ObjectSchema } from 'joi'
-import { joiResolver } from '@hookform/resolvers/joi'
 
-import {
-  FORM_REVALIDATION_MODE,
-  FORM_VALIDATION_MODE,
-} from '../app/constants'
+import { FORM_REVALIDATION_MODE, FORM_VALIDATION_MODE } from '../app/constants'
 
 type AppFormSubmitHandler<TFieldValues extends FieldValues> = (values: TFieldValues) => void | Promise<void>
 
@@ -36,7 +33,7 @@ export function AppForm<TFieldValues extends FieldValues>({
 
   return (
     <FormProvider {...methods}>
-      <form noValidate onSubmit={handleSubmit}>
+      <form noValidate={true} onSubmit={handleSubmit}>
         {children}
       </form>
     </FormProvider>

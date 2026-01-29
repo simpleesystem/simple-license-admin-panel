@@ -7,8 +7,8 @@ import {
   UI_CLASS_CARD_LIST_CARD,
   UI_CLASS_CARD_LIST_GRID,
   UI_CLASS_TEXT_MUTED,
-  UI_TEST_ID_CARD_LIST,
   UI_FORM_ROW_COLUMNS_TWO,
+  UI_TEST_ID_CARD_LIST,
 } from '../constants'
 import type { CardListProps } from '../types'
 import { composeClassNames } from '../utils/classNames'
@@ -35,17 +35,15 @@ export function CardList({
 
   return (
     <VisibilityGate ability={ability} permissionKey={permissionKey} permissionFallback={permissionFallback}>
-      <div
+      <ul
         className={composeClassNames(UI_CLASS_CARD_LIST_GRID, className)}
         data-testid={testId ?? UI_TEST_ID_CARD_LIST}
-        role="list"
         aria-label={UI_ARIA_LABEL_CARD_LIST}
       >
         {items.map((item) => (
-          <div
+          <li
             key={item.id}
             className={composeClassNames('col-12', UI_CLASS_CARD_COLUMN_MAP[columns])}
-            role="listitem"
             aria-label={typeof item.title === 'string' ? item.title : undefined}
           >
             <Card
@@ -66,9 +64,9 @@ export function CardList({
               </Card.Body>
               {item.footer ? <Card.Footer>{item.footer}</Card.Footer> : null}
             </Card>
-          </div>
+          </li>
         ))}
-      </div>
+      </ul>
     </VisibilityGate>
   )
 }

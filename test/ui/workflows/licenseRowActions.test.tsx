@@ -34,7 +34,7 @@ vi.mock('../../../src/ui/data/ActionMenu', () => ({
   }) => (
     <div>
       {items.map((item) => (
-        <button key={item.id} onClick={item.onSelect} disabled={item.disabled}>
+        <button type="button" key={item.id} onClick={item.onSelect} disabled={item.disabled}>
           {item.label}
         </button>
       ))}

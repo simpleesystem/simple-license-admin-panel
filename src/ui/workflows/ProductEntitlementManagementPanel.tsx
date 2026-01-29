@@ -1,8 +1,8 @@
-import type { Client, Product, User } from '@/simpleLicense'
 import { useMemo, useState } from 'react'
 import Badge from 'react-bootstrap/Badge'
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
+import type { Client, Product, User } from '@/simpleLicense'
 import {
   canCreateEntitlement,
   canUpdateEntitlement,
@@ -87,7 +87,9 @@ export function ProductEntitlementManagementPanel({
 
     // Vendor filtering
     if (isVendorScoped) {
-      list = list.filter((entitlement) => isEntitlementOwnedByUser(currentUser ?? null, entitlement as unknown as Product))
+      list = list.filter((entitlement) =>
+        isEntitlementOwnedByUser(currentUser ?? null, entitlement as unknown as Product)
+      )
     }
 
     // Search filtering
@@ -102,9 +104,15 @@ export function ProductEntitlementManagementPanel({
         const aValue = a[currentSortState.columnId as keyof ProductEntitlementListItem]
         const bValue = b[currentSortState.columnId as keyof ProductEntitlementListItem]
 
-        if (aValue === bValue) return 0
-        if (aValue === null || aValue === undefined) return 1
-        if (bValue === null || bValue === undefined) return -1
+        if (aValue === bValue) {
+          return 0
+        }
+        if (aValue === null || aValue === undefined) {
+          return 1
+        }
+        if (bValue === null || bValue === undefined) {
+          return -1
+        }
 
         if (typeof aValue === 'string' && typeof bValue === 'string') {
           const cmp = aValue.localeCompare(bValue)
@@ -187,11 +195,15 @@ export function ProductEntitlementManagementPanel({
         header: UI_ENTITLEMENT_COLUMN_HEADER_VALUE_TYPE,
         cell: (row) => {
           const types = []
-          if (row.number_value !== null && row.number_value !== undefined) types.push(UI_ENTITLEMENT_VALUE_LABEL_NUMBER)
+          if (row.number_value !== null && row.number_value !== undefined) {
+            types.push(UI_ENTITLEMENT_VALUE_LABEL_NUMBER)
+          }
           if (row.boolean_value !== null && row.boolean_value !== undefined) {
             types.push(UI_ENTITLEMENT_VALUE_LABEL_BOOLEAN)
           }
-          if (row.string_value !== null && row.string_value !== undefined) types.push(UI_ENTITLEMENT_VALUE_LABEL_STRING)
+          if (row.string_value !== null && row.string_value !== undefined) {
+            types.push(UI_ENTITLEMENT_VALUE_LABEL_STRING)
+          }
           return types.join(', ') || UI_VALUE_PLACEHOLDER
         },
         sortable: false,
@@ -201,9 +213,15 @@ export function ProductEntitlementManagementPanel({
         header: UI_ENTITLEMENT_COLUMN_HEADER_DEFAULT_VALUE,
         cell: (row) => {
           const values = []
-          if (row.number_value !== null && row.number_value !== undefined) { values.push(row.number_value) }
-          if (row.boolean_value !== null && row.boolean_value !== undefined) { values.push(String(row.boolean_value)) }
-          if (row.string_value !== null && row.string_value !== undefined) values.push(row.string_value)
+          if (row.number_value !== null && row.number_value !== undefined) {
+            values.push(row.number_value)
+          }
+          if (row.boolean_value !== null && row.boolean_value !== undefined) {
+            values.push(String(row.boolean_value))
+          }
+          if (row.string_value !== null && row.string_value !== undefined) {
+            values.push(row.string_value)
+          }
           return values.join(', ') || UI_VALUE_PLACEHOLDER
         },
         sortable: false,
@@ -212,10 +230,12 @@ export function ProductEntitlementManagementPanel({
         id: 'tiers',
         header: 'Tiers',
         cell: (row) => {
-          if (!row.productTiers || row.productTiers.length === 0) return UI_VALUE_PLACEHOLDER
+          if (!row.productTiers || row.productTiers.length === 0) {
+            return UI_VALUE_PLACEHOLDER
+          }
           return (
             <div className="d-flex flex-wrap gap-1">
-              {row.productTiers.map(t => (
+              {row.productTiers.map((t) => (
                 <Badge key={t.id} bg="light" text="dark" className="border">
                   {t.tierCode}
                 </Badge>
@@ -290,7 +310,7 @@ export function ProductEntitlementManagementPanel({
             boolean_value:
               editingEntitlement.boolean_value !== null ? String(editingEntitlement.boolean_value) : undefined,
             string_value: editingEntitlement.string_value ?? undefined,
-            tier_ids: editingEntitlement.productTiers ? editingEntitlement.productTiers.map(pt => pt.id) : [],
+            tier_ids: editingEntitlement.productTiers ? editingEntitlement.productTiers.map((pt) => pt.id) : [],
             metadata: editingEntitlement.metadata ? JSON.stringify(editingEntitlement.metadata, null, 2) : '',
           }}
           onCompleted={onRefresh}

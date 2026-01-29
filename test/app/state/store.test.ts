@@ -1,31 +1,37 @@
-import { describe, expect, it, beforeEach } from 'vitest'
-import {
-  useAppStore,
-  selectSurface,
-  selectErrorSurface,
-  selectErrorByScope,
-  selectLatestError,
-  selectErrorViewModel,
-  selectLoadingByScope,
-  selectAnyLoading,
-  selectUser,
-  selectPermissions,
-  selectNavigationIntent,
-  selectData,
-} from '@/app/state/store'
-import { buildUser } from '@test/factories/userFactory'
-import {
-  APP_ERROR_CODE_UNEXPECTED,
-  APP_ERROR_TYPE_SERVER,
-  APP_ERROR_TYPE_VALIDATION,
-} from '@/app/constants'
 import { faker } from '@faker-js/faker'
+import { buildUser } from '@test/factories/userFactory'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { APP_ERROR_CODE_UNEXPECTED, APP_ERROR_TYPE_SERVER, APP_ERROR_TYPE_VALIDATION } from '@/app/constants'
+import {
+  selectAnyLoading,
+  selectData,
+  selectErrorByScope,
+  selectErrorSurface,
+  selectErrorViewModel,
+  selectLatestError,
+  selectLoadingByScope,
+  selectNavigationIntent,
+  selectPermissions,
+  selectSurface,
+  selectUser,
+  useAppStore,
+} from '@/app/state/store'
 
 describe('useAppStore', () => {
   beforeEach(() => {
     useAppStore.setState({
       user: null,
-      permissions: { viewDashboard: false, viewLicenses: false, viewProducts: false, viewUsers: false, viewTenants: false, canEdit: false, canDelete: false, canCreate: false, vendorId: null },
+      permissions: {
+        viewDashboard: false,
+        viewLicenses: false,
+        viewProducts: false,
+        viewUsers: false,
+        viewTenants: false,
+        canEdit: false,
+        canDelete: false,
+        canCreate: false,
+        vendorId: null,
+      },
       data: {},
       surface: { errors: {}, lastScope: null, loading: {} },
       navigationIntent: null,

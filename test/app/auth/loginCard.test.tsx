@@ -1,4 +1,3 @@
-import { ApiException } from '@/simpleLicense'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import mitt from 'mitt'
 import { describe, expect, test, vi } from 'vitest'
@@ -6,6 +5,8 @@ import { AuthContext } from '@/app/auth/AuthContext'
 import { AuthorizationContext } from '@/app/auth/authorizationContext'
 import { LoginCard } from '@/app/auth/LoginCard'
 import type { AuthContextValue } from '@/app/auth/types'
+import { AppConfigProvider } from '@/app/config'
+import { APP_CONFIG } from '@/app/config/appConfig'
 import {
   AUTH_STATUS_IDLE,
   I18N_KEY_FORM_PASSWORD_LABEL,
@@ -14,15 +15,14 @@ import {
   I18N_KEY_FORM_USERNAME_REQUIRED,
   NOTIFICATION_EVENT_TOAST,
 } from '@/app/constants'
-import { APP_CONFIG } from '@/app/config/appConfig'
-import { AppConfigProvider } from '@/app/config'
 import { I18nProvider } from '@/app/i18n/I18nProvider'
 import { i18nResources } from '@/app/i18n/resources'
+import { createAppLogger } from '@/app/logging/logger'
+import { LoggerContext } from '@/app/logging/loggerContext'
 import { NotificationBusProvider } from '@/notifications/busContext'
 import type { NotificationEventMap } from '@/notifications/types'
+import { ApiException } from '@/simpleLicense'
 import { buildPermissions } from '../../factories/permissionFactory'
-import { LoggerContext } from '@/app/logging/loggerContext'
-import { createAppLogger } from '@/app/logging/logger'
 
 vi.mock('@tanstack/react-router', () => {
   const navigate = vi.fn()

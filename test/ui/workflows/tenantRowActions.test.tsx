@@ -1,11 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import { describe, expect, beforeEach, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
-import {
-  UI_TENANT_ACTION_EDIT,
-  UI_TENANT_ACTION_RESUME,
-  UI_TENANT_ACTION_SUSPEND,
-} from '../../../src/ui/constants'
+import { UI_TENANT_ACTION_EDIT, UI_TENANT_ACTION_RESUME, UI_TENANT_ACTION_SUSPEND } from '../../../src/ui/constants'
 import { TenantRowActions } from '../../../src/ui/workflows/TenantRowActions'
 import { buildTenant } from '../../factories/tenantFactory'
 import { buildUser } from '../../factories/userFactory'
@@ -23,10 +19,14 @@ vi.mock('@/simpleLicense', async () => {
 })
 
 vi.mock('../../../src/ui/data/ActionMenu', () => ({
-  ActionMenu: ({ items }: { items: Array<{ id: string; label: string; disabled?: boolean; onSelect: () => void }> }) => (
+  ActionMenu: ({
+    items,
+  }: {
+    items: Array<{ id: string; label: string; disabled?: boolean; onSelect: () => void }>
+  }) => (
     <div>
       {items.map((item) => (
-        <button key={item.id} onClick={item.onSelect} disabled={item.disabled}>
+        <button type="button" key={item.id} onClick={item.onSelect} disabled={item.disabled}>
           {item.label}
         </button>
       ))}
@@ -54,7 +54,7 @@ describe('TenantRowActions', () => {
     const superuser = buildUser({ role: 'SUPERUSER' })
 
     const { rerender } = render(
-      <TenantRowActions client={{} as never} tenant={tenant as never} onEdit={onEdit} currentUser={superuser} />,
+      <TenantRowActions client={{} as never} tenant={tenant as never} onEdit={onEdit} currentUser={superuser} />
     )
 
     fireEvent.click(screen.getByText(UI_TENANT_ACTION_EDIT))
@@ -75,7 +75,7 @@ describe('TenantRowActions', () => {
         tenant={suspendedTenant as never}
         onEdit={onEdit}
         currentUser={superuser}
-      />,
+      />
     )
 
     fireEvent.click(screen.getByText(UI_TENANT_ACTION_RESUME))
@@ -97,12 +97,7 @@ describe('TenantRowActions', () => {
     const tenant = buildTenant({ vendorId, status: 'ACTIVE' })
 
     render(
-      <TenantRowActions
-        client={{} as never}
-        tenant={tenant as never}
-        onEdit={vi.fn()}
-        currentUser={vendorManager}
-      />,
+      <TenantRowActions client={{} as never} tenant={tenant as never} onEdit={vi.fn()} currentUser={vendorManager} />
     )
 
     expect(screen.getByText(UI_TENANT_ACTION_EDIT)).toBeEnabled()
@@ -124,12 +119,7 @@ describe('TenantRowActions', () => {
     const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId: `${tenant.vendorId}-other` })
 
     render(
-      <TenantRowActions
-        client={{} as never}
-        tenant={tenant as never}
-        onEdit={vi.fn()}
-        currentUser={vendorManager}
-      />,
+      <TenantRowActions client={{} as never} tenant={tenant as never} onEdit={vi.fn()} currentUser={vendorManager} />
     )
 
     expect(screen.queryByText(UI_TENANT_ACTION_EDIT)).toBeNull()
@@ -145,14 +135,7 @@ describe('TenantRowActions', () => {
     const tenant = buildTenant()
     const viewer = buildUser({ role: 'VIEWER', vendorId: tenant.vendorId })
 
-    render(
-      <TenantRowActions
-        client={{} as never}
-        tenant={tenant as never}
-        onEdit={vi.fn()}
-        currentUser={viewer}
-      />,
-    )
+    render(<TenantRowActions client={{} as never} tenant={tenant as never} onEdit={vi.fn()} currentUser={viewer} />)
 
     expect(screen.queryByText(UI_TENANT_ACTION_EDIT)).toBeNull()
     expect(screen.queryByText(UI_TENANT_ACTION_SUSPEND)).toBeNull()

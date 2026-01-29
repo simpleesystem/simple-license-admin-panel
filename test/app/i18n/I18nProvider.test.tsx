@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-
+import { useTranslation } from 'react-i18next'
 import {
   APP_BRAND_NAME,
   APP_DEFAULT_LANGUAGE,
@@ -7,7 +7,6 @@ import {
   I18N_KEY_APP_BRAND,
 } from '../../../src/app/constants'
 import { I18nProvider } from '../../../src/app/i18n/I18nProvider'
-import { useTranslation } from 'react-i18next'
 
 const TRANSLATION_TEST_ID = 'i18n-probe'
 
@@ -21,7 +20,7 @@ describe('I18nProvider', () => {
     render(
       <I18nProvider language={APP_DEFAULT_LANGUAGE}>
         <TranslationProbe />
-      </I18nProvider>,
+      </I18nProvider>
     )
 
     expect(await screen.findByTestId(TRANSLATION_TEST_ID)).toHaveTextContent(APP_BRAND_NAME)
@@ -31,13 +30,13 @@ describe('I18nProvider', () => {
     const { rerender } = render(
       <I18nProvider language={APP_DEFAULT_LANGUAGE}>
         <TranslationProbe />
-      </I18nProvider>,
+      </I18nProvider>
     )
 
     rerender(
       <I18nProvider language={APP_SECONDARY_LANGUAGE}>
         <TranslationProbe />
-      </I18nProvider>,
+      </I18nProvider>
     )
 
     expect(await screen.findByTestId(TRANSLATION_TEST_ID)).toHaveTextContent(APP_BRAND_NAME)

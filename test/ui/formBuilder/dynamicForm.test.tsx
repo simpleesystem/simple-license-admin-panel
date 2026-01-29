@@ -1,10 +1,9 @@
 import { faker } from '@faker-js/faker'
 import { act, fireEvent, render } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
-
+import { createFormBlueprint } from '../../../src/ui/formBuilder/blueprint'
 import { DynamicForm } from '../../../src/ui/formBuilder/DynamicForm'
 import { FormModal } from '../../../src/ui/formBuilder/FormModal'
-import { createFormBlueprint } from '../../../src/ui/formBuilder/blueprint'
 
 type LicenseFormValues = {
   name: string
@@ -123,7 +122,7 @@ describe('DynamicForm', () => {
     const onClose = vi.fn()
     const { getByRole } = render(
       <FormModal
-        show
+        show={true}
         onClose={onClose}
         blueprint={blueprint}
         defaultValues={defaultValues}

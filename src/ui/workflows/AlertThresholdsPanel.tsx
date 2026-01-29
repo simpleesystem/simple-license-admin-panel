@@ -1,9 +1,10 @@
-import type { Client } from '@/simpleLicense'
-import { useAlertThresholds } from '@/simpleLicense'
 import { useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
+import type { Client } from '@/simpleLicense'
+import { useAlertThresholds } from '@/simpleLicense'
 
 import {
+  UI_ALERT_THRESHOLD_FORM_SUBMIT_LABEL,
   UI_ALERT_THRESHOLD_LABEL_HIGH_ACTIVATIONS,
   UI_ALERT_THRESHOLD_LABEL_HIGH_CONCURRENCY,
   UI_ALERT_THRESHOLD_LABEL_HIGH_VALIDATIONS,
@@ -16,7 +17,6 @@ import {
   UI_ALERT_THRESHOLD_SUMMARY_ID_MEDIUM_ACTIVATIONS,
   UI_ALERT_THRESHOLD_SUMMARY_ID_MEDIUM_CONCURRENCY,
   UI_ALERT_THRESHOLD_SUMMARY_ID_MEDIUM_VALIDATIONS,
-  UI_ALERT_THRESHOLD_FORM_SUBMIT_LABEL,
   UI_ANALYTICS_ALERT_THRESHOLDS_DESCRIPTION,
   UI_ANALYTICS_ALERT_THRESHOLDS_EMPTY_STATE,
   UI_ANALYTICS_ALERT_THRESHOLDS_ERROR_BODY,
@@ -53,12 +53,6 @@ export function AlertThresholdsPanel({
 }: AlertThresholdsPanelProps) {
   const [showModal, setShowModal] = useState(false)
   const thresholdsQuery = useAlertThresholds(client, { retry: false })
-
-  console.log('AlertThresholdsPanel render', {
-    isLoading: thresholdsQuery.isLoading,
-    isError: thresholdsQuery.isError,
-    data: thresholdsQuery.data,
-  })
 
   const summaryItems = useMemo<UiSummaryCardItem[]>(() => {
     const thresholds = thresholdsQuery.data

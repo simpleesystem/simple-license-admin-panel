@@ -2,9 +2,13 @@ import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
 
 import { UsersRouteComponent } from '../../../../src/routes/users/UsersRoute'
-import { UI_USER_BUTTON_CREATE, UI_USER_STATUS_ERROR_TITLE, UI_USER_STATUS_LOADING_TITLE } from '../../../../src/ui/constants'
-import { renderWithProviders } from '../../utils'
+import {
+  UI_USER_BUTTON_CREATE,
+  UI_USER_STATUS_ERROR_TITLE,
+  UI_USER_STATUS_LOADING_TITLE,
+} from '../../../../src/ui/constants'
 import { buildUser } from '../../../factories/userFactory'
+import { renderWithProviders } from '../../utils'
 
 const useAdminUsersMock = vi.hoisted(() => vi.fn())
 const useAuthMock = vi.hoisted(() => vi.fn())
@@ -37,9 +41,7 @@ describe('UsersRouteComponent', () => {
       refreshCurrentUser: vi.fn(),
     })
 
-    const adminUsers = [
-      buildUser({ username: 'allowed-user', vendorId: 'vendor-1' }),
-    ]
+    const adminUsers = [buildUser({ username: 'allowed-user', vendorId: 'vendor-1' })]
     useAdminUsersMock.mockReturnValue({ data: adminUsers, isLoading: false, isError: false, refetch: vi.fn() })
 
     renderWithProviders(<UsersRouteComponent />)
@@ -510,9 +512,12 @@ describe('UsersRouteComponent', () => {
     renderWithProviders(<UsersRouteComponent />)
 
     // Wait for own-user to appear
-    await waitFor(() => {
-      expect(screen.getByText('own-user')).toBeInTheDocument()
-    }, { timeout: 1000 })
+    await waitFor(
+      () => {
+        expect(screen.getByText('own-user')).toBeInTheDocument()
+      },
+      { timeout: 1000 }
+    )
 
     // After vendor scoping, verify own-user is visible
     const ownUsers = screen.queryAllByText('own-user')

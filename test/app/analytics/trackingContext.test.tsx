@@ -1,9 +1,8 @@
-import type { ReactNode } from 'react'
 import { renderHook } from '@testing-library/react'
+import type { ReactNode } from 'react'
 import { describe, expect, it, vi } from 'vitest'
-
-import { TrackingContext, useTracking } from '../../../src/app/analytics/trackingContext'
 import type { TrackingClient } from '../../../src/app/analytics/tracking'
+import { TrackingContext, useTracking } from '../../../src/app/analytics/trackingContext'
 
 const createTrackingClient = (): TrackingClient => ({
   track: vi.fn(),

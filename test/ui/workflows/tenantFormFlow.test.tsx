@@ -1,5 +1,5 @@
 import { fireEvent, render, waitFor } from '@testing-library/react'
-import { describe, expect, beforeEach, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { UI_TENANT_FORM_SUBMIT_CREATE, UI_TENANT_FORM_SUBMIT_UPDATE } from '../../../src/ui/constants'
 import { TenantFormFlow } from '../../../src/ui/workflows/TenantFormFlow'
@@ -40,11 +40,11 @@ describe('TenantFormFlow', () => {
       <TenantFormFlow
         client={{} as never}
         mode="create"
-        show
+        show={true}
         onClose={onClose}
         submitLabel={UI_TENANT_FORM_SUBMIT_CREATE}
         onCompleted={onCompleted}
-      />,
+      />
     )
 
     fireEvent.click(getByRole('button', { name: UI_TENANT_FORM_SUBMIT_CREATE }))
@@ -66,12 +66,12 @@ describe('TenantFormFlow', () => {
       <TenantFormFlow
         client={{} as never}
         mode="update"
-        show
+        show={true}
         onClose={() => {}}
         submitLabel={UI_TENANT_FORM_SUBMIT_UPDATE}
         tenantId={tenant.id}
         onCompleted={onCompleted}
-      />,
+      />
     )
 
     fireEvent.click(getByRole('button', { name: UI_TENANT_FORM_SUBMIT_UPDATE }))
@@ -80,7 +80,7 @@ describe('TenantFormFlow', () => {
       expect(updateMutation.mutateAsync).toHaveBeenCalledWith({
         id: tenant.id,
         data: expect.any(Object),
-      }),
+      })
     )
     expect(onCompleted).toHaveBeenCalled()
   })
@@ -103,11 +103,11 @@ describe('TenantFormFlow', () => {
       <TenantFormFlow
         client={{} as never}
         mode="create"
-        show
+        show={true}
         onClose={onClose}
         submitLabel={UI_TENANT_FORM_SUBMIT_CREATE}
         onCompleted={onCompleted}
-      />,
+      />
     )
 
     fireEvent.click(getByRole('button', { name: UI_TENANT_FORM_SUBMIT_CREATE }))

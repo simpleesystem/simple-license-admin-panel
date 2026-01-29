@@ -1,5 +1,6 @@
 import { act, render, screen } from '@testing-library/react'
-
+import { AppProviders } from '../../../src/app/AppProviders'
+import { createPermissionSet } from '../../../src/app/auth/permissions'
 import {
   I18N_KEY_NOT_FOUND_BODY,
   I18N_KEY_NOT_FOUND_TITLE,
@@ -12,10 +13,13 @@ import {
   STORAGE_KEY_AUTH_TOKEN,
   STORAGE_KEY_AUTH_USER,
 } from '../../../src/app/constants'
-import { AppProviders } from '../../../src/app/AppProviders'
-import { createDefaultAuthState, computeFirstAllowedRoute, type AuthStateSnapshot, router } from '../../../src/app/router'
 import { i18nResources } from '../../../src/app/i18n/resources'
-import { createPermissionSet } from '../../../src/app/auth/permissions'
+import {
+  type AuthStateSnapshot,
+  computeFirstAllowedRoute,
+  createDefaultAuthState,
+  router,
+} from '../../../src/app/router'
 
 const NOT_FOUND_TITLE = i18nResources.common[I18N_KEY_NOT_FOUND_TITLE]
 const NOT_FOUND_BODY = i18nResources.common[I18N_KEY_NOT_FOUND_BODY]

@@ -1,10 +1,10 @@
 import type { PropsWithChildren } from 'react'
-import { useAuth } from './useAuth'
+import { Container } from 'react-bootstrap'
 import { ChangePasswordFlow } from '@/ui/auth/ChangePasswordFlow'
-import { PersistentHeader } from '../layout/PersistentHeader'
 import { AppShell } from '@/ui/layout/AppShell'
 import { TEST_ID_APP_SHELL } from '../constants'
-import { Container } from 'react-bootstrap'
+import { PersistentHeader } from '../layout/PersistentHeader'
+import { useAuth } from './useAuth'
 
 export function PasswordResetGate({ children }: PropsWithChildren) {
   const { currentUser } = useAuth()
@@ -14,7 +14,7 @@ export function PasswordResetGate({ children }: PropsWithChildren) {
   if (currentUser?.passwordResetRequired) {
     return (
       <AppShell testId={TEST_ID_APP_SHELL} topBar={<PersistentHeader />}>
-        <Container fluid className="py-4">
+        <Container fluid={true} className="py-4">
           <ChangePasswordFlow />
         </Container>
       </AppShell>

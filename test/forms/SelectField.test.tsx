@@ -3,13 +3,9 @@ import userEvent from '@testing-library/user-event'
 import Joi from 'joi'
 import { vi } from 'vitest'
 
-import {
-  I18N_KEY_APP_BRAND,
-  I18N_KEY_APP_TAGLINE,
-  I18N_KEY_FORM_TENANT_PLACEHOLDER,
-} from '../../src/app/constants'
-import { i18nResources } from '../../src/app/i18n/resources'
+import { I18N_KEY_APP_BRAND, I18N_KEY_APP_TAGLINE, I18N_KEY_FORM_TENANT_PLACEHOLDER } from '../../src/app/constants'
 import { I18nProvider } from '../../src/app/i18n/I18nProvider'
+import { i18nResources } from '../../src/app/i18n/resources'
 import { AppForm } from '../../src/forms/Form'
 import { SelectField } from '../../src/forms/fields/SelectField'
 
@@ -42,7 +38,7 @@ const renderSelectForm = (onSubmit: (values: SelectFormValues) => void) => {
         />
         <button type="submit">submit</button>
       </AppForm>
-    </I18nProvider>,
+    </I18nProvider>
   )
 }
 

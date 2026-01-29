@@ -58,15 +58,15 @@ const createNavItems = (onSelect: (id: string) => void) => [
 ]
 
 const ScreenHost = ({
-  role,
+  userRole,
   vendorId,
 }: {
-  role: 'SUPERUSER' | 'ADMIN' | 'VENDOR_MANAGER' | 'VIEWER'
+  userRole: 'SUPERUSER' | 'ADMIN' | 'VENDOR_MANAGER' | 'VIEWER'
   vendorId: string
 }) => {
   const product = buildProduct({ vendorId, status: 'ACTIVE' })
   const license = buildLicense({ vendorId, status: 'ACTIVE' })
-  const currentUser = buildUser({ role, vendorId })
+  const currentUser = buildUser({ role: userRole, vendorId })
   const onRefresh = vi.fn()
   const [active, setActive] = useState<'products' | 'licenses'>('products')
   const items = createNavItems(setActive)
@@ -117,7 +117,7 @@ describe('Screen-level navigation and flows', () => {
 
   test('SUPERUSER navigates between products and licenses and sees edit actions', async () => {
     const vendorId = faker.string.uuid()
-    renderWithProviders(<ScreenHost role="SUPERUSER" vendorId={vendorId} />)
+    renderWithProviders(<ScreenHost userRole="SUPERUSER" vendorId={vendorId} />)
 
     await waitFor(() => {
       expect(screen.getByText(UI_PRODUCT_ACTION_EDIT)).toBeInTheDocument()
@@ -134,7 +134,7 @@ describe('Screen-level navigation and flows', () => {
 
   test('VIEWER sees read-only views with no create/delete actions', async () => {
     const vendorId = faker.string.uuid()
-    renderWithProviders(<ScreenHost role="VIEWER" vendorId={vendorId} />)
+    renderWithProviders(<ScreenHost userRole="VIEWER" vendorId={vendorId} />)
 
     await waitFor(() => {
       expect(screen.queryByText(UI_PRODUCT_BUTTON_CREATE)).toBeNull()

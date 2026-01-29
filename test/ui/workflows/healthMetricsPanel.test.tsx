@@ -1,7 +1,8 @@
-import type { Client } from '@/simpleLicense'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
-
+import type { Client } from '@/simpleLicense'
+import { ADMIN_SYSTEM_WS_STATUS_DISCONNECTED } from '../../../src/app/constants'
+import { AdminSystemLiveFeedContext } from '../../../src/app/live/AdminSystemLiveFeedContextDef'
 import {
   UI_HEALTH_METRICS_EMPTY_BODY,
   UI_HEALTH_METRICS_EMPTY_TITLE,
@@ -14,8 +15,6 @@ import {
   UI_LIVE_STATUS_DISCONNECTED,
 } from '../../../src/ui/constants'
 import { HealthMetricsPanel } from '../../../src/ui/workflows/HealthMetricsPanel'
-import { AdminSystemLiveFeedContext } from '../../../src/app/live/AdminSystemLiveFeedContextDef'
-import { ADMIN_SYSTEM_WS_STATUS_DISCONNECTED } from '../../../src/app/constants'
 import { buildUser } from '../../factories/userFactory'
 
 const useHealthMetricsMock = vi.hoisted(() => vi.fn())
@@ -55,11 +54,7 @@ const mockLiveContext = {
 }
 
 const renderWithContext = (ui: React.ReactElement) => {
-  return render(
-    <AdminSystemLiveFeedContext.Provider value={mockLiveContext}>
-      {ui}
-    </AdminSystemLiveFeedContext.Provider>
-  )
+  return render(<AdminSystemLiveFeedContext.Provider value={mockLiveContext}>{ui}</AdminSystemLiveFeedContext.Provider>)
 }
 
 describe('HealthMetricsPanel', () => {

@@ -31,7 +31,9 @@ export function FormSection({
         <div className={UI_CLASS_FORM_SECTION_HEADER}>
           <div>
             <h2 className={UI_CLASS_FORM_SECTION_TITLE}>{title}</h2>
-            {description ? <p className={composeClassNames(UI_CLASS_TEXT_MUTED, UI_CLASS_MARGIN_RESET)}>{description}</p> : null}
+            {description ? (
+              <p className={composeClassNames(UI_CLASS_TEXT_MUTED, UI_CLASS_MARGIN_RESET)}>{description}</p>
+            ) : null}
           </div>
           {actions}
         </div>

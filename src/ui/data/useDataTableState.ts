@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 import { UI_SORT_ASC, UI_TABLE_PAGE_SIZE_DEFAULT } from '../constants'
 import type { UiDataTableSortState, UiSortDirection } from '../types'
@@ -73,20 +73,23 @@ export function useDataTableState<TData>({
   const start = (currentPage - 1) * pageSize
   const rows = sorted.slice(start, start + pageSize)
 
-  const onSort = (columnId: string, direction: UiSortDirection) => {
+  const onSort = useCallback((columnId: string, direction: UiSortDirection) => {
     setSortState({ columnId, direction })
     setPage(1)
-  }
+  }, [])
 
-  const goToPage = (nextPage: number) => {
-    const clamped = Math.max(1, Math.min(totalPages, nextPage))
-    setPage(clamped)
-  }
+  const goToPage = useCallback(
+    (nextPage: number) => {
+      const clamped = Math.max(1, Math.min(totalPages, nextPage))
+      setPage(clamped)
+    },
+    [totalPages]
+  )
 
-  const setSearchTermClamped = (term: string) => {
+  const setSearchTermClamped = useCallback((term: string) => {
     setSearchTerm(term)
     setPage(1)
-  }
+  }, [])
 
   return {
     rows,

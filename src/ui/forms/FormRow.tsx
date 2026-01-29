@@ -1,8 +1,8 @@
 import {
   UI_CLASS_FORM_ROW,
   UI_CLASS_FORM_ROW_COLUMNS_MAP,
-  UI_TEST_ID_FORM_ROW,
   UI_FORM_ROW_COLUMNS_TWO,
+  UI_TEST_ID_FORM_ROW,
 } from '../constants'
 import type { FormRowProps } from '../types'
 import { composeClassNames } from '../utils/classNames'

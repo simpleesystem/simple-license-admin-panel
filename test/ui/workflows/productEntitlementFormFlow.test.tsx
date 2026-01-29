@@ -41,11 +41,11 @@ describe('ProductEntitlementFormFlow', () => {
         client={{} as never}
         mode="create"
         productId={buildText()}
-        show
+        show={true}
         onClose={onClose}
         submitLabel={UI_ENTITLEMENT_FORM_SUBMIT_CREATE}
         onCompleted={onCompleted}
-      />,
+      />
     )
 
     fireEvent.click(getByRole('button', { name: UI_ENTITLEMENT_FORM_SUBMIT_CREATE }))
@@ -68,11 +68,11 @@ describe('ProductEntitlementFormFlow', () => {
         client={{} as never}
         mode="update"
         entitlementId={entitlement.id}
-        show
+        show={true}
         onClose={() => {}}
         submitLabel={UI_ENTITLEMENT_FORM_SUBMIT_UPDATE}
         onCompleted={onCompleted}
-      />,
+      />
     )
 
     fireEvent.click(getByRole('button', { name: UI_ENTITLEMENT_FORM_SUBMIT_UPDATE }))
@@ -81,7 +81,7 @@ describe('ProductEntitlementFormFlow', () => {
       expect(updateMutation.mutateAsync).toHaveBeenCalledWith({
         id: entitlement.id,
         data: expect.any(Object),
-      }),
+      })
     )
     expect(onCompleted).toHaveBeenCalled()
   })
@@ -105,11 +105,11 @@ describe('ProductEntitlementFormFlow', () => {
         client={{} as never}
         mode="create"
         productId={buildText()}
-        show
+        show={true}
         onClose={onClose}
         submitLabel={UI_ENTITLEMENT_FORM_SUBMIT_CREATE}
         onCompleted={onCompleted}
-      />,
+      />
     )
 
     fireEvent.click(getByRole('button', { name: UI_ENTITLEMENT_FORM_SUBMIT_CREATE }))

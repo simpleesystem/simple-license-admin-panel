@@ -1,6 +1,6 @@
+import type { ReactNode } from 'react'
 import type { Client, CreateProductRequest, UpdateProductRequest, User } from '@/simpleLicense'
 import { useCreateProduct, useUpdateProduct } from '@/simpleLicense'
-import type { ReactNode } from 'react'
 
 import type { MutationAdapter } from '../actions/mutationActions'
 import { adaptMutation } from '../actions/mutationAdapter'
@@ -11,10 +11,10 @@ import {
   UI_PRODUCT_FORM_SUBMIT_CREATE,
   UI_PRODUCT_FORM_SUBMIT_UPDATE,
 } from '../constants'
-import type { UiSelectOption } from '../types'
 import type { FormBlueprint } from '../formBuilder/blueprint'
 import { createProductBlueprint } from '../formBuilder/factories'
 import { FormModalWithMutation } from '../formBuilder/mutationBridge'
+import type { UiSelectOption } from '../types'
 import { wrapMutationAdapter } from './mutationHelpers'
 
 type ProductFormBaseProps = {
@@ -64,8 +64,12 @@ type FormValuesUpdate = Omit<UpdateProductRequest, 'metadata'> & { metadata: str
 
 // Helper to convert empty strings to null/undefined
 const sanitizeNumber = (value: number | string | null | undefined): number | null | undefined => {
-  if (value === '' || value === null) return null // Explicitly return null for backend to handle as nullable
-  if (value === undefined) return undefined
+  if (value === '' || value === null) {
+    return null // Explicitly return null for backend to handle as nullable
+  }
+  if (value === undefined) {
+    return undefined
+  }
   const num = Number(value)
   return Number.isNaN(num) ? undefined : num
 }
@@ -156,19 +160,19 @@ export function ProductFormFlow(props: ProductFormFlowProps) {
   }
 
   return (
-      <FormModalWithMutation
-        show={props.show}
-        onClose={props.onClose}
-        blueprint={blueprint}
-        defaultValues={defaultValues}
-        submitLabel={submitLabel}
-        pendingLabel={pendingLabel}
-        secondaryActions={props.secondaryActions}
-        mutation={wrapMutationAdapter(adapter, {
-          onCompleted: props.onCompleted,
-          onSuccess: props.onSuccess,
-          onError: props.onError,
-        })}
-      />
+    <FormModalWithMutation
+      show={props.show}
+      onClose={props.onClose}
+      blueprint={blueprint}
+      defaultValues={defaultValues}
+      submitLabel={submitLabel}
+      pendingLabel={pendingLabel}
+      secondaryActions={props.secondaryActions}
+      mutation={wrapMutationAdapter(adapter, {
+        onCompleted: props.onCompleted,
+        onSuccess: props.onSuccess,
+        onError: props.onError,
+      })}
+    />
   )
 }

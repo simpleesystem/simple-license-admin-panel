@@ -1,8 +1,12 @@
-import type { Client, User } from '@/simpleLicense'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { NotificationBusProvider } from '@/notifications/busContext'
-import { UI_PRODUCT_TIER_BUTTON_CREATE, UI_PRODUCT_TIER_EMPTY_STATE_MESSAGE, UI_USER_ROLE_SUPERUSER } from '@/ui/constants'
+import type { Client, User } from '@/simpleLicense'
+import {
+  UI_PRODUCT_TIER_BUTTON_CREATE,
+  UI_PRODUCT_TIER_EMPTY_STATE_MESSAGE,
+  UI_USER_ROLE_SUPERUSER,
+} from '@/ui/constants'
 import { type ProductTierListItem, ProductTierManagementPanel } from '@/ui/workflows/ProductTierManagementPanel'
 
 // Mock client
@@ -51,14 +55,18 @@ vi.mock('@/ui/workflows/ProductTierFormFlow', () => ({
   ProductTierFormFlow: ({ show, onClose }: { show: boolean; onClose: () => void }) =>
     show ? (
       <div data-testid="product-tier-form-flow">
-        <button onClick={onClose}>Close</button>
+        <button type="button" onClick={onClose}>
+          Close
+        </button>
       </div>
     ) : null,
 }))
 
 vi.mock('@/ui/workflows/ProductTierRowActions', () => ({
   ProductTierRowActions: ({ onEdit }: { onEdit: (t: { id: string; tierCode: string; tierName: string }) => void }) => (
-    <button onClick={() => onEdit({ id: 'tier-1', tierCode: 'tier-1', tierName: 'Tier 1' })}>Edit</button>
+    <button type="button" onClick={() => onEdit({ id: 'tier-1', tierCode: 'tier-1', tierName: 'Tier 1' })}>
+      Edit
+    </button>
   ),
 }))
 

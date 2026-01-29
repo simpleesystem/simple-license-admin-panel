@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import * as persistedAuth from '@/app/auth/persistedAuth'
-import { STORAGE_KEY_AUTH_TOKEN, STORAGE_KEY_AUTH_USER, STORAGE_KEY_AUTH_EXPIRY } from '@/app/constants'
+import { STORAGE_KEY_AUTH_EXPIRY, STORAGE_KEY_AUTH_TOKEN, STORAGE_KEY_AUTH_USER } from '@/app/constants'
 import {
   DEV_PERSONA_SUPERUSER,
   ENV_VAR_DEV_PERSONA_SUPERUSER_EMAIL,
@@ -11,8 +11,8 @@ import {
 } from '@/app/dev/constants'
 import {
   applyDevPersona,
-  clearDevPersona,
   canUseDevTools,
+  clearDevPersona,
   DEV_PERSONA_KEYS,
   type DevPersonaKey,
 } from '@/app/dev/devScenarios'

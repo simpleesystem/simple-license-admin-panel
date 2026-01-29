@@ -1,5 +1,5 @@
-import type { ReactElement } from 'react'
 import { render } from '@testing-library/react'
+import type { ReactElement } from 'react'
 
 import { AppProviders } from '../../src/app/AppProviders'
 

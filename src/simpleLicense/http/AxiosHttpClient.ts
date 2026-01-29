@@ -25,8 +25,8 @@ import {
   HEADER_REQUEST_ID,
 } from '../constants'
 import { ApiException, ClientConfigurationException, NetworkException } from '../exceptions/ApiException'
-import { camelizeKeysDeep } from '../utils/case'
 import type { ErrorDetails } from '../types/api'
+import { camelizeKeysDeep } from '../utils/case'
 import type { HttpClientInterface, HttpData, HttpRequestConfig, HttpResponse } from './HttpClientInterface'
 import { extractHeaderString, getHeaderString, normalizeTelemetry } from './telemetry'
 
@@ -97,13 +97,13 @@ export class AxiosHttpClient implements HttpClientInterface {
   }
 
   private processQueue(error: unknown, token: string | null = null): void {
-    this.failedQueue.forEach((prom) => {
+    for (const prom of this.failedQueue) {
       if (error) {
         prom.reject(error)
       } else if (token) {
         prom.resolve(token)
       }
-    })
+    }
     this.failedQueue = []
   }
 
@@ -457,13 +457,13 @@ export class AxiosHttpClient implements HttpClientInterface {
     headers: Record<string, string | number | string[] | number[] | boolean | null | undefined>
   ): Record<string, string> {
     const result: Record<string, string> = {}
-    Object.keys(headers).forEach((key) => {
+    for (const key of Object.keys(headers)) {
       const value = headers[key]
       const normalized = extractHeaderString(value)
       if (normalized !== undefined) {
         result[key] = normalized
       }
-    })
+    }
     return result
   }
 

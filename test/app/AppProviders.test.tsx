@@ -26,6 +26,7 @@ vi.mock('../../src/api/apiContext', async () => {
     useApiClient: () => mockClient,
   }
 })
+
 import {
   APP_BRAND_NAME,
   I18N_KEY_APP_BRAND,
@@ -125,9 +126,12 @@ describe('AppProviders', () => {
 
     // Wait for auth to initialize and router to navigate to dashboard
     // The router should navigate to dashboard when user is authenticated
-    await waitFor(() => {
-      expect(screen.getByText(DASHBOARD_HEADING)).toBeInTheDocument()
-    }, { timeout: 5000 })
+    await waitFor(
+      () => {
+        expect(screen.getByText(DASHBOARD_HEADING)).toBeInTheDocument()
+      },
+      { timeout: 5000 }
+    )
   })
 
   it('renders the error fallback when a child throws', async () => {

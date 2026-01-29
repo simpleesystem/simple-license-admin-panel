@@ -62,10 +62,7 @@ export const selectFilteredLicenses = (licenses: License[], options: LicenseFilt
   })
 }
 
-export const selectExpiringLicenses = (
-  licenses: License[],
-  options: ExpiringLicenseOptions = {},
-): License[] => {
+export const selectExpiringLicenses = (licenses: License[], options: ExpiringLicenseOptions = {}): License[] => {
   const { withinDays = LICENSE_EXPIRY_WARNING_DAYS, now = new Date() } = options
   const nowEpoch = now.getTime()
   const thresholdMs = withinDays * 24 * 60 * 60 * 1_000
@@ -89,7 +86,7 @@ export const selectProductsByActivity = (products: Product[], isActive = true): 
 export const selectProductTiersByProduct = (
   tiers: ProductTier[],
   productId: string,
-  options: ProductTierFilterOptions = {},
+  options: ProductTierFilterOptions = {}
 ): ProductTier[] => {
   if (!productId) {
     return []

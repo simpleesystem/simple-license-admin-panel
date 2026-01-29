@@ -159,11 +159,7 @@ export const createAppConfig = (env: EnvRecord = import.meta.env as EnvRecord): 
       : DEFAULT_API_BASE_URL
 
   // Allow empty string, valid URIs (http:// or https://), or relative paths starting with /
-  if (
-    apiBaseUrl !== '' &&
-    !/^https?:\/\//i.test(apiBaseUrl) &&
-    !/^\//.test(apiBaseUrl)
-  ) {
+  if (apiBaseUrl !== '' && !/^https?:\/\//i.test(apiBaseUrl) && !/^\//.test(apiBaseUrl)) {
     throw new Error(
       `${ERROR_PREFIX}: API base URL must be a valid URI (http:// or https://), a relative path starting with /, or empty`
     )

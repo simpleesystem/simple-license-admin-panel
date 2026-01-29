@@ -1,9 +1,8 @@
-import type { ReactNode } from 'react'
 import { renderHook } from '@testing-library/react'
+import type { ReactNode } from 'react'
 import { describe, expect, it } from 'vitest'
-
-import { LoggerContext, useLogger } from '../../../src/app/logging/loggerContext'
 import type { Logger } from '../../../src/app/logging/logger'
+import { LoggerContext, useLogger } from '../../../src/app/logging/loggerContext'
 
 const createLogger = (): Logger => ({
   debug: () => {},

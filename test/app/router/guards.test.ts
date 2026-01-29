@@ -1,8 +1,9 @@
-import type { User } from '@/simpleLicense'
 import { QueryClient } from '@tanstack/react-query'
 import type { RouterLocation } from '@tanstack/react-router'
 import { describe, expect, it } from 'vitest'
-
+import type { User } from '@/simpleLicense'
+import { derivePermissionsFromUser } from '../../../src/app/auth/permissions'
+import { ROUTE_PATH_AUTH, ROUTE_PATH_ROOT } from '../../../src/app/constants'
 import {
   assertAuthenticated,
   assertPermission,
@@ -10,11 +11,6 @@ import {
   assertTenantAccess,
   type RouterContext,
 } from '../../../src/app/router'
-import {
-  ROUTE_PATH_AUTH,
-  ROUTE_PATH_ROOT,
-} from '../../../src/app/constants'
-import { derivePermissionsFromUser } from '../../../src/app/auth/permissions'
 
 type RedirectResponse = Response & {
   options?: {
@@ -30,7 +26,7 @@ const createContext = (overrides: Partial<RouterContext> = {}): RouterContext =>
   ...overrides,
 })
 
-const createUserRole = (role: User['role']) => ({ role } as Pick<User, 'role'>)
+const createUserRole = (role: User['role']) => ({ role }) as Pick<User, 'role'>
 
 const captureRedirect = (fn: () => void): RedirectResponse => {
   try {
@@ -79,7 +75,7 @@ describe('router guards', () => {
     const context = createContext()
 
     const redirectResponse = captureRedirect(() =>
-      assertAuthenticated(context, { href: '' as unknown as RouterLocation['href'] }),
+      assertAuthenticated(context, { href: '' as unknown as RouterLocation['href'] })
     )
 
     expect(redirectResponse.options?.search).toMatchObject({ redirect: ROUTE_PATH_ROOT })

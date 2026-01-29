@@ -1,8 +1,7 @@
-import type { ReactElement } from 'react'
 import { render } from '@testing-library/react'
-
-import { AuthContext } from '../../src/app/auth/authContext'
+import type { ReactElement } from 'react'
 import type { User } from '@/simpleLicense'
+import { AuthContext } from '../../src/app/auth/authContext'
 
 export const renderWithAuth = (ui: ReactElement, currentUser: User | null = null) => {
   const value = {

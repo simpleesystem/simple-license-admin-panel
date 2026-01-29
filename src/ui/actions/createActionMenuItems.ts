@@ -18,7 +18,7 @@ export type UiActionDefinition<
 }
 
 export const createActionMenuItems = <PayloadMap extends UiActionPayloadMap>(
-  definitions: readonly UiActionDefinition<PayloadMap>[],
+  definitions: readonly UiActionDefinition<PayloadMap>[]
 ): UiActionMenuItem[] =>
   definitions.map((definition) => ({
     id: String(definition.id),

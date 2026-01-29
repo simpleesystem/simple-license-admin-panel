@@ -19,10 +19,10 @@ import {
   UI_TENANT_BACKUP_TYPE_LABEL,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
+import { SummaryList } from '../data/SummaryList'
 import { InlineAlert } from '../feedback/InlineAlert'
 import { Stack } from '../layout/Stack'
 import type { UiKeyValueItem } from '../types'
-import { SummaryList } from '../data/SummaryList'
 
 type TenantBackupPanelProps = {
   client: Client
@@ -80,12 +80,8 @@ export function TenantBackupPanel({
         <p className="text-muted mb-0">{UI_TENANT_BACKUP_DESCRIPTION}</p>
       </div>
 
-      {status === 'success' ? (
-        <InlineAlert variant="success" title={UI_TENANT_BACKUP_SUCCESS} />
-      ) : null}
-      {status === 'error' ? (
-        <InlineAlert variant="danger" title={UI_TENANT_BACKUP_ERROR} />
-      ) : null}
+      {status === 'success' ? <InlineAlert variant="success" title={UI_TENANT_BACKUP_SUCCESS} /> : null}
+      {status === 'error' ? <InlineAlert variant="danger" title={UI_TENANT_BACKUP_ERROR} /> : null}
 
       <div className="d-flex flex-wrap gap-2">
         <Button variant="primary" disabled={mutation.isPending} onClick={handleCreateBackup}>

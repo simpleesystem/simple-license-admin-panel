@@ -3,8 +3,8 @@
  * Functions for persisting authentication state to localStorage
  */
 
-import type { User } from '@/simpleLicense'
 import { STORAGE_KEY_AUTH_EXPIRY, STORAGE_KEY_AUTH_TOKEN, STORAGE_KEY_AUTH_USER } from '@/app/constants'
+import type { User } from '@/simpleLicense'
 
 /**
  * Persists authentication token and expiry to localStorage

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const sentryLoggerMock = vi.hoisted(() => ({
   debug: vi.fn(),
@@ -12,8 +12,8 @@ vi.mock('../../../src/app/logging/sentryLogger', () => ({
   createSentryLogger: createSentryLoggerMock,
 }))
 
-import { createAppLogger, createNoopLogger } from '../../../src/app/logging/logger'
 import type { AppConfig } from '../../../src/app/config/appConfig'
+import { createAppLogger, createNoopLogger } from '../../../src/app/logging/logger'
 
 const baseConfig: AppConfig = {
   apiBaseUrl: 'https://api.example.com',
@@ -72,7 +72,7 @@ describe('createAppLogger', () => {
         ...baseConfig,
         sentryDsn: 'https://examplePublicKey@o0.ingest.sentry.io/0',
       },
-      { enableSentry: true },
+      { enableSentry: true }
     )
 
     logger.info('tracked')

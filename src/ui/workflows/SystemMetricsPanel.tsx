@@ -1,10 +1,10 @@
 /* c8 ignore file */
 /* istanbul ignore file */
 
-import type { Client, MetricObject, MetricsResponse, MetricValue } from '@/simpleLicense'
-import { useSystemMetrics } from '@/simpleLicense'
 import { useCallback, useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
+import type { Client, MetricObject, MetricsResponse, MetricValue } from '@/simpleLicense'
+import { useSystemMetrics } from '@/simpleLicense'
 import { useAdminSystemLiveFeed } from '../../app/live/useAdminSystemLiveFeed'
 import { useLiveStatusBadgeModel } from '../../app/live/useLiveStatusBadgeModel'
 import {

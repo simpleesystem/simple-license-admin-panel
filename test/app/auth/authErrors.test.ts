@@ -1,10 +1,3 @@
-import {
-  ApiException,
-  ERROR_CODE_ACCOUNT_LOCKED,
-  ERROR_CODE_AUTHENTICATION_ERROR,
-  ERROR_CODE_INVALID_CREDENTIALS,
-  ERROR_CODE_TOO_MANY_ATTEMPTS,
-} from '@/simpleLicense'
 import { describe, expect, it } from 'vitest'
 import { buildAuthErrorNotification } from '@/app/auth/authErrors'
 import {
@@ -13,6 +6,13 @@ import {
   NOTIFICATION_VARIANT_ERROR,
   NOTIFICATION_VARIANT_WARNING,
 } from '@/app/constants'
+import {
+  ApiException,
+  ERROR_CODE_ACCOUNT_LOCKED,
+  ERROR_CODE_AUTHENTICATION_ERROR,
+  ERROR_CODE_INVALID_CREDENTIALS,
+  ERROR_CODE_TOO_MANY_ATTEMPTS,
+} from '@/simpleLicense'
 
 describe('buildAuthErrorNotification', () => {
   it('maps invalid credentials to the auth error message key', () => {

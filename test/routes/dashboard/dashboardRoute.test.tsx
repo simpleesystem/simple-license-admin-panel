@@ -1,14 +1,14 @@
-import { render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import type { Client } from '@/simpleLicense'
+import { ApiContext } from '@/api/apiContext'
 
 import { AppConfigProvider } from '@/app/config'
+import { I18N_KEY_DASHBOARD_HEADING } from '@/app/constants'
 import { I18nProvider } from '@/app/i18n/I18nProvider'
 import { i18nResources } from '@/app/i18n/resources'
-import { I18N_KEY_DASHBOARD_HEADING } from '@/app/constants'
-import { ApiContext } from '@/api/apiContext'
 import { DashboardRouteComponent } from '@/routes/dashboard/DashboardRoute'
+import type { Client } from '@/simpleLicense'
 
 const DASHBOARD_HEADING = i18nResources.common[I18N_KEY_DASHBOARD_HEADING]
 
@@ -56,7 +56,7 @@ describe('DashboardRouteComponent', () => {
             </ApiContext.Provider>
           </I18nProvider>
         </QueryClientProvider>
-      </AppConfigProvider>,
+      </AppConfigProvider>
     )
 
     expect(screen.getByRole('heading', { name: DASHBOARD_HEADING })).toBeInTheDocument()

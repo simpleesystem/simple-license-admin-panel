@@ -1,7 +1,8 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { Client } from '@/simpleLicense/client'
-import { AxiosHttpClient } from '@/simpleLicense/http/AxiosHttpClient'
+import { faker } from '@faker-js/faker'
+import { buildUser } from '@test/factories/userFactory'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
+  ActivationLimitExceededException,
   ApiException,
   AuthenticationException,
   ERROR_CODE_ACTIVATION_LIMIT_EXCEEDED,
@@ -10,10 +11,9 @@ import {
   ERROR_CODE_LICENSE_NOT_FOUND,
   LicenseExpiredException,
   LicenseNotFoundException,
-  ActivationLimitExceededException,
 } from '@/simpleLicense'
-import { buildUser } from '@test/factories/userFactory'
-import { faker } from '@faker-js/faker'
+import { Client } from '@/simpleLicense/client'
+import { AxiosHttpClient } from '@/simpleLicense/http/AxiosHttpClient'
 
 vi.mock('@/simpleLicense/http/AxiosHttpClient')
 
@@ -60,10 +60,7 @@ describe('Client', () => {
 
       mockHttpClient.post.mockResolvedValue(mockResponse)
 
-      const result = await client.login(
-        faker.internet.username(),
-        faker.internet.password()
-      )
+      const result = await client.login(faker.internet.username(), faker.internet.password())
 
       expect(result.token).toBeDefined()
       expect(result.user).toEqual(user)
@@ -83,10 +80,7 @@ describe('Client', () => {
 
       mockHttpClient.post.mockResolvedValue(mockResponse)
 
-      const result = await client.login(
-        faker.internet.username(),
-        faker.internet.password()
-      )
+      const result = await client.login(faker.internet.username(), faker.internet.password())
 
       expect(result.token).toBeDefined()
       expect(result.user).toEqual(user)
@@ -106,12 +100,9 @@ describe('Client', () => {
 
       mockHttpClient.post.mockResolvedValue(mockResponse)
 
-      await expect(
-        client.login(
-          faker.internet.username(),
-          faker.internet.password()
-        )
-      ).rejects.toThrow(AuthenticationException)
+      await expect(client.login(faker.internet.username(), faker.internet.password())).rejects.toThrow(
+        AuthenticationException
+      )
     })
 
     it('throws AuthenticationException when token is missing', async () => {
@@ -129,12 +120,9 @@ describe('Client', () => {
 
       mockHttpClient.post.mockResolvedValue(mockResponse)
 
-      await expect(
-        client.login(
-          faker.internet.username(),
-          faker.internet.password()
-        )
-      ).rejects.toThrow(AuthenticationException)
+      await expect(client.login(faker.internet.username(), faker.internet.password())).rejects.toThrow(
+        AuthenticationException
+      )
     })
   })
 
@@ -260,10 +248,7 @@ describe('Client', () => {
 
       mockHttpClient.post.mockResolvedValue(mockResponse)
 
-      const result = await client.login(
-        faker.internet.username(),
-        faker.internet.password()
-      )
+      const result = await client.login(faker.internet.username(), faker.internet.password())
 
       expect(result.expires_in).toBe(3600)
       expect(result.expiresIn).toBe(3600)
@@ -285,10 +270,7 @@ describe('Client', () => {
 
       mockHttpClient.post.mockResolvedValue(mockResponse)
 
-      const result = await client.login(
-        faker.internet.username(),
-        faker.internet.password()
-      )
+      const result = await client.login(faker.internet.username(), faker.internet.password())
 
       expect(result.expires_in).toBe(7200)
       expect(result.expiresIn).toBe(7200)
@@ -310,10 +292,7 @@ describe('Client', () => {
 
       mockHttpClient.post.mockResolvedValue(mockResponse)
 
-      const result = await client.login(
-        faker.internet.username(),
-        faker.internet.password()
-      )
+      const result = await client.login(faker.internet.username(), faker.internet.password())
 
       expect(result.mustChangePassword).toBe(true)
     })
@@ -335,10 +314,7 @@ describe('Client', () => {
 
       mockHttpClient.post.mockResolvedValue(mockResponse)
 
-      const result = await client.login(
-        faker.internet.username(),
-        faker.internet.password()
-      )
+      const result = await client.login(faker.internet.username(), faker.internet.password())
 
       expect(result.mustChangePassword).toBe(true)
     })
@@ -360,10 +336,7 @@ describe('Client', () => {
 
       mockHttpClient.post.mockResolvedValue(mockResponse)
 
-      const result = await client.login(
-        faker.internet.username(),
-        faker.internet.password()
-      )
+      const result = await client.login(faker.internet.username(), faker.internet.password())
 
       expect(result.mustChangePassword).toBe(true)
     })
@@ -384,10 +357,7 @@ describe('Client', () => {
 
       mockHttpClient.post.mockResolvedValue(mockResponse)
 
-      const result = await client.login(
-        faker.internet.username(),
-        faker.internet.password()
-      )
+      const result = await client.login(faker.internet.username(), faker.internet.password())
 
       expect(result.user.passwordResetRequired).toBe(true)
     })
@@ -408,10 +378,7 @@ describe('Client', () => {
 
       mockHttpClient.post.mockResolvedValue(mockResponse)
 
-      const result = await client.login(
-        faker.internet.username(),
-        faker.internet.password()
-      )
+      const result = await client.login(faker.internet.username(), faker.internet.password())
 
       expect(result.user.passwordResetRequired).toBe(true)
     })
@@ -432,10 +399,7 @@ describe('Client', () => {
 
       mockHttpClient.post.mockResolvedValue(mockResponse)
 
-      const result = await client.login(
-        faker.internet.username(),
-        faker.internet.password()
-      )
+      const result = await client.login(faker.internet.username(), faker.internet.password())
 
       expect(result.user.passwordResetRequired).toBe(false)
     })
@@ -451,12 +415,9 @@ describe('Client', () => {
 
       mockHttpClient.post.mockResolvedValue(mockResponse)
 
-      await expect(
-        client.login(
-          faker.internet.username(),
-          faker.internet.password()
-        )
-      ).rejects.toThrow(AuthenticationException)
+      await expect(client.login(faker.internet.username(), faker.internet.password())).rejects.toThrow(
+        AuthenticationException
+      )
     })
 
     it('handles error response without error code', async () => {
@@ -472,12 +433,9 @@ describe('Client', () => {
 
       mockHttpClient.post.mockResolvedValue(mockResponse)
 
-      await expect(
-        client.login(
-          faker.internet.username(),
-          faker.internet.password()
-        )
-      ).rejects.toThrow(AuthenticationException)
+      await expect(client.login(faker.internet.username(), faker.internet.password())).rejects.toThrow(
+        AuthenticationException
+      )
     })
   })
 
@@ -640,9 +598,7 @@ describe('Client', () => {
       const result = await client.listLicenses({ status: 'ACTIVE' })
 
       expect(result).toBeDefined()
-      expect(mockHttpClient.get).toHaveBeenCalledWith(
-        expect.stringContaining('status=ACTIVE')
-      )
+      expect(mockHttpClient.get).toHaveBeenCalledWith(expect.stringContaining('status=ACTIVE'))
     })
 
     it('applies product_slug filter', async () => {
@@ -659,9 +615,7 @@ describe('Client', () => {
       const result = await client.listLicenses({ product_slug: 'test-product' })
 
       expect(result).toBeDefined()
-      expect(mockHttpClient.get).toHaveBeenCalledWith(
-        expect.stringContaining('product_slug=test-product')
-      )
+      expect(mockHttpClient.get).toHaveBeenCalledWith(expect.stringContaining('product_slug=test-product'))
     })
 
     it('applies customer_email filter', async () => {
@@ -678,9 +632,7 @@ describe('Client', () => {
       const result = await client.listLicenses({ customer_email: 'test@example.com' })
 
       expect(result).toBeDefined()
-      expect(mockHttpClient.get).toHaveBeenCalledWith(
-        expect.stringContaining('customer_email=test%40example.com')
-      )
+      expect(mockHttpClient.get).toHaveBeenCalledWith(expect.stringContaining('customer_email=test%40example.com'))
     })
 
     it('applies limit filter', async () => {
@@ -697,9 +649,7 @@ describe('Client', () => {
       const result = await client.listLicenses({ limit: 10 })
 
       expect(result).toBeDefined()
-      expect(mockHttpClient.get).toHaveBeenCalledWith(
-        expect.stringContaining('limit=10')
-      )
+      expect(mockHttpClient.get).toHaveBeenCalledWith(expect.stringContaining('limit=10'))
     })
 
     it('applies page filter', async () => {
@@ -721,7 +671,6 @@ describe('Client', () => {
       expect(callUrl).toBeDefined()
     })
 
-
     it('applies offset filter', async () => {
       const mockResponse = {
         data: {
@@ -736,9 +685,7 @@ describe('Client', () => {
       const result = await client.listLicenses({ offset: 20 })
 
       expect(result).toBeDefined()
-      expect(mockHttpClient.get).toHaveBeenCalledWith(
-        expect.stringContaining('offset=20')
-      )
+      expect(mockHttpClient.get).toHaveBeenCalledWith(expect.stringContaining('offset=20'))
     })
 
     it('applies multiple filters', async () => {
@@ -928,17 +875,13 @@ describe('Client', () => {
 
       mockHttpClient.post.mockResolvedValue(mockResponse)
 
-      const result = await client.activateLicense(
-        faker.string.alphanumeric(32),
-        faker.internet.domainName(),
-        {
-          site_name: faker.company.name(),
-          os: 'Linux',
-          region: 'US',
-          client_version: '1.0.0',
-          device_hash: faker.string.alphanumeric(16),
-        }
-      )
+      const result = await client.activateLicense(faker.string.alphanumeric(32), faker.internet.domainName(), {
+        site_name: faker.company.name(),
+        os: 'Linux',
+        region: 'US',
+        client_version: '1.0.0',
+        device_hash: faker.string.alphanumeric(16),
+      })
 
       expect(result).toBeDefined()
       expect(mockHttpClient.post).toHaveBeenCalled()
@@ -960,10 +903,7 @@ describe('Client', () => {
 
       mockHttpClient.post.mockResolvedValue(mockResponse)
 
-      const result = await client.activateLicense(
-        faker.string.alphanumeric(32),
-        faker.internet.domainName()
-      )
+      const result = await client.activateLicense(faker.string.alphanumeric(32), faker.internet.domainName())
 
       expect(result).toBeDefined()
       expect(mockHttpClient.post).toHaveBeenCalled()
@@ -984,10 +924,7 @@ describe('Client', () => {
 
       mockHttpClient.post.mockResolvedValue(mockResponse)
 
-      const result = await client.validateLicense(
-        faker.string.alphanumeric(32),
-        faker.internet.domainName()
-      )
+      const result = await client.validateLicense(faker.string.alphanumeric(32), faker.internet.domainName())
 
       expect(result).toBeDefined()
       expect(mockHttpClient.post).toHaveBeenCalled()
@@ -1008,10 +945,7 @@ describe('Client', () => {
 
       mockHttpClient.post.mockResolvedValue(mockResponse)
 
-      const result = await client.deactivateLicense(
-        faker.string.alphanumeric(32),
-        faker.internet.domainName()
-      )
+      const result = await client.deactivateLicense(faker.string.alphanumeric(32), faker.internet.domainName())
 
       expect(result).toBeDefined()
       expect(mockHttpClient.post).toHaveBeenCalled()
@@ -1165,9 +1099,7 @@ describe('Client', () => {
       const result = await client.listUsers({ role: 'SUPERUSER' })
 
       expect(result).toBeDefined()
-      expect(mockHttpClient.get).toHaveBeenCalledWith(
-        expect.stringContaining('role=SUPERUSER')
-      )
+      expect(mockHttpClient.get).toHaveBeenCalledWith(expect.stringContaining('role=SUPERUSER'))
     })
 
     it('applies vendor_id filter', async () => {
@@ -1184,9 +1116,7 @@ describe('Client', () => {
       const result = await client.listUsers({ vendor_id: 'vendor-1' })
 
       expect(result).toBeDefined()
-      expect(mockHttpClient.get).toHaveBeenCalledWith(
-        expect.stringContaining('vendor_id=vendor-1')
-      )
+      expect(mockHttpClient.get).toHaveBeenCalledWith(expect.stringContaining('vendor_id=vendor-1'))
     })
 
     it('applies search filter', async () => {
@@ -1203,9 +1133,7 @@ describe('Client', () => {
       const result = await client.listUsers({ search: 'test' })
 
       expect(result).toBeDefined()
-      expect(mockHttpClient.get).toHaveBeenCalledWith(
-        expect.stringContaining('search=test')
-      )
+      expect(mockHttpClient.get).toHaveBeenCalledWith(expect.stringContaining('search=test'))
     })
 
     it('applies limit filter when number', async () => {
@@ -1222,9 +1150,7 @@ describe('Client', () => {
       const result = await client.listUsers({ limit: 10 })
 
       expect(result).toBeDefined()
-      expect(mockHttpClient.get).toHaveBeenCalledWith(
-        expect.stringContaining('limit=10')
-      )
+      expect(mockHttpClient.get).toHaveBeenCalledWith(expect.stringContaining('limit=10'))
     })
 
     it('applies offset filter when number', async () => {
@@ -1241,9 +1167,7 @@ describe('Client', () => {
       const result = await client.listUsers({ offset: 20 })
 
       expect(result).toBeDefined()
-      expect(mockHttpClient.get).toHaveBeenCalledWith(
-        expect.stringContaining('offset=20')
-      )
+      expect(mockHttpClient.get).toHaveBeenCalledWith(expect.stringContaining('offset=20'))
     })
 
     it('builds URL without query string when no filters', async () => {
@@ -2026,7 +1950,6 @@ describe('Client', () => {
       expect(mockHttpClient.delete).toHaveBeenCalled()
     })
   })
-
 
   describe('createTenant', () => {
     it('creates tenant successfully', async () => {
@@ -2897,197 +2820,197 @@ describe('Client', () => {
   })
 
   describe('getAuditLogs', () => {
-      it('fetches audit logs without filters', async () => {
-        const mockResponse = {
+    it('fetches audit logs without filters', async () => {
+      const mockResponse = {
+        data: {
+          success: true,
           data: {
-            success: true,
-            data: {
-              logs: [],
-              total: 0,
-            },
+            logs: [],
+            total: 0,
           },
-          status: 200,
-        }
+        },
+        status: 200,
+      }
 
-        mockHttpClient.get.mockResolvedValue(mockResponse)
+      mockHttpClient.get.mockResolvedValue(mockResponse)
 
-        const result = await client.getAuditLogs()
+      const result = await client.getAuditLogs()
 
-        expect(mockHttpClient.get).toHaveBeenCalledWith('/api/v1/admin/audit/logs')
-        expect(result).toEqual({
-          logs: [],
-          total: 0,
-        })
+      expect(mockHttpClient.get).toHaveBeenCalledWith('/api/v1/admin/audit/logs')
+      expect(result).toEqual({
+        logs: [],
+        total: 0,
       })
+    })
 
-      it('fetches audit logs with all filters', async () => {
-        const mockResponse = {
+    it('fetches audit logs with all filters', async () => {
+      const mockResponse = {
+        data: {
+          success: true,
           data: {
-            success: true,
-            data: {
-              logs: [],
-              total: 0,
-            },
+            logs: [],
+            total: 0,
           },
-          status: 200,
-        }
+        },
+        status: 200,
+      }
 
-        mockHttpClient.get.mockResolvedValue(mockResponse)
+      mockHttpClient.get.mockResolvedValue(mockResponse)
 
-        const filters = {
-          adminId: 'admin-1',
-          action: 'CREATE',
-          resourceType: 'LICENSE',
-          resourceId: 'license-1',
-          limit: 10,
-          offset: 0,
-        }
+      const filters = {
+        adminId: 'admin-1',
+        action: 'CREATE',
+        resourceType: 'LICENSE',
+        resourceId: 'license-1',
+        limit: 10,
+        offset: 0,
+      }
 
-        const result = await client.getAuditLogs(filters)
+      const result = await client.getAuditLogs(filters)
 
-        expect(mockHttpClient.get).toHaveBeenCalledWith(
-          '/api/v1/admin/audit/logs?adminId=admin-1&action=CREATE&resourceType=LICENSE&resourceId=license-1&limit=10&offset=0'
-        )
-        expect(result).toEqual({
-          logs: [],
-          total: 0,
-        })
+      expect(mockHttpClient.get).toHaveBeenCalledWith(
+        '/api/v1/admin/audit/logs?adminId=admin-1&action=CREATE&resourceType=LICENSE&resourceId=license-1&limit=10&offset=0'
+      )
+      expect(result).toEqual({
+        logs: [],
+        total: 0,
       })
+    })
 
-      it('fetches audit logs with partial filters', async () => {
-        const mockResponse = {
+    it('fetches audit logs with partial filters', async () => {
+      const mockResponse = {
+        data: {
+          success: true,
           data: {
-            success: true,
-            data: {
-              logs: [],
-              total: 0,
-            },
+            logs: [],
+            total: 0,
           },
-          status: 200,
-        }
+        },
+        status: 200,
+      }
 
-        mockHttpClient.get.mockResolvedValue(mockResponse)
+      mockHttpClient.get.mockResolvedValue(mockResponse)
 
-        const filters = {
-          adminId: 'admin-1',
-          limit: 20,
-        }
+      const filters = {
+        adminId: 'admin-1',
+        limit: 20,
+      }
 
-        const result = await client.getAuditLogs(filters)
+      const result = await client.getAuditLogs(filters)
 
-        expect(mockHttpClient.get).toHaveBeenCalledWith('/api/v1/admin/audit/logs?adminId=admin-1&limit=20')
-        expect(result).toEqual({
-          logs: [],
-          total: 0,
-        })
+      expect(mockHttpClient.get).toHaveBeenCalledWith('/api/v1/admin/audit/logs?adminId=admin-1&limit=20')
+      expect(result).toEqual({
+        logs: [],
+        total: 0,
       })
+    })
   })
 
   describe('verifyAuditChain', () => {
-      it('verifies audit chain without params', async () => {
-        const mockResponse = {
+    it('verifies audit chain without params', async () => {
+      const mockResponse = {
+        data: {
+          success: true,
           data: {
-            success: true,
-            data: {
-              isValid: true,
-              chain: [],
-            },
+            isValid: true,
+            chain: [],
           },
-          status: 200,
-        }
+        },
+        status: 200,
+      }
 
-        mockHttpClient.get.mockResolvedValue(mockResponse)
+      mockHttpClient.get.mockResolvedValue(mockResponse)
 
-        const result = await client.verifyAuditChain()
+      const result = await client.verifyAuditChain()
 
-        expect(mockHttpClient.get).toHaveBeenCalledWith('/api/v1/admin/audit/verify')
-        expect(result).toEqual({
-          isValid: true,
-          chain: [],
-        })
+      expect(mockHttpClient.get).toHaveBeenCalledWith('/api/v1/admin/audit/verify')
+      expect(result).toEqual({
+        isValid: true,
+        chain: [],
       })
+    })
 
-      it('verifies audit chain with fromId and toId', async () => {
-        const mockResponse = {
+    it('verifies audit chain with fromId and toId', async () => {
+      const mockResponse = {
+        data: {
+          success: true,
           data: {
-            success: true,
-            data: {
-              isValid: true,
-              chain: [],
-            },
+            isValid: true,
+            chain: [],
           },
-          status: 200,
-        }
+        },
+        status: 200,
+      }
 
-        mockHttpClient.get.mockResolvedValue(mockResponse)
+      mockHttpClient.get.mockResolvedValue(mockResponse)
 
-        const params = {
-          fromId: 'log-1',
-          toId: 'log-2',
-        }
+      const params = {
+        fromId: 'log-1',
+        toId: 'log-2',
+      }
 
-        const result = await client.verifyAuditChain(params)
+      const result = await client.verifyAuditChain(params)
 
-        expect(mockHttpClient.get).toHaveBeenCalledWith('/api/v1/admin/audit/verify?fromId=log-1&toId=log-2')
-        expect(result).toEqual({
-          isValid: true,
-          chain: [],
-        })
+      expect(mockHttpClient.get).toHaveBeenCalledWith('/api/v1/admin/audit/verify?fromId=log-1&toId=log-2')
+      expect(result).toEqual({
+        isValid: true,
+        chain: [],
       })
+    })
 
-      it('verifies audit chain with only fromId', async () => {
-        const mockResponse = {
+    it('verifies audit chain with only fromId', async () => {
+      const mockResponse = {
+        data: {
+          success: true,
           data: {
-            success: true,
-            data: {
-              isValid: true,
-              chain: [],
-            },
+            isValid: true,
+            chain: [],
           },
-          status: 200,
-        }
+        },
+        status: 200,
+      }
 
-        mockHttpClient.get.mockResolvedValue(mockResponse)
+      mockHttpClient.get.mockResolvedValue(mockResponse)
 
-        const params = {
-          fromId: 'log-1',
-        }
+      const params = {
+        fromId: 'log-1',
+      }
 
-        const result = await client.verifyAuditChain(params)
+      const result = await client.verifyAuditChain(params)
 
-        expect(mockHttpClient.get).toHaveBeenCalledWith('/api/v1/admin/audit/verify?fromId=log-1')
-        expect(result).toEqual({
-          isValid: true,
-          chain: [],
-        })
+      expect(mockHttpClient.get).toHaveBeenCalledWith('/api/v1/admin/audit/verify?fromId=log-1')
+      expect(result).toEqual({
+        isValid: true,
+        chain: [],
       })
+    })
 
-      it('verifies audit chain with only toId', async () => {
-        const mockResponse = {
+    it('verifies audit chain with only toId', async () => {
+      const mockResponse = {
+        data: {
+          success: true,
           data: {
-            success: true,
-            data: {
-              isValid: true,
-              chain: [],
-            },
+            isValid: true,
+            chain: [],
           },
-          status: 200,
-        }
+        },
+        status: 200,
+      }
 
-        mockHttpClient.get.mockResolvedValue(mockResponse)
+      mockHttpClient.get.mockResolvedValue(mockResponse)
 
-        const params = {
-          toId: 'log-2',
-        }
+      const params = {
+        toId: 'log-2',
+      }
 
-        const result = await client.verifyAuditChain(params)
+      const result = await client.verifyAuditChain(params)
 
-        expect(mockHttpClient.get).toHaveBeenCalledWith('/api/v1/admin/audit/verify?toId=log-2')
-        expect(result).toEqual({
-          isValid: true,
-          chain: [],
-        })
+      expect(mockHttpClient.get).toHaveBeenCalledWith('/api/v1/admin/audit/verify?toId=log-2')
+      expect(result).toEqual({
+        isValid: true,
+        chain: [],
       })
+    })
   })
 
   describe('parseErrorDetails branches continued', () => {
@@ -3168,6 +3091,5 @@ describe('Client', () => {
 
       await expect(client.listProducts()).rejects.toThrow(ApiException)
     })
-
   })
 })

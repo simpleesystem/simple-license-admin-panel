@@ -1,17 +1,17 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { faker } from '@faker-js/faker'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
 
 import { ChangePasswordRouteComponent } from '../../../../src/routes/auth/ChangePasswordRoute'
 import {
   UI_CHANGE_PASSWORD_BUTTON_UPDATE,
-  UI_CHANGE_PASSWORD_LABEL_CURRENT_PASSWORD,
-  UI_CHANGE_PASSWORD_LABEL_NEW_PASSWORD,
   UI_CHANGE_PASSWORD_LABEL_CONFIRM_PASSWORD,
+  UI_CHANGE_PASSWORD_LABEL_CURRENT_PASSWORD,
   UI_CHANGE_PASSWORD_LABEL_EMAIL,
+  UI_CHANGE_PASSWORD_LABEL_NEW_PASSWORD,
 } from '../../../../src/ui/constants'
-import { renderWithProviders } from '../../utils'
 import { buildUser } from '../../../factories/userFactory'
+import { renderWithProviders } from '../../utils'
 
 const testUserEmail = faker.internet.email()
 const testUser = buildUser({ email: testUserEmail })
@@ -70,7 +70,9 @@ describe('ChangePasswordRouteComponent', () => {
     if (emailInput.value !== testUserEmail) {
       fireEvent.change(emailInput, { target: { value: testUserEmail } })
     }
-    fireEvent.change(screen.getByLabelText(UI_CHANGE_PASSWORD_LABEL_CURRENT_PASSWORD), { target: { value: currentPassword } })
+    fireEvent.change(screen.getByLabelText(UI_CHANGE_PASSWORD_LABEL_CURRENT_PASSWORD), {
+      target: { value: currentPassword },
+    })
     await waitFor(() => {
       expect(screen.getByLabelText(UI_CHANGE_PASSWORD_LABEL_NEW_PASSWORD)).toBeInTheDocument()
     })
@@ -78,7 +80,9 @@ describe('ChangePasswordRouteComponent', () => {
     await waitFor(() => {
       expect(screen.getByLabelText(UI_CHANGE_PASSWORD_LABEL_CONFIRM_PASSWORD)).toBeInTheDocument()
     })
-    fireEvent.change(screen.getByLabelText(UI_CHANGE_PASSWORD_LABEL_CONFIRM_PASSWORD), { target: { value: newPassword } })
+    fireEvent.change(screen.getByLabelText(UI_CHANGE_PASSWORD_LABEL_CONFIRM_PASSWORD), {
+      target: { value: newPassword },
+    })
     fireEvent.click(screen.getByRole('button', { name: UI_CHANGE_PASSWORD_BUTTON_UPDATE }))
 
     await waitFor(() => {
@@ -118,7 +122,9 @@ describe('ChangePasswordRouteComponent', () => {
     if (emailInput.value !== testUserEmail) {
       fireEvent.change(emailInput, { target: { value: testUserEmail } })
     }
-    fireEvent.change(screen.getByLabelText(UI_CHANGE_PASSWORD_LABEL_CURRENT_PASSWORD), { target: { value: currentPassword } })
+    fireEvent.change(screen.getByLabelText(UI_CHANGE_PASSWORD_LABEL_CURRENT_PASSWORD), {
+      target: { value: currentPassword },
+    })
     await waitFor(() => {
       expect(screen.getByLabelText(UI_CHANGE_PASSWORD_LABEL_NEW_PASSWORD)).toBeInTheDocument()
     })
@@ -126,7 +132,9 @@ describe('ChangePasswordRouteComponent', () => {
     await waitFor(() => {
       expect(screen.getByLabelText(UI_CHANGE_PASSWORD_LABEL_CONFIRM_PASSWORD)).toBeInTheDocument()
     })
-    fireEvent.change(screen.getByLabelText(UI_CHANGE_PASSWORD_LABEL_CONFIRM_PASSWORD), { target: { value: newPassword } })
+    fireEvent.change(screen.getByLabelText(UI_CHANGE_PASSWORD_LABEL_CONFIRM_PASSWORD), {
+      target: { value: newPassword },
+    })
     fireEvent.click(screen.getByRole('button', { name: UI_CHANGE_PASSWORD_BUTTON_UPDATE }))
 
     expect(await screen.findByText(errorMessage)).toBeInTheDocument()

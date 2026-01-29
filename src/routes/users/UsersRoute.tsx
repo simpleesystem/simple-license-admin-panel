@@ -2,8 +2,8 @@ import { useMemo, useState } from 'react'
 import { useAdminUsers } from '@/simpleLicense'
 
 import { useApiClient } from '../../api/apiContext'
-import { useAuth } from '../../app/auth/useAuth'
 import { canViewUsers, isVendorScopedUser } from '../../app/auth/permissions'
+import { useAuth } from '../../app/auth/useAuth'
 import {
   UI_PAGE_SUBTITLE_USERS,
   UI_PAGE_TITLE_USERS,
@@ -19,8 +19,8 @@ import {
 import { SectionStatus } from '../../ui/feedback/SectionStatus'
 import { Page } from '../../ui/layout/Page'
 import { PageHeader } from '../../ui/layout/PageHeader'
-import { UserManagementPanel } from '../../ui/workflows/UserManagementPanel'
 import type { UiDataTableSortState, UiSortDirection } from '../../ui/types'
+import { UserManagementPanel } from '../../ui/workflows/UserManagementPanel'
 
 export function UsersRouteComponent() {
   const client = useApiClient()
@@ -49,12 +49,14 @@ export function UsersRouteComponent() {
   const { data, isLoading, isError, refetch } = useAdminUsers(client, filters)
 
   const users = useMemo(() => {
-    const list = Array.isArray(data) ? data : data?.data ?? []
+    const list = Array.isArray(data) ? data : (data?.data ?? [])
     return list
   }, [data])
 
   const totalPages = useMemo(() => {
-    if (Array.isArray(data)) return 1
+    if (Array.isArray(data)) {
+      return 1
+    }
     return data?.pagination?.totalPages ?? 1
   }, [data])
 

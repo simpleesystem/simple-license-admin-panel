@@ -1,3 +1,9 @@
+import { useQuery } from '@tanstack/react-query'
+import { act, render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { HttpResponse, http } from 'msw'
+import { useState } from 'react'
+import { beforeEach, describe, expect, it } from 'vitest'
 import {
   API_ENDPOINT_ADMIN_USERS_ME,
   API_ENDPOINT_ADMIN_USERS_ME_PASSWORD,
@@ -5,12 +11,6 @@ import {
   ApiException,
   ERROR_CODE_INVALID_CREDENTIALS,
 } from '@/simpleLicense'
-import { useQuery } from '@tanstack/react-query'
-import { act, render, screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { HttpResponse, http } from 'msw'
-import { useState } from 'react'
-import { beforeEach, describe, expect, it } from 'vitest'
 
 import { AppProviders } from '../../../src/app/AppProviders'
 import { useAuth } from '../../../src/app/auth/authContext'
@@ -140,9 +140,12 @@ describe('integration flows', () => {
     })
 
     // Wait for components to render
-    await waitFor(() => {
-      expect(screen.getByText('login-success')).toBeInTheDocument()
-    }, { timeout: 5000 })
+    await waitFor(
+      () => {
+        expect(screen.getByText('login-success')).toBeInTheDocument()
+      },
+      { timeout: 5000 }
+    )
 
     await userEvent.click(screen.getByText('login-success'))
 

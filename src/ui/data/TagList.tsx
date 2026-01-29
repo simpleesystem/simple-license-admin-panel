@@ -1,23 +1,11 @@
 import Badge from 'react-bootstrap/Badge'
 
-import {
-  UI_ARIA_LABEL_TAG_LIST,
-  UI_CLASS_TAG_LIST,
-  UI_TAG_VARIANT_NEUTRAL,
-  UI_TEST_ID_TAG_LIST,
-} from '../constants'
+import { UI_ARIA_LABEL_TAG_LIST, UI_CLASS_TAG_LIST, UI_TAG_VARIANT_NEUTRAL, UI_TEST_ID_TAG_LIST } from '../constants'
 import type { TagListProps } from '../types'
 import { composeClassNames } from '../utils/classNames'
 import { VisibilityGate } from '../utils/PermissionGate'
 
-export function TagList({
-  tags,
-  className,
-  testId,
-  ability,
-  permissionKey,
-  permissionFallback,
-}: TagListProps) {
+export function TagList({ tags, className, testId, ability, permissionKey, permissionFallback }: TagListProps) {
   return (
     <VisibilityGate ability={ability} permissionKey={permissionKey} permissionFallback={permissionFallback}>
       <ul

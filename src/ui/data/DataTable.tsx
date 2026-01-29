@@ -67,7 +67,9 @@ export function DataTable<TData>({
       selection.onToggleAll(data)
       return
     }
-    data.forEach((row) => selection.onToggleRow(row))
+    for (const row of data) {
+      selection.onToggleRow(row)
+    }
   }
 
   const resolveHeaderLabel = (header: ReactNode, fallback: string): string => {

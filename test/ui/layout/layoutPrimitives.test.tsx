@@ -1,12 +1,6 @@
 import { faker } from '@faker-js/faker'
 import { render } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
-
-import { AppShell } from '../../../src/ui/layout/AppShell'
-import { Page } from '../../../src/ui/layout/Page'
-import { PageHeader } from '../../../src/ui/layout/PageHeader'
-import { SidebarLayout } from '../../../src/ui/layout/SidebarLayout'
-import { Stack } from '../../../src/ui/layout/Stack'
 import {
   UI_CLASS_APP_SHELL,
   UI_CLASS_PAGE_CONSTRAINED,
@@ -25,6 +19,11 @@ import {
   UI_TEST_ID_SIDEBAR_LAYOUT,
   UI_TEST_ID_STACK,
 } from '../../../src/ui/constants'
+import { AppShell } from '../../../src/ui/layout/AppShell'
+import { Page } from '../../../src/ui/layout/Page'
+import { PageHeader } from '../../../src/ui/layout/PageHeader'
+import { SidebarLayout } from '../../../src/ui/layout/SidebarLayout'
+import { Stack } from '../../../src/ui/layout/Stack'
 
 describe('Layout primitives', () => {
   test('AppShell renders the provided content region', () => {
@@ -75,7 +74,7 @@ describe('Layout primitives', () => {
 
   test('Page switches to full width variant when requested', () => {
     const { getByTestId } = render(
-      <Page variant="fullWidth" fullHeight>
+      <Page variant="fullWidth" fullHeight={true}>
         {faker.lorem.words(2)}
       </Page>
     )
@@ -149,7 +148,7 @@ describe('Layout primitives', () => {
 
   test('Stack supports wrap, alignment, and justification options', () => {
     const { getByTestId } = render(
-      <Stack direction="row" gap="large" align="center" justify="between" wrap>
+      <Stack direction="row" gap="large" align="center" justify="between" wrap={true}>
         <span>child</span>
       </Stack>
     )
@@ -159,9 +158,7 @@ describe('Layout primitives', () => {
 
   test('SidebarLayout renders sidebar section', () => {
     const sidebar = faker.lorem.words(2)
-    const { getByText } = render(
-      <SidebarLayout sidebar={<div>{sidebar}</div>}>{faker.lorem.words(2)}</SidebarLayout>
-    )
+    const { getByText } = render(<SidebarLayout sidebar={<div>{sidebar}</div>}>{faker.lorem.words(2)}</SidebarLayout>)
 
     expect(getByText(sidebar).closest('aside')).toHaveClass(UI_CLASS_SIDEBAR_LAYOUT_SIDEBAR, { exact: false })
   })
@@ -176,7 +173,7 @@ describe('Layout primitives', () => {
 
   test('SidebarLayout supports sticky sidebars', () => {
     const { getByTestId } = render(
-      <SidebarLayout sidebar={<div>sidebar</div>} stickySidebar>
+      <SidebarLayout sidebar={<div>sidebar</div>} stickySidebar={true}>
         content
       </SidebarLayout>
     )

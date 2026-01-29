@@ -32,10 +32,7 @@ export const normalizeTelemetry = (payload: NormalizedTelemetry): NormalizedTele
   error: payload.error,
 })
 
-export const getHeaderString = (
-  headers: Record<string, unknown> | undefined,
-  key: string
-): string | undefined => {
+export const getHeaderString = (headers: Record<string, unknown> | undefined, key: string): string | undefined => {
   if (!headers) {
     return undefined
   }

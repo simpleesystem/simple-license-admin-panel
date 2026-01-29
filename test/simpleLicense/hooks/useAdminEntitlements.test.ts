@@ -1,15 +1,15 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { waitFor } from '@testing-library/react'
-import type { Client } from '@/simpleLicense'
-import {
-  useProductEntitlements,
-  useCreateEntitlement,
-  useUpdateEntitlement,
-  useDeleteEntitlement,
-} from '@/simpleLicense/hooks/useAdminEntitlements'
+import { faker } from '@faker-js/faker'
 import { buildEntitlement } from '@test/factories/entitlementFactory'
 import { renderHookWithQueryClient } from '@test/utils/renderHookWithQueryClient'
-import { faker } from '@faker-js/faker'
+import { waitFor } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { Client } from '@/simpleLicense'
+import {
+  useCreateEntitlement,
+  useDeleteEntitlement,
+  useProductEntitlements,
+  useUpdateEntitlement,
+} from '@/simpleLicense/hooks/useAdminEntitlements'
 
 describe('useAdminEntitlements hooks', () => {
   let mockClient: Client
@@ -30,9 +30,7 @@ describe('useAdminEntitlements hooks', () => {
       const mockResponse = { data: entitlements }
       ;(mockClient.listEntitlements as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse)
 
-      const { result } = renderHookWithQueryClient(() =>
-        useProductEntitlements(mockClient, mockProductId)
-      )
+      const { result } = renderHookWithQueryClient(() => useProductEntitlements(mockClient, mockProductId))
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true)
@@ -46,9 +44,7 @@ describe('useAdminEntitlements hooks', () => {
       const mockError = new Error('Failed to fetch entitlements')
       ;(mockClient.listEntitlements as ReturnType<typeof vi.fn>).mockRejectedValue(mockError)
 
-      const { result } = renderHookWithQueryClient(() =>
-        useProductEntitlements(mockClient, mockProductId)
-      )
+      const { result } = renderHookWithQueryClient(() => useProductEntitlements(mockClient, mockProductId))
 
       await waitFor(() => {
         expect(result.current.isError).toBe(true)
@@ -58,9 +54,7 @@ describe('useAdminEntitlements hooks', () => {
     })
 
     it('does not fetch when productId is empty', () => {
-      const { result } = renderHookWithQueryClient(() =>
-        useProductEntitlements(mockClient, '')
-      )
+      const { result } = renderHookWithQueryClient(() => useProductEntitlements(mockClient, ''))
 
       expect(result.current.isFetching).toBe(false)
       expect(mockClient.listEntitlements).not.toHaveBeenCalled()
@@ -92,10 +86,9 @@ describe('useAdminEntitlements hooks', () => {
       })
       const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries')
 
-      const { result } = renderHookWithQueryClient(
-        () => useCreateEntitlement(mockClient, mockProductId),
-        { queryClient }
-      )
+      const { result } = renderHookWithQueryClient(() => useCreateEntitlement(mockClient, mockProductId), {
+        queryClient,
+      })
 
       result.current.mutate(mockRequest)
 
@@ -117,9 +110,7 @@ describe('useAdminEntitlements hooks', () => {
       const mockError = new Error('Failed to create entitlement')
       ;(mockClient.createEntitlement as ReturnType<typeof vi.fn>).mockRejectedValue(mockError)
 
-      const { result } = renderHookWithQueryClient(() =>
-        useCreateEntitlement(mockClient, mockProductId)
-      )
+      const { result } = renderHookWithQueryClient(() => useCreateEntitlement(mockClient, mockProductId))
 
       result.current.mutate(mockRequest)
 

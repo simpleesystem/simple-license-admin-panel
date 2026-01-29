@@ -1,5 +1,5 @@
-import type { User } from '@/simpleLicense'
 import { create } from 'zustand'
+import type { User } from '@/simpleLicense'
 import { derivePermissionsFromUser } from '../auth/permissions'
 import type { AppError } from '../errors/appErrors'
 import type { ErrorScope } from './types'

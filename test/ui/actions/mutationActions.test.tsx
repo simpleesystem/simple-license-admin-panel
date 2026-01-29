@@ -1,10 +1,10 @@
 import { describe, expect, test, vi } from 'vitest'
 
 import {
+  type CrudActionConfig,
   createCrudActions,
   createMutationActions,
   createTypedActionMenuItems,
-  type CrudActionConfig,
   type MutationActionDefinition,
 } from '../../../src/ui/actions/mutationActions'
 
@@ -85,7 +85,7 @@ describe('mutation-backed action helpers', () => {
           label: 'Remove entry',
           buildPayload: () => ({ id: 'row-1' }),
         },
-      ],
+      ]
     )
 
     actions[0].onSelect()
@@ -116,16 +116,13 @@ describe('mutation-backed action helpers', () => {
 
   test('createMutationActions throws when mutation map is missing entry', () => {
     expect(() =>
-      createMutationActions<PayloadMap>(
-        {},
-        [
-          {
-            id: 'delete',
-            label: 'Remove entry',
-            buildPayload: () => ({ id: 'row-1' }),
-          },
-        ],
-      ),
+      createMutationActions<PayloadMap>({}, [
+        {
+          id: 'delete',
+          label: 'Remove entry',
+          buildPayload: () => ({ id: 'row-1' }),
+        },
+      ])
     ).toThrow('Missing mutation for action delete')
   })
 

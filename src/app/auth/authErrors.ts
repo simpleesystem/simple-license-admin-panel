@@ -4,18 +4,18 @@
  */
 
 import {
+  AUTH_ERROR_MESSAGE_KEY,
+  I18N_KEY_APP_ERROR_TITLE,
+  NOTIFICATION_VARIANT_ERROR,
+  NOTIFICATION_VARIANT_WARNING,
+} from '@/app/constants'
+import {
   ApiException,
   ERROR_CODE_ACCOUNT_LOCKED,
   ERROR_CODE_AUTHENTICATION_ERROR,
   ERROR_CODE_INVALID_CREDENTIALS,
   ERROR_CODE_TOO_MANY_ATTEMPTS,
 } from '@/simpleLicense'
-import {
-  AUTH_ERROR_MESSAGE_KEY,
-  I18N_KEY_APP_ERROR_TITLE,
-  NOTIFICATION_VARIANT_ERROR,
-  NOTIFICATION_VARIANT_WARNING,
-} from '@/app/constants'
 
 export interface AuthErrorNotification {
   titleKey: string

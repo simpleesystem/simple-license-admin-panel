@@ -1,5 +1,5 @@
 import { fireEvent, render, waitFor } from '@testing-library/react'
-import { describe, expect, beforeEach, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { UI_PRODUCT_FORM_SUBMIT_CREATE, UI_PRODUCT_FORM_SUBMIT_UPDATE } from '../../../src/ui/constants'
 import { ProductFormFlow } from '../../../src/ui/workflows/ProductFormFlow'
@@ -40,11 +40,11 @@ describe('ProductFormFlow', () => {
       <ProductFormFlow
         client={{} as never}
         mode="create"
-        show
+        show={true}
         onClose={onClose}
         submitLabel={UI_PRODUCT_FORM_SUBMIT_CREATE}
         onCompleted={onCompleted}
-      />,
+      />
     )
 
     fireEvent.click(getByRole('button', { name: UI_PRODUCT_FORM_SUBMIT_CREATE }))
@@ -67,11 +67,11 @@ describe('ProductFormFlow', () => {
         client={{} as never}
         mode="update"
         productId={product.id}
-        show
+        show={true}
         onClose={() => {}}
         submitLabel={UI_PRODUCT_FORM_SUBMIT_UPDATE}
         onCompleted={onCompleted}
-      />,
+      />
     )
 
     fireEvent.click(getByRole('button', { name: UI_PRODUCT_FORM_SUBMIT_UPDATE }))
@@ -80,7 +80,7 @@ describe('ProductFormFlow', () => {
       expect(updateMutation.mutateAsync).toHaveBeenCalledWith({
         id: product.id,
         data: expect.any(Object),
-      }),
+      })
     )
     expect(onCompleted).toHaveBeenCalled()
   })
@@ -103,11 +103,11 @@ describe('ProductFormFlow', () => {
       <ProductFormFlow
         client={{} as never}
         mode="create"
-        show
+        show={true}
         onClose={onClose}
         submitLabel={UI_PRODUCT_FORM_SUBMIT_CREATE}
         onCompleted={onCompleted}
-      />,
+      />
     )
 
     fireEvent.click(getByRole('button', { name: UI_PRODUCT_FORM_SUBMIT_CREATE }))

@@ -1,10 +1,6 @@
 import { faker } from '@faker-js/faker'
 import { fireEvent, render } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
-
-import { Breadcrumbs } from '../../../src/ui/navigation/Breadcrumbs'
-import { SidebarNav } from '../../../src/ui/navigation/SidebarNav'
-import { TopNavBar } from '../../../src/ui/navigation/TopNavBar'
 import {
   UI_CLASS_BREADCRUMBS,
   UI_CLASS_SIDEBAR_NAV,
@@ -14,6 +10,9 @@ import {
   UI_TEST_ID_SIDEBAR_NAV,
   UI_TEST_ID_TOP_NAV,
 } from '../../../src/ui/constants'
+import { Breadcrumbs } from '../../../src/ui/navigation/Breadcrumbs'
+import { SidebarNav } from '../../../src/ui/navigation/SidebarNav'
+import { TopNavBar } from '../../../src/ui/navigation/TopNavBar'
 import { buildBreadcrumbItem, buildSidebarNavItem } from '../../ui/factories/uiFactories'
 
 describe('Navigation primitives', () => {
@@ -69,7 +68,7 @@ describe('Navigation primitives', () => {
         brand={faker.company.name()}
         navigation={<span>{navLabel}</span>}
         actions={<button type="button">{actionLabel}</button>}
-      />,
+      />
     )
 
     expect(getByText(navLabel)).toBeInTheDocument()

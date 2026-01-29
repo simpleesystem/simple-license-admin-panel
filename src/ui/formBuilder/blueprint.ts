@@ -1,5 +1,5 @@
-import type { FieldValues, Path } from 'react-hook-form'
 import type { ReactNode } from 'react'
+import type { FieldValues, Path } from 'react-hook-form'
 
 import type {
   FormSectionProps,

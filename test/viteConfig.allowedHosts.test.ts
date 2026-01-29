@@ -10,13 +10,15 @@ import viteConfig, {
 
 describe('vite preview allowedHosts', () => {
   it('allows the production admin panel host', () => {
-    const resolvedConfig = typeof viteConfig === 'function' ? viteConfig({ command: 'serve', mode: 'test' }) : viteConfig
+    const resolvedConfig =
+      typeof viteConfig === 'function' ? viteConfig({ command: 'serve', mode: 'test' }) : viteConfig
 
     expect(resolvedConfig.preview?.allowedHosts).toContain(PREVIEW_ALLOWED_HOST_LICENSE_ADMIN)
   })
 
   it('includes the SPA HTML entry points for direct navigation', () => {
-    const resolvedConfig = typeof viteConfig === 'function' ? viteConfig({ command: 'serve', mode: 'test' }) : viteConfig
+    const resolvedConfig =
+      typeof viteConfig === 'function' ? viteConfig({ command: 'serve', mode: 'test' }) : viteConfig
     const input = resolvedConfig.build?.rollupOptions?.input
 
     if (!input || typeof input !== 'object' || Array.isArray(input)) {

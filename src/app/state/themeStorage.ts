@@ -1,12 +1,7 @@
 /* c8 ignore file */
 
 import { APP_THEME_DEFAULT } from '../constants'
-import {
-  THEME_BODY_DATA_ATTRIBUTE,
-  THEME_CLASS_MAP,
-  THEME_DEFAULT_CLASS,
-  THEME_STORAGE_KEY,
-} from '../theme/constants'
+import { THEME_BODY_DATA_ATTRIBUTE, THEME_CLASS_MAP, THEME_DEFAULT_CLASS, THEME_STORAGE_KEY } from '../theme/constants'
 import type { ThemeName } from './types'
 
 const isBrowser = typeof window !== 'undefined'

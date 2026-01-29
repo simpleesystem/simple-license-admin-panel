@@ -28,7 +28,7 @@ export type MutationActionDefinition<
   }
 
 const toActionDefinition = <PayloadMap extends UiActionPayloadMap, TType extends keyof PayloadMap>(
-  definition: MutationActionDefinition<PayloadMap, TType>,
+  definition: MutationActionDefinition<PayloadMap, TType>
 ): UiActionDefinition<PayloadMap, TType> => ({
   ...definition,
   disabled: definition.disabled ?? definition.mutation.isPending,
@@ -43,7 +43,7 @@ const toActionDefinition = <PayloadMap extends UiActionPayloadMap, TType extends
 })
 
 export const createTypedActionMenuItems = <PayloadMap extends UiActionPayloadMap>(
-  definitions: readonly MutationActionDefinition<PayloadMap>[],
+  definitions: readonly MutationActionDefinition<PayloadMap>[]
 ): UiActionMenuItem[] => createActionMenuItems(definitions.map((definition) => toActionDefinition(definition)))
 
 type MutationMap<PayloadMap extends UiActionPayloadMap> = {
@@ -57,7 +57,7 @@ export type MutationActionConfig<
 
 export const createMutationActions = <PayloadMap extends UiActionPayloadMap>(
   mutations: MutationMap<PayloadMap>,
-  configs: readonly MutationActionConfig<PayloadMap>[],
+  configs: readonly MutationActionConfig<PayloadMap>[]
 ): UiActionMenuItem[] => {
   const definitions = configs.map((config) => {
     const mutation = mutations[config.id]
@@ -118,13 +118,13 @@ export const createCrudActions = <
   TUpdatePayload = TIdentifierPayload,
 >(
   entityLabel: string,
-  config: CrudActionConfig<TIdentifierPayload, TCreatePayload, TUpdatePayload>,
+  config: CrudActionConfig<TIdentifierPayload, TCreatePayload, TUpdatePayload>
 ): UiActionMenuItem[] => {
   const definitions: MutationActionDefinition<CrudPayloadMap>[] = []
 
   const pushDefinition = <TKey extends keyof CrudPayloadMap>(
     id: TKey,
-    entry: CrudMutationEntry<CrudPayloadMap[TKey]>,
+    entry: CrudMutationEntry<CrudPayloadMap[TKey]>
   ) => {
     const verb = CRUD_VERB_LABELS[id]
     definitions.push({

@@ -9,7 +9,7 @@ import {
   UI_CLASS_SIDEBAR_NAV_LINK,
   UI_TEST_ID_SIDEBAR_NAV,
 } from '../constants'
-import type { UiSidebarNavItem, SidebarNavProps } from '../types'
+import type { SidebarNavProps, UiSidebarNavItem } from '../types'
 import { composeClassNames } from '../utils/classNames'
 import { VisibilityGate } from '../utils/PermissionGate'
 

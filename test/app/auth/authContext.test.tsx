@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react'
 import { renderHook } from '@testing-library/react'
+import type { ReactNode } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { AuthContext, useAuth } from '../../../src/app/auth/authContext'
@@ -23,7 +23,9 @@ describe('useAuth', () => {
 
   it('returns the provided value', () => {
     const value = createAuthValue()
-    const wrapper = ({ children }: { children: ReactNode }) => <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+    )
     const { result } = renderHook(() => useAuth(), { wrapper })
 
     expect(result.current).toBe(value)

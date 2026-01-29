@@ -1,7 +1,7 @@
-import type { Client, Tenant, User } from '@/simpleLicense'
 import { useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
+import type { Client, Tenant, User } from '@/simpleLicense'
 import {
   canCreateTenant,
   canUpdateTenant,
@@ -83,7 +83,10 @@ export function TenantManagementPanel({
   const notificationBus = useNotificationBus()
   const isVendorScoped = isVendorScopedUser(currentUser ?? null)
   const visibleTenants = useMemo(
-    () => (isVendorScoped ? tenants.filter((tenant) => isTenantOwnedByUser(currentUser ?? null, tenant as unknown as Tenant)) : tenants),
+    () =>
+      isVendorScoped
+        ? tenants.filter((tenant) => isTenantOwnedByUser(currentUser ?? null, tenant as unknown as Tenant))
+        : tenants,
     [currentUser, isVendorScoped, tenants]
   )
   const allowCreate = canCreateTenant(currentUser ?? null)

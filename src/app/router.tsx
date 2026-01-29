@@ -1,6 +1,6 @@
-import type { AdminRole } from '@/simpleLicense'
 import type { QueryClient } from '@tanstack/react-query'
 import { createRootRouteWithContext, createRoute, createRouter, redirect } from '@tanstack/react-router'
+import type { AdminRole } from '@/simpleLicense'
 import { AnalyticsRouteComponent } from '../routes/analytics/AnalyticsRoute'
 import { AuditRouteComponent } from '../routes/audit/AuditRoute'
 import { LoginRoute as AuthRouteComponent } from '../routes/auth/LoginRoute'

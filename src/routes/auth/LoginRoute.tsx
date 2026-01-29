@@ -1,12 +1,12 @@
-import { LoginForm } from '@/ui/auth/LoginForm'
 import { Navigate } from '@tanstack/react-router'
 import { useAuth } from '@/app/auth/useAuth'
+import { LoginForm } from '@/ui/auth/LoginForm'
 
 export function LoginRoute() {
   const { isAuthenticated } = useAuth()
 
   if (isAuthenticated) {
-    return <Navigate to="/" replace />
+    return <Navigate to="/" replace={true} />
   }
 
   return (

@@ -1,8 +1,8 @@
-import type { Client, User } from '@/simpleLicense'
-import { useAdminTenants } from '@/simpleLicense'
 import { useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
+import type { Client, User } from '@/simpleLicense'
+import { useAdminTenants } from '@/simpleLicense'
 import { canCreateUser, canDeleteUser, canUpdateUser } from '../../app/auth/permissions'
 import { useNotificationBus } from '../../notifications/useNotificationBus'
 import {
@@ -36,13 +36,13 @@ import {
   UI_USER_ROLE_LABEL_API_CONSUMER_ACTIVATE,
   UI_USER_ROLE_LABEL_API_READ_ONLY,
   UI_USER_ROLE_LABEL_API_VENDOR_WRITE,
+  UI_USER_ROLE_LABEL_SUPERUSER,
   UI_USER_ROLE_LABEL_VENDOR_ADMIN,
   UI_USER_ROLE_LABEL_VENDOR_MANAGER,
   UI_USER_ROLE_LABEL_VIEWER,
+  UI_USER_ROLE_SUPERUSER,
   UI_USER_ROLE_VENDOR_ADMIN,
   UI_USER_ROLE_VENDOR_MANAGER,
-  UI_USER_ROLE_LABEL_SUPERUSER,
-  UI_USER_ROLE_SUPERUSER,
   UI_USER_ROLE_VIEWER,
   UI_USER_STATUS_ACTIVE,
   UI_USER_STATUS_DELETED,
@@ -50,8 +50,8 @@ import {
   UI_USER_STATUS_LABEL_ACTIVE,
   UI_USER_STATUS_LABEL_DELETED,
   UI_USER_STATUS_LABEL_DISABLED,
-  UI_VALUE_PLACEHOLDER,
   UI_USER_VENDOR_PLACEHOLDER,
+  UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
 import { TableFilter } from '../data/TableFilter'
@@ -256,7 +256,9 @@ export function UserManagementPanel({
             {(() => {
               const allowUpdate = canUpdateUser(currentUser as unknown as User, row) && currentUser?.id !== row.id
               const allowDelete =
-                canDeleteUser(currentUser as unknown as User, row) && currentUser?.id !== row.id && row.status !== UI_USER_STATUS_DELETED
+                canDeleteUser(currentUser as unknown as User, row) &&
+                currentUser?.id !== row.id &&
+                row.status !== UI_USER_STATUS_DELETED
               const hasActions = allowUpdate || allowDelete
               return (
                 <>

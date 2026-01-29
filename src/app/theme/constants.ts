@@ -1,4 +1,4 @@
-import { APP_THEME_DEFAULT, APP_THEME_DARK, APP_THEME_LIGHT } from '../constants'
+import { APP_THEME_DARK, APP_THEME_DEFAULT, APP_THEME_LIGHT } from '../constants'
 
 export const THEME_STORAGE_KEY = 'simple-license-admin-theme' as const
 export const THEME_BODY_DATA_ATTRIBUTE = 'data-app-theme' as const

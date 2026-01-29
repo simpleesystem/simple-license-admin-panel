@@ -22,7 +22,10 @@ export function SidebarLayout({
 }: SidebarLayoutProps) {
   return (
     <VisibilityGate ability={ability} permissionKey={permissionKey} permissionFallback={permissionFallback}>
-      <section className={composeClassNames(UI_CLASS_SIDEBAR_LAYOUT, className)} data-testid={testId ?? UI_TEST_ID_SIDEBAR_LAYOUT}>
+      <section
+        className={composeClassNames(UI_CLASS_SIDEBAR_LAYOUT, className)}
+        data-testid={testId ?? UI_TEST_ID_SIDEBAR_LAYOUT}
+      >
         <aside
           className={composeClassNames(
             UI_CLASS_SIDEBAR_LAYOUT_SIDEBAR,

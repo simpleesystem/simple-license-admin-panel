@@ -34,7 +34,6 @@ vi.mock('@/simpleLicense', async () => {
   }
 })
 
-
 const mockMutation = () => ({
   mutateAsync: vi.fn(async () => ({})),
   isPending: false,
@@ -59,7 +58,7 @@ describe('License RBAC & vendor scoping', () => {
         licenseStatus={license.status}
         currentUser={superuser}
         onEdit={onEdit}
-      />,
+      />
     )
 
     await waitFor(() => {
@@ -100,7 +99,7 @@ describe('License RBAC & vendor scoping', () => {
         licenseStatus={license.status}
         currentUser={buildUser({ role: 'VENDOR_MANAGER', vendorId })}
         onEdit={onEdit}
-      />,
+      />
     )
 
     await waitFor(() => {
@@ -138,7 +137,7 @@ describe('License RBAC & vendor scoping', () => {
         licenseVendorId={license.vendorId}
         licenseStatus={license.status}
         currentUser={buildUser({ role: 'VENDOR_MANAGER', vendorId: faker.string.uuid() })}
-      />,
+      />
     )
 
     expect(screen.queryByText(UI_LICENSE_ACTION_EDIT)).toBeNull()
@@ -162,7 +161,7 @@ describe('License RBAC & vendor scoping', () => {
         licenseVendorId={license.vendorId}
         licenseStatus={license.status}
         currentUser={buildUser({ role: 'VIEWER', vendorId: license.vendorId })}
-      />,
+      />
     )
 
     expect(screen.queryByText(UI_LICENSE_ACTION_EDIT)).toBeNull()
@@ -188,7 +187,7 @@ describe('License RBAC & vendor scoping', () => {
         licenseStatus={license.status}
         currentUser={buildUser({ role: 'SUPERUSER' })}
         onEdit={vi.fn()}
-      />,
+      />
     )
 
     await waitFor(() => {

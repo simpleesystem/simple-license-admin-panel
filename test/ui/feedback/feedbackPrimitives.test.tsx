@@ -1,9 +1,6 @@
 import { faker } from '@faker-js/faker'
 import { fireEvent, render } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
-
-import { InlineAlert } from '../../../src/ui/feedback/InlineAlert'
-import { SectionStatus } from '../../../src/ui/feedback/SectionStatus'
 import {
   UI_ARIA_LABEL_SECTION_STATUS,
   UI_CLASS_INLINE_ALERT,
@@ -11,6 +8,8 @@ import {
   UI_TEST_ID_INLINE_ALERT,
   UI_TEST_ID_SECTION_STATUS,
 } from '../../../src/ui/constants'
+import { InlineAlert } from '../../../src/ui/feedback/InlineAlert'
+import { SectionStatus } from '../../../src/ui/feedback/SectionStatus'
 
 describe('Feedback primitives', () => {
   test('InlineAlert applies alert styling', () => {
@@ -30,7 +29,13 @@ describe('Feedback primitives', () => {
     const onClose = vi.fn()
     const actionLabel = faker.lorem.word()
     const { getByRole, getByText } = render(
-      <InlineAlert variant="warning" title="Heads up" actions={<button type="button">{actionLabel}</button>} dismissible onClose={onClose}>
+      <InlineAlert
+        variant="warning"
+        title="Heads up"
+        actions={<button type="button">{actionLabel}</button>}
+        dismissible={true}
+        onClose={onClose}
+      >
         {faker.lorem.sentence()}
       </InlineAlert>
     )
@@ -43,9 +48,7 @@ describe('Feedback primitives', () => {
 
   test('SectionStatus displays title', () => {
     const title = faker.lorem.words(2)
-    const { getByTestId, getByRole } = render(
-      <SectionStatus status="success" title={title} />
-    )
+    const { getByTestId, getByRole } = render(<SectionStatus status="success" title={title} />)
 
     expect(getByTestId(UI_TEST_ID_SECTION_STATUS)).toHaveClass(UI_CLASS_SECTION_STATUS, { exact: false })
     const region = getByRole('status')

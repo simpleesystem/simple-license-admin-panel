@@ -1,9 +1,8 @@
 import { faker } from '@faker-js/faker'
 import { act, fireEvent, render, renderHook } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
-
-import { FormModalWithMutation, useFormMutation } from '../../../src/ui/formBuilder/mutationBridge'
 import { createFormBlueprint } from '../../../src/ui/formBuilder/blueprint'
+import { FormModalWithMutation, useFormMutation } from '../../../src/ui/formBuilder/mutationBridge'
 
 type SampleValues = {
   name: string
@@ -15,9 +14,7 @@ const blueprint = createFormBlueprint<SampleValues>({
   sections: [
     {
       id: 'main',
-      fields: [
-        { id: 'name', name: 'name', component: 'text', label: 'Name' },
-      ],
+      fields: [{ id: 'name', name: 'name', component: 'text', label: 'Name' }],
     },
   ],
 })
@@ -36,7 +33,7 @@ describe('form mutation bridge', () => {
       useFormMutation<SampleValues>({
         mutation,
         onSuccess,
-      }),
+      })
     )
 
     await result.current.handleSubmit({ name: 'Example' })
@@ -57,7 +54,7 @@ describe('form mutation bridge', () => {
       useFormMutation<SampleValues>({
         mutation,
         onError,
-      }),
+      })
     )
 
     await expect(result.current.handleSubmit({ name: 'Example' })).rejects.toThrow('failure')
@@ -76,13 +73,13 @@ describe('form mutation bridge', () => {
     const submitLabel = faker.lorem.word()
     const { getByRole } = render(
       <FormModalWithMutation
-        show
+        show={true}
         onClose={onClose}
         blueprint={blueprint}
         defaultValues={{ name: faker.person.fullName() }}
         submitLabel={submitLabel}
         mutation={mutation}
-      />,
+      />
     )
 
     await act(async () => {

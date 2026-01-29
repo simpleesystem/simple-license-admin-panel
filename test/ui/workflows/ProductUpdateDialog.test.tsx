@@ -1,7 +1,9 @@
-import type { Client, Entitlement, Product, ProductTier } from '@/simpleLicense'
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { createNoopLogger } from '@/app/logging/logger'
+import { LoggerContext } from '@/app/logging/loggerContext'
+import type { Client, Entitlement, ProductTier } from '@/simpleLicense'
 import { UI_PRODUCT_FORM_TITLE_UPDATE } from '@/ui/constants'
 import { ProductUpdateDialog } from '@/ui/workflows/ProductUpdateDialog'
 
@@ -20,7 +22,9 @@ const createMockClient = (): Client =>
 vi.mock('../../../src/ui/formBuilder/DynamicForm', () => ({
   DynamicForm: ({ defaultValues, onSubmit }: { defaultValues: unknown; onSubmit: (val: unknown) => void }) => (
     <div data-testid="dynamic-form">
-      <button onClick={() => onSubmit({ ...(defaultValues as object), name: 'Updated Product' })}>Submit</button>
+      <button type="button" onClick={() => onSubmit({ ...(defaultValues as object), name: 'Updated Product' })}>
+        Submit
+      </button>
     </div>
   ),
 }))
@@ -33,7 +37,6 @@ vi.mock('../../../src/ui/workflows/ProductEntitlementManagementPanel', () => ({
   ProductEntitlementManagementPanel: () => <div data-testid="entitlement-panel">Entitlement Panel</div>,
 }))
 
-
 const renderWithQueryClient = (ui: React.ReactElement) => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -42,11 +45,12 @@ const renderWithQueryClient = (ui: React.ReactElement) => {
       },
     },
   })
+  const logger = createNoopLogger()
 
   return render(
-    <QueryClientProvider client={queryClient}>
-      {ui}
-    </QueryClientProvider>
+    <LoggerContext.Provider value={logger}>
+      <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
+    </LoggerContext.Provider>
   )
 }
 

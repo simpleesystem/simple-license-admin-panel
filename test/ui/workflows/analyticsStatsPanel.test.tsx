@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
-
+import { ADMIN_SYSTEM_WS_STATUS_DISCONNECTED } from '../../../src/app/constants'
+import { AdminSystemLiveFeedContext } from '../../../src/app/live/AdminSystemLiveFeedContextDef'
 import {
   UI_ANALYTICS_STATS_EMPTY_BODY,
   UI_ANALYTICS_STATS_EMPTY_TITLE,
@@ -15,8 +16,6 @@ import {
   UI_LIVE_STATUS_DISCONNECTED,
 } from '../../../src/ui/constants'
 import { AnalyticsStatsPanel } from '../../../src/ui/workflows/AnalyticsStatsPanel'
-import { AdminSystemLiveFeedContext } from '../../../src/app/live/AdminSystemLiveFeedContextDef'
-import { ADMIN_SYSTEM_WS_STATUS_DISCONNECTED } from '../../../src/app/constants'
 
 const useSystemStatsMock = vi.hoisted(() => vi.fn())
 
@@ -47,11 +46,7 @@ const mockLiveContext = {
 }
 
 const renderWithContext = (ui: React.ReactElement) => {
-  return render(
-    <AdminSystemLiveFeedContext.Provider value={mockLiveContext}>
-      {ui}
-    </AdminSystemLiveFeedContext.Provider>
-  )
+  return render(<AdminSystemLiveFeedContext.Provider value={mockLiveContext}>{ui}</AdminSystemLiveFeedContext.Provider>)
 }
 
 describe('AnalyticsStatsPanel', () => {

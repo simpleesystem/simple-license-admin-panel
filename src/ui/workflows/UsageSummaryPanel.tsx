@@ -1,7 +1,7 @@
-import type { Client, UsageSummaryResponse } from '@/simpleLicense'
-import { useUsageSummaries } from '@/simpleLicense'
 import { useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
+import type { Client, UsageSummaryResponse } from '@/simpleLicense'
+import { useUsageSummaries } from '@/simpleLicense'
 
 import {
   UI_ANALYTICS_COLUMN_ACTIVATIONS,

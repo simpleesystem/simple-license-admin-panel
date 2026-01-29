@@ -1,11 +1,4 @@
 import { describe, expect, it } from 'vitest'
-
-import {
-  buildListQueryOptions,
-  createListState,
-  parseListState,
-  serializeListState,
-} from '../../../src/app/lists/listState'
 import {
   LIST_DEFAULT_PAGE,
   LIST_DEFAULT_PAGE_SIZE,
@@ -19,6 +12,12 @@ import {
   LIST_SORT_DIRECTION_ASC,
   LIST_SORT_DIRECTION_DESC,
 } from '../../../src/app/constants'
+import {
+  buildListQueryOptions,
+  createListState,
+  parseListState,
+  serializeListState,
+} from '../../../src/app/lists/listState'
 
 describe('list state helpers', () => {
   it('creates a list state with defaults', () => {

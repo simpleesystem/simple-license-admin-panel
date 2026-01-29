@@ -1,11 +1,11 @@
 import Form from 'react-bootstrap/Form'
-import { useFormContext } from 'react-hook-form'
 import type { FieldValues } from 'react-hook-form'
+import { useFormContext } from 'react-hook-form'
 
 import { UI_FORM_TEXTAREA_MIN_ROWS } from '../constants'
 import type { TextareaFieldProps } from '../types'
-import { FormField } from './FormField'
 import { VisibilityGate } from '../utils/PermissionGate'
+import { FormField } from './FormField'
 
 export function TextareaField<TFieldValues extends FieldValues>({
   name,

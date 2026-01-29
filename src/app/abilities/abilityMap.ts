@@ -1,3 +1,4 @@
+import type { PermissionKey } from '../auth/permissions'
 import {
   ABILITY_ACTION_MANAGE,
   ABILITY_ACTION_VIEW,
@@ -8,7 +9,6 @@ import {
   ABILITY_SUBJECT_TENANT,
   ABILITY_SUBJECT_USER,
 } from '../constants'
-import type { PermissionKey } from '../auth/permissions'
 
 export const ABILITY_ACTIONS = [ABILITY_ACTION_VIEW, ABILITY_ACTION_MANAGE] as const
 export type AbilityAction = (typeof ABILITY_ACTIONS)[number]

@@ -1,6 +1,6 @@
+import type { ReactNode } from 'react'
 import type { Client, CreateLicenseRequest, UpdateLicenseRequest } from '@/simpleLicense'
 import { useCreateLicense, useUpdateLicense } from '@/simpleLicense'
-import type { ReactNode } from 'react'
 import type { MutationAdapter } from '../actions/mutationActions'
 import {
   UI_LICENSE_FORM_PENDING_CREATE,
@@ -96,7 +96,7 @@ export function LicenseFormFlow(props: LicenseFormFlowProps) {
     const adapter: MutationAdapter<FormValuesCreate> = {
       mutateAsync: async (values) => {
         let metadata = {}
-        if (values.metadata && values.metadata.trim()) {
+        if (values.metadata?.trim()) {
           try {
             metadata = JSON.parse(values.metadata.trim())
           } catch {

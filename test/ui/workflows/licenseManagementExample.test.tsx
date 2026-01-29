@@ -1,15 +1,15 @@
 import { faker } from '@faker-js/faker'
 import { fireEvent, screen, waitFor } from '@testing-library/react'
-import { describe, expect, beforeEach, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import {
   UI_LICENSE_ACTION_EDIT,
   UI_LICENSE_BUTTON_DELETE,
-  UI_LICENSE_FORM_SUBMIT_UPDATE,
   UI_LICENSE_CONFIRM_DELETE_CONFIRM,
+  UI_LICENSE_FORM_SUBMIT_UPDATE,
 } from '../../../src/ui/constants'
-import { LicenseManagementExample } from '../../../src/ui/workflows/LicenseManagementExample'
 import type { UiSelectOption } from '../../../src/ui/types'
+import { LicenseManagementExample } from '../../../src/ui/workflows/LicenseManagementExample'
 import { buildLicense } from '../../factories/licenseFactory'
 import { renderWithProviders } from '../utils'
 
@@ -35,7 +35,7 @@ vi.mock('../../../src/ui/data/ActionMenu', () => ({
   ActionMenu: ({ items }: { items: Array<{ id: string; label: string; onSelect: () => void }> }) => (
     <div>
       {items.map((item) => (
-        <button key={item.id} onClick={item.onSelect}>
+        <button type="button" key={item.id} onClick={item.onSelect}>
           {item.label}
         </button>
       ))}
@@ -93,7 +93,7 @@ describe('LicenseManagementExample', () => {
         page={1}
         totalPages={1}
         onPageChange={vi.fn()}
-      />,
+      />
     )
 
     await waitFor(() => {
@@ -142,7 +142,7 @@ describe('LicenseManagementExample', () => {
         page={1}
         totalPages={1}
         onPageChange={vi.fn()}
-      />,
+      />
     )
 
     await waitFor(() => {
@@ -187,7 +187,7 @@ describe('LicenseManagementExample', () => {
         page={1}
         totalPages={1}
         onPageChange={vi.fn()}
-      />,
+      />
     )
 
     // License should be filtered out, so no edit/delete buttons should be visible

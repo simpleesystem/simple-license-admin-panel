@@ -26,6 +26,12 @@ export function SessionManager(): null {
   const timeoutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastActivityRef = useRef<number>(0)
   const warningShownRef = useRef<boolean>(false)
+  const isAuthenticatedRef = useRef(isAuthenticated)
+
+  // Keep ref in sync after render; never update ref during render (react-hooks/refs)
+  useEffect(() => {
+    isAuthenticatedRef.current = isAuthenticated
+  }, [isAuthenticated])
 
   // Initialize lastActivityRef in useEffect to avoid calling Date.now() during render
   useEffect(() => {
@@ -52,9 +58,9 @@ export function SessionManager(): null {
 
     resetTimers()
 
-    // Set up warning timer
+    // Set up warning timer - use ref inside callback to avoid stale closure
     warningTimerRef.current = setTimeout(() => {
-      if (isAuthenticated && !warningShownRef.current) {
+      if (isAuthenticatedRef.current && !warningShownRef.current) {
         notificationBus.emit(NOTIFICATION_EVENT_TOAST, {
           titleKey: I18N_KEY_SESSION_WARNING_TITLE,
           variant: 'warning',
@@ -64,9 +70,9 @@ export function SessionManager(): null {
       }
     }, SESSION_IDLE_WARNING_MS)
 
-    // Set up timeout timer
+    // Set up timeout timer - use ref inside callback to avoid stale closure
     timeoutTimerRef.current = setTimeout(() => {
-      if (isAuthenticated) {
+      if (isAuthenticatedRef.current) {
         notificationBus.emit(NOTIFICATION_EVENT_TOAST, {
           titleKey: I18N_KEY_SESSION_EXPIRED_TITLE,
           variant: 'error',
@@ -94,14 +100,14 @@ export function SessionManager(): null {
     }
 
     const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart']
-    events.forEach((event) => {
+    for (const event of events) {
       window.addEventListener(event, handleActivity, { passive: true })
-    })
+    }
 
     return () => {
-      events.forEach((event) => {
+      for (const event of events) {
         window.removeEventListener(event, handleActivity)
-      })
+      }
       resetTimers()
     }
   }, [isAuthenticated, resetTimers, setupTimers])

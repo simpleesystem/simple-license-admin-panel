@@ -32,10 +32,10 @@ describe('TenantQuotaFormFlow', () => {
       <TenantQuotaFormFlow
         client={{} as never}
         tenantId="tenant-123"
-        show
+        show={true}
         onClose={onClose}
         submitLabel="Save quotas"
-      />,
+      />
     )
 
     fireEvent.click(getByRole('button', { name: 'Save quotas' }))
@@ -44,7 +44,7 @@ describe('TenantQuotaFormFlow', () => {
       expect(mutation.mutateAsync).toHaveBeenCalledWith({
         tenantId: 'tenant-123',
         data: expect.any(Object),
-      }),
+      })
     )
     expect(onClose).toHaveBeenCalled()
   })

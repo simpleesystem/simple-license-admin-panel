@@ -1,11 +1,11 @@
 import type { JSX } from 'react'
 
 import {
-  UI_CLASS_INLINE_GAP,
   UI_CLASS_HEADING,
   UI_CLASS_HEADING_BADGE,
   UI_CLASS_HEADING_EYEBROW,
   UI_CLASS_HEADING_TITLE,
+  UI_CLASS_INLINE_GAP,
   UI_CLASS_MARGIN_RESET,
   UI_CLASS_TEXT_ALIGN_MAP,
   UI_TEST_ID_HEADING,
@@ -37,7 +37,9 @@ export function Heading({
       >
         {eyebrow ? <span className={UI_CLASS_HEADING_EYEBROW}>{eyebrow}</span> : null}
         <div className={UI_CLASS_INLINE_GAP}>
-          <HeadingTag className={composeClassNames(UI_CLASS_HEADING_TITLE, UI_CLASS_MARGIN_RESET)}>{children}</HeadingTag>
+          <HeadingTag className={composeClassNames(UI_CLASS_HEADING_TITLE, UI_CLASS_MARGIN_RESET)}>
+            {children}
+          </HeadingTag>
           {badge ? <span className={UI_CLASS_HEADING_BADGE}>{badge}</span> : null}
         </div>
       </div>

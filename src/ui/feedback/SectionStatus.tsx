@@ -55,10 +55,9 @@ export function SectionStatus({
 
   return (
     <VisibilityGate ability={ability} permissionKey={permissionKey} permissionFallback={permissionFallback}>
-      <section
+      <output
         className={composeClassNames(UI_CLASS_SECTION_STATUS, className)}
         data-testid={testId ?? UI_TEST_ID_SECTION_STATUS}
-        role="status"
         aria-live={UI_ARIA_LIVE_POLITE}
         aria-busy={isLoading ? true : undefined}
         aria-label={UI_ARIA_LABEL_SECTION_STATUS}
@@ -71,7 +70,7 @@ export function SectionStatus({
           {meta?.helperText ? <p className={UI_CLASS_TEXT_MUTED}>{meta.helperText}</p> : null}
         </div>
         {actions ? <div className={UI_CLASS_ALERT_ACTIONS}>{actions}</div> : null}
-      </section>
+      </output>
     </VisibilityGate>
   )
 }

@@ -13,7 +13,10 @@ export const VITE_HTML_ENTRY_INDEX = 'index.html'
 export const VITE_HTML_ENTRY_NOT_FOUND = '404.html'
 
 const CHUNK_GROUPS = [
-  { name: CHUNK_REACT, modules: ['react', 'react-dom', 'react-bootstrap', 'react-hook-form', 'react-i18next', '@tanstack/react-query'] },
+  {
+    name: CHUNK_REACT,
+    modules: ['react', 'react-dom', 'react-bootstrap', 'react-hook-form', 'react-i18next', '@tanstack/react-query'],
+  },
   { name: CHUNK_FORMS, modules: ['joi'] },
   { name: CHUNK_I18N, modules: ['i18next'] },
   { name: CHUNK_EVENTS, modules: ['mitt'] },

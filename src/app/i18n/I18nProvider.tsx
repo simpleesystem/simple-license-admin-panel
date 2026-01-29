@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
-import type { PropsWithChildren } from 'react'
 import i18next, { type i18n } from 'i18next'
+import type { PropsWithChildren } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { I18nextProvider } from 'react-i18next'
 import { initReactI18next } from 'react-i18next/initReactI18next'
 

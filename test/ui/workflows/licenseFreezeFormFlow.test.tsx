@@ -1,6 +1,6 @@
-import type { Client } from '@/simpleLicense'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
+import type { Client } from '@/simpleLicense'
 
 import {
   UI_LICENSE_FREEZE_FORM_SUBMIT_LABEL,

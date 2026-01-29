@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
 import type { Client, LicenseUsageDetailsResponse, User } from '@/simpleLicense'
 import { useLicenseUsageDetails } from '@/simpleLicense'
-
+import { canViewLicenses } from '../../app/auth/permissions'
+import { isSystemAdminUser } from '../../app/auth/userUtils'
 import {
   UI_ANALYTICS_COLUMN_ACTIVATIONS,
   UI_ANALYTICS_COLUMN_PEAK_CONCURRENCY,
@@ -30,8 +31,6 @@ import {
   UI_TEXT_ALIGN_END,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
-import { canViewLicenses } from '../../app/auth/permissions'
-import { isSystemAdminUser } from '../../app/auth/userUtils'
 import { DataTable } from '../data/DataTable'
 import { InlineAlert } from '../feedback/InlineAlert'
 import { Stack } from '../layout/Stack'

@@ -80,7 +80,7 @@ export function AuditLogsPanel({
   const [formState, setFormState] = useState<AuditLogFilters>(initialFilters ?? {})
   const dateTimeFormatter = useMemo(
     () => new Intl.DateTimeFormat(UI_DATE_FORMAT_LOCALE, UI_DATE_TIME_FORMAT_OPTIONS),
-    [],
+    []
   )
 
   const queryFilters = useMemo(() => {
@@ -231,12 +231,7 @@ export function AuditLogsPanel({
         </div>
       </Form>
 
-      <DataTable
-        data={rows}
-        columns={columns}
-        rowKey={(row) => row.id}
-        emptyState={UI_AUDIT_LOGS_EMPTY_STATE}
-      />
+      <DataTable data={rows} columns={columns} rowKey={(row) => row.id} emptyState={UI_AUDIT_LOGS_EMPTY_STATE} />
     </Stack>
   )
 }

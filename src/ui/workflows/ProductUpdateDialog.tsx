@@ -1,8 +1,9 @@
-import type { Client, Entitlement, Product, ProductTier, UpdateProductRequest, User } from '@/simpleLicense'
-import { useUpdateProduct } from '@/simpleLicense'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Tab from 'react-bootstrap/Tab'
 import Tabs from 'react-bootstrap/Tabs'
+import type { Client, Entitlement, Product, ProductTier, UpdateProductRequest, User } from '@/simpleLicense'
+import { useUpdateProduct } from '@/simpleLicense'
+import { useLogger } from '../../app/logging/loggerContext'
 
 import type { MutationAdapter } from '../actions/mutationActions'
 import {
@@ -57,6 +58,7 @@ export function ProductUpdateDialog({
   currentUser,
   vendorOptions,
 }: ProductUpdateDialogProps) {
+  const logger = useLogger()
   const [activeTab, setActiveTab] = useState('details')
   const [tiers, setTiers] = useState<ProductTierListItem[]>([])
   const [entitlements, setEntitlements] = useState<ProductEntitlementListItem[]>([])
@@ -87,11 +89,11 @@ export function ProductUpdateDialog({
 
       setTiers(formatted)
     } catch (e) {
-      console.error('Failed to fetch tiers', e)
+      logger.error(e instanceof Error ? e : new Error(String(e)), { message: 'Failed to fetch tiers' })
       // Set empty array on error to prevent stale data
       setTiers([])
     }
-  }, [client, productId, product])
+  }, [client, productId, product, logger])
 
   const fetchEntitlements = useCallback(async () => {
     try {
@@ -112,15 +114,15 @@ export function ProductUpdateDialog({
         string_value: e.stringValue,
         vendorId: product.vendorId,
         productTiers: Array.isArray((e as unknown as { productTiers?: unknown }).productTiers)
-          ? ((e as unknown as { productTiers: Array<{ id: string; tierCode: string }> }).productTiers)
+          ? (e as unknown as { productTiers: Array<{ id: string; tierCode: string }> }).productTiers
           : undefined,
         metadata: (e as unknown as { metadata: Record<string, string | number | boolean | null> | undefined }).metadata,
       }))
       setEntitlements(formatted)
     } catch (e) {
-      console.error('Failed to fetch entitlements', e)
+      logger.error(e instanceof Error ? e : new Error(String(e)), { message: 'Failed to fetch entitlements' })
     }
-  }, [client, productId, product])
+  }, [client, productId, product, logger])
 
   const fetchProductDetails = useCallback(async () => {
     try {
@@ -131,29 +133,31 @@ export function ProductUpdateDialog({
         setMetadataString(JSON.stringify(productData.metadata, null, 2))
       }
     } catch (e) {
-      console.error('Failed to fetch product details', e)
+      logger.error(e instanceof Error ? e : new Error(String(e)), { message: 'Failed to fetch product details' })
     }
-  }, [client, productId])
+  }, [client, productId, logger])
 
+  // Fetch product when dialog opens; defer to avoid setState synchronously in effect (react-hooks/set-state-in-effect)
   useEffect(() => {
-    if (show) {
+    if (!show) {
+      return
+    }
+    const id = setTimeout(() => {
+      void fetchProductDetails()
+    }, 0)
+    return () => clearTimeout(id)
+  }, [show, fetchProductDetails])
+
+  // Fetch tiers and entitlements only when dialog is open and product is loaded (avoids double fetch)
+  useEffect(() => {
+    if (show && product) {
       const load = async () => {
-        await fetchProductDetails()
+        await fetchTiers()
         await fetchEntitlements()
       }
       void load()
     }
-  }, [show, fetchProductDetails, fetchEntitlements])
-
-  // Fetch tiers when show changes or when product (and thus fetchTiers) changes
-  useEffect(() => {
-    if (show) {
-      const load = async () => {
-        await fetchTiers()
-      }
-      void load()
-    }
-  }, [show, fetchTiers])
+  }, [show, product, fetchTiers, fetchEntitlements])
 
   // Callbacks for manual refresh (e.g. from child panels)
   // const refreshTiers = useCallback(() => { ... }, [])
@@ -198,16 +202,17 @@ export function ProductUpdateDialog({
     vendorOptions,
     currentUser: currentUser ?? undefined,
   }) as unknown as FormBlueprint<FormValuesUpdate>
-  const defaultValues: FormValuesUpdate = {
-    name: initialValues?.name,
-    slug: initialValues?.slug,
-    description: initialValues?.description,
-    metadata: metadataString || (initialValues?.metadata ? JSON.stringify(initialValues.metadata, null, 2) : ''),
-    vendor_id: product?.vendorId ?? initialValues?.vendor_id,
-  }
 
-  // Effect to update default values when metadata is fetched
-  // DynamicForm listens to defaultValues changes
+  const defaultValues = useMemo<FormValuesUpdate>(
+    () => ({
+      name: initialValues?.name,
+      slug: initialValues?.slug,
+      description: initialValues?.description,
+      metadata: metadataString || (initialValues?.metadata ? JSON.stringify(initialValues.metadata, null, 2) : ''),
+      vendor_id: product?.vendorId ?? initialValues?.vendor_id,
+    }),
+    [metadataString, product?.vendorId, initialValues]
+  )
 
   return (
     <ModalDialog

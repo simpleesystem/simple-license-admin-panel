@@ -1,11 +1,10 @@
-import type { ReactNode } from 'react'
 import { renderHook } from '@testing-library/react'
+import type { ReactNode } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-
-import { useCan, usePermissions } from '../../../src/app/auth/useAuthorization'
-import type { AuthContextValue } from '../../../src/app/auth/types'
-import { AuthContext } from '../../../src/app/auth/authContext'
 import type { User } from '@/simpleLicense'
+import { AuthContext } from '../../../src/app/auth/authContext'
+import type { AuthContextValue } from '../../../src/app/auth/types'
+import { useCan, usePermissions } from '../../../src/app/auth/useAuthorization'
 
 const baseAuthValue: AuthContextValue = {
   token: null,

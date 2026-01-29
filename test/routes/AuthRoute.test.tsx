@@ -1,15 +1,14 @@
 import { render, screen } from '@testing-library/react'
 import mitt from 'mitt'
 import { vi } from 'vitest'
-
-import { I18nProvider } from '@/app/i18n/I18nProvider'
-import { AUTH_STATUS_IDLE } from '@/app/constants'
-import { AuthRouteComponent } from '@/routes/auth/AuthRoute'
 import { AuthContext } from '@/app/auth/authContext'
-import type { AuthContextValue } from '@/app/auth/types'
 import { AuthorizationContext } from '@/app/auth/authorizationContext'
-import { buildPermissions } from '../factories/permissionFactory'
+import type { AuthContextValue } from '@/app/auth/types'
+import { AUTH_STATUS_IDLE } from '@/app/constants'
+import { I18nProvider } from '@/app/i18n/I18nProvider'
 import { NotificationBusProvider } from '@/notifications/busContext'
+import { AuthRouteComponent } from '@/routes/auth/AuthRoute'
+import { buildPermissions } from '../factories/permissionFactory'
 
 vi.mock('@tanstack/react-router', () => {
   const navigate = vi.fn()
@@ -33,7 +32,7 @@ describe('AuthRouteComponent', () => {
             </AuthContext.Provider>
           </AuthorizationContext.Provider>
         </NotificationBusProvider>
-      </I18nProvider>,
+      </I18nProvider>
     )
 
     const heading = screen.getByRole('heading', { name: /login/i })

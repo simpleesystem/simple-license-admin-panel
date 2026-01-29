@@ -104,7 +104,7 @@ describe('UserFormFlow', () => {
         onClose={onClose}
         onCompleted={vi.fn()}
         submitLabel={UI_USER_FORM_SUBMIT_CREATE}
-      />,
+      />
     )
 
     fireEvent.click(getByRole('button', { name: UI_USER_FORM_SUBMIT_CREATE }))

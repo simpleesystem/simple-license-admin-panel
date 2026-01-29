@@ -1,14 +1,6 @@
 import { faker } from '@faker-js/faker'
 import { render } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
-
-import { BadgeText } from '../../../src/ui/typography/BadgeText'
-import { BodyText } from '../../../src/ui/typography/BodyText'
-import { EmptyState } from '../../../src/ui/typography/EmptyState'
-import { Heading } from '../../../src/ui/typography/Heading'
-import { KeyValueList } from '../../../src/ui/typography/KeyValueList'
-import { MutedText } from '../../../src/ui/typography/MutedText'
-import { buildKeyValueItem } from '../../ui/factories/uiFactories'
 import {
   UI_CLASS_BADGE_TEXT,
   UI_CLASS_BODY_TEXT,
@@ -22,6 +14,13 @@ import {
   UI_TEST_ID_KEY_VALUE_ITEM,
   UI_TEST_ID_KEY_VALUE_LIST,
 } from '../../../src/ui/constants'
+import { BadgeText } from '../../../src/ui/typography/BadgeText'
+import { BodyText } from '../../../src/ui/typography/BodyText'
+import { EmptyState } from '../../../src/ui/typography/EmptyState'
+import { Heading } from '../../../src/ui/typography/Heading'
+import { KeyValueList } from '../../../src/ui/typography/KeyValueList'
+import { MutedText } from '../../../src/ui/typography/MutedText'
+import { buildKeyValueItem } from '../../ui/factories/uiFactories'
 
 describe('Typography primitives', () => {
   test('Heading renders as requested level', () => {
@@ -47,7 +46,7 @@ describe('Typography primitives', () => {
 
   test('BodyText supports lead emphasis', () => {
     const content = faker.lorem.words(2)
-    const { getByText } = render(<BodyText lead>{content}</BodyText>)
+    const { getByText } = render(<BodyText lead={true}>{content}</BodyText>)
 
     expect(getByText(content)).toHaveClass(UI_CLASS_BODY_TEXT_LEAD, { exact: false })
   })

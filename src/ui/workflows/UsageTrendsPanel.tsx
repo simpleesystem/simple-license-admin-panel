@@ -1,7 +1,7 @@
-import type { Client } from '@/simpleLicense'
-import { useUsageTrends } from '@/simpleLicense'
 import { useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
+import type { Client } from '@/simpleLicense'
+import { useUsageTrends } from '@/simpleLicense'
 import {
   UI_ANALYTICS_COLUMN_ACTIVATIONS,
   UI_ANALYTICS_COLUMN_PERIOD,

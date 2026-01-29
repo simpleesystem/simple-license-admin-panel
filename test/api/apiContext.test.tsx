@@ -1,9 +1,8 @@
 import { render } from '@testing-library/react'
 import { useEffect } from 'react'
 import { vi } from 'vitest'
-
-import { ERROR_MESSAGE_API_CONTEXT_UNAVAILABLE } from '../../src/app/constants'
 import { ApiContext, useApiClient } from '../../src/api/apiContext'
+import { ERROR_MESSAGE_API_CONTEXT_UNAVAILABLE } from '../../src/app/constants'
 
 const HookConsumer = ({ onCapture }: { onCapture: (client: unknown) => void }) => {
   const client = useApiClient()
@@ -26,7 +25,7 @@ describe('ApiContext', () => {
     render(
       <ApiContext.Provider value={mockClient as never}>
         <HookConsumer onCapture={handleCapture} />
-      </ApiContext.Provider>,
+      </ApiContext.Provider>
     )
 
     expect(handleCapture).toHaveBeenCalledWith(mockClient)

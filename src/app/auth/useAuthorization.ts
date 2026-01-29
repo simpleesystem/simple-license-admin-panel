@@ -1,5 +1,5 @@
-import { useAuth } from './useAuth'
 import { derivePermissionsFromUser, type PermissionKey, type Permissions } from './permissions'
+import { useAuth } from './useAuth'
 
 export function usePermissions(): Permissions {
   const { user } = useAuth()

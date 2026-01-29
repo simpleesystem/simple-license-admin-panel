@@ -1,7 +1,7 @@
-import { ApiException, ERROR_CODE_MUST_CHANGE_PASSWORD } from '@/simpleLicense'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { useCallback } from 'react'
 import { beforeEach, vi } from 'vitest'
+import { ApiException, ERROR_CODE_MUST_CHANGE_PASSWORD } from '@/simpleLicense'
 
 import { AppProviders } from '../../../src/app/AppProviders'
 import { useAuth } from '../../../src/app/auth/authContext'
@@ -94,7 +94,10 @@ const renderAuthTree = async () => {
   await waitFor(() => {
     expect(screen.getByText(BUTTON_LABEL_LOGIN)).toBeInTheDocument()
   })
-  return result!
+  if (!result) {
+    throw new Error('Expected render result')
+  }
+  return result
 }
 
 beforeEach(() => {
@@ -362,14 +365,20 @@ describe('AuthProvider', () => {
     fireEvent.click(screen.getByText(BUTTON_LABEL_LOGIN))
 
     // Wait for fetchUser to be called and set passwordResetRequired flag
-    await waitFor(() => {
-      expect(mockClient.getCurrentUser).toHaveBeenCalled()
-    }, { timeout: 3000 })
+    await waitFor(
+      () => {
+        expect(mockClient.getCurrentUser).toHaveBeenCalled()
+      },
+      { timeout: 3000 }
+    )
 
     // Verify user state is set correctly (passwordResetRequired should be true after error)
-    await waitFor(() => {
-      const authStatus = screen.getByTestId(TEST_ID_AUTH_STATUS)
-      expect(authStatus.textContent).toBe(TEXT_ANONYMOUS)
-    }, { timeout: 3000 })
+    await waitFor(
+      () => {
+        const authStatus = screen.getByTestId(TEST_ID_AUTH_STATUS)
+        expect(authStatus.textContent).toBe(TEXT_ANONYMOUS)
+      },
+      { timeout: 3000 }
+    )
   })
 })

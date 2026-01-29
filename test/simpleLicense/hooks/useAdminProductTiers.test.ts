@@ -1,15 +1,15 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { waitFor } from '@testing-library/react'
-import type { Client } from '@/simpleLicense'
-import {
-  useProductTiers,
-  useCreateProductTier,
-  useUpdateProductTier,
-  useDeleteProductTier,
-} from '@/simpleLicense/hooks/useAdminProductTiers'
+import { faker } from '@faker-js/faker'
 import { buildProductTier } from '@test/factories/licenseFactory'
 import { renderHookWithQueryClient } from '@test/utils/renderHookWithQueryClient'
-import { faker } from '@faker-js/faker'
+import { waitFor } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { Client } from '@/simpleLicense'
+import {
+  useCreateProductTier,
+  useDeleteProductTier,
+  useProductTiers,
+  useUpdateProductTier,
+} from '@/simpleLicense/hooks/useAdminProductTiers'
 
 describe('useAdminProductTiers hooks', () => {
   let mockClient: Client
@@ -30,9 +30,7 @@ describe('useAdminProductTiers hooks', () => {
       const mockResponse = { data: tiers }
       ;(mockClient.listProductTiers as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse)
 
-      const { result } = renderHookWithQueryClient(() =>
-        useProductTiers(mockClient, mockProductId)
-      )
+      const { result } = renderHookWithQueryClient(() => useProductTiers(mockClient, mockProductId))
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true)
@@ -46,9 +44,7 @@ describe('useAdminProductTiers hooks', () => {
       const mockError = new Error('Failed to fetch product tiers')
       ;(mockClient.listProductTiers as ReturnType<typeof vi.fn>).mockRejectedValue(mockError)
 
-      const { result } = renderHookWithQueryClient(() =>
-        useProductTiers(mockClient, mockProductId)
-      )
+      const { result } = renderHookWithQueryClient(() => useProductTiers(mockClient, mockProductId))
 
       await waitFor(() => {
         expect(result.current.isError).toBe(true)
@@ -65,9 +61,7 @@ describe('useAdminProductTiers hooks', () => {
     })
 
     it('respects enabled option', () => {
-      const { result } = renderHookWithQueryClient(() =>
-        useProductTiers(mockClient, mockProductId, { enabled: false })
-      )
+      const { result } = renderHookWithQueryClient(() => useProductTiers(mockClient, mockProductId, { enabled: false }))
 
       expect(result.current.isFetching).toBe(false)
       expect(mockClient.listProductTiers).not.toHaveBeenCalled()
@@ -94,10 +88,9 @@ describe('useAdminProductTiers hooks', () => {
       })
       const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries')
 
-      const { result } = renderHookWithQueryClient(
-        () => useCreateProductTier(mockClient, mockProductId),
-        { queryClient }
-      )
+      const { result } = renderHookWithQueryClient(() => useCreateProductTier(mockClient, mockProductId), {
+        queryClient,
+      })
 
       result.current.mutate(mockRequest)
 
@@ -123,9 +116,7 @@ describe('useAdminProductTiers hooks', () => {
       const mockError = new Error('Failed to create product tier')
       ;(mockClient.createProductTier as ReturnType<typeof vi.fn>).mockRejectedValue(mockError)
 
-      const { result } = renderHookWithQueryClient(() =>
-        useCreateProductTier(mockClient, mockProductId)
-      )
+      const { result } = renderHookWithQueryClient(() => useCreateProductTier(mockClient, mockProductId))
 
       result.current.mutate(mockRequest)
 

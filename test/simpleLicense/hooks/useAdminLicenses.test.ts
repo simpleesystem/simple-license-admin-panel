@@ -1,20 +1,20 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { waitFor } from '@testing-library/react'
-import type { Client } from '@/simpleLicense'
-import {
-  useAdminLicenses,
-  useAdminLicense,
-  useCreateLicense,
-  useUpdateLicense,
-  useSuspendLicense,
-  useResumeLicense,
-  useFreezeLicense,
-  useRevokeLicense,
-  useLicenseActivations,
-} from '@/simpleLicense/hooks/useAdminLicenses'
+import { faker } from '@faker-js/faker'
 import { buildLicense } from '@test/factories/licenseFactory'
 import { renderHookWithQueryClient } from '@test/utils/renderHookWithQueryClient'
-import { faker } from '@faker-js/faker'
+import { waitFor } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { Client } from '@/simpleLicense'
+import {
+  useAdminLicense,
+  useAdminLicenses,
+  useCreateLicense,
+  useFreezeLicense,
+  useLicenseActivations,
+  useResumeLicense,
+  useRevokeLicense,
+  useSuspendLicense,
+  useUpdateLicense,
+} from '@/simpleLicense/hooks/useAdminLicenses'
 
 describe('useAdminLicenses hooks', () => {
   let mockClient: Client
@@ -400,9 +400,7 @@ describe('useAdminLicenses hooks', () => {
       }
       ;(mockClient.getLicenseActivations as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse)
 
-      const { result } = renderHookWithQueryClient(() =>
-        useLicenseActivations(mockClient, mockLicenseId)
-      )
+      const { result } = renderHookWithQueryClient(() => useLicenseActivations(mockClient, mockLicenseId))
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true)

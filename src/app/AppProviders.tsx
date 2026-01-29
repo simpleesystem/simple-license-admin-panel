@@ -5,7 +5,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider } from '@tanstack/react-router'
 import type { PropsWithChildren, ReactNode } from 'react'
 import { useEffect, useMemo } from 'react'
-
+import type { Client } from '@/simpleLicense'
 import { ApiProvider } from '../api/ApiProvider'
 import { AppErrorBoundary } from '../errors/AppErrorBoundary'
 import { NotificationBusProvider } from '../notifications/bus'
@@ -30,9 +30,6 @@ import { AppStateProvider } from './state/appState'
 import { SurfaceRenderer } from './state/SurfaceRenderer'
 import { useAppStore } from './state/store'
 
-import type { Client } from '@/simpleLicense'
-// ... existing imports ...
-
 type AppProvidersProps = PropsWithChildren<{
   queryClient?: QueryClient
   apiClient?: Client
@@ -41,7 +38,9 @@ type AppProvidersProps = PropsWithChildren<{
 export function AppProviders({ children, queryClient, apiClient }: AppProvidersProps) {
   return (
     <AppConfigProvider>
-      <AppProvidersInner queryClient={queryClient} apiClient={apiClient}>{children}</AppProvidersInner>
+      <AppProvidersInner queryClient={queryClient} apiClient={apiClient}>
+        {children}
+      </AppProvidersInner>
     </AppConfigProvider>
   )
 }
@@ -122,11 +121,13 @@ function RouterContextBridge({ queryClient, children }: { queryClient: QueryClie
         firstAllowedRoute,
       },
     })
-    logger.debug('router:context:update', {
-      isAuthenticated: authState.isAuthenticated,
-      firstAllowedRoute,
-      role: authState.currentUserRole,
-    })
+    if (import.meta.env.DEV) {
+      logger.debug('router:context:update', {
+        isAuthenticated: authState.isAuthenticated,
+        firstAllowedRoute,
+        role: authState.currentUserRole,
+      })
+    }
   }, [queryClient, authState, firstAllowedRoute, logger])
 
   // Process navigation intent AFTER router context is updated
@@ -136,11 +137,13 @@ function RouterContextBridge({ queryClient, children }: { queryClient: QueryClie
     if (navigationIntent) {
       // Use setTimeout to ensure router context update has been processed
       const timeoutId = setTimeout(() => {
-        logger.info('router:navigation-intent', {
-          to: navigationIntent.to,
-          replace: navigationIntent.replace,
-          isAuthenticated: authState.isAuthenticated,
-        })
+        if (import.meta.env.DEV) {
+          logger.info('router:navigation-intent', {
+            to: navigationIntent.to,
+            replace: navigationIntent.replace,
+            isAuthenticated: authState.isAuthenticated,
+          })
+        }
         navigate({
           to: navigationIntent.to,
           replace: navigationIntent.replace,

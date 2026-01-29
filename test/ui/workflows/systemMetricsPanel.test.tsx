@@ -1,8 +1,9 @@
 import { faker } from '@faker-js/faker'
-import type { Client, MetricsResponse } from '@/simpleLicense'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
-
+import type { Client, MetricsResponse } from '@/simpleLicense'
+import { ADMIN_SYSTEM_WS_STATUS_DISCONNECTED } from '../../../src/app/constants'
+import { AdminSystemLiveFeedContext } from '../../../src/app/live/AdminSystemLiveFeedContextDef'
 import {
   UI_LIVE_STATUS_DISCONNECTED,
   UI_SYSTEM_METRICS_EMPTY_BODY,
@@ -18,8 +19,6 @@ import {
   UI_SYSTEM_METRICS_TITLE,
 } from '../../../src/ui/constants'
 import { SystemMetricsPanel } from '../../../src/ui/workflows/SystemMetricsPanel'
-import { AdminSystemLiveFeedContext } from '../../../src/app/live/AdminSystemLiveFeedContextDef'
-import { ADMIN_SYSTEM_WS_STATUS_DISCONNECTED } from '../../../src/app/constants'
 import { buildUser } from '../../factories/userFactory'
 
 const useSystemMetricsMock = vi.hoisted(() => vi.fn())
@@ -76,11 +75,7 @@ const mockLiveContext = {
 }
 
 const renderWithContext = (ui: React.ReactElement) => {
-  return render(
-    <AdminSystemLiveFeedContext.Provider value={mockLiveContext}>
-      {ui}
-    </AdminSystemLiveFeedContext.Provider>
-  )
+  return render(<AdminSystemLiveFeedContext.Provider value={mockLiveContext}>{ui}</AdminSystemLiveFeedContext.Provider>)
 }
 
 describe('SystemMetricsPanel', () => {

@@ -1,8 +1,13 @@
-import type { Client, User } from '@/simpleLicense'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { NotificationBusProvider } from '@/notifications/busContext'
-import { UI_PRODUCT_BUTTON_CREATE, UI_PRODUCT_EMPTY_STATE_MESSAGE, UI_TABLE_SEARCH_PLACEHOLDER, UI_USER_ROLE_SUPERUSER } from '@/ui/constants'
+import type { Client, User } from '@/simpleLicense'
+import {
+  UI_PRODUCT_BUTTON_CREATE,
+  UI_PRODUCT_EMPTY_STATE_MESSAGE,
+  UI_TABLE_SEARCH_PLACEHOLDER,
+  UI_USER_ROLE_SUPERUSER,
+} from '@/ui/constants'
 import { type ProductListItem, ProductManagementPanel } from '@/ui/workflows/ProductManagementPanel'
 
 // Mock client
@@ -52,7 +57,9 @@ vi.mock('@/ui/workflows/ProductFormFlow', () => ({
   ProductFormFlow: ({ show, onClose }: { show: boolean; onClose: () => void }) =>
     show ? (
       <div data-testid="product-form-flow">
-        <button onClick={onClose}>Close</button>
+        <button type="button" onClick={onClose}>
+          Close
+        </button>
       </div>
     ) : null,
 }))
@@ -61,14 +68,18 @@ vi.mock('@/ui/workflows/ProductUpdateDialog', () => ({
   ProductUpdateDialog: ({ show, onClose }: { show: boolean; onClose: () => void }) =>
     show ? (
       <div data-testid="product-update-dialog">
-        <button onClick={onClose}>Close</button>
+        <button type="button" onClick={onClose}>
+          Close
+        </button>
       </div>
     ) : null,
 }))
 
 vi.mock('@/ui/workflows/ProductRowActions', () => ({
   ProductRowActions: ({ onEdit }: { onEdit: (p: { id: string }) => void }) => (
-    <button onClick={() => onEdit({ id: 'product-1' })}>Edit</button>
+    <button type="button" onClick={() => onEdit({ id: 'product-1' })}>
+      Edit
+    </button>
   ),
 }))
 

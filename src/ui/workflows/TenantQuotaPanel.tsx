@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
+import Button from 'react-bootstrap/Button'
 import type { Client } from '@/simpleLicense'
 import { useQuotaConfig, useQuotaUsage } from '@/simpleLicense'
-import Button from 'react-bootstrap/Button'
 
 import { SummaryList } from '../data/SummaryList'
-import type { UiSummaryCardItem } from '../types'
-import { Stack } from '../layout/Stack'
 import { InlineAlert } from '../feedback/InlineAlert'
+import { Stack } from '../layout/Stack'
+import type { UiSummaryCardItem } from '../types'
 import { TenantQuotaFormFlow } from './TenantQuotaFormFlow'
 
 type TenantQuotaPanelProps = {

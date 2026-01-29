@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import { describe, expect, beforeEach, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import {
   UI_PRODUCT_ACTION_DELETE,
@@ -25,10 +25,14 @@ vi.mock('@/simpleLicense', async () => {
 })
 
 vi.mock('../../../src/ui/data/ActionMenu', () => ({
-  ActionMenu: ({ items }: { items: Array<{ id: string; label: string; disabled?: boolean; onSelect: () => void }> }) => (
+  ActionMenu: ({
+    items,
+  }: {
+    items: Array<{ id: string; label: string; disabled?: boolean; onSelect: () => void }>
+  }) => (
     <div>
       {items.map((item) => (
-        <button key={item.id} onClick={item.onSelect} disabled={item.disabled}>
+        <button type="button" key={item.id} onClick={item.onSelect} disabled={item.disabled}>
           {item.label}
         </button>
       ))}
@@ -63,7 +67,7 @@ describe('ProductRowActions', () => {
         isActive={product.isActive}
         currentUser={superuser}
         vendorId={product.vendorId}
-      />,
+      />
     )
 
     // Verify buttons are present
@@ -84,7 +88,7 @@ describe('ProductRowActions', () => {
         isActive={false}
         currentUser={superuser}
         vendorId={product.vendorId}
-      />,
+      />
     )
 
     // Test resume via modal
@@ -111,7 +115,7 @@ describe('ProductRowActions', () => {
         isActive={product.isActive}
         currentUser={vendorManager}
         vendorId={product.vendorId}
-      />,
+      />
     )
 
     expect(screen.queryByText(UI_PRODUCT_ACTION_DELETE)).toBeNull()
@@ -141,7 +145,7 @@ describe('ProductRowActions', () => {
         isActive={product.isActive}
         currentUser={vendorManager}
         vendorId={product.vendorId}
-      />,
+      />
     )
 
     expect(container).toBeEmptyDOMElement()
@@ -164,7 +168,7 @@ describe('ProductRowActions', () => {
         isActive={product.isActive}
         currentUser={viewer}
         vendorId={product.vendorId}
-      />,
+      />
     )
 
     expect(container).toBeEmptyDOMElement()

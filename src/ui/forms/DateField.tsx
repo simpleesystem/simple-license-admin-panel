@@ -1,6 +1,6 @@
 import Form from 'react-bootstrap/Form'
-import { useFormContext } from 'react-hook-form'
 import type { FieldValues } from 'react-hook-form'
+import { useFormContext } from 'react-hook-form'
 
 import { UI_FORM_CONTROL_TYPE_DATE } from '../constants'
 import type { DateFieldProps } from '../types'
@@ -44,7 +44,7 @@ export function DateField<TFieldValues extends FieldValues>({
           {...register(name)}
         />
         {description ? (
-          <Form.Text muted id={descriptionId}>
+          <Form.Text muted={true} id={descriptionId}>
             {description}
           </Form.Text>
         ) : null}

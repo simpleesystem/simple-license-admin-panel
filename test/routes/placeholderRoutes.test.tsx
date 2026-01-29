@@ -1,10 +1,10 @@
-import type { JSX } from 'react'
 import { render, screen } from '@testing-library/react'
 import i18n from 'i18next'
+import type { JSX } from 'react'
 import { initReactI18next } from 'react-i18next'
-import { describe, test, beforeAll } from 'vitest'
-import { renderWithProviders } from '../ui/utils'
-
+import { beforeAll, describe, test } from 'vitest'
+import { APP_DEFAULT_LANGUAGE, APP_I18N_DEFAULT_NAMESPACE } from '../../src/app/constants'
+import { i18nResources } from '../../src/app/i18n/resources'
 import { AnalyticsRouteComponent } from '../../src/routes/analytics/AnalyticsRoute'
 import { AuditRouteComponent } from '../../src/routes/audit/AuditRoute'
 import { SectionPlaceholder } from '../../src/routes/common/SectionPlaceholder'
@@ -21,9 +21,7 @@ import {
   UI_PAGE_TITLE_TENANTS,
   UI_PAGE_TITLE_USERS,
 } from '../../src/ui/constants'
-import { APP_DEFAULT_LANGUAGE, APP_I18N_DEFAULT_NAMESPACE } from '../../src/app/constants'
-import { i18nResources } from '../../src/app/i18n/resources'
-
+import { renderWithProviders } from '../ui/utils'
 
 type RouteCase = {
   label: string
@@ -53,13 +51,13 @@ describe('placeholder routes', () => {
     }
   })
 
-  ROUTE_CASES.forEach(({ label, Component, title }) => {
+  for (const { label, Component, title } of ROUTE_CASES) {
     test(`renders ${label} placeholder content`, async () => {
       renderWithProviders(<Component />)
       expect(await screen.findByText(title)).toBeInTheDocument()
       expect(await screen.findByText(UI_PAGE_PLACEHOLDER_TITLE)).toBeInTheDocument()
     })
-  })
+  }
 
   test('renders users route content', async () => {
     renderWithProviders(<UsersRouteComponent />)
@@ -93,7 +91,7 @@ describe('placeholder routes', () => {
 
   test('SectionPlaceholder renders custom body', () => {
     const customBody = 'Custom placeholder body'
-    render(<SectionPlaceholder title="Custom" subtitle="Subtitle" body={customBody} testMode />)
+    render(<SectionPlaceholder title="Custom" subtitle="Subtitle" body={customBody} testMode={true} />)
     expect(screen.getByText('Custom')).toBeInTheDocument()
     expect(screen.getByText(customBody)).toBeInTheDocument()
   })

@@ -1,16 +1,15 @@
-import type { ReactNode } from 'react'
+import { buildPermissions } from '@test/factories/permissionFactory'
 import { renderHook } from '@testing-library/react'
-import { describe, it, expect } from 'vitest'
-
+import type { ReactNode } from 'react'
+import { describe, expect, it } from 'vitest'
+import { AbilityContext } from '@/app/abilities/abilityContext'
+import { buildAbilityFromPermissions } from '@/app/abilities/factory'
+import { useAbility, useCanAbility } from '@/app/abilities/useAbility'
 import {
   ABILITY_ACTION_VIEW,
   ABILITY_SUBJECT_DASHBOARD,
   ERROR_MESSAGE_ABILITY_CONTEXT_UNAVAILABLE,
 } from '@/app/constants'
-import { AbilityContext } from '@/app/abilities/abilityContext'
-import { buildAbilityFromPermissions } from '@/app/abilities/factory'
-import { useAbility, useCanAbility } from '@/app/abilities/useAbility'
-import { buildPermissions } from '@test/factories/permissionFactory'
 
 const withProviders = (permissions = buildPermissions({ viewDashboard: true })) => {
   const ability = buildAbilityFromPermissions(permissions)
@@ -38,10 +37,7 @@ describe('useCanAbility', () => {
   it('returns true when the user can perform the action', () => {
     const wrapper = withProviders()
 
-    const { result } = renderHook(
-      () => useCanAbility(ABILITY_ACTION_VIEW, ABILITY_SUBJECT_DASHBOARD),
-      { wrapper },
-    )
+    const { result } = renderHook(() => useCanAbility(ABILITY_ACTION_VIEW, ABILITY_SUBJECT_DASHBOARD), { wrapper })
 
     expect(result.current).toBe(true)
   })
@@ -49,10 +45,7 @@ describe('useCanAbility', () => {
   it('returns false when the ability is not granted', () => {
     const wrapper = withProviders(buildPermissions())
 
-    const { result } = renderHook(
-      () => useCanAbility(ABILITY_ACTION_VIEW, ABILITY_SUBJECT_DASHBOARD),
-      { wrapper },
-    )
+    const { result } = renderHook(() => useCanAbility(ABILITY_ACTION_VIEW, ABILITY_SUBJECT_DASHBOARD), { wrapper })
 
     expect(result.current).toBe(false)
   })

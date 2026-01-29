@@ -1,9 +1,9 @@
-import { useAdminProducts, useAdminTenants } from '@/simpleLicense'
 import { useMemo, useState } from 'react'
+import { useAdminProducts, useAdminTenants } from '@/simpleLicense'
 
 import { useApiClient } from '../../api/apiContext'
-import { useAuth } from '../../app/auth/useAuth'
 import { canViewProducts, isProductOwnedByUser, isVendorScopedUser } from '../../app/auth/permissions'
+import { useAuth } from '../../app/auth/useAuth'
 import {
   UI_PAGE_SUBTITLE_PRODUCTS,
   UI_PAGE_TITLE_PRODUCTS,

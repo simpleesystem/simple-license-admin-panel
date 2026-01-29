@@ -2,7 +2,11 @@ import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
 
 import { TenantsRouteComponent } from '../../../../src/routes/tenants/TenantsRoute'
-import { UI_TENANT_BUTTON_CREATE, UI_TENANT_STATUS_ERROR_TITLE, UI_TENANT_STATUS_LOADING_TITLE } from '../../../../src/ui/constants'
+import {
+  UI_TENANT_BUTTON_CREATE,
+  UI_TENANT_STATUS_ERROR_TITLE,
+  UI_TENANT_STATUS_LOADING_TITLE,
+} from '../../../../src/ui/constants'
 import { buildTenant } from '../../../factories/tenantFactory'
 import { buildUser } from '../../../factories/userFactory'
 import { renderWithProviders } from '../../utils'
@@ -130,10 +134,7 @@ describe('TenantsRouteComponent', () => {
       refreshCurrentUser: vi.fn(),
     })
 
-    const tenants = [
-      buildTenant({ name: 'Tenant Alpha' }),
-      buildTenant({ name: 'Tenant Beta' }),
-    ]
+    const tenants = [buildTenant({ name: 'Tenant Alpha' }), buildTenant({ name: 'Tenant Beta' })]
     useAdminTenantsMock.mockReturnValue({ data: tenants, isLoading: false, isError: false, refetch: vi.fn() })
 
     renderWithProviders(<TenantsRouteComponent />)
@@ -437,10 +438,7 @@ describe('TenantsRouteComponent', () => {
       refreshCurrentUser: vi.fn(),
     })
 
-    const tenants = [
-      buildTenant({ name: 'Tenant A' }),
-      buildTenant({ name: 'Tenant B' }),
-    ]
+    const tenants = [buildTenant({ name: 'Tenant A' }), buildTenant({ name: 'Tenant B' })]
     useAdminTenantsMock.mockReturnValue({ data: tenants, isLoading: false, isError: false, refetch: vi.fn() })
 
     renderWithProviders(<TenantsRouteComponent />)
@@ -469,10 +467,13 @@ describe('TenantsRouteComponent', () => {
     renderWithProviders(<TenantsRouteComponent />)
 
     // Wait for tenants to appear (pagination should show first page with 10 tenants)
-    await waitFor(() => {
-      const tenantElements = screen.queryAllByText(/Tenant \d+/)
-      expect(tenantElements.length).toBeGreaterThan(0)
-    }, { timeout: 2000 })
+    await waitFor(
+      () => {
+        const tenantElements = screen.queryAllByText(/Tenant \d+/)
+        expect(tenantElements.length).toBeGreaterThan(0)
+      },
+      { timeout: 2000 }
+    )
   })
 
   test('handles custom sort with ascending direction', async () => {
@@ -488,10 +489,7 @@ describe('TenantsRouteComponent', () => {
       refreshCurrentUser: vi.fn(),
     })
 
-    const tenants = [
-      buildTenant({ name: 'Zebra Tenant' }),
-      buildTenant({ name: 'Alpha Tenant' }),
-    ]
+    const tenants = [buildTenant({ name: 'Zebra Tenant' }), buildTenant({ name: 'Alpha Tenant' })]
     useAdminTenantsMock.mockReturnValue({ data: tenants, isLoading: false, isError: false, refetch: vi.fn() })
 
     renderWithProviders(<TenantsRouteComponent />)
@@ -514,10 +512,7 @@ describe('TenantsRouteComponent', () => {
       refreshCurrentUser: vi.fn(),
     })
 
-    const tenants = [
-      buildTenant({ name: 'Alpha Tenant' }),
-      buildTenant({ name: 'Zebra Tenant' }),
-    ]
+    const tenants = [buildTenant({ name: 'Alpha Tenant' }), buildTenant({ name: 'Zebra Tenant' })]
     useAdminTenantsMock.mockReturnValue({ data: tenants, isLoading: false, isError: false, refetch: vi.fn() })
 
     renderWithProviders(<TenantsRouteComponent />)
@@ -657,10 +652,7 @@ describe('TenantsRouteComponent', () => {
       refreshCurrentUser: vi.fn(),
     })
 
-    const tenants = [
-      buildTenant({ name: 'Alpha Tenant' }),
-      buildTenant({ name: 'Beta Tenant' }),
-    ]
+    const tenants = [buildTenant({ name: 'Alpha Tenant' }), buildTenant({ name: 'Beta Tenant' })]
     useAdminTenantsMock.mockReturnValue({ data: tenants, isLoading: false, isError: false, refetch: vi.fn() })
 
     renderWithProviders(<TenantsRouteComponent />)
@@ -844,10 +836,7 @@ describe('TenantsRouteComponent', () => {
       refreshCurrentUser: vi.fn(),
     })
 
-    const tenants = [
-      buildTenant({ name: 'Tenant A' }),
-      buildTenant({ name: 'Tenant B' }),
-    ]
+    const tenants = [buildTenant({ name: 'Tenant A' }), buildTenant({ name: 'Tenant B' })]
     useAdminTenantsMock.mockReturnValue({ data: tenants, isLoading: false, isError: false, refetch: vi.fn() })
 
     renderWithProviders(<TenantsRouteComponent />)
@@ -951,10 +940,7 @@ describe('TenantsRouteComponent', () => {
       refreshCurrentUser: vi.fn(),
     })
 
-    const tenants = [
-      buildTenant({ name: 'Tenant Z' }),
-      buildTenant({ name: 'Tenant A' }),
-    ]
+    const tenants = [buildTenant({ name: 'Tenant Z' }), buildTenant({ name: 'Tenant A' })]
     useAdminTenantsMock.mockReturnValue({ data: tenants, isLoading: false, isError: false, refetch: vi.fn() })
 
     renderWithProviders(<TenantsRouteComponent />)
@@ -978,10 +964,7 @@ describe('TenantsRouteComponent', () => {
       refreshCurrentUser: vi.fn(),
     })
 
-    const tenants = [
-      buildTenant({ name: 'Tenant A' }),
-      buildTenant({ name: 'Tenant Z' }),
-    ]
+    const tenants = [buildTenant({ name: 'Tenant A' }), buildTenant({ name: 'Tenant Z' })]
     useAdminTenantsMock.mockReturnValue({ data: tenants, isLoading: false, isError: false, refetch: vi.fn() })
 
     renderWithProviders(<TenantsRouteComponent />)

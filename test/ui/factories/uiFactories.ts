@@ -1,5 +1,10 @@
 import { faker } from '@faker-js/faker'
-
+import {
+  UI_BADGE_VARIANT_INFO,
+  UI_BADGE_VARIANT_PRIMARY,
+  UI_BADGE_VARIANT_SUCCESS,
+  UI_BADGE_VARIANT_WARNING,
+} from '../../../src/ui/constants'
 import type {
   UiBreadcrumbItem,
   UiCardListItem,
@@ -9,12 +14,6 @@ import type {
   UiSummaryCardItem,
   UiTagItem,
 } from '../../../src/ui/types'
-import {
-  UI_BADGE_VARIANT_INFO,
-  UI_BADGE_VARIANT_PRIMARY,
-  UI_BADGE_VARIANT_SUCCESS,
-  UI_BADGE_VARIANT_WARNING,
-} from '../../../src/ui/constants'
 
 export const buildText = () => faker.lorem.words(2)
 
@@ -66,9 +65,7 @@ export const buildSidebarNavItem = (overrides?: Partial<UiSidebarNavItem>): UiSi
   ...overrides,
 })
 
-export const buildTableColumn = <TData,>(
-  overrides?: Partial<UiDataTableColumn<TData>>
-): UiDataTableColumn<TData> => ({
+export const buildTableColumn = <TData>(overrides?: Partial<UiDataTableColumn<TData>>): UiDataTableColumn<TData> => ({
   id: faker.string.uuid(),
   header: buildText(),
   cell: () => buildText(),

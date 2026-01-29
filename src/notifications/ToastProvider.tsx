@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Toast, ToastContainer } from 'react-bootstrap'
 import { useTranslation } from 'react-i18next'
 
@@ -79,9 +79,9 @@ export function ToastProvider() {
     }
   }, [bus])
 
-  const removeToast = (key: string) => {
+  const removeToast = useCallback((key: string) => {
     setToasts((prev) => prev.filter((item) => item.key !== key))
-  }
+  }, [])
 
   // Map position constant to Bootstrap ToastContainer position
   // 'bottom-right' -> 'bottom-end'

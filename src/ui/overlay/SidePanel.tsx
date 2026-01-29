@@ -36,7 +36,12 @@ export function SidePanel({
   return (
     <VisibilityGate ability={ability} permissionKey={permissionKey} permissionFallback={permissionFallback}>
       <aside
-        className={composeClassNames(UI_CLASS_SIDE_PANEL, placement === 'start' ? 'start-0' : 'end-0', sizeClass, className)}
+        className={composeClassNames(
+          UI_CLASS_SIDE_PANEL,
+          placement === 'start' ? 'start-0' : 'end-0',
+          sizeClass,
+          className
+        )}
         data-testid={panelTestId}
         role="dialog"
         aria-modal={UI_ARIA_MODAL_DIALOG}

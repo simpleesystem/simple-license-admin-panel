@@ -1,24 +1,19 @@
-import type { ReactNode } from 'react'
+import { buildPermissions } from '@test/factories/permissionFactory'
+import { buildUser } from '@test/factories/userFactory'
 import { render, screen } from '@testing-library/react'
-import { describe, it, expect, vi } from 'vitest'
-
-import { IfCan } from '@/app/abilities/IfCan'
-import { IfPermission } from '@/app/abilities/IfPermission'
-import {
-  ABILITY_ACTION_VIEW,
-  ABILITY_SUBJECT_DASHBOARD,
-  ABILITY_SUBJECT_LICENSE,
-} from '@/app/constants'
+import type { ReactNode } from 'react'
+import { describe, expect, it, vi } from 'vitest'
 import { AbilityContext } from '@/app/abilities/abilityContext'
 import { buildAbilityFromPermissions } from '@/app/abilities/factory'
+import { IfCan } from '@/app/abilities/IfCan'
+import { IfPermission } from '@/app/abilities/IfPermission'
 import { AuthContext } from '@/app/auth/authContext'
 import type { AuthContextValue } from '@/app/auth/types'
-import { buildUser } from '@test/factories/userFactory'
-import { buildPermissions } from '@test/factories/permissionFactory'
+import { ABILITY_ACTION_VIEW, ABILITY_SUBJECT_DASHBOARD, ABILITY_SUBJECT_LICENSE } from '@/app/constants'
 
 const renderWithProviders = (
   ui: ReactNode,
-  permissions = buildPermissions({ viewDashboard: true, manageLicenses: true }),
+  permissions = buildPermissions({ viewDashboard: true, manageLicenses: true })
 ) => {
   const ability = buildAbilityFromPermissions(permissions)
   const userHasManageLicenses = permissions.manageLicenses ?? false
@@ -39,7 +34,7 @@ const renderWithProviders = (
   return render(
     <AuthContext.Provider value={authValue}>
       <AbilityContext.Provider value={ability}>{ui}</AbilityContext.Provider>
-    </AuthContext.Provider>,
+    </AuthContext.Provider>
   )
 }
 
@@ -48,7 +43,7 @@ describe('IfCan', () => {
     renderWithProviders(
       <IfCan action={ABILITY_ACTION_VIEW} subject={ABILITY_SUBJECT_DASHBOARD}>
         <span data-testid="allowed">Allowed</span>
-      </IfCan>,
+      </IfCan>
     )
 
     expect(screen.getByTestId('allowed')).toBeInTheDocument()
@@ -63,7 +58,7 @@ describe('IfCan', () => {
       >
         <span data-testid="denied-child">Should not render</span>
       </IfCan>,
-      buildPermissions(), // Empty permissions
+      buildPermissions() // Empty permissions
     )
 
     expect(screen.queryByTestId('denied-child')).toBeNull()
@@ -77,7 +72,7 @@ describe('IfCan', () => {
           Action
         </button>
       </IfCan>,
-      buildPermissions(),
+      buildPermissions()
     )
 
     const button = screen.getByTestId('action')
@@ -91,14 +86,10 @@ describe('IfCan', () => {
     ))
 
     renderWithProviders(
-      <IfCan
-        action={ABILITY_ACTION_VIEW}
-        subject={ABILITY_SUBJECT_LICENSE}
-        fallback={fallbackRenderer}
-      >
+      <IfCan action={ABILITY_ACTION_VIEW} subject={ABILITY_SUBJECT_LICENSE} fallback={fallbackRenderer}>
         <span data-testid="fn-child">Hidden</span>
       </IfCan>,
-      buildPermissions(),
+      buildPermissions()
     )
 
     expect(screen.queryByTestId('fn-child')).toBeNull()
@@ -112,7 +103,7 @@ describe('IfPermission', () => {
     renderWithProviders(
       <IfPermission permission="manageLicenses">
         <span data-testid="permission-allowed">Allowed</span>
-      </IfPermission>,
+      </IfPermission>
     )
 
     expect(screen.getByTestId('permission-allowed')).toBeInTheDocument()
@@ -123,7 +114,7 @@ describe('IfPermission', () => {
       <IfPermission permission="manageLicenses" fallback={<span data-testid="perm-fallback">No</span>}>
         <span data-testid="should-hide">Hidden</span>
       </IfPermission>,
-      buildPermissions(),
+      buildPermissions()
     )
 
     expect(screen.queryByTestId('should-hide')).toBeNull()
@@ -137,7 +128,7 @@ describe('IfPermission', () => {
       <IfPermission permission="manageLicenses" fallback={fallbackFn}>
         <span data-testid="perm-hidden">Hidden</span>
       </IfPermission>,
-      buildPermissions(),
+      buildPermissions()
     )
 
     expect(screen.queryByTestId('perm-hidden')).toBeNull()

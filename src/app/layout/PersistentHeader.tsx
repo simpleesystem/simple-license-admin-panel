@@ -2,7 +2,6 @@ import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import Nav from 'react-bootstrap/Nav'
-import { ModalDialog } from '../../ui/overlay/ModalDialog'
 import { ChangePasswordForm } from '../../ui/auth/ChangePasswordForm'
 import {
   UI_CLASS_HEADER_ACTIONS,
@@ -16,6 +15,7 @@ import {
 } from '../../ui/constants'
 import { UI_NAV_LABEL_DASHBOARD } from '../../ui/navigation/navConstants'
 import { TopNavBar } from '../../ui/navigation/TopNavBar'
+import { ModalDialog } from '../../ui/overlay/ModalDialog'
 import { useAuth } from '../auth/useAuth'
 import { usePermissions } from '../auth/useAuthorization'
 import { isApiUser } from '../auth/userUtils'

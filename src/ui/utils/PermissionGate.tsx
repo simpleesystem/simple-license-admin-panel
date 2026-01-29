@@ -6,12 +6,7 @@ import type { UiVisibilityProps } from '../types'
 
 type VisibilityGateProps = PropsWithChildren<UiVisibilityProps>
 
-export function VisibilityGate({
-  ability,
-  permissionKey,
-  permissionFallback,
-  children,
-}: VisibilityGateProps) {
+export function VisibilityGate({ ability, permissionKey, permissionFallback, children }: VisibilityGateProps) {
   if (permissionKey) {
     return (
       <IfPermission permission={permissionKey} fallback={permissionFallback}>

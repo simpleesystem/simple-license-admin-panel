@@ -1,14 +1,10 @@
-import { useEffect, useMemo, useReducer } from 'react'
 import type { PropsWithChildren } from 'react'
+import { useEffect, useReducer } from 'react'
 
-import {
-  APP_STATE_ACTION_SET_SIDEBAR,
-  APP_STATE_ACTION_SET_TENANT,
-  APP_STATE_ACTION_SET_THEME,
-} from '../constants'
+import { APP_STATE_ACTION_SET_SIDEBAR, APP_STATE_ACTION_SET_TENANT, APP_STATE_ACTION_SET_THEME } from '../constants'
 import { AppDispatchContext, AppStateContext } from './appStateContext'
-import type { AppState, AppStateAction } from './types'
 import { applyThemeClass, persistTheme, readStoredTheme } from './themeStorage'
+import type { AppState, AppStateAction } from './types'
 
 const initialState = (): AppState => ({
   activeTenantId: null,
@@ -37,12 +33,9 @@ export function AppStateProvider({ children }: PropsWithChildren) {
     persistTheme(state.theme)
   }, [state.theme])
 
-  const stateValue = useMemo(() => state, [state])
-  const dispatchValue = useMemo(() => dispatch, [dispatch])
-
   return (
-    <AppStateContext.Provider value={stateValue}>
-      <AppDispatchContext.Provider value={dispatchValue}>{children}</AppDispatchContext.Provider>
+    <AppStateContext.Provider value={state}>
+      <AppDispatchContext.Provider value={dispatch}>{children}</AppDispatchContext.Provider>
     </AppStateContext.Provider>
   )
 }

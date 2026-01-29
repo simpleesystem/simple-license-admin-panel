@@ -1,7 +1,7 @@
-import type { Client, LicenseActivation, User } from '@/simpleLicense'
-import { useLicenseActivations } from '@/simpleLicense'
 import { useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
+import type { Client, LicenseActivation, User } from '@/simpleLicense'
+import { useLicenseActivations } from '@/simpleLicense'
 import { canViewActivations, isActivationOwnedByUser, isVendorScopedUser } from '../../app/auth/permissions'
 import { isSystemAdminUser } from '../../app/auth/userUtils'
 import {
@@ -144,7 +144,9 @@ export function LicenseActivationsPanel({
 
   if (
     !allowView ||
-    (!isSystemAdmin && licenseVendorId && !isActivationOwnedByUser(currentUser ?? null, { vendorId: licenseVendorId } as LicenseActivation))
+    (!isSystemAdmin &&
+      licenseVendorId &&
+      !isActivationOwnedByUser(currentUser ?? null, { vendorId: licenseVendorId } as LicenseActivation))
   ) {
     return (
       <InlineAlert variant="danger" title={UI_LICENSE_ACTIVATIONS_ERROR_TITLE}>

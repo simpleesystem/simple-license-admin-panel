@@ -1,8 +1,9 @@
-import type { Client, UpdateLicenseRequest, User } from '@/simpleLicense'
-import { useUpdateLicense } from '@/simpleLicense'
 import { useEffect, useState } from 'react'
 import Tab from 'react-bootstrap/Tab'
 import Tabs from 'react-bootstrap/Tabs'
+import type { Client, UpdateLicenseRequest, User } from '@/simpleLicense'
+import { useUpdateLicense } from '@/simpleLicense'
+import { useLogger } from '../../app/logging/loggerContext'
 
 import type { MutationAdapter } from '../actions/mutationActions'
 import {
@@ -53,6 +54,7 @@ export function LicenseUpdateDialog({
   onSuccess,
   onError,
 }: LicenseUpdateDialogProps) {
+  const logger = useLogger()
   const [activeTab, setActiveTab] = useState('details')
   const [metadataString, setMetadataString] = useState<string>('')
   const [licenseKey, setLicenseKey] = useState<string>(licenseKeyParam)
@@ -69,14 +71,14 @@ export function LicenseUpdateDialog({
           setLicenseKey(license.licenseKey)
         }
       } catch (e) {
-        console.error('Failed to fetch license details', e)
+        logger.error(e instanceof Error ? e : new Error(String(e)), { message: 'Failed to fetch license details' })
       }
     }
 
     if (show) {
       void fetchLicenseDetails()
     }
-  }, [client, licenseKeyParam, show])
+  }, [client, licenseKeyParam, show, logger])
 
   const updateMutation = useUpdateLicense(client)
 

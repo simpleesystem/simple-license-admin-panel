@@ -1,10 +1,9 @@
+import type { ReactNode } from 'react'
 import type { Client, UpdateQuotaLimitsRequest } from '@/simpleLicense'
 import { useUpdateQuotaLimits } from '@/simpleLicense'
-import type { ReactNode } from 'react'
-
+import type { MutationAdapter } from '../actions/mutationActions'
 import { createTenantQuotaBlueprint } from '../formBuilder/factories'
 import { FormModalWithMutation } from '../formBuilder/mutationBridge'
-import type { MutationAdapter } from '../actions/mutationActions'
 
 type TenantQuotaFormFlowProps = {
   client: Client
@@ -30,7 +29,7 @@ const baseDefaults: UpdateQuotaLimitsRequest = {
 
 const createAdapter = (
   mutation: ReturnType<typeof useUpdateQuotaLimits>,
-  tenantId: string,
+  tenantId: string
 ): MutationAdapter<UpdateQuotaLimitsRequest> => ({
   mutateAsync: async (values) => {
     const result = await mutation.mutateAsync({ tenantId, data: values })

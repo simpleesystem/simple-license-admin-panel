@@ -3,21 +3,15 @@ import { useTranslation } from 'react-i18next'
 
 import { useFeatureFlag } from '../config'
 import {
-  I18N_KEY_DEV_TOOLBAR_HEADING,
-  I18N_KEY_DEV_TOOLBAR_RESET,
   I18N_KEY_DEV_PERSONA_SUPERUSER,
   I18N_KEY_DEV_PERSONA_SUPPORT,
   I18N_KEY_DEV_PERSONA_VIEWER,
+  I18N_KEY_DEV_TOOLBAR_HEADING,
+  I18N_KEY_DEV_TOOLBAR_RESET,
   TEST_ID_DEV_TOOLBAR,
 } from '../constants'
 import { DEV_PERSONA_SUPERUSER, DEV_PERSONA_SUPPORT, DEV_PERSONA_VIEWER } from './constants'
-import {
-  canUseDevTools,
-  applyDevPersona,
-  clearDevPersona,
-  DEV_PERSONA_KEYS,
-  type DevPersonaKey,
-} from './devScenarios'
+import { applyDevPersona, canUseDevTools, clearDevPersona, DEV_PERSONA_KEYS, type DevPersonaKey } from './devScenarios'
 
 export function DevToolbar() {
   const { t } = useTranslation()
@@ -42,11 +36,7 @@ export function DevToolbar() {
         <strong>{t(I18N_KEY_DEV_TOOLBAR_HEADING)}</strong>
         <ButtonGroup size="sm">
           {DEV_PERSONA_KEYS.map((persona) => (
-            <Button
-              key={persona}
-              variant="outline-primary"
-              onClick={() => applyDevPersona(persona)}
-            >
+            <Button key={persona} variant="outline-primary" onClick={() => applyDevPersona(persona)}>
               {personaLabelMap[persona]}
             </Button>
           ))}

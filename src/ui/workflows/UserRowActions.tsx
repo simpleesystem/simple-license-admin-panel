@@ -1,7 +1,7 @@
-import type { Client, User } from '@/simpleLicense'
-import { useDeleteUser } from '@/simpleLicense'
 import { useState } from 'react'
 import Button from 'react-bootstrap/Button'
+import type { Client, User } from '@/simpleLicense'
+import { useDeleteUser } from '@/simpleLicense'
 import { useNotificationBus } from '../../notifications/useNotificationBus'
 import { adaptMutation } from '../actions/mutationAdapter'
 import {

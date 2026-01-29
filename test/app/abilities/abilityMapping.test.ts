@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-
+import { describe, expect, it } from 'vitest'
+import { getAbilitiesForPermission, PERMISSION_TO_ABILITIES } from '@/app/abilities/abilityMap'
 import { PERMISSION_KEYS } from '@/app/auth/permissions'
 import {
   ABILITY_ACTION_MANAGE,
@@ -11,10 +11,6 @@ import {
   ABILITY_SUBJECT_TENANT,
   ABILITY_SUBJECT_USER,
 } from '@/app/constants'
-import {
-  getAbilitiesForPermission,
-  PERMISSION_TO_ABILITIES,
-} from '@/app/abilities/abilityMap'
 
 describe('permission to ability mapping', () => {
   it('covers every permission key with at least one ability tuple', () => {
@@ -23,13 +19,13 @@ describe('permission to ability mapping', () => {
 
     const permissionsWithoutAbilities = new Set(['changePassword'])
 
-    PERMISSION_KEYS.forEach((permission) => {
+    for (const permission of PERMISSION_KEYS) {
       if (permissionsWithoutAbilities.has(permission)) {
         expect(getAbilitiesForPermission(permission)).toHaveLength(0)
       } else {
         expect(getAbilitiesForPermission(permission)).not.toHaveLength(0)
       }
-    })
+    }
   })
 
   it('maps viewDashboard to the dashboard view ability', () => {

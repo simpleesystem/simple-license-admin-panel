@@ -1,13 +1,9 @@
+import { faker } from '@faker-js/faker'
 import { describe, expect, it, vi } from 'vitest'
+import { APP_ERROR_CODE_UNEXPECTED, APP_ERROR_TYPE_SERVER, APP_ERROR_TYPE_UNEXPECTED } from '@/app/constants'
+import { mapUnknownToAppError } from '@/app/errors/appErrors'
 import { raiseError, raiseErrorFromUnknown } from '@/app/state/dispatchers'
 import type { AppStore } from '@/app/state/store'
-import {
-  APP_ERROR_CODE_UNEXPECTED,
-  APP_ERROR_TYPE_SERVER,
-  APP_ERROR_TYPE_UNEXPECTED,
-} from '@/app/constants'
-import { mapUnknownToAppError } from '@/app/errors/appErrors'
-import { faker } from '@faker-js/faker'
 
 vi.mock('@/app/errors/appErrors', async () => {
   const actual = await vi.importActual<typeof import('@/app/errors/appErrors')>('@/app/errors/appErrors')

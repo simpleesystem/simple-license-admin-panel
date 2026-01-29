@@ -1,6 +1,6 @@
-import { cloneElement, isValidElement } from 'react'
-import type { Consumer, PropsWithChildren, ReactElement, ReactNode } from 'react'
 import { createContextualCan } from '@casl/react'
+import type { Consumer, PropsWithChildren, ReactElement, ReactNode } from 'react'
+import { cloneElement, isValidElement } from 'react'
 
 import { AbilityContext } from './abilityContext'
 import type { AbilityAction, AbilitySubject } from './abilityMap'
@@ -45,7 +45,7 @@ const disableChild = (child: ReactNode): ReactNode => {
 
 export function IfCan({ action, subject, fallback, mode = 'hide', children }: IfCanProps) {
   return (
-    <ContextualCan I={action} a={subject} passThrough>
+    <ContextualCan I={action} a={subject} passThrough={true}>
       {(isAllowed: boolean) => {
         if (isAllowed) {
           return children

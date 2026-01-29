@@ -1,6 +1,6 @@
-import { describe, expect, test, vi } from 'vitest'
 import { render } from '@testing-library/react'
 import type { ReactNode } from 'react'
+import { describe, expect, test, vi } from 'vitest'
 
 const permissionState = vi.hoisted(() => ({ allowed: true }))
 const abilityState = vi.hoisted(() => ({ allowed: true }))
@@ -13,13 +13,7 @@ const resolveFallback = (fallback: ReactNode | (() => ReactNode)) => {
 }
 
 vi.mock('../../../src/app/abilities/IfPermission', () => ({
-  IfPermission: ({
-    children,
-    fallback,
-  }: {
-    children: ReactNode
-    fallback?: ReactNode | (() => ReactNode)
-  }) => {
+  IfPermission: ({ children, fallback }: { children: ReactNode; fallback?: ReactNode | (() => ReactNode) }) => {
     if (permissionState.allowed) {
       return <>{children}</>
     }
@@ -42,7 +36,7 @@ vi.mock('../../../src/app/abilities/IfCan', () => ({
     }
     if (mode === 'disable') {
       return (
-        <button type="button" disabled>
+        <button type="button" disabled={true}>
           disabled
         </button>
       )

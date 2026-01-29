@@ -1,4 +1,4 @@
-import { render, cleanup, act } from '@testing-library/react'
+import { act, cleanup, render } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const enableQueryCachePersistenceMock = vi.hoisted(() => vi.fn(() => vi.fn()))
@@ -31,7 +31,7 @@ describe('AppProviders feature flags', () => {
 
     let unmount: () => void = () => {}
     await act(async () => {
-      ({ unmount } = render(<AppProviders />))
+      ;({ unmount } = render(<AppProviders />))
     })
 
     expect(enableQueryCachePersistenceMock).toHaveBeenCalled()

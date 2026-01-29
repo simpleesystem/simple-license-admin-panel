@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import Form from 'react-bootstrap/Form'
-import { useFormContext } from 'react-hook-form'
 import type { FieldValues, Path } from 'react-hook-form'
+import { useFormContext } from 'react-hook-form'
 
 import {
   UI_FORM_SELECT_PLACEHOLDER_DISABLED,
@@ -9,8 +9,8 @@ import {
   UI_FORM_SELECT_PLACEHOLDER_VALUE,
 } from '../constants'
 import type { FormFieldProps, UiSelectOption } from '../types'
-import { FormField } from './FormField'
 import { VisibilityGate } from '../utils/PermissionGate'
+import { FormField } from './FormField'
 
 export interface SelectFieldProps<TFieldValues extends FieldValues> extends Omit<FormFieldProps, 'children' | 'hint'> {
   name: Path<TFieldValues>

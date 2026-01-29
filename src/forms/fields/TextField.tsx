@@ -1,13 +1,13 @@
 import { Form } from 'react-bootstrap'
-import { useFormContext } from 'react-hook-form'
 import type { FieldValues, Path } from 'react-hook-form'
+import { useFormContext } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 
 import {
   FORM_CLASS_ERROR,
   FORM_CLASS_FIELD_WRAPPER,
   FORM_CLASS_LABEL,
-  FORM_INPUT_TYPE_PASSWORD,
+  type FORM_INPUT_TYPE_PASSWORD,
   FORM_INPUT_TYPE_TEXT,
   FORM_LABEL_FOR_ID_PREFIX,
 } from '../form.constants'

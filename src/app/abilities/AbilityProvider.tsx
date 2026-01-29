@@ -1,9 +1,8 @@
-import { useMemo } from 'react'
 import type { PropsWithChildren } from 'react'
-
+import { useMemo } from 'react'
+import { usePermissions } from '../auth/useAuthorization'
 import { AbilityContext } from './abilityContext'
 import { buildAbilityFromPermissions } from './factory'
-import { usePermissions } from '../auth/useAuthorization'
 
 type AbilityProviderProps = PropsWithChildren
 

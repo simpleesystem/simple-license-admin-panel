@@ -1,6 +1,6 @@
 import Form from 'react-bootstrap/Form'
-import { useFormContext } from 'react-hook-form'
 import type { FieldValues } from 'react-hook-form'
+import { useFormContext } from 'react-hook-form'
 
 import { UI_FORM_CHECK_TYPE_BOX } from '../constants'
 import type { CheckboxFieldProps } from '../types'
@@ -41,7 +41,7 @@ export function CheckboxField<TFieldValues extends FieldValues>({
           {...register(name)}
         />
         {description ? (
-          <Form.Text muted id={descriptionId}>
+          <Form.Text muted={true} id={descriptionId}>
             {description}
           </Form.Text>
         ) : null}

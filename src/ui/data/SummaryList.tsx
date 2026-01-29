@@ -20,18 +20,16 @@ export function SummaryList({
 }: SummaryListProps) {
   return (
     <VisibilityGate ability={ability} permissionKey={permissionKey} permissionFallback={permissionFallback}>
-      <section
+      <ul
         className={composeClassNames(UI_CLASS_SUMMARY_LIST, className)}
         data-testid={testId ?? UI_TEST_ID_SUMMARY_LIST}
-        role="list"
         aria-label={UI_ARIA_LABEL_SUMMARY_LIST}
       >
         {items.map((item) => (
-          <div key={item.id} role="presentation">
+          <li key={item.id}>
             <article
               className={UI_CLASS_SUMMARY_CARD}
               data-testid={item.testId}
-              role="listitem"
               aria-labelledby={`${item.id}-summary-label`}
             >
               <div className="d-flex justify-content-between align-items-center mb-2">
@@ -59,9 +57,9 @@ export function SummaryList({
               )}
               {item.trend ? <div className={UI_CLASS_TEXT_MUTED}>{item.trend}</div> : null}
             </article>
-          </div>
+          </li>
         ))}
-      </section>
+      </ul>
     </VisibilityGate>
   )
 }

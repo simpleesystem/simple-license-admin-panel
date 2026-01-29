@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest'
-
-import { formatTenantCreatedAt } from '@/ui/utils/formatUtils'
+import { fireEvent, waitFor } from '@testing-library/react'
+import { beforeEach, describe, expect, it, test, vi } from 'vitest'
 import { UI_VALUE_PLACEHOLDER } from '@/ui/constants'
+import { formatTenantCreatedAt } from '@/ui/utils/formatUtils'
 
 describe('formatTenantCreatedAt', () => {
   it('returns the placeholder when the date is missing', () => {
@@ -13,8 +13,6 @@ describe('formatTenantCreatedAt', () => {
     expect(formatTenantCreatedAt(date)).toContain('2023')
   })
 })
-import { fireEvent, waitFor } from '@testing-library/react'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import {
   UI_TENANT_ACTION_EDIT,
@@ -106,7 +104,7 @@ describe('TenantManagementExample', () => {
         page={1}
         totalPages={1}
         onPageChange={vi.fn()}
-      />,
+      />
     )
 
     await waitFor(() => {
@@ -140,7 +138,7 @@ describe('TenantManagementExample', () => {
         page={1}
         totalPages={1}
         onPageChange={vi.fn()}
-      />,
+      />
     )
 
     await waitFor(() => {
@@ -156,7 +154,7 @@ describe('TenantManagementExample', () => {
       expect(updateMutation.mutateAsync).toHaveBeenCalledWith({
         id: tenant.id,
         data: expect.any(Object),
-      }),
+      })
     )
     expect(onRefresh).toHaveBeenCalled()
   })
@@ -180,7 +178,7 @@ describe('TenantManagementExample', () => {
         page={1}
         totalPages={1}
         onPageChange={vi.fn()}
-      />,
+      />
     )
 
     expect(queryByText(UI_TENANT_BUTTON_CREATE)).toBeNull()
@@ -198,7 +196,7 @@ describe('TenantManagementExample', () => {
       expect(updateMutation.mutateAsync).toHaveBeenCalledWith({
         id: tenant.id,
         data: expect.any(Object),
-      }),
+      })
     )
     expect(onRefresh).toHaveBeenCalled()
   })
@@ -219,7 +217,7 @@ describe('TenantManagementExample', () => {
         page={1}
         totalPages={1}
         onPageChange={vi.fn()}
-      />,
+      />
     )
 
     expect(queryByText(UI_TENANT_BUTTON_CREATE)).toBeNull()
@@ -244,7 +242,7 @@ describe('TenantManagementExample', () => {
         page={1}
         totalPages={1}
         onPageChange={vi.fn()}
-      />,
+      />
     )
 
     await waitFor(
@@ -275,7 +273,7 @@ describe('TenantManagementExample', () => {
         page={1}
         totalPages={1}
         onPageChange={vi.fn()}
-      />,
+      />
     )
 
     await waitFor(() => {

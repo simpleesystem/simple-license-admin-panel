@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import {
   ApiException,
   ERROR_CODE_INVALID_CREDENTIALS,
@@ -8,7 +9,6 @@ import {
   HTTP_UNAUTHORIZED,
   NetworkException,
 } from '@/simpleLicense'
-import { describe, expect, it } from 'vitest'
 
 import {
   APP_ERROR_CODE_UNEXPECTED,

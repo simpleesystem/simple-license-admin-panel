@@ -1,8 +1,13 @@
-import type { Client, User } from '@/simpleLicense'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { NotificationBusProvider } from '@/notifications/busContext'
-import { UI_LICENSE_BUTTON_CREATE, UI_LICENSE_EMPTY_STATE_MESSAGE, UI_TABLE_SEARCH_PLACEHOLDER, UI_USER_ROLE_SUPERUSER } from '@/ui/constants'
+import type { Client, User } from '@/simpleLicense'
+import {
+  UI_LICENSE_BUTTON_CREATE,
+  UI_LICENSE_EMPTY_STATE_MESSAGE,
+  UI_TABLE_SEARCH_PLACEHOLDER,
+  UI_USER_ROLE_SUPERUSER,
+} from '@/ui/constants'
 import { type LicenseListItem, LicenseManagementPanel } from '@/ui/workflows/LicenseManagementPanel'
 
 // Mock client
@@ -51,7 +56,9 @@ vi.mock('@/ui/workflows/LicenseFormFlow', () => ({
   LicenseFormFlow: ({ show, onClose }: { show: boolean; onClose: () => void }) =>
     show ? (
       <div data-testid="license-form-flow">
-        <button onClick={onClose}>Close</button>
+        <button type="button" onClick={onClose}>
+          Close
+        </button>
       </div>
     ) : null,
 }))
@@ -60,14 +67,18 @@ vi.mock('@/ui/workflows/LicenseUpdateDialog', () => ({
   LicenseUpdateDialog: ({ show, onClose }: { show: boolean; onClose: () => void }) =>
     show ? (
       <div data-testid="license-update-dialog">
-        <button onClick={onClose}>Close</button>
+        <button type="button" onClick={onClose}>
+          Close
+        </button>
       </div>
     ) : null,
 }))
 
 vi.mock('@/ui/workflows/LicenseRowActions', () => ({
   LicenseRowActions: ({ onEdit }: { onEdit: (id: string) => void }) => (
-    <button onClick={() => onEdit('license-key-1')}>Edit</button>
+    <button type="button" onClick={() => onEdit('license-key-1')}>
+      Edit
+    </button>
   ),
 }))
 

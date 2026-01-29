@@ -1,7 +1,6 @@
-import type { Client } from '@/simpleLicense'
-import type { ChangePasswordRequest, ChangePasswordResponse } from '@/simpleLicense'
 import { fireEvent, screen, waitFor } from '@testing-library/react'
-import { describe, expect, test, vi, type MockedFunction } from 'vitest'
+import { describe, expect, type MockedFunction, test, vi } from 'vitest'
+import type { ChangePasswordRequest, ChangePasswordResponse, Client } from '@/simpleLicense'
 
 import { ChangePasswordFlow } from '../../../../src/ui/auth/ChangePasswordFlow'
 import { UI_CHANGE_PASSWORD_BUTTON_UPDATE } from '../../../../src/ui/constants'

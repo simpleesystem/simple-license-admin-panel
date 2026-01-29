@@ -1,10 +1,9 @@
 import { fireEvent, render } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-
-import { DevToolbar } from '@/app/dev/DevToolbar'
-import { TEST_ID_DEV_TOOLBAR } from '@/app/constants'
-import { applyDevPersona, clearDevPersona, canUseDevTools, DEV_PERSONA_KEYS } from '@/app/dev/devScenarios'
 import { useFeatureFlag } from '@/app/config'
+import { TEST_ID_DEV_TOOLBAR } from '@/app/constants'
+import { DevToolbar } from '@/app/dev/DevToolbar'
+import { applyDevPersona, canUseDevTools, clearDevPersona, DEV_PERSONA_KEYS } from '@/app/dev/devScenarios'
 
 vi.mock('@/app/config', () => ({
   useFeatureFlag: vi.fn(),
@@ -51,9 +50,9 @@ describe('DevToolbar', () => {
     const toolbar = getByTestId(TEST_ID_DEV_TOOLBAR)
 
     expect(toolbar).toBeInTheDocument()
-    DEV_PERSONA_KEYS.forEach((persona) => {
+    for (const persona of DEV_PERSONA_KEYS) {
       fireEvent.click(getByText(persona))
-    })
+    }
     fireEvent.click(getByText('dev.toolbar.reset'))
 
     expect(mockApplyDevPersona).toHaveBeenCalledTimes(DEV_PERSONA_KEYS.length)

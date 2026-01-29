@@ -1,6 +1,6 @@
-import type { Client } from '@/simpleLicense'
 import { screen } from '@testing-library/react'
-import { describe, expect, test, vi, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
+import type { Client } from '@/simpleLicense'
 
 import {
   UI_USAGE_TRENDS_EMPTY_BODY,

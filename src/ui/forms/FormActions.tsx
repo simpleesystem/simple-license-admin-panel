@@ -1,7 +1,4 @@
-import {
-  UI_CLASS_FORM_ACTIONS,
-  UI_TEST_ID_FORM_ACTIONS,
-} from '../constants'
+import { UI_CLASS_FORM_ACTIONS, UI_TEST_ID_FORM_ACTIONS } from '../constants'
 import type { FormActionsProps } from '../types'
 import { composeClassNames } from '../utils/classNames'
 import { VisibilityGate } from '../utils/PermissionGate'

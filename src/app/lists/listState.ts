@@ -63,10 +63,7 @@ export const serializeListState = (state: ListState): URLSearchParams => {
 
   if (state.sort?.field) {
     params.set(LIST_QUERY_PARAM_SORT, state.sort.field)
-    params.set(
-      LIST_QUERY_PARAM_DIRECTION,
-      state.sort.direction ?? LIST_SORT_DIRECTION_ASC,
-    )
+    params.set(LIST_QUERY_PARAM_DIRECTION, state.sort.direction ?? LIST_SORT_DIRECTION_ASC)
   }
 
   if (state.search) {
@@ -74,17 +71,17 @@ export const serializeListState = (state: ListState): URLSearchParams => {
   }
 
   const filters = state.filters ?? {}
-  Object.entries(filters).forEach(([key, value]) => {
+  for (const [key, value] of Object.entries(filters)) {
     if (value === undefined || value === null || key.length === 0) {
-      return
+      continue
     }
     const paramKey = `${LIST_FILTER_PARAM_PREFIX}${key}`
     if (Array.isArray(value)) {
       params.set(paramKey, value.join(','))
-      return
+      continue
     }
     params.set(paramKey, `${value}`)
-  })
+  }
 
   return params
 }
@@ -100,7 +97,10 @@ const parseFilters = (params: URLSearchParams): ListFilterState => {
       return
     }
     if (value.includes(',')) {
-      result[filterKey] = value.split(',').map((entry) => entry.trim()).filter(Boolean)
+      result[filterKey] = value
+        .split(',')
+        .map((entry) => entry.trim())
+        .filter(Boolean)
       return
     }
     result[filterKey] = value
@@ -108,19 +108,12 @@ const parseFilters = (params: URLSearchParams): ListFilterState => {
   return result
 }
 
-export const parseListState = (
-  params: URLSearchParams,
-  defaults: ListState = DEFAULT_LIST_STATE,
-): ListState => {
+export const parseListState = (params: URLSearchParams, defaults: ListState = DEFAULT_LIST_STATE): ListState => {
   const page = normalizePage(Number.parseInt(params.get(LIST_QUERY_PARAM_PAGE) ?? '', 10))
-  const pageSize = normalizePageSize(
-    Number.parseInt(params.get(LIST_QUERY_PARAM_PAGE_SIZE) ?? '', 10),
-  )
+  const pageSize = normalizePageSize(Number.parseInt(params.get(LIST_QUERY_PARAM_PAGE_SIZE) ?? '', 10))
   const sortField = params.get(LIST_QUERY_PARAM_SORT)
   const directionParam = params.get(LIST_QUERY_PARAM_DIRECTION) ?? LIST_SORT_DIRECTION_ASC
-  const direction = isValidDirection(directionParam)
-    ? directionParam
-    : LIST_SORT_DIRECTION_ASC
+  const direction = isValidDirection(directionParam) ? directionParam : LIST_SORT_DIRECTION_ASC
   const search = params.get(LIST_QUERY_PARAM_SEARCH)
   const filters = parseFilters(params)
 
@@ -129,9 +122,9 @@ export const parseListState = (
       page: page || defaults.pagination.page,
       pageSize: pageSize || defaults.pagination.pageSize,
     },
-    sort: sortField ? { field: sortField, direction } : defaults.sort ?? null,
-    search: search ? search.trim() : defaults.search ?? null,
-    filters: Object.keys(filters).length > 0 ? filters : defaults.filters ?? {},
+    sort: sortField ? { field: sortField, direction } : (defaults.sort ?? null),
+    search: search ? search.trim() : (defaults.search ?? null),
+    filters: Object.keys(filters).length > 0 ? filters : (defaults.filters ?? {}),
   }
 }
 

@@ -7,12 +7,11 @@ import { useFormMutation } from './useFormMutation'
 export type FormModalWithMutationProps<TFieldValues extends FieldValues, TData = unknown, TError = Error> = Omit<
   FormModalProps<TFieldValues>,
   'onSubmit'
-> &
-  {
-    mutation: MutationAdapter<TFieldValues, TData>
-    onSuccess?: (data: TData, values: TFieldValues) => void
-    onError?: (error: TError, values: TFieldValues) => void
-  }
+> & {
+  mutation: MutationAdapter<TFieldValues, TData>
+  onSuccess?: (data: TData, values: TFieldValues) => void
+  onError?: (error: TError, values: TFieldValues) => void
+}
 
 export function FormModalWithMutation<TFieldValues extends FieldValues, TData = unknown, TError = Error>({
   mutation,

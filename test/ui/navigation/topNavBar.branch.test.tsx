@@ -6,7 +6,7 @@ import { TopNavBar } from '../../../src/ui/navigation/TopNavBar'
 
 describe('TopNavBar branch coverage', () => {
   test('renders brand, navigation, and actions when provided', () => {
-    render(<TopNavBar brand="Brand" navigation={<nav>Links</nav>} actions={<button>Action</button>} />)
+    render(<TopNavBar brand="Brand" navigation={<nav>Links</nav>} actions={<button type="button">Action</button>} />)
 
     expect(screen.getByTestId(UI_TEST_ID_TOP_NAV)).toBeInTheDocument()
     expect(screen.getByText('Brand')).toBeInTheDocument()
@@ -21,10 +21,10 @@ describe('TopNavBar branch coverage', () => {
     const actionsWrapper = screen.getByText('OnlyAction').parentElement as HTMLElement
     const tokens = UI_CLASS_INLINE_GAP.split(' ')
 
-    tokens.forEach((token) => {
+    for (const token of tokens) {
       expect(navWrapper.classList.contains(token)).toBe(true)
       expect(actionsWrapper.classList.contains(token)).toBe(true)
-    })
+    }
     expect(screen.queryByText('Brand')).toBeNull()
   })
 })

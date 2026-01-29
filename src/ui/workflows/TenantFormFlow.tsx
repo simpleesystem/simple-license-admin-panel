@@ -1,6 +1,6 @@
+import type { ReactNode } from 'react'
 import type { Client, CreateTenantRequest, UpdateTenantRequest } from '@/simpleLicense'
 import { useCreateTenant, useUpdateTenant } from '@/simpleLicense'
-import type { ReactNode } from 'react'
 import type { MutationAdapter } from '../actions/mutationActions'
 import { adaptMutation } from '../actions/mutationAdapter'
 import { UI_TENANT_FORM_SUBMIT_CREATE, UI_TENANT_FORM_SUBMIT_UPDATE, UI_TENANT_STATUS_ACTIVE } from '../constants'

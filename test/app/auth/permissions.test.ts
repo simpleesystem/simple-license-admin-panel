@@ -1,7 +1,12 @@
-import type { AdminRole } from '@/simpleLicense'
 import { describe, expect, it } from 'vitest'
+import type { AdminRole } from '@/simpleLicense'
 
-import { derivePermissionsFromUser, hasPermission, PERMISSION_KEYS, type Permissions } from '../../../src/app/auth/permissions'
+import {
+  derivePermissionsFromUser,
+  hasPermission,
+  PERMISSION_KEYS,
+  type Permissions,
+} from '../../../src/app/auth/permissions'
 
 const createUser = (role: AdminRole) =>
   ({
@@ -11,19 +16,20 @@ const createUser = (role: AdminRole) =>
 describe('derivePermissionsFromUser', () => {
   it('returns all permissions disabled for anonymous users', () => {
     const permissions = derivePermissionsFromUser(null)
-    PERMISSION_KEYS.forEach((key) => {
+    for (const key of PERMISSION_KEYS) {
       expect(permissions[key]).toBe(false)
-    })
+    }
   })
 
   it('grants all permissions to privileged roles', () => {
     const superuserPermissions = derivePermissionsFromUser(createUser('SUPERUSER'))
     const adminPermissions = derivePermissionsFromUser(createUser('ADMIN'))
 
-    PERMISSION_KEYS.filter(k => k !== 'changePassword').forEach((key) => {
+    const privilegedKeys = PERMISSION_KEYS.filter((k) => k !== 'changePassword')
+    for (const key of privilegedKeys) {
       expect(superuserPermissions[key]).toBe(true)
       expect(adminPermissions[key]).toBe(true)
-    })
+    }
   })
 
   it('grants scoped permissions to vendor roles', () => {

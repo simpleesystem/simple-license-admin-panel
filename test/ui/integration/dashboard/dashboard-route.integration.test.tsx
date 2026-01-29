@@ -1,5 +1,5 @@
 import { screen } from '@testing-library/react'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 
 import { DashboardRouteComponent } from '../../../../src/routes/dashboard/DashboardRoute'
 import {
@@ -53,7 +53,10 @@ describe('DashboardRouteComponent (integration)', () => {
     useTopLicensesMock.mockReturnValue({ data: [], isLoading: false, isError: false })
     useActivationDistributionMock.mockReturnValue({ data: [], isLoading: false, isError: false })
     useAlertThresholdsMock.mockReturnValue({
-      data: { high: { activations: 0, validations: 0, concurrency: 0 }, medium: { activations: 0, validations: 0, concurrency: 0 } },
+      data: {
+        high: { activations: 0, validations: 0, concurrency: 0 },
+        medium: { activations: 0, validations: 0, concurrency: 0 },
+      },
       isLoading: false,
       isError: false,
     })

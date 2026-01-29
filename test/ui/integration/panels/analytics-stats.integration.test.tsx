@@ -1,10 +1,16 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
 
-import { UI_ANALYTICS_STATS_REFRESH_LABEL, UI_ANALYTICS_STATS_TITLE, UI_USER_ROLE_SUPERUSER, UI_BADGE_VARIANT_SECONDARY, UI_LIVE_STATUS_DISCONNECTED } from '../../../../src/ui/constants'
+import {
+  UI_ANALYTICS_STATS_REFRESH_LABEL,
+  UI_ANALYTICS_STATS_TITLE,
+  UI_BADGE_VARIANT_SECONDARY,
+  UI_LIVE_STATUS_DISCONNECTED,
+  UI_USER_ROLE_SUPERUSER,
+} from '../../../../src/ui/constants'
 import { AnalyticsStatsPanel } from '../../../../src/ui/workflows/AnalyticsStatsPanel'
-import { renderWithProviders } from '../../utils'
 import { buildUser } from '../../../factories/userFactory'
+import { renderWithProviders } from '../../utils'
 
 const useSystemStatsMock = vi.hoisted(() => vi.fn())
 const mockUser = buildUser({ role: UI_USER_ROLE_SUPERUSER })
@@ -60,12 +66,10 @@ describe('AnalyticsStatsPanel integration', () => {
       refetch,
     })
 
-    renderWithProviders(
-        <AnalyticsStatsPanel client={{} as never} title={UI_ANALYTICS_STATS_TITLE} />
-    )
+    renderWithProviders(<AnalyticsStatsPanel client={{} as never} title={UI_ANALYTICS_STATS_TITLE} />)
 
     await waitFor(() => {
-        expect(screen.getByText(UI_ANALYTICS_STATS_TITLE)).toBeInTheDocument()
+      expect(screen.getByText(UI_ANALYTICS_STATS_TITLE)).toBeInTheDocument()
     })
     expect(screen.getByText('5')).toBeInTheDocument()
     expect(screen.getByText('2')).toBeInTheDocument()
@@ -91,7 +95,7 @@ describe('AnalyticsStatsPanel integration', () => {
     renderWithProviders(<AnalyticsStatsPanel client={{} as never} />)
 
     await waitFor(() => {
-        expect(screen.getByText(/unable to load analytics/i)).toBeInTheDocument()
+      expect(screen.getByText(/unable to load analytics/i)).toBeInTheDocument()
     })
   })
 })

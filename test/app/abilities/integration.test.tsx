@@ -1,14 +1,13 @@
-import type { ReactElement } from 'react'
+import { buildUser } from '@test/factories/userFactory'
 import { render, screen } from '@testing-library/react'
+import type { ReactElement } from 'react'
 import { describe, expect, it, vi } from 'vitest'
-import type { AdminRole, LoginResponse } from '@/simpleLicense'
-
-import { IfCan } from '@/app/abilities/IfCan'
 import { AbilityProvider } from '@/app/abilities/AbilityProvider'
+import { IfCan } from '@/app/abilities/IfCan'
 import { AuthContext } from '@/app/auth/authContext'
 import type { AuthContextValue } from '@/app/auth/types'
-import { AUTH_STATUS_IDLE, ABILITY_ACTION_MANAGE, ABILITY_SUBJECT_LICENSE } from '@/app/constants'
-import { buildUser } from '@test/factories/userFactory'
+import { ABILITY_ACTION_MANAGE, ABILITY_SUBJECT_LICENSE, AUTH_STATUS_IDLE } from '@/app/constants'
+import type { AdminRole, LoginResponse } from '@/simpleLicense'
 
 const createAuthValue = (userRole: AdminRole | null): AuthContextValue => {
   const user = userRole ? buildUser({ role: userRole }) : null
@@ -34,7 +33,7 @@ const renderAbilityTree = (ui: ReactElement, role: AdminRole | null) => {
   return render(
     <AuthContext.Provider value={authValue}>
       <AbilityProvider>{ui}</AbilityProvider>
-    </AuthContext.Provider>,
+    </AuthContext.Provider>
   )
 }
 
@@ -44,7 +43,7 @@ describe('Ability pipeline integration', () => {
       <IfCan action={ABILITY_ACTION_MANAGE} subject={ABILITY_SUBJECT_LICENSE}>
         <span data-testid="manage-license-control">control</span>
       </IfCan>,
-      'SUPERUSER',
+      'SUPERUSER'
     )
 
     expect(screen.getByTestId('manage-license-control')).toBeInTheDocument()
@@ -59,7 +58,7 @@ describe('Ability pipeline integration', () => {
       >
         <span data-testid="should-hide">hidden</span>
       </IfCan>,
-      'VIEWER',
+      'VIEWER'
     )
 
     expect(screen.queryByTestId('should-hide')).toBeNull()

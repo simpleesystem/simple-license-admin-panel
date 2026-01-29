@@ -19,7 +19,10 @@ export function Breadcrumbs({
   return (
     <VisibilityGate ability={ability} permissionKey={permissionKey} permissionFallback={permissionFallback}>
       <nav aria-label={UI_ARIA_LABEL_BREADCRUMBS}>
-        <ol className={composeClassNames(UI_CLASS_BREADCRUMBS, className)} data-testid={testId ?? UI_TEST_ID_BREADCRUMBS}>
+        <ol
+          className={composeClassNames(UI_CLASS_BREADCRUMBS, className)}
+          data-testid={testId ?? UI_TEST_ID_BREADCRUMBS}
+        >
           {items.map((item) => (
             <li key={item.id} className={composeClassNames('breadcrumb-item', item.active ? 'active' : undefined)}>
               {item.active || !item.href ? (

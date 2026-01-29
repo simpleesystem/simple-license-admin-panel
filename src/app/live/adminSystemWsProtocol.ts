@@ -135,10 +135,7 @@ export type AdminSystemWsServerError = {
   message: string
 }
 
-export type AdminSystemWsServerMessage =
-  | AdminSystemWsHealthUpdate
-  | AdminSystemWsPong
-  | AdminSystemWsServerError
+export type AdminSystemWsServerMessage = AdminSystemWsHealthUpdate | AdminSystemWsPong | AdminSystemWsServerError
 
 export type AdminSystemWsClientMessage =
   | { type: typeof ADMIN_SYSTEM_WS_MESSAGE_TYPE_PING }

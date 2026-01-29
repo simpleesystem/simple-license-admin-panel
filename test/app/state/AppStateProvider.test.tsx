@@ -7,9 +7,9 @@ import {
   APP_THEME_DARK,
   APP_THEME_LIGHT,
 } from '../../../src/app/constants'
-import type { AppStateAction, ThemeName } from '../../../src/app/state/types'
 import { AppStateProvider } from '../../../src/app/state/appState'
 import { useAppDispatch, useAppState, useTheme } from '../../../src/app/state/appStateContext'
+import type { AppStateAction, ThemeName } from '../../../src/app/state/types'
 import { THEME_BODY_DATA_ATTRIBUTE, THEME_STORAGE_KEY } from '../../../src/app/theme/constants'
 
 const TENANT_BUTTON_ID = 'set-tenant'
@@ -78,7 +78,7 @@ describe('AppStateProvider', () => {
     render(
       <AppStateProvider>
         <StateConsumer />
-      </AppStateProvider>,
+      </AppStateProvider>
     )
 
     expect(screen.getByTestId('tenant-display')).toHaveTextContent('none')
@@ -90,7 +90,7 @@ describe('AppStateProvider', () => {
     render(
       <AppStateProvider>
         <StateConsumer />
-      </AppStateProvider>,
+      </AppStateProvider>
     )
 
     fireEvent.click(screen.getByTestId(THEME_BUTTON_ID))
@@ -106,7 +106,7 @@ describe('AppStateProvider', () => {
     render(
       <AppStateProvider>
         <StateConsumer />
-      </AppStateProvider>,
+      </AppStateProvider>
     )
 
     expect(screen.getByTestId('theme-display')).toHaveTextContent(APP_THEME_DARK)
@@ -118,7 +118,7 @@ describe('AppStateProvider', () => {
     render(
       <AppStateProvider>
         <StateConsumer />
-      </AppStateProvider>,
+      </AppStateProvider>
     )
 
     expect(screen.getByTestId('theme-display')).toHaveTextContent(APP_THEME_LIGHT)
@@ -128,7 +128,7 @@ describe('AppStateProvider', () => {
     render(
       <AppStateProvider>
         <StateConsumer />
-      </AppStateProvider>,
+      </AppStateProvider>
     )
 
     fireEvent.click(screen.getByTestId(UNKNOWN_ACTION_BUTTON_ID))
@@ -140,7 +140,7 @@ describe('AppStateProvider', () => {
     render(
       <AppStateProvider>
         <StateConsumer />
-      </AppStateProvider>,
+      </AppStateProvider>
     )
 
     fireEvent.click(screen.getByTestId(INVALID_THEME_BUTTON_ID))
@@ -152,7 +152,7 @@ describe('AppStateProvider', () => {
     render(
       <AppStateProvider>
         <StateConsumer />
-      </AppStateProvider>,
+      </AppStateProvider>
     )
 
     expect(screen.getByTestId('sidebar-display')).toHaveTextContent('expanded')

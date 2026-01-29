@@ -1,6 +1,6 @@
+import type { ReactNode } from 'react'
 import type { Client, CreateEntitlementRequest, UpdateEntitlementRequest } from '@/simpleLicense'
 import { useCreateEntitlement, useUpdateEntitlement } from '@/simpleLicense'
-import type { ReactNode } from 'react'
 
 import type { MutationAdapter } from '../actions/mutationActions'
 import {
@@ -9,12 +9,12 @@ import {
   UI_ENTITLEMENT_FORM_SUBMIT_CREATE,
   UI_ENTITLEMENT_FORM_SUBMIT_UPDATE,
 } from '../constants'
+import type { FormBlueprint } from '../formBuilder/blueprint'
 import type { EntitlementFormValues } from '../formBuilder/factories'
 import { createEntitlementBlueprint } from '../formBuilder/factories'
-import type { FormBlueprint } from '../formBuilder/blueprint'
 import { FormModalWithMutation } from '../formBuilder/mutationBridge'
-import { wrapMutationAdapter } from './mutationHelpers'
 import type { UiSelectOption } from '../types'
+import { wrapMutationAdapter } from './mutationHelpers'
 
 type ProductEntitlementBaseProps = {
   client: Client

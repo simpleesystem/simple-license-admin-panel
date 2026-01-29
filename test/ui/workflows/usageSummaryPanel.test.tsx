@@ -1,7 +1,7 @@
-import { screen, waitFor } from '@testing-library/react'
 import { faker } from '@faker-js/faker'
-import type { Client, UsageSummaryResponse } from '@/simpleLicense'
+import { screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
+import type { Client, UsageSummaryResponse } from '@/simpleLicense'
 
 import {
   UI_ANALYTICS_SUMMARY_ERROR_BODY,
@@ -77,7 +77,7 @@ describe('UsageSummaryPanel', () => {
 
     const dateFormatter = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
     const expectedPeriod = `${dateFormatter.format(new Date(summary.periodStart))} – ${dateFormatter.format(
-      new Date(summary.periodEnd),
+      new Date(summary.periodEnd)
     )}`
 
     await waitFor(() => {

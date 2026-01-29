@@ -3,7 +3,17 @@ import type { Mock } from 'vitest'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 vi.mock('../../../src/ui/navigation/TopNavBar', () => ({
-  TopNavBar: ({ brand, navigation, actions, testId }: { brand?: React.ReactNode; navigation?: React.ReactNode; actions?: React.ReactNode; testId?: string }) => (
+  TopNavBar: ({
+    brand,
+    navigation,
+    actions,
+    testId,
+  }: {
+    brand?: React.ReactNode
+    navigation?: React.ReactNode
+    actions?: React.ReactNode
+    testId?: string
+  }) => (
     <div data-testid={testId ?? 'top-nav'}>
       <div data-testid="top-nav-brand">{brand}</div>
       <div data-testid="top-nav-navigation">{navigation}</div>
@@ -12,11 +22,14 @@ vi.mock('../../../src/ui/navigation/TopNavBar', () => ({
   ),
 }))
 
-import { PersistentHeader } from '../../../src/app/layout/PersistentHeader'
+import { AbilityContext } from '../../../src/app/abilities/abilityContext'
+import { buildAbilityFromPermissions } from '../../../src/app/abilities/factory'
 import { AuthContext } from '../../../src/app/auth/AuthContext'
-import type { AuthContextValue } from '../../../src/app/auth/types'
 import { AuthorizationContext } from '../../../src/app/auth/authorizationContext'
+import type { AuthContextValue } from '../../../src/app/auth/types'
+import * as UseAuthorization from '../../../src/app/auth/useAuthorization'
 import { APP_BRAND_NAME, AUTH_STATUS_IDLE, ROUTE_PATH_DASHBOARD } from '../../../src/app/constants'
+import { PersistentHeader } from '../../../src/app/layout/PersistentHeader'
 import {
   UI_HEADER_ACTION_CHANGE_PASSWORD,
   UI_HEADER_ACTION_SIGN_OUT,
@@ -24,11 +37,8 @@ import {
   UI_TEST_ID_MODAL_DIALOG,
 } from '../../../src/ui/constants'
 import { UI_NAV_LABEL_HEALTH, UI_NAV_LABEL_TENANTS, UI_NAV_LABEL_USERS } from '../../../src/ui/navigation/navConstants'
-import { buildUser } from '../../factories/userFactory'
 import { buildPermissions } from '../../factories/permissionFactory'
-import * as UseAuthorization from '../../../src/app/auth/useAuthorization'
-import { AbilityContext } from '../../../src/app/abilities/abilityContext'
-import { buildAbilityFromPermissions } from '../../../src/app/abilities/factory'
+import { buildUser } from '../../factories/userFactory'
 
 const mockUseRouterState = vi.hoisted(() => vi.fn()) as Mock
 const mockChangePasswordFlowRender = vi.hoisted(() => vi.fn())
@@ -36,16 +46,7 @@ const mockUseNavigate = vi.hoisted(() => vi.fn())
 const mockUseAuth = vi.hoisted(() => vi.fn())
 
 vi.mock('@tanstack/react-router', () => ({
-  Link: ({
-    to,
-    className,
-    children,
-    ...props
-  }: {
-    to: string
-    className?: string
-    children: React.ReactNode
-  }) => (
+  Link: ({ to, className, children, ...props }: { to: string; className?: string; children: React.ReactNode }) => (
     <a href={to} className={className} {...props}>
       {children}
     </a>
@@ -196,7 +197,7 @@ const renderHeader = ({
           <PersistentHeader />
         </AbilityContext.Provider>
       </AuthorizationContext.Provider>
-    </AuthContext.Provider>,
+    </AuthContext.Provider>
   )
 
   return result

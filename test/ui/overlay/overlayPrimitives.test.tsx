@@ -1,16 +1,13 @@
 import { faker } from '@faker-js/faker'
 import { fireEvent, render } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
-
+import { UI_TEST_ID_MODAL_DIALOG, UI_TEST_ID_SIDE_PANEL } from '../../../src/ui/constants'
 import { ModalDialog } from '../../../src/ui/overlay/ModalDialog'
 import { SidePanel } from '../../../src/ui/overlay/SidePanel'
-import { UI_TEST_ID_MODAL_DIALOG, UI_TEST_ID_SIDE_PANEL } from '../../../src/ui/constants'
 
 describe('Overlay primitives', () => {
   test('ModalDialog renders when show flag is true', () => {
-    const { getByTestId } = render(
-      <ModalDialog show title={faker.lorem.words(2)} onClose={() => undefined} />
-    )
+    const { getByTestId } = render(<ModalDialog show={true} title={faker.lorem.words(2)} onClose={() => undefined} />)
 
     expect(getByTestId(UI_TEST_ID_MODAL_DIALOG)).toBeInTheDocument()
   })
@@ -20,7 +17,7 @@ describe('Overlay primitives', () => {
     const secondaryAction = vi.fn()
     const { getByText } = render(
       <ModalDialog
-        show
+        show={true}
         onClose={() => undefined}
         title="Actions"
         primaryAction={{ id: 'primary', label: 'Confirm', onClick: primaryAction }}
@@ -39,7 +36,7 @@ describe('Overlay primitives', () => {
     const footerLabel = faker.lorem.words(2)
     const body = faker.lorem.sentence()
     const { getByText, queryByText } = render(
-      <ModalDialog show onClose={() => undefined} body={<p>{body}</p>} footer={<div>{footerLabel}</div>} />
+      <ModalDialog show={true} onClose={() => undefined} body={<p>{body}</p>} footer={<div>{footerLabel}</div>} />
     )
 
     expect(getByText(body)).toBeInTheDocument()
@@ -49,9 +46,7 @@ describe('Overlay primitives', () => {
 
   test('SidePanel renders title content', () => {
     const title = faker.lorem.words(2)
-    const { getByText } = render(
-      <SidePanel show onClose={() => undefined} title={title} />
-    )
+    const { getByText } = render(<SidePanel show={true} onClose={() => undefined} title={title} />)
 
     expect(getByText(title)).toBeInTheDocument()
   })
@@ -62,7 +57,7 @@ describe('Overlay primitives', () => {
     const footerLabel = faker.lorem.words(2)
     const { getByText, getByTestId, getByRole } = render(
       <SidePanel
-        show
+        show={true}
         placement="start"
         onClose={onClose}
         title="Side Panel"
@@ -89,7 +84,7 @@ describe('Overlay primitives', () => {
     expect(hidden.queryByTestId(UI_TEST_ID_SIDE_PANEL)).toBeNull()
 
     const { getByTestId } = render(
-      <SidePanel show onClose={() => undefined} title="Visible" sizeClass="w-50">
+      <SidePanel show={true} onClose={() => undefined} title="Visible" sizeClass="w-50">
         content
       </SidePanel>
     )

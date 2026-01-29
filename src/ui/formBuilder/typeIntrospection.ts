@@ -1,5 +1,5 @@
-import type { FieldValues, Path } from 'react-hook-form'
 import type { ReactNode } from 'react'
+import type { FieldValues, Path } from 'react-hook-form'
 
 import {
   UI_FORM_CHECK_TYPE_BOX,
@@ -7,7 +7,13 @@ import {
   UI_FORM_CONTROL_TYPE_TEXT,
   UI_FORM_TEXTAREA_MIN_ROWS,
 } from '../constants'
-import type { UiFormCheckType, UiFormControlTextType, UiFormRowColumns, UiSelectOption, UiVisibilityProps } from '../types'
+import type {
+  UiFormCheckType,
+  UiFormControlTextType,
+  UiFormRowColumns,
+  UiSelectOption,
+  UiVisibilityProps,
+} from '../types'
 import { createFormBlueprint, type FormBlueprint, type FormFieldBlueprint, type FormFieldKind } from './blueprint'
 
 const WORD_SEPARATOR = /_|(?=[A-Z])/
@@ -101,7 +107,7 @@ export type BlueprintConfig<TFieldValues extends FieldValues> = UiVisibilityProp
 }
 
 export const inferFieldType = <TFieldValues extends FieldValues>(
-  descriptor: PropertyDescriptor<TFieldValues>,
+  descriptor: PropertyDescriptor<TFieldValues>
 ): FormFieldKind => {
   switch (descriptor.kind) {
     case 'boolean':
@@ -118,7 +124,7 @@ export const inferFieldType = <TFieldValues extends FieldValues>(
 }
 
 export const inferFieldProps = <TFieldValues extends FieldValues>(
-  descriptor: PropertyDescriptor<TFieldValues>,
+  descriptor: PropertyDescriptor<TFieldValues>
 ): FormFieldBlueprint<TFieldValues> => {
   const common = {
     id: descriptor.id ?? String(descriptor.name),
@@ -171,7 +177,6 @@ export const inferFieldProps = <TFieldValues extends FieldValues>(
         inputType: UI_FORM_CONTROL_TYPE_NUMBER,
         placeholder: descriptor.placeholder,
       }
-    case 'string':
     default:
       return {
         ...common,
@@ -184,7 +189,7 @@ export const inferFieldProps = <TFieldValues extends FieldValues>(
 }
 
 export const generateBlueprintFromType = <TFieldValues extends FieldValues>(
-  config: BlueprintConfig<TFieldValues>,
+  config: BlueprintConfig<TFieldValues>
 ): FormBlueprint<TFieldValues> => {
   const resolvedSections: FormBlueprint<TFieldValues>['sections'] = config.sections.map((section) => ({
     id: section.id,

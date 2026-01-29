@@ -1,7 +1,11 @@
 import { useState } from 'react'
 import { useApiClient } from '@/api/apiContext'
 import { useAuth } from '@/app/auth/useAuth'
-import { APP_ERROR_MESSAGE_NON_ERROR_THROWABLE, NOTIFICATION_EVENT_TOAST, NOTIFICATION_VARIANT_SUCCESS } from '@/app/constants'
+import {
+  APP_ERROR_MESSAGE_NON_ERROR_THROWABLE,
+  NOTIFICATION_EVENT_TOAST,
+  NOTIFICATION_VARIANT_SUCCESS,
+} from '@/app/constants'
 import { useNotificationBus } from '@/notifications/useNotificationBus'
 import {
   UI_CHANGE_PASSWORD_BUTTON_UPDATE,
@@ -55,11 +59,11 @@ export function ChangePasswordForm({ onSuccess }: ChangePasswordFormProps) {
     }
 
     if (isEmailChanged) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        if (!emailRegex.test(email)) {
-            setError(UI_CHANGE_PASSWORD_ERROR_EMAIL_INVALID)
-            return
-        }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(email)) {
+        setError(UI_CHANGE_PASSWORD_ERROR_EMAIL_INVALID)
+        return
+      }
     }
 
     if (isPasswordChanged) {
@@ -100,7 +104,7 @@ export function ChangePasswordForm({ onSuccess }: ChangePasswordFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate>
+    <form onSubmit={handleSubmit} noValidate={true}>
       <Stack gap="large">
         {error && (
           <div className="alert alert-danger" role="alert">

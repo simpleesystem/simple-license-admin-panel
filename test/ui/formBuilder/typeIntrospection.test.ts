@@ -1,19 +1,18 @@
 import { faker } from '@faker-js/faker'
-import type { CreateLicenseRequest } from '@/simpleLicense'
 import { describe, expect, test, vi } from 'vitest'
-
-import {
-  generateBlueprintFromType,
-  inferFieldProps,
-  inferFieldType,
-  type BlueprintSectionConfig,
-  type PropertyDescriptor,
-} from '../../../src/ui/formBuilder/typeIntrospection'
+import type { CreateLicenseRequest } from '@/simpleLicense'
 import {
   UI_FORM_CONTROL_TYPE_EMAIL,
   UI_FORM_CONTROL_TYPE_NUMBER,
   UI_FORM_TEXTAREA_MIN_ROWS,
 } from '../../../src/ui/constants'
+import {
+  type BlueprintSectionConfig,
+  generateBlueprintFromType,
+  inferFieldProps,
+  inferFieldType,
+  type PropertyDescriptor,
+} from '../../../src/ui/formBuilder/typeIntrospection'
 import type { UiSelectOption } from '../../../src/ui/types'
 
 describe('typeIntrospection utilities', () => {
@@ -80,9 +79,7 @@ describe('typeIntrospection utilities', () => {
     const descriptor: PropertyDescriptor<CreateLicenseRequest> = {
       name: 'product_slug',
       kind: 'select',
-      options: [
-        { value: 'license', label: 'License' },
-      ] satisfies readonly UiSelectOption[],
+      options: [{ value: 'license', label: 'License' }] satisfies readonly UiSelectOption[],
       placeholder: faker.commerce.productName(),
     }
 

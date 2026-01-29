@@ -1,4 +1,5 @@
-import { expect, test } from 'vitest'
+import { faker } from '@faker-js/faker'
+import { describe, expect, test } from 'vitest'
 
 import { composeClassNames } from '../../../src/ui/utils/classNames'
 import { buildText } from '../../ui/factories/uiFactories'
@@ -21,11 +22,6 @@ describe('composeClassNames', () => {
     expect(result).toBe(token)
   })
 })
-
-import { faker } from '@faker-js/faker'
-import { describe, expect, test } from 'vitest'
-
-import { composeClassNames } from '../../../src/ui/utils/classNames'
 
 describe('composeClassNames', () => {
   test('joins provided class names in order', () => {

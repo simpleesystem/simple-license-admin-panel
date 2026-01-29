@@ -1,10 +1,11 @@
+import { useEffect, useMemo, useState } from 'react'
 import type { License } from '@/simpleLicense'
 import { useAdminLicenses, useAdminProducts } from '@/simpleLicense'
-import { useEffect, useMemo, useState } from 'react'
 
 import { useApiClient } from '../../api/apiContext'
 import { canViewLicenses, isLicenseOwnedByUser, isVendorScopedUser } from '../../app/auth/permissions'
 import { useAuth } from '../../app/auth/useAuth'
+import { useLogger } from '../../app/logging/loggerContext'
 import {
   UI_LICENSE_STATUS_ACTION_RETRY,
   UI_LICENSE_STATUS_ERROR_BODY,
@@ -27,8 +28,8 @@ import { LicenseManagementPanel } from '../../ui/workflows/LicenseManagementPane
 
 export function LicensesRouteComponent() {
   const client = useApiClient()
+  const logger = useLogger()
   const { user: currentUser } = useAuth()
-  console.log('LicensesRouteComponent: currentUser', currentUser)
   const { data, isLoading, isError, refetch } = useAdminLicenses(client)
   const { data: productsData } = useAdminProducts(client)
   const [searchTerm, setSearchTerm] = useState('')
@@ -51,7 +52,7 @@ export function LicensesRouteComponent() {
         list.map(async (product) => {
           try {
             const response = await client.listProductTiers(product.id)
-            const tiers = Array.isArray(response) ? response : (response.data ?? [])
+            const tiers = Array.isArray(response) ? response : (response?.data ?? [])
 
             for (const tier of tiers) {
               allTiers.push({
@@ -60,7 +61,9 @@ export function LicensesRouteComponent() {
               })
             }
           } catch (e) {
-            console.error(`Failed to fetch tiers for product ${product.name}`, e)
+            logger.error(e instanceof Error ? e : new Error(String(e)), {
+              message: `Failed to fetch tiers for product ${product.name}`,
+            })
           }
         })
       )
@@ -71,7 +74,7 @@ export function LicensesRouteComponent() {
     }
 
     void fetchTiers()
-  }, [client, productsData])
+  }, [client, productsData, logger])
 
   const allFilteredLicenses = useMemo<LicenseListItem[]>(() => {
     let list = Array.isArray(data) ? (data as LicenseListItem[]) : ((data?.data as LicenseListItem[]) ?? [])
@@ -140,7 +143,6 @@ export function LicensesRouteComponent() {
   }, [productsData])
 
   const canView = canViewLicenses(currentUser ?? null)
-  console.log('LicensesRouteComponent: canView', canView)
 
   const handleRefresh = () => {
     void refetch()

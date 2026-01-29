@@ -1,8 +1,7 @@
 import type { Client, UpdateAlertThresholdsRequest } from '@/simpleLicense'
 import { useUpdateAlertThresholds } from '@/simpleLicense'
-
-import { adaptMutation } from '../actions/mutationAdapter'
 import type { MutationAdapter } from '../actions/mutationActions'
+import { adaptMutation } from '../actions/mutationAdapter'
 import { createAlertThresholdsBlueprint } from '../formBuilder/factories'
 import { FormModalWithMutation } from '../formBuilder/mutationBridge'
 

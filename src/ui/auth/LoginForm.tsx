@@ -81,9 +81,7 @@ export function LoginForm() {
             disabled={isSubmitting}
             required={true}
           />
-          {validationErrors.username && (
-            <div className="text-danger small mt-1">{validationErrors.username}</div>
-          )}
+          {validationErrors.username && <div className="text-danger small mt-1">{validationErrors.username}</div>}
         </div>
 
         <div>
@@ -99,9 +97,7 @@ export function LoginForm() {
             disabled={isSubmitting}
             required={true}
           />
-          {validationErrors.password && (
-            <div className="text-danger small mt-1">{validationErrors.password}</div>
-          )}
+          {validationErrors.password && <div className="text-danger small mt-1">{validationErrors.password}</div>}
         </div>
 
         <button type="submit" className="btn btn-primary w-100" disabled={isSubmitting || !isFormValid}>

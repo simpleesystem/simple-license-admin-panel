@@ -1,21 +1,14 @@
 import { faker } from '@faker-js/faker'
 import { act, fireEvent, render } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
-
-import { ActionMenu } from '../../../src/ui/data/ActionMenu'
 import { UI_ACTION_MENU_TOGGLE_LABEL } from '../../../src/ui/constants'
+import { ActionMenu } from '../../../src/ui/data/ActionMenu'
 
 describe('ActionMenu', () => {
   test('invokes action handler when menu item selected', async () => {
     const label = faker.lorem.word()
     const onSelect = vi.fn()
-    const { getByLabelText, getByText } = render(
-      <ActionMenu
-        items={[
-          { id: 'view', label, onSelect },
-        ]}
-      />
-    )
+    const { getByLabelText, getByText } = render(<ActionMenu items={[{ id: 'view', label, onSelect }]} />)
 
     await act(async () => {
       fireEvent.click(getByLabelText(UI_ACTION_MENU_TOGGLE_LABEL))
@@ -60,13 +53,7 @@ describe('ActionMenu', () => {
     const ariaLabel = faker.lorem.words(2)
     const testId = faker.string.uuid()
     const { getByTestId, getByLabelText } = render(
-      <ActionMenu
-        items={[]}
-        variant="outline-secondary"
-        size="sm"
-        testId={testId}
-        ariaLabel={ariaLabel}
-      />
+      <ActionMenu items={[]} variant="outline-secondary" size="sm" testId={testId} ariaLabel={ariaLabel} />
     )
 
     const toggle = getByLabelText(ariaLabel)

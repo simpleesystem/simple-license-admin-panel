@@ -1,7 +1,7 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import type { Client } from '@/simpleLicense'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
+import type { Client } from '@/simpleLicense'
 
 import { ApiContext } from '../../../src/api/apiContext'
 import {
@@ -36,7 +36,7 @@ const renderWithProviders = (ui: React.ReactElement, client: Client) => {
   return render(
     <QueryClientProvider client={queryClient}>
       <ApiContext.Provider value={{ client }}>{ui}</ApiContext.Provider>
-    </QueryClientProvider>,
+    </QueryClientProvider>
   )
 }
 
@@ -67,7 +67,7 @@ describe('TenantBackupPanel', () => {
           metadata: {},
         }}
       />,
-      client,
+      client
     )
 
     expect(screen.getByText(UI_TENANT_BACKUP_TITLE)).toBeInTheDocument()
