@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useRef } from 'react'
 import type { FieldValues } from 'react-hook-form'
 
 import type { MutationAdapter } from '../actions/mutationActions'
@@ -14,14 +14,22 @@ export const useFormMutation = <TFieldValues extends FieldValues, TData = unknow
   onSuccess,
   onError,
 }: FormMutationOptions<TFieldValues, TData, TError>) => {
+  const submittingRef = useRef(false)
+
   const handleSubmit = useCallback(
     async (values: TFieldValues) => {
+      if (submittingRef.current) {
+        return
+      }
+      submittingRef.current = true
       try {
         const result = await mutation.mutateAsync(values)
         onSuccess?.(result, values)
       } catch (error) {
         onError?.(error as TError, values)
         throw error
+      } finally {
+        submittingRef.current = false
       }
     },
     [mutation, onError, onSuccess]
