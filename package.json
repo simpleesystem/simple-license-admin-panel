@@ -59,7 +59,7 @@
     "@vitejs/plugin-react": "^5.1.2"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.10",
+    "@biomejs/biome": "2.3.13",
     "@faker-js/faker": "^10.1.0",
     "@stryker-mutator/core": "^9.4.0",
     "@stryker-mutator/vitest-runner": "^9.4.0",

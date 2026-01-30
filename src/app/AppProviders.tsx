@@ -28,7 +28,7 @@ import { createAppQueryClient } from './queryClient'
 import { computeFirstAllowedRoute, router } from './router'
 import { AppStateProvider } from './state/appState'
 import { SurfaceRenderer } from './state/SurfaceRenderer'
-import { useAppStore } from './state/store'
+import { type AppStore, useAppStore } from './state/store'
 
 type AppProvidersProps = PropsWithChildren<{
   queryClient?: QueryClient
@@ -90,8 +90,8 @@ function AppProvidersInner({ children, queryClient: externalQueryClient, apiClie
 
 function RouterContextBridge({ queryClient, children }: { queryClient: QueryClient; children: ReactNode }) {
   const { isAuthenticated, user } = useAuth()
-  const navigationIntent = useAppStore((state) => state.navigationIntent)
-  const dispatch = useAppStore((state) => state.dispatch)
+  const navigationIntent = useAppStore((state: AppStore) => state.navigationIntent)
+  const dispatch = useAppStore((state: AppStore) => state.dispatch)
   const navigateRef = useRef(router.navigate)
   navigateRef.current = router.navigate
   const logger = useLogger()
