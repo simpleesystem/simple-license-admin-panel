@@ -4,7 +4,7 @@ import type { QueryClient } from '@tanstack/react-query'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider } from '@tanstack/react-router'
 import type { PropsWithChildren, ReactNode } from 'react'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import type { Client } from '@/simpleLicense'
 import { ApiProvider } from '../api/ApiProvider'
 import { AppErrorBoundary } from '../errors/AppErrorBoundary'
@@ -92,7 +92,8 @@ function RouterContextBridge({ queryClient, children }: { queryClient: QueryClie
   const { isAuthenticated, user } = useAuth()
   const navigationIntent = useAppStore((state) => state.navigationIntent)
   const dispatch = useAppStore((state) => state.dispatch)
-  const navigate = router.navigate
+  const navigateRef = useRef(router.navigate)
+  navigateRef.current = router.navigate
   const logger = useLogger()
 
   const permissions = useMemo(() => derivePermissionsFromUser(user), [user])
@@ -133,9 +134,9 @@ function RouterContextBridge({ queryClient, children }: { queryClient: QueryClie
   // Process navigation intent AFTER router context is updated
   // Use a separate effect that runs after router context update completes
   // This ensures navigation happens with the correct auth state in router context
+  // navigateRef used so we don't close over router.navigate; both exhaustive-deps and Biome agree on deps
   useEffect(() => {
     if (navigationIntent) {
-      // Use setTimeout to ensure router context update has been processed
       const timeoutId = setTimeout(() => {
         if (import.meta.env.DEV) {
           logger.info('router:navigation-intent', {
@@ -144,7 +145,7 @@ function RouterContextBridge({ queryClient, children }: { queryClient: QueryClie
             isAuthenticated: authState.isAuthenticated,
           })
         }
-        navigate({
+        navigateRef.current({
           to: navigationIntent.to,
           replace: navigationIntent.replace,
         })
@@ -152,7 +153,7 @@ function RouterContextBridge({ queryClient, children }: { queryClient: QueryClie
       }, 0)
       return () => clearTimeout(timeoutId)
     }
-  }, [navigationIntent, authState, navigate, dispatch, logger])
+  }, [navigationIntent, authState, dispatch, logger])
 
   return <>{children}</>
 }
