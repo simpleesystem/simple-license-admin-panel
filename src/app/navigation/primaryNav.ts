@@ -6,6 +6,7 @@ import {
   UI_NAV_ID_HEALTH,
   UI_NAV_ID_LICENSES,
   UI_NAV_ID_PRODUCTS,
+  UI_NAV_ID_RELEASES,
   UI_NAV_ID_TENANTS,
   UI_NAV_ID_USERS,
   UI_NAV_LABEL_ANALYTICS,
@@ -14,6 +15,7 @@ import {
   UI_NAV_LABEL_HEALTH,
   UI_NAV_LABEL_LICENSES,
   UI_NAV_LABEL_PRODUCTS,
+  UI_NAV_LABEL_RELEASES,
   UI_NAV_LABEL_TENANTS,
   UI_NAV_LABEL_USERS,
 } from '../../ui/navigation/navConstants'
@@ -26,6 +28,7 @@ import {
   ROUTE_PATH_HEALTH,
   ROUTE_PATH_LICENSES,
   ROUTE_PATH_PRODUCTS,
+  ROUTE_PATH_RELEASES,
   ROUTE_PATH_TENANTS,
   ROUTE_PATH_USERS,
 } from '../constants'
@@ -60,6 +63,13 @@ const NAV_DEFINITIONS: readonly NavDefinition[] = [
     id: UI_NAV_ID_PRODUCTS,
     label: UI_NAV_LABEL_PRODUCTS,
     href: ROUTE_PATH_PRODUCTS,
+    permission: 'manageProducts',
+    matchStrategy: 'startsWith',
+  },
+  {
+    id: UI_NAV_ID_RELEASES,
+    label: UI_NAV_LABEL_RELEASES,
+    href: ROUTE_PATH_RELEASES,
     permission: 'manageProducts',
     matchStrategy: 'startsWith',
   },

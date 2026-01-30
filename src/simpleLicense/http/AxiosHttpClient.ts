@@ -367,6 +367,26 @@ export class AxiosHttpClient implements HttpClientInterface {
     return this.toHttpResponse(response)
   }
 
+  async postFormData<T = Record<string, never>>(
+    url: string,
+    formData: FormData,
+    config?: HttpRequestConfig
+  ): Promise<HttpResponse<T>> {
+    const axiosConfig: AxiosRequestConfig | undefined = config
+      ? {
+          ...config,
+          headers: {
+            ...(this.axiosInstance.defaults.headers?.common || {}),
+            ...config.headers,
+          },
+          signal: config.signal,
+        }
+      : undefined
+
+    const response = await this.axiosInstance.post<T>(url, formData, axiosConfig)
+    return this.toHttpResponse(response)
+  }
+
   async put<T = Record<string, never>>(
     url: string,
     data?: HttpData,

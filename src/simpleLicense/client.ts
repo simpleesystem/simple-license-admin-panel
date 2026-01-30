@@ -100,6 +100,7 @@ import type {
   CreateProductResponse,
   CreateProductTierRequest,
   CreateProductTierResponse,
+  CreateReleaseResponse,
   CreateTenantBackupResponse,
   CreateTenantRequest,
   CreateTenantResponse,
@@ -129,6 +130,7 @@ import type {
   ListLicensesResponse,
   ListProductsResponse,
   ListProductTiersResponse,
+  ListReleasesResponse,
   ListTenantsResponse,
   ListUsersRequest,
   ListUsersResponse,
@@ -539,6 +541,21 @@ export class Client {
     const response = await this.httpClient.post<ApiResponse<{ success: boolean }>>(url)
 
     return this.handleApiResponse<ActionSuccessResponse>(response.data, { success: true })
+  }
+
+  // Admin API - Releases (plugin release files per product)
+  async listReleases(productId: string): Promise<ListReleasesResponse> {
+    const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}/releases`
+    const response = await this.httpClient.get<ApiResponse<ListReleasesResponse>>(url)
+
+    return this.handleApiResponse(response.data, [])
+  }
+
+  async createRelease(productId: string, formData: FormData): Promise<CreateReleaseResponse> {
+    const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}/releases`
+    const response = await this.httpClient.postFormData<ApiResponse<CreateReleaseResponse>>(url, formData)
+
+    return this.handleApiResponse(response.data, {} as CreateReleaseResponse)
   }
 
   // Admin API - Product Tiers

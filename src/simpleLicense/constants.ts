@@ -184,6 +184,9 @@ export const VALIDATION_SLUG_MAX_LENGTH = 100
 export const VALIDATION_ACTIVATION_LIMIT_MAX = 1000
 export const VALIDATION_EXPIRES_DAYS_MAX = 36500
 
+/** FormData field name for release file upload (must match license-server RELEASE_UPLOAD_FIELD_NAME) */
+export const RELEASE_UPLOAD_FIELD_NAME = 'file'
+
 // License Key Pattern (Ed25519 format: payload.signature)
 export const LICENSE_KEY_PATTERN = /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/
 export const LICENSE_KEY_LENGTH = 1000

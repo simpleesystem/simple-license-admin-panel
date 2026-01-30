@@ -33,6 +33,11 @@ export interface HttpRequestConfig {
 export interface HttpClientInterface {
   get<T = Record<string, never>>(url: string, config?: HttpRequestConfig): Promise<HttpResponse<T>>
   post<T = Record<string, never>>(url: string, data?: HttpData, config?: HttpRequestConfig): Promise<HttpResponse<T>>
+  postFormData<T = Record<string, never>>(
+    url: string,
+    formData: FormData,
+    config?: HttpRequestConfig
+  ): Promise<HttpResponse<T>>
   put<T = Record<string, never>>(url: string, data?: HttpData, config?: HttpRequestConfig): Promise<HttpResponse<T>>
   patch<T = Record<string, never>>(url: string, data?: HttpData, config?: HttpRequestConfig): Promise<HttpResponse<T>>
   delete<T = Record<string, never>>(url: string, config?: HttpRequestConfig): Promise<HttpResponse<T>>

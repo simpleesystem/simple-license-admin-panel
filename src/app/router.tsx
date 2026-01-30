@@ -9,6 +9,7 @@ import { HealthRouteComponent } from '../routes/health/HealthRoute'
 import { LicensesRouteComponent } from '../routes/licenses/LicensesRoute'
 import { NotFoundRouteComponent } from '../routes/notFound/NotFoundRoute'
 import { ProductsRouteComponent } from '../routes/products/ProductsRoute'
+import { ReleasesRouteComponent } from '../routes/releases/ReleasesRoute'
 import { RootRouteComponent } from '../routes/root/RootRoute'
 import { TenantsRouteComponent } from '../routes/tenants/TenantsRoute'
 import { UsersRouteComponent } from '../routes/users/UsersRoute'
@@ -21,6 +22,7 @@ import {
   ROUTE_PATH_HEALTH,
   ROUTE_PATH_LICENSES,
   ROUTE_PATH_PRODUCTS,
+  ROUTE_PATH_RELEASES,
   ROUTE_PATH_ROOT,
   ROUTE_PATH_TENANTS,
   ROUTE_PATH_USERS,
@@ -96,6 +98,15 @@ const productsRoute = createRoute({
   component: ProductsRouteComponent,
 })
 
+const releasesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: ROUTE_PATH_RELEASES,
+  beforeLoad: ({ context, location }) => {
+    assertPermission(context, location, 'manageProducts')
+  },
+  component: ReleasesRouteComponent,
+})
+
 const tenantsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: ROUTE_PATH_TENANTS,
@@ -153,6 +164,7 @@ const routeTree = rootRoute.addChildren([
   authRoute,
   licensesRoute,
   productsRoute,
+  releasesRoute,
   tenantsRoute,
   usersRoute,
   analyticsRoute,

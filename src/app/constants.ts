@@ -45,12 +45,14 @@ export const ROUTE_ID_USERS = 'route.users' as const
 export const ROUTE_ID_ANALYTICS = 'route.analytics' as const
 export const ROUTE_ID_HEALTH = 'route.health' as const
 export const ROUTE_ID_AUDIT = 'route.audit' as const
+export const ROUTE_ID_RELEASES = 'route.releases' as const
 
 export const ROUTE_PATH_ROOT = '/' as const
 export const ROUTE_PATH_DASHBOARD = '/dashboard' as const
 export const ROUTE_PATH_AUTH = '/auth' as const
 export const ROUTE_PATH_LICENSES = '/licenses' as const
 export const ROUTE_PATH_PRODUCTS = '/products' as const
+export const ROUTE_PATH_RELEASES = '/releases' as const
 export const ROUTE_PATH_TENANTS = '/tenants' as const
 export const ROUTE_PATH_USERS = '/users' as const
 export const ROUTE_PATH_ANALYTICS = '/analytics' as const

@@ -40,6 +40,11 @@ export const QUERY_KEYS = {
     detail: (id: string) => ['admin', 'product-tiers', id] as const,
   },
 
+  // Admin API - Releases (plugin release files per product)
+  adminReleases: {
+    all: (productId: string) => ['admin', 'products', productId, 'releases'] as const,
+  },
+
   // Admin API - Entitlements
   adminEntitlements: {
     all: (productId: string) => ['admin', 'products', productId, 'entitlements'] as const,

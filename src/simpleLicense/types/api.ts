@@ -712,3 +712,24 @@ export interface FreezeLicenseResponse {
     freezeTier?: boolean
   }
 }
+
+// Plugin release (admin releases for product)
+export interface PluginRelease {
+  id: string
+  slug: string
+  version: string
+  fileName: string
+  sizeBytes: number
+  changelogMd?: string | null
+  requiredTier?: string | null
+  minWpVersion?: string | null
+  testedWpVersion?: string | null
+  isPrerelease: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export type ListReleasesResponse = PluginRelease[]
+
+/** Response from createRelease; API returns { success, data: PluginRelease } */
+export type CreateReleaseResponse = PluginRelease
