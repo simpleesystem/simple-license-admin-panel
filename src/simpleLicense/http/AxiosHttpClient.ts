@@ -372,16 +372,16 @@ export class AxiosHttpClient implements HttpClientInterface {
     formData: FormData,
     config?: HttpRequestConfig
   ): Promise<HttpResponse<T>> {
-    const axiosConfig: AxiosRequestConfig | undefined = config
-      ? {
-          ...config,
-          headers: {
-            ...(this.axiosInstance.defaults.headers?.common || {}),
-            ...config.headers,
-          },
-          signal: config.signal,
-        }
-      : undefined
+    const defaultHeaders = { ...(this.axiosInstance.defaults.headers?.common || {}) }
+    delete defaultHeaders[HEADER_CONTENT_TYPE]
+    const axiosConfig: AxiosRequestConfig = {
+      ...config,
+      headers: {
+        ...defaultHeaders,
+        ...config?.headers,
+      },
+      signal: config?.signal,
+    }
 
     const response = await this.axiosInstance.post<T>(url, formData, axiosConfig)
     return this.toHttpResponse(response)
