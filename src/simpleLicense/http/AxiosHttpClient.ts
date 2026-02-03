@@ -372,13 +372,19 @@ export class AxiosHttpClient implements HttpClientInterface {
     formData: FormData,
     config?: HttpRequestConfig
   ): Promise<HttpResponse<T>> {
-    const defaultHeaders = { ...(this.axiosInstance.defaults.headers?.common || {}) }
-    delete defaultHeaders[HEADER_CONTENT_TYPE]
+    const defaultCommonHeaders = { ...(this.axiosInstance.defaults.headers?.common || {}) }
+    const defaultPostHeaders = { ...(this.axiosInstance.defaults.headers?.post || {}) }
+    const mergedHeaders = {
+      ...defaultCommonHeaders,
+      ...defaultPostHeaders,
+      ...config?.headers,
+    }
+    delete mergedHeaders[HEADER_CONTENT_TYPE]
+    delete mergedHeaders[HEADER_CONTENT_TYPE.toLowerCase()]
     const axiosConfig: AxiosRequestConfig = {
       ...config,
       headers: {
-        ...defaultHeaders,
-        ...config?.headers,
+        ...mergedHeaders,
       },
       signal: config?.signal,
     }
