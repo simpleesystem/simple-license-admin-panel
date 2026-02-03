@@ -453,6 +453,12 @@ export class AxiosHttpClient implements HttpClientInterface {
     if (!cfg.headers) {
       cfg.headers = {}
     }
+    // FormData must not have Content-Type set - browser sets multipart/form-data with boundary.
+    // Axios/defaults may have merged Content-Type; strip it so Multer can parse the upload.
+    if (config.data instanceof FormData && cfg.headers) {
+      delete cfg.headers[HEADER_CONTENT_TYPE]
+      delete cfg.headers[HEADER_CONTENT_TYPE.toLowerCase()]
+    }
     // Respect signal from config
     if (config.signal) {
       cfg.signal = config.signal
