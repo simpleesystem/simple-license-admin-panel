@@ -23,9 +23,10 @@ export function SurfaceRenderer() {
       return
     }
 
+    const messageText = typeof error.message === 'string' ? error.message : undefined
     notificationBus.emit(NOTIFICATION_EVENT_TOAST, {
       titleKey: I18N_KEY_APP_ERROR_TITLE,
-      message: error.message,
+      message: messageText,
       variant: NOTIFICATION_VARIANT_ERROR,
       id: errorId,
     })

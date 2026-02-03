@@ -123,7 +123,7 @@ export function ToastProvider() {
           >
             <Toast.Header>
               <strong className={`me-auto ${getVariantHeaderClass(toast.variant)}`}>
-                {toast.message ?? t(toast.titleKey)}
+                {typeof toast.message === 'string' ? toast.message : t(toast.titleKey)}
               </strong>
             </Toast.Header>
             {toast.descriptionKey ? (
