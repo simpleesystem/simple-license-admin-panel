@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import type { Mock } from 'vitest'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
-vi.mock('../../../src/ui/navigation/TopNavBar', () => ({
+vi.mock('@/ui/navigation/TopNavBar', () => ({
   TopNavBar: ({
     brand,
     navigation,
@@ -22,21 +22,21 @@ vi.mock('../../../src/ui/navigation/TopNavBar', () => ({
   ),
 }))
 
-import { AbilityContext } from '../../../src/app/abilities/abilityContext'
-import { buildAbilityFromPermissions } from '../../../src/app/abilities/factory'
-import { AuthContext } from '../../../src/app/auth/AuthContext'
-import { AuthorizationContext } from '../../../src/app/auth/authorizationContext'
-import type { AuthContextValue } from '../../../src/app/auth/types'
-import * as UseAuthorization from '../../../src/app/auth/useAuthorization'
-import { APP_BRAND_NAME, AUTH_STATUS_IDLE, ROUTE_PATH_DASHBOARD } from '../../../src/app/constants'
-import { PersistentHeader } from '../../../src/app/layout/PersistentHeader'
+import { AbilityContext } from '@/app/abilities/abilityContext'
+import { buildAbilityFromPermissions } from '@/app/abilities/factory'
+import { AuthContext } from '@/app/auth/authContext'
+import { AuthorizationContext } from '@/app/auth/authorizationContext'
+import type { AuthContextValue } from '@/app/auth/types'
+import * as UseAuthorization from '@/app/auth/useAuthorization'
+import { APP_BRAND_NAME, AUTH_STATUS_IDLE, ROUTE_PATH_DASHBOARD } from '@/app/constants'
+import { PersistentHeader } from '@/app/layout/PersistentHeader'
 import {
   UI_HEADER_ACTION_CHANGE_PASSWORD,
   UI_HEADER_ACTION_SIGN_OUT,
   UI_HEADER_MODAL_TITLE_CHANGE_PASSWORD,
   UI_TEST_ID_MODAL_DIALOG,
-} from '../../../src/ui/constants'
-import { UI_NAV_LABEL_HEALTH, UI_NAV_LABEL_TENANTS, UI_NAV_LABEL_USERS } from '../../../src/ui/navigation/navConstants'
+} from '@/ui/constants'
+import { UI_NAV_LABEL_HEALTH, UI_NAV_LABEL_TENANTS, UI_NAV_LABEL_USERS } from '@/ui/navigation/navConstants'
 import { buildPermissions } from '../../factories/permissionFactory'
 import { buildUser } from '../../factories/userFactory'
 
@@ -60,11 +60,11 @@ vi.mock('@tanstack/react-router', () => ({
   useNavigate: () => mockUseNavigate,
 }))
 
-vi.mock('../../../src/app/auth/useAuth', () => ({
+vi.mock('@/app/auth/useAuth', () => ({
   useAuth: () => mockUseAuth(),
 }))
 
-vi.mock('../../../src/ui/auth/ChangePasswordForm', () => ({
+vi.mock('@/ui/auth/ChangePasswordForm', () => ({
   ChangePasswordForm: (props: { onSuccess?: () => void }) => {
     mockChangePasswordFlowRender(props)
     return (

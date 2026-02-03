@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import mitt from 'mitt'
 import { describe, expect, test, vi } from 'vitest'
-import { AuthContext } from '@/app/auth/AuthContext'
+import { AuthContext } from '@/app/auth/authContext'
 import { AuthorizationContext } from '@/app/auth/authorizationContext'
 import { LoginCard } from '@/app/auth/LoginCard'
 import type { AuthContextValue } from '@/app/auth/types'
