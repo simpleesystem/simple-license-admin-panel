@@ -80,7 +80,6 @@ export class AxiosHttpClient implements HttpClientInterface {
       timeout: timeoutSeconds * 1000,
       withCredentials: true,
       headers: {
-        [HEADER_CONTENT_TYPE]: CONTENT_TYPE_JSON,
         [HEADER_ACCEPT]: CONTENT_TYPE_JSON,
       },
     })
