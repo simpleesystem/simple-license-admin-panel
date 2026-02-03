@@ -103,11 +103,14 @@ export function ReleasesRouteComponent() {
     setCreateFile(null)
   }
 
-  const formatReleaseDateSafe = (dateStr: string) => {
+  const formatReleaseDateSafe = (value: string | Date | number | null | undefined): string => {
+    if (value == null) {
+      return '—'
+    }
     try {
-      return formatReleaseDate(dateStr)
+      return formatReleaseDate(value)
     } catch {
-      return dateStr
+      return typeof value === 'string' ? value : '—'
     }
   }
 

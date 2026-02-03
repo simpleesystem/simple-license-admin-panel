@@ -43,6 +43,13 @@ export const isNetworkError = (error: unknown): boolean => {
   return false
 }
 
+const ensureStringMessage = (value: unknown): string | undefined => {
+  if (typeof value === 'string' && value.trim().length > 0) {
+    return value
+  }
+  return undefined
+}
+
 export const handleQueryError = (error: unknown): ToastNotificationPayload | null => {
   // Auth errors should be handled separately (e.g., redirect to login), not shown as notifications
   if (isApiException(error)) {
@@ -50,14 +57,23 @@ export const handleQueryError = (error: unknown): ToastNotificationPayload | nul
     if (errorCode === ERROR_CODE_AUTHENTICATION_ERROR || errorCode === ERROR_CODE_INVALID_CREDENTIALS) {
       return null
     }
-    // Map ApiException to notification payload
+    const message = ensureStringMessage(error.message)
     return {
-      titleKey: errorCode || I18N_KEY_APP_ERROR_TITLE,
+      titleKey: I18N_KEY_APP_ERROR_TITLE,
+      message,
       descriptionKey: I18N_KEY_APP_ERROR_MESSAGE,
       variant: NOTIFICATION_VARIANT_ERROR,
     }
   }
-  // Fallback for unknown errors
+  if (error instanceof Error) {
+    const message = ensureStringMessage(error.message)
+    return {
+      titleKey: I18N_KEY_APP_ERROR_TITLE,
+      message,
+      descriptionKey: I18N_KEY_APP_ERROR_MESSAGE,
+      variant: NOTIFICATION_VARIANT_ERROR,
+    }
+  }
   return {
     titleKey: I18N_KEY_APP_ERROR_TITLE,
     descriptionKey: I18N_KEY_APP_ERROR_MESSAGE,

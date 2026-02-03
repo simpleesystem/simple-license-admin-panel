@@ -48,6 +48,17 @@ const getVariantHeaderClass = (variant?: NotificationVariant) => {
   }
 }
 
+const formatToastContent = (value: unknown, fallback?: () => string): string => {
+  if (typeof value === 'string' && value.trim().length > 0) {
+    return value
+  }
+  if (fallback) {
+    const fb = fallback()
+    return typeof fb === 'string' && fb.trim().length > 0 ? fb : ''
+  }
+  return ''
+}
+
 export function ToastProvider() {
   const bus = useNotificationBus()
   const { t } = useTranslation()
@@ -123,12 +134,12 @@ export function ToastProvider() {
           >
             <Toast.Header>
               <strong className={`me-auto ${getVariantHeaderClass(toast.variant)}`}>
-                {typeof toast.message === 'string' ? toast.message : t(toast.titleKey)}
+                {formatToastContent(toast.message, () => t(toast.titleKey))}
               </strong>
             </Toast.Header>
             {toast.descriptionKey ? (
               <Toast.Body className={getVariantStyle(toast.variant) !== 'light' ? 'text-white' : ''}>
-                {t(toast.descriptionKey)}
+                {formatToastContent(t(toast.descriptionKey))}
               </Toast.Body>
             ) : null}
           </Toast>

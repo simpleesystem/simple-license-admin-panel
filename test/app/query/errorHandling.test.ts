@@ -16,11 +16,12 @@ describe('handleQueryError', () => {
     expect(result).toBeNull()
   })
 
-  it('maps ApiException instances with error code', () => {
+  it('maps ApiException instances with error message', () => {
     const exception = new ApiException('failure', 'ERROR_CODE')
     const payload = handleQueryError(exception)
     expect(payload).not.toBeNull()
-    expect(payload?.titleKey).toBe('ERROR_CODE')
+    expect(payload?.titleKey).toBe(I18N_KEY_APP_ERROR_TITLE)
+    expect(payload?.message).toBe('failure')
     expect(payload?.descriptionKey).toBe(I18N_KEY_APP_ERROR_MESSAGE)
   })
 
@@ -38,16 +39,18 @@ describe('handleQueryError', () => {
     expect(payload?.titleKey).toBe(I18N_KEY_APP_ERROR_TITLE)
   })
 
-  it('returns payload for non-auth errors', () => {
+  it('returns payload for non-auth errors with message', () => {
     const error = new ApiException('Other error', 'SOME_ERROR', { status: 500 })
     const result = handleQueryError(error)
     expect(result).not.toBeNull()
+    expect(result?.message).toBe('Other error')
   })
 
-  it('falls back to generic notifications for unknown errors', () => {
+  it('falls back to generic notifications for unknown errors with message', () => {
     const payload = handleQueryError(new Error('boom'))
     expect(payload).not.toBeNull()
     expect(payload?.titleKey).toBe(I18N_KEY_APP_ERROR_TITLE)
+    expect(payload?.message).toBe('boom')
     expect(payload?.descriptionKey).toBe(I18N_KEY_APP_ERROR_MESSAGE)
   })
 
