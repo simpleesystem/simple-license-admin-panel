@@ -58,6 +58,7 @@ export function LicenseUpdateDialog({
   const [activeTab, setActiveTab] = useState('details')
   const [metadataString, setMetadataString] = useState<string>('')
   const [licenseKey, setLicenseKey] = useState<string>(licenseKeyParam)
+  const [domain, setDomain] = useState<string>('')
 
   useEffect(() => {
     const fetchLicenseDetails = async () => {
@@ -69,6 +70,9 @@ export function LicenseUpdateDialog({
         }
         if (license.licenseKey) {
           setLicenseKey(license.licenseKey)
+        }
+        if (license.domain != null && license.domain !== '') {
+          setDomain(String(license.domain))
         }
       } catch (e) {
         logger.error(e instanceof Error ? e : new Error(String(e)), { message: 'Failed to fetch license details' })
@@ -119,6 +123,7 @@ export function LicenseUpdateDialog({
   const defaultValues: FormValuesUpdate = {
     customer_email: initialValues?.customer_email,
     tier_code: initialValues?.tier_code,
+    domain: (domain || initialValues?.domain) ?? '',
     activation_limit: initialValues?.activation_limit,
     expires_days: initialValues?.expires_days,
     metadata: metadataString || (initialValues?.metadata ? JSON.stringify(initialValues.metadata, null, 2) : ''),

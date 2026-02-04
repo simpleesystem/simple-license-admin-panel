@@ -210,6 +210,7 @@ export interface CreateLicenseRequest {
 export interface UpdateLicenseRequest {
   customer_email?: string
   tier_code?: string
+  domain?: string
   activation_limit?: number
   expires_days?: number
   metadata?: Record<string, string | number | boolean | null>

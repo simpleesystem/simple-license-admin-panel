@@ -80,6 +80,14 @@ describe('form blueprint factories', () => {
     expect(tierField.component).toBe('select')
   })
 
+  test('license update blueprint includes domain field', () => {
+    const blueprint = createLicenseBlueprint('update')
+    const domainField = findField('domain', UI_LICENSE_FORM_SECTION_DETAILS, blueprint)
+
+    expect(domainField).toBeDefined()
+    expect(domainField.component).toBe('text')
+  })
+
   test('product blueprint includes metadata textarea section', () => {
     const blueprint = createProductBlueprint('create')
 

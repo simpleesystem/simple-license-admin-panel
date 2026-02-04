@@ -50,6 +50,7 @@ export type LicenseListItem = {
   productSlug: string
   tierCode: string
   customerEmail: string
+  domain?: string | null
   status: LicenseStatus
   vendorId?: string | null
 }
@@ -262,6 +263,7 @@ export function LicenseManagementPanel({
           initialValues={{
             tier_code: editingLicenseData.tierCode,
             customer_email: editingLicenseData.customerEmail,
+            domain: editingLicenseData.domain ?? undefined,
           }}
           onCompleted={onRefresh}
         />
