@@ -1,6 +1,6 @@
 import type { PropsWithChildren } from 'react'
 import { useMemo } from 'react'
-import { AxiosHttpClient, Client as SimpleLicenseClient } from '@/simpleLicense'
+import { Client as SimpleLicenseClient } from '@/simpleLicense'
 
 import { useAppConfig } from '../app/config'
 import { ApiContext } from './apiContext'
@@ -12,11 +12,11 @@ export function ApiProvider({ children, client }: PropsWithChildren<{ client?: S
     if (client) {
       return client
     }
-    const httpClient = new AxiosHttpClient(apiBaseUrl, httpTimeoutMs / 1000, {
+    return new SimpleLicenseClient(apiBaseUrl, undefined, {
       retryAttempts: httpRetryAttempts,
       retryDelayMs: httpRetryDelayMs,
+      timeoutSeconds: httpTimeoutMs / 1000,
     })
-    return new SimpleLicenseClient(apiBaseUrl, httpClient)
   }, [apiBaseUrl, httpRetryAttempts, httpRetryDelayMs, httpTimeoutMs, client])
 
   return <ApiContext.Provider value={value}>{children}</ApiContext.Provider>

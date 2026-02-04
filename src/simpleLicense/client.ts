@@ -164,12 +164,18 @@ import type {
 } from './types/api'
 import type { ProductTier, User } from './types/license'
 
+export type ClientOptions = {
+  retryAttempts?: number
+  retryDelayMs?: number
+  timeoutSeconds?: number
+}
+
 export class Client {
   private readonly httpClient: HttpClientInterface
   private readonly baseUrl: string
   private authToken: string | null = null
 
-  constructor(baseURL: string, httpClient?: HttpClientInterface) {
+  constructor(baseURL: string, httpClient?: HttpClientInterface, options?: ClientOptions) {
     const baseUrlClean = baseURL.endsWith('/') ? baseURL.slice(0, -1) : baseURL
     this.baseUrl = baseUrlClean
 
@@ -188,7 +194,13 @@ export class Client {
       }
     }
 
-    this.httpClient = httpClient || new AxiosHttpClient(baseUrlClean, undefined, { onRefreshToken })
+    this.httpClient =
+      httpClient ||
+      new AxiosHttpClient(baseUrlClean, options?.timeoutSeconds, {
+        onRefreshToken,
+        retryAttempts: options?.retryAttempts,
+        retryDelayMs: options?.retryDelayMs,
+      })
   }
 
   // Authentication methods

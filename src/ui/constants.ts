@@ -917,7 +917,7 @@ export const UI_LICENSE_FORM_ID_UPDATE = 'update-license' as const
 export const UI_LICENSE_FORM_SECTION_DETAILS = 'license-details' as const
 export const UI_LICENSE_FORM_SECTION_LIMITS = 'license-limits' as const
 export const UI_LICENSE_FORM_SECTION_METADATA = 'license-metadata' as const
-export const UI_LICENSE_FORM_PLACEHOLDER_DOMAIN = 'example.com' as const
+export const UI_LICENSE_FORM_PLACEHOLDER_DOMAIN = 'example.com, *.example.com, a.com,b.com (blank=any)' as const
 export const UI_LICENSE_BUTTON_CREATE = 'Create License' as const
 export const UI_LICENSE_BUTTON_EDIT = 'Edit license' as const
 export const UI_LICENSE_BUTTON_SAVE = 'Save license' as const

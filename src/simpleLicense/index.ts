@@ -4,7 +4,7 @@
  * This code lives inside the `admin-panel` app and is not a standalone React SDK/package.
  */
 
-export { Client } from './client'
+export { Client, type ClientOptions } from './client'
 // Constants
 export * from './constants'
 
