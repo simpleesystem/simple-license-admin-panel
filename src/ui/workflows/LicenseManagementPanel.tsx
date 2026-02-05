@@ -15,11 +15,13 @@ import {
   UI_LICENSE_BUTTON_CREATE,
   UI_LICENSE_COLUMN_HEADER_ACTIONS,
   UI_LICENSE_COLUMN_HEADER_CUSTOMER,
+  UI_LICENSE_COLUMN_HEADER_DOMAIN,
   UI_LICENSE_COLUMN_HEADER_PRODUCT,
   UI_LICENSE_COLUMN_HEADER_STATUS,
   UI_LICENSE_COLUMN_HEADER_TIER,
   UI_LICENSE_COLUMN_ID_ACTIONS,
   UI_LICENSE_COLUMN_ID_CUSTOMER,
+  UI_LICENSE_COLUMN_ID_DOMAIN,
   UI_LICENSE_COLUMN_ID_PRODUCT,
   UI_LICENSE_COLUMN_ID_STATUS,
   UI_LICENSE_COLUMN_ID_TIER,
@@ -180,6 +182,12 @@ export function LicenseManagementPanel({
         sortable: true,
       },
       {
+        id: UI_LICENSE_COLUMN_ID_DOMAIN,
+        header: UI_LICENSE_COLUMN_HEADER_DOMAIN,
+        cell: (row) => row.domain ?? UI_VALUE_PLACEHOLDER,
+        sortable: true,
+      },
+      {
         id: UI_LICENSE_COLUMN_ID_TIER,
         header: UI_LICENSE_COLUMN_HEADER_TIER,
         cell: (row) => row.tierCode,
@@ -263,7 +271,6 @@ export function LicenseManagementPanel({
           initialValues={{
             tier_code: editingLicenseData.tierCode,
             customer_email: editingLicenseData.customerEmail,
-            domain: editingLicenseData.domain ?? undefined,
           }}
           onCompleted={onRefresh}
         />

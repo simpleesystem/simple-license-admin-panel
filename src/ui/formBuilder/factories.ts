@@ -247,11 +247,6 @@ const buildUpdateLicenseBlueprint = (options?: LicenseBlueprintOptions<UpdateLic
           format: UI_FORM_CONTROL_TYPE_EMAIL,
         },
         {
-          name: 'domain',
-          kind: 'string',
-          placeholder: UI_LICENSE_FORM_PLACEHOLDER_DOMAIN,
-        },
-        {
           name: 'tier_code',
           kind: 'select',
           options: tierOptions,

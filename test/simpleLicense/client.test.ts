@@ -1400,18 +1400,13 @@ describe('Client', () => {
   })
 
   describe('updateLicense', () => {
-    it('updates license successfully when domain is unchanged', async () => {
+    it('updates license successfully via PUT', async () => {
       const currentLicense = buildLicense({ domain: 'current.example.com', productSlug: 'my-product' })
       const newEmail = faker.internet.email()
-      const getResponse = {
-        data: { success: true, data: { license: currentLicense } },
-        status: 200,
-      }
       const putResponse = {
         data: { success: true, data: { license: { ...currentLicense, customerEmail: newEmail } } },
         status: 200,
       }
-      mockHttpClient.get.mockResolvedValue(getResponse)
       mockHttpClient.put.mockResolvedValue(putResponse)
 
       const result = await client.updateLicense(currentLicense.id, {
@@ -1419,70 +1414,34 @@ describe('Client', () => {
       })
 
       expect(result).toBeDefined()
-      expect(mockHttpClient.get).toHaveBeenCalled()
-      expect(mockHttpClient.put).toHaveBeenCalled()
-      expect(mockHttpClient.delete).not.toHaveBeenCalled()
-      expect(mockHttpClient.post).not.toHaveBeenCalled()
-    })
-
-    it('revokes and reissues license when domain is changed', async () => {
-      const currentLicense = buildLicense({
-        domain: 'old.example.com',
-        productSlug: 'my-product',
-        customerEmail: faker.internet.email(),
-        tierCode: 'PROFESSIONAL',
-      })
-      const newLicense = buildLicense({
-        id: faker.string.uuid(),
-        licenseKey: faker.string.alphanumeric(24),
-        domain: 'new.example.com',
-        productSlug: currentLicense.productSlug,
-        customerEmail: currentLicense.customerEmail,
-        tierCode: currentLicense.tierCode,
-      })
-      mockHttpClient.get.mockResolvedValue({
-        data: { success: true, data: { license: currentLicense } },
-        status: 200,
-      })
-      mockHttpClient.delete.mockResolvedValue({ data: { success: true, data: { success: true } }, status: 200 })
-      mockHttpClient.post.mockResolvedValue({
-        data: { success: true, data: { license: newLicense } },
-        status: 200,
-      })
-
-      const result = await client.updateLicense(currentLicense.id, {
-        domain: 'new.example.com',
-      })
-
-      expect(result.license).toEqual(newLicense)
-      expect(mockHttpClient.get).toHaveBeenCalled()
-      expect(mockHttpClient.delete).toHaveBeenCalled()
-      expect(mockHttpClient.post).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          customer_email: currentLicense.customerEmail,
-          product_slug: currentLicense.productSlug,
-          tier_code: currentLicense.tierCode,
-          domain: 'new.example.com',
-        })
+      expect(mockHttpClient.put).toHaveBeenCalledWith(
+        expect.stringContaining(currentLicense.id),
+        expect.objectContaining({ customer_email: newEmail })
       )
-      expect(mockHttpClient.put).not.toHaveBeenCalled()
-    })
-
-    it('throws ApiException when domain is changed but license has no productSlug', async () => {
-      const currentLicense = buildLicense({ domain: 'old.example.com' })
-      const licenseWithoutProductSlug = { ...currentLicense, productSlug: undefined }
-      mockHttpClient.get.mockResolvedValueOnce({
-        data: { success: true, data: { license: licenseWithoutProductSlug } },
-        status: 200,
-      })
-
-      await expect(client.updateLicense(currentLicense.id, { domain: 'new.example.com' })).rejects.toThrow(ApiException)
-
-      expect(mockHttpClient.get).toHaveBeenCalled()
+      expect(mockHttpClient.get).not.toHaveBeenCalled()
       expect(mockHttpClient.delete).not.toHaveBeenCalled()
       expect(mockHttpClient.post).not.toHaveBeenCalled()
-      expect(mockHttpClient.put).not.toHaveBeenCalled()
+    })
+
+    it('updates license via PUT when domain is included in request', async () => {
+      const licenseId = faker.string.uuid()
+      const updatedLicense = buildLicense({ id: licenseId, domain: 'new.example.com' })
+      const putResponse = {
+        data: { success: true, data: { license: updatedLicense } },
+        status: 200,
+      }
+      mockHttpClient.put.mockResolvedValue(putResponse)
+
+      const result = await client.updateLicense(licenseId, { domain: 'new.example.com' })
+
+      expect(result).toBeDefined()
+      expect(mockHttpClient.put).toHaveBeenCalledWith(
+        expect.stringContaining(licenseId),
+        expect.objectContaining({ domain: 'new.example.com' })
+      )
+      expect(mockHttpClient.get).not.toHaveBeenCalled()
+      expect(mockHttpClient.delete).not.toHaveBeenCalled()
+      expect(mockHttpClient.post).not.toHaveBeenCalled()
     })
   })
 

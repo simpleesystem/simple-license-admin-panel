@@ -8,6 +8,7 @@ import { useLogger } from '../../app/logging/loggerContext'
 import type { MutationAdapter } from '../actions/mutationActions'
 import {
   UI_ANALYTICS_COLUMN_LICENSE_KEY,
+  UI_LICENSE_ACTIVATIONS_COLUMN_DOMAIN,
   UI_LICENSE_FORM_PENDING_UPDATE,
   UI_LICENSE_FORM_SUBMIT_UPDATE,
   UI_LICENSE_FORM_TITLE_UPDATE,
@@ -88,8 +89,9 @@ export function LicenseUpdateDialog({
 
   const adapter: MutationAdapter<FormValuesUpdate> = {
     mutateAsync: async (values) => {
+      const { domain: _domain, ...rest } = values
       const data: UpdateLicenseRequest = {
-        ...values,
+        ...rest,
         metadata: values.metadata ? JSON.parse(values.metadata) : undefined,
       }
       return await updateMutation.mutateAsync({
@@ -123,7 +125,6 @@ export function LicenseUpdateDialog({
   const defaultValues: FormValuesUpdate = {
     customer_email: initialValues?.customer_email,
     tier_code: initialValues?.tier_code,
-    domain: (domain || initialValues?.domain) ?? '',
     activation_limit: initialValues?.activation_limit,
     expires_days: initialValues?.expires_days,
     metadata: metadataString || (initialValues?.metadata ? JSON.stringify(initialValues.metadata, null, 2) : ''),
@@ -140,6 +141,9 @@ export function LicenseUpdateDialog({
           <Tab eventKey="details" title="Details">
             <div className="mb-3 text-muted">
               <strong>{UI_ANALYTICS_COLUMN_LICENSE_KEY}:</strong> <code>{licenseKey || UI_VALUE_PLACEHOLDER}</code>
+            </div>
+            <div className="mb-3 text-muted">
+              <strong>{UI_LICENSE_ACTIVATIONS_COLUMN_DOMAIN}:</strong> <code>{domain || UI_VALUE_PLACEHOLDER}</code>
             </div>
             <DynamicForm
               blueprint={blueprint}
