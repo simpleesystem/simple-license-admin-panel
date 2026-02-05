@@ -583,11 +583,32 @@ export class Client {
   }
 
   // Admin API - Releases (plugin release files per product)
-  async listReleases(productId: string): Promise<ListReleasesResponse> {
-    const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}/releases`
+  async listReleases(
+    productId: string,
+    params?: { sortBy?: string; sortOrder?: string; isPrerelease?: boolean }
+  ): Promise<ListReleasesResponse> {
+    const baseUrl = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}/releases`
+    const searchParams = new URLSearchParams()
+    if (params?.sortBy) {
+      searchParams.set('sortBy', params.sortBy)
+    }
+    if (params?.sortOrder) {
+      searchParams.set('sortOrder', params.sortOrder)
+    }
+    if (params?.isPrerelease !== undefined) {
+      searchParams.set('isPrerelease', String(params.isPrerelease))
+    }
+    const url = searchParams.toString() ? `${baseUrl}?${searchParams.toString()}` : baseUrl
     const response = await this.httpClient.get<ApiResponse<ListReleasesResponse>>(url)
 
     return this.handleApiResponse(response.data, [])
+  }
+
+  async promoteRelease(productId: string, releaseId: string): Promise<CreateReleaseResponse> {
+    const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}/releases/${encodeURIComponent(releaseId)}/promote`
+    const response = await this.httpClient.patch<ApiResponse<CreateReleaseResponse>>(url)
+
+    return this.handleApiResponse(response.data, {} as CreateReleaseResponse)
   }
 
   async createRelease(productId: string, formData: FormData): Promise<CreateReleaseResponse> {

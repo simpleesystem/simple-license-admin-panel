@@ -726,8 +726,9 @@ export interface PluginRelease {
   minWpVersion?: string | null
   testedWpVersion?: string | null
   isPrerelease: boolean
+  isPromoted: boolean
   createdAt: string
-  updatedAt: string
+  updatedAt?: string
 }
 
 export type ListReleasesResponse = PluginRelease[]

@@ -4,7 +4,7 @@ import { renderHookWithQueryClient } from '@test/utils/renderHookWithQueryClient
 import { waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Client } from '@/simpleLicense'
-import { useAdminReleases, useCreateRelease } from '@/simpleLicense/hooks/useAdminReleases'
+import { useAdminReleases, useCreateRelease, usePromoteRelease } from '@/simpleLicense/hooks/useAdminReleases'
 
 describe('useAdminReleases hooks', () => {
   let mockClient: Client
@@ -14,6 +14,7 @@ describe('useAdminReleases hooks', () => {
     mockClient = {
       listReleases: vi.fn(),
       createRelease: vi.fn(),
+      promoteRelease: vi.fn(),
     } as unknown as Client
   })
 
@@ -29,7 +30,7 @@ describe('useAdminReleases hooks', () => {
       })
 
       expect(result.current.data).toEqual(releases)
-      expect(mockClient.listReleases).toHaveBeenCalledWith(mockProductId)
+      expect(mockClient.listReleases).toHaveBeenCalledWith(mockProductId, undefined)
     })
 
     it('does not fetch when productId is empty', () => {
@@ -91,6 +92,31 @@ describe('useAdminReleases hooks', () => {
       })
 
       expect(result.current.error).toEqual(mockError)
+    })
+  })
+
+  describe('usePromoteRelease', () => {
+    it('promotes release successfully and invalidates queries', async () => {
+      const release = buildRelease({ isPromoted: true })
+      ;(mockClient.promoteRelease as ReturnType<typeof vi.fn>).mockResolvedValue(release)
+
+      const queryClient = new (await import('@tanstack/react-query')).QueryClient({
+        defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      })
+      const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries')
+
+      const { result } = renderHookWithQueryClient(() => usePromoteRelease(mockClient, mockProductId), { queryClient })
+
+      const releaseId = faker.string.uuid()
+      result.current.mutate(releaseId)
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true)
+      })
+
+      expect(result.current.data).toEqual(release)
+      expect(mockClient.promoteRelease).toHaveBeenCalledWith(mockProductId, releaseId)
+      expect(invalidateQueriesSpy).toHaveBeenCalled()
     })
   })
 })

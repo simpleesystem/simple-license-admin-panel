@@ -1,19 +1,28 @@
 import { useMemo, useState } from 'react'
-import { Button, Form, Table } from 'react-bootstrap'
+import { Badge, Button, Form, Table } from 'react-bootstrap'
 import { useApiClient } from '../../api/apiContext'
 import { isProductOwnedByUser, isVendorScopedUser } from '../../app/auth/permissions'
 import { useAuth } from '../../app/auth/useAuth'
 import { RELEASE_UPLOAD_FIELD_NAME } from '../../simpleLicense/constants'
-import { useAdminProducts, useAdminReleases, useCreateRelease } from '../../simpleLicense/hooks'
+import { useAdminProducts, useAdminReleases, useCreateRelease, usePromoteRelease } from '../../simpleLicense/hooks'
 import {
   UI_PAGE_SUBTITLE_RELEASES,
   UI_PAGE_TITLE_RELEASES,
+  UI_RELEASE_ACTION_PROMOTE,
+  UI_RELEASE_ACTION_PROMOTING,
   UI_RELEASE_BUTTON_NEW,
+  UI_RELEASE_COLUMN_ACTIONS,
   UI_RELEASE_COLUMN_CREATED,
   UI_RELEASE_COLUMN_FILE,
   UI_RELEASE_COLUMN_SIZE,
+  UI_RELEASE_COLUMN_STATUS,
   UI_RELEASE_COLUMN_VERSION,
+  UI_RELEASE_CONFIRM_PROMOTE_BODY,
+  UI_RELEASE_CONFIRM_PROMOTE_TITLE,
   UI_RELEASE_EMPTY_MESSAGE,
+  UI_RELEASE_FILTER_ALL,
+  UI_RELEASE_FILTER_PRERELEASE_ONLY,
+  UI_RELEASE_FILTER_STABLE_ONLY,
   UI_RELEASE_FORM_FIELD_CHANGELOG,
   UI_RELEASE_FORM_FIELD_FILE,
   UI_RELEASE_FORM_FIELD_PRERELEASE,
@@ -22,14 +31,20 @@ import {
   UI_RELEASE_FORM_SUBMIT,
   UI_RELEASE_FORM_TITLE,
   UI_RELEASE_FORM_VERSION_PLACEHOLDER,
+  UI_RELEASE_LIVE_BADGE,
   UI_RELEASE_MODAL_CANCEL,
   UI_RELEASE_SELECT_PRODUCT_BODY,
   UI_RELEASE_SELECT_PRODUCT_PLACEHOLDER,
+  UI_RELEASE_SORT_ASC,
+  UI_RELEASE_SORT_DATE,
+  UI_RELEASE_SORT_DESC,
+  UI_RELEASE_SORT_VERSION,
   UI_RELEASE_STATUS_ACTION_RETRY,
   UI_RELEASE_STATUS_ERROR_BODY,
   UI_RELEASE_STATUS_ERROR_TITLE,
   UI_RELEASE_STATUS_LOADING_BODY,
   UI_RELEASE_STATUS_LOADING_TITLE,
+  UI_RELEASE_VERSION_PREFIX,
   UI_SECTION_STATUS_ERROR,
   UI_SECTION_STATUS_LOADING,
 } from '../../ui/constants'
@@ -52,6 +67,20 @@ export function ReleasesRouteComponent() {
   const [createChangelog, setCreateChangelog] = useState('')
   const [createIsPrerelease, setCreateIsPrerelease] = useState(false)
   const [createFile, setCreateFile] = useState<File | null>(null)
+  const [sortBy, setSortBy] = useState<'version' | 'createdAt'>('createdAt')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  const [filterPrerelease, setFilterPrerelease] = useState<boolean | undefined>(undefined)
+  const [showPromoteModal, setShowPromoteModal] = useState(false)
+  const [releaseToPromote, setReleaseToPromote] = useState<{ id: string; version: string } | null>(null)
+
+  const listParams = useMemo(
+    () => ({
+      sortBy,
+      sortOrder,
+      isPrerelease: filterPrerelease,
+    }),
+    [sortBy, sortOrder, filterPrerelease]
+  )
 
   const productOptions = useMemo((): UiSelectOption[] => {
     const list = Array.isArray(productsData) ? productsData : (productsData?.data ?? [])
@@ -67,9 +96,13 @@ export function ReleasesRouteComponent() {
     isLoading: releasesLoading,
     isError: releasesError,
     refetch: refetchReleases,
-  } = useAdminReleases(client, selectedProductId, { enabled: Boolean(selectedProductId) })
+  } = useAdminReleases(client, selectedProductId, {
+    params: listParams,
+    enabled: Boolean(selectedProductId),
+  })
 
   const createReleaseMutation = useCreateRelease(client, selectedProductId)
+  const promoteReleaseMutation = usePromoteRelease(client, selectedProductId)
 
   const releases = Array.isArray(releasesData) ? releasesData : []
 
@@ -101,6 +134,28 @@ export function ReleasesRouteComponent() {
     setCreateChangelog('')
     setCreateIsPrerelease(false)
     setCreateFile(null)
+  }
+
+  const handlePromoteClick = (rel: { id: string; version: string }) => {
+    setReleaseToPromote(rel)
+    setShowPromoteModal(true)
+  }
+
+  const handleConfirmPromote = () => {
+    if (!releaseToPromote) {
+      return
+    }
+    promoteReleaseMutation.mutate(releaseToPromote.id, {
+      onSuccess: () => {
+        setShowPromoteModal(false)
+        setReleaseToPromote(null)
+      },
+    })
+  }
+
+  const handleClosePromoteModal = () => {
+    setShowPromoteModal(false)
+    setReleaseToPromote(null)
   }
 
   const formatReleaseDateSafe = (value: string | Date | number | null | undefined): string => {
@@ -161,8 +216,43 @@ export function ReleasesRouteComponent() {
 
         {selectedProductId && !releasesLoading && !releasesError && (
           <>
-            <div className="d-flex justify-content-between align-items-center">
-              <span />
+            <div className="d-flex flex-wrap gap-2 justify-content-between align-items-center">
+              <div className="d-flex flex-wrap gap-2 align-items-center">
+                <Form.Select
+                  size="sm"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as 'version' | 'createdAt')}
+                  aria-label={UI_RELEASE_SORT_VERSION}
+                  style={{ width: 'auto' }}
+                >
+                  <option value="createdAt">{UI_RELEASE_SORT_DATE}</option>
+                  <option value="version">{UI_RELEASE_SORT_VERSION}</option>
+                </Form.Select>
+                <Form.Select
+                  size="sm"
+                  value={sortOrder}
+                  onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                  aria-label={UI_RELEASE_SORT_ASC}
+                  style={{ width: 'auto' }}
+                >
+                  <option value="desc">{UI_RELEASE_SORT_DESC}</option>
+                  <option value="asc">{UI_RELEASE_SORT_ASC}</option>
+                </Form.Select>
+                <Form.Select
+                  size="sm"
+                  value={filterPrerelease === undefined ? 'all' : filterPrerelease ? 'prerelease' : 'stable'}
+                  onChange={(e) => {
+                    const v = e.target.value
+                    setFilterPrerelease(v === 'all' ? undefined : v === 'prerelease')
+                  }}
+                  aria-label={UI_RELEASE_FILTER_ALL}
+                  style={{ width: 'auto' }}
+                >
+                  <option value="all">{UI_RELEASE_FILTER_ALL}</option>
+                  <option value="prerelease">{UI_RELEASE_FILTER_PRERELEASE_ONLY}</option>
+                  <option value="stable">{UI_RELEASE_FILTER_STABLE_ONLY}</option>
+                </Form.Select>
+              </div>
               <Button variant="primary" onClick={() => setShowCreateModal(true)}>
                 {UI_RELEASE_BUTTON_NEW}
               </Button>
@@ -177,6 +267,8 @@ export function ReleasesRouteComponent() {
                     <th>{UI_RELEASE_COLUMN_FILE}</th>
                     <th>{UI_RELEASE_COLUMN_SIZE}</th>
                     <th>{UI_RELEASE_COLUMN_CREATED}</th>
+                    <th>{UI_RELEASE_COLUMN_STATUS}</th>
+                    <th>{UI_RELEASE_COLUMN_ACTIONS}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -186,6 +278,21 @@ export function ReleasesRouteComponent() {
                       <td>{rel.fileName}</td>
                       <td>{rel.sizeBytes != null ? `${Number(rel.sizeBytes).toLocaleString()} B` : '—'}</td>
                       <td>{formatReleaseDateSafe(rel.createdAt)}</td>
+                      <td>{rel.isPromoted === true ? <Badge bg="success">{UI_RELEASE_LIVE_BADGE}</Badge> : '—'}</td>
+                      <td>
+                        {rel.isPromoted !== true && (
+                          <Button
+                            variant="outline-primary"
+                            size="sm"
+                            onClick={() => handlePromoteClick({ id: rel.id, version: rel.version })}
+                            disabled={promoteReleaseMutation.isPending}
+                          >
+                            {promoteReleaseMutation.isPending && releaseToPromote?.id === rel.id
+                              ? UI_RELEASE_ACTION_PROMOTING
+                              : UI_RELEASE_ACTION_PROMOTE}
+                          </Button>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -254,6 +361,32 @@ export function ReleasesRouteComponent() {
           id: 'release-upload-cancel',
           label: UI_RELEASE_MODAL_CANCEL,
           onClick: handleCloseCreateModal,
+          variant: 'secondary',
+        }}
+      />
+
+      <ModalDialog
+        show={showPromoteModal}
+        onClose={handleClosePromoteModal}
+        title={UI_RELEASE_CONFIRM_PROMOTE_TITLE}
+        body={
+          releaseToPromote ? (
+            <p>
+              {UI_RELEASE_CONFIRM_PROMOTE_BODY} ({UI_RELEASE_VERSION_PREFIX}
+              {releaseToPromote.version})
+            </p>
+          ) : null
+        }
+        primaryAction={{
+          id: 'release-promote-confirm',
+          label: promoteReleaseMutation.isPending ? UI_RELEASE_ACTION_PROMOTING : UI_RELEASE_ACTION_PROMOTE,
+          onClick: handleConfirmPromote,
+          disabled: promoteReleaseMutation.isPending,
+        }}
+        secondaryAction={{
+          id: 'release-promote-cancel',
+          label: UI_RELEASE_MODAL_CANCEL,
+          onClick: handleClosePromoteModal,
           variant: 'secondary',
         }}
       />

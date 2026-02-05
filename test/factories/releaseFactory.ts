@@ -3,6 +3,8 @@ import type { PluginRelease } from '@/simpleLicense'
 
 const PLUGIN_RELEASE_IS_PRERELEASE_DEFAULT = false as const
 
+const PLUGIN_RELEASE_IS_PROMOTED_DEFAULT = false as const
+
 export const buildRelease = (overrides?: Partial<PluginRelease>): PluginRelease => ({
   id: faker.string.uuid(),
   slug: faker.string.alphanumeric(8).toLowerCase(),
@@ -14,6 +16,7 @@ export const buildRelease = (overrides?: Partial<PluginRelease>): PluginRelease 
   minWpVersion: null,
   testedWpVersion: null,
   isPrerelease: PLUGIN_RELEASE_IS_PRERELEASE_DEFAULT,
+  isPromoted: PLUGIN_RELEASE_IS_PROMOTED_DEFAULT,
   createdAt: faker.date.past().toISOString(),
   updatedAt: faker.date.recent().toISOString(),
   ...overrides,
