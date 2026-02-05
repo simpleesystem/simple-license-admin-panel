@@ -68,6 +68,7 @@ import {
   ERROR_CODE_INVALID_CREDENTIALS,
   ERROR_CODE_LICENSE_EXPIRED,
   ERROR_CODE_LICENSE_NOT_FOUND,
+  ERROR_CODE_VALIDATION_ERROR,
 } from './constants'
 import {
   ActivationLimitExceededException,
@@ -463,9 +464,35 @@ export class Client {
   }
 
   async updateLicense(idOrKey: string, request: UpdateLicenseRequest): Promise<UpdateLicenseResponse> {
+    const current = await this.getLicense(idOrKey)
+    const currentDomain = current.license.domain ?? ''
+    const requestDomain = request.domain !== undefined ? request.domain : currentDomain
+    const domainChanged = request.domain !== undefined && requestDomain !== currentDomain
+
+    if (domainChanged) {
+      const productSlug = current.license.productSlug
+      if (!productSlug) {
+        throw new ApiException(
+          'Cannot reissue license after domain change: license has no product_slug',
+          ERROR_CODE_VALIDATION_ERROR
+        )
+      }
+      await this.revokeLicense(idOrKey)
+      const createRequest: CreateLicenseRequest = {
+        customer_email: request.customer_email ?? current.license.customerEmail,
+        product_slug: productSlug,
+        tier_code: request.tier_code ?? current.license.tierCode,
+        domain: requestDomain || undefined,
+        activation_limit: request.activation_limit ?? current.license.activationLimit ?? undefined,
+        expires_days: request.expires_days,
+        metadata: request.metadata ?? current.license.metadata ?? undefined,
+      }
+      const createResponse = await this.createLicense(createRequest)
+      return { license: createResponse.license }
+    }
+
     const url = `${API_ENDPOINT_ADMIN_LICENSES_UPDATE}/${encodeURIComponent(idOrKey)}`
     const response = await this.httpClient.put<ApiResponse<UpdateLicenseResponse>>(url, request)
-
     return this.handleApiResponse(response.data, {} as UpdateLicenseResponse)
   }
 
