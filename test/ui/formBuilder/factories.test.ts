@@ -80,12 +80,12 @@ describe('form blueprint factories', () => {
     expect(tierField.component).toBe('select')
   })
 
-  test('license update blueprint includes domain field', () => {
+  test('license update blueprint omits domain field (read-only on edit)', () => {
     const blueprint = createLicenseBlueprint('update')
-    const domainField = findField('domain', UI_LICENSE_FORM_SECTION_DETAILS, blueprint)
-
-    expect(domainField).toBeDefined()
-    expect(domainField.component).toBe('text')
+    const detailsSection = blueprint.sections.find((s) => s.id === UI_LICENSE_FORM_SECTION_DETAILS)
+    expect(detailsSection).toBeDefined()
+    const domainField = detailsSection?.fields.find((f) => f.name === 'domain')
+    expect(domainField).toBeUndefined()
   })
 
   test('product blueprint includes metadata textarea section', () => {
