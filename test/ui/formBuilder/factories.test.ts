@@ -49,8 +49,14 @@ describe('form blueprint factories', () => {
     const products = createOptions()
     const tiers = createOptions()
 
-    const createBlueprint = createLicenseBlueprint('create', { productOptions: products, tierOptions: tiers })
-    const updateBlueprint = createLicenseBlueprint('update', { productOptions: products, tierOptions: tiers })
+    const createBlueprint = createLicenseBlueprint('create', {
+      productOptions: products,
+      tierOptions: tiers,
+    })
+    const updateBlueprint = createLicenseBlueprint('update', {
+      productOptions: products,
+      tierOptions: tiers,
+    })
 
     const createField = findField('customer_email', UI_LICENSE_FORM_SECTION_DETAILS, createBlueprint)
     const updateField = findField('customer_email', UI_LICENSE_FORM_SECTION_DETAILS, updateBlueprint)
@@ -148,7 +154,9 @@ describe('form blueprint factories', () => {
     ]
 
     for (const fieldName of fields) {
-      expect(findField(fieldName, 'limits', blueprint)).toMatchObject({ component: 'text' })
+      expect(findField(fieldName, 'limits', blueprint)).toMatchObject({
+        component: 'text',
+      })
     }
   })
 })
