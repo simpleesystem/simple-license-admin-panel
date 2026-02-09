@@ -70,3 +70,21 @@ export function useCreateRelease(
     ...options,
   })
 }
+
+export function useDeleteRelease(
+  client: Client,
+  productId: string,
+  options?: UseMutationOptions<{ success: boolean; data: { id: string } }, Error, string>
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation<{ success: boolean; data: { id: string } }, Error, string>({
+    mutationFn: async (releaseId) => {
+      return await client.deleteRelease(productId, releaseId)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminReleases.all(productId) })
+    },
+    ...options,
+  })
+}

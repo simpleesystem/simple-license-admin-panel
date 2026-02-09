@@ -299,6 +299,13 @@ export const canDeleteProduct = (user: User | null): boolean => {
   return isSystemAdminUser(user)
 }
 
+export const canDeleteRelease = (user: User | null): boolean => {
+  if (!user) {
+    return false
+  }
+  return isSystemAdminUser(user)
+}
+
 export const canUpdateProduct = (user: User | null): boolean => {
   if (!user) {
     return false

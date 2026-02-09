@@ -590,6 +590,13 @@ export class Client {
     return this.handleApiResponse(response.data, {} as CreateReleaseResponse)
   }
 
+  async deleteRelease(productId: string, releaseId: string): Promise<{ success: boolean; data: { id: string } }> {
+    const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}/releases/${encodeURIComponent(releaseId)}`
+    const response = await this.httpClient.delete<ApiResponse<{ id: string }>>(url)
+
+    return this.handleApiResponse(response.data, { success: true, data: { id: releaseId } })
+  }
+
   // Admin API - Product Tiers
   async listProductTiers(productId: string): Promise<ListProductTiersResponse> {
     const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}/tiers`

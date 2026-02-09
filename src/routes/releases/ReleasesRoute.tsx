@@ -1,13 +1,24 @@
 import { useMemo, useState } from 'react'
 import { Badge, Button, Form, Table } from 'react-bootstrap'
 import { useApiClient } from '../../api/apiContext'
-import { isProductOwnedByUser, isVendorScopedUser } from '../../app/auth/permissions'
+import { canDeleteRelease, isProductOwnedByUser, isVendorScopedUser } from '../../app/auth/permissions'
 import { useAuth } from '../../app/auth/useAuth'
 import { RELEASE_UPLOAD_FIELD_NAME } from '../../simpleLicense/constants'
-import { useAdminProducts, useAdminReleases, useCreateRelease, usePromoteRelease } from '../../simpleLicense/hooks'
 import {
+  useAdminProducts,
+  useAdminReleases,
+  useCreateRelease,
+  useDeleteRelease,
+  usePromoteRelease,
+} from '../../simpleLicense/hooks'
+import {
+  UI_BUTTON_VARIANT_DANGER,
+  UI_BUTTON_VARIANT_OUTLINE_DANGER,
+  UI_BUTTON_VARIANT_SECONDARY,
   UI_PAGE_SUBTITLE_RELEASES,
   UI_PAGE_TITLE_RELEASES,
+  UI_RELEASE_ACTION_DELETE,
+  UI_RELEASE_ACTION_DELETING,
   UI_RELEASE_ACTION_PROMOTE,
   UI_RELEASE_ACTION_PROMOTING,
   UI_RELEASE_BUTTON_NEW,
@@ -17,6 +28,9 @@ import {
   UI_RELEASE_COLUMN_SIZE,
   UI_RELEASE_COLUMN_STATUS,
   UI_RELEASE_COLUMN_VERSION,
+  UI_RELEASE_CONFIRM_DELETE_BODY,
+  UI_RELEASE_CONFIRM_DELETE_BUTTON,
+  UI_RELEASE_CONFIRM_DELETE_TITLE,
   UI_RELEASE_CONFIRM_PROMOTE_BODY,
   UI_RELEASE_CONFIRM_PROMOTE_TITLE,
   UI_RELEASE_EMPTY_MESSAGE,
@@ -72,6 +86,8 @@ export function ReleasesRouteComponent() {
   const [filterPrerelease, setFilterPrerelease] = useState<boolean | undefined>(undefined)
   const [showPromoteModal, setShowPromoteModal] = useState(false)
   const [releaseToPromote, setReleaseToPromote] = useState<{ id: string; version: string } | null>(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [releaseToDelete, setReleaseToDelete] = useState<{ id: string; version: string; fileName: string } | null>(null)
 
   const listParams = useMemo(
     () => ({
@@ -103,6 +119,8 @@ export function ReleasesRouteComponent() {
 
   const createReleaseMutation = useCreateRelease(client, selectedProductId)
   const promoteReleaseMutation = usePromoteRelease(client, selectedProductId)
+  const deleteReleaseMutation = useDeleteRelease(client, selectedProductId)
+  const canDelete = currentUser ? canDeleteRelease(currentUser) : false
 
   const releases = Array.isArray(releasesData) ? releasesData : []
 
@@ -156,6 +174,28 @@ export function ReleasesRouteComponent() {
   const handleClosePromoteModal = () => {
     setShowPromoteModal(false)
     setReleaseToPromote(null)
+  }
+
+  const handleDeleteClick = (rel: { id: string; version: string; fileName: string }) => {
+    setReleaseToDelete(rel)
+    setShowDeleteModal(true)
+  }
+
+  const handleConfirmDelete = () => {
+    if (!releaseToDelete) {
+      return
+    }
+    deleteReleaseMutation.mutate(releaseToDelete.id, {
+      onSuccess: () => {
+        setShowDeleteModal(false)
+        setReleaseToDelete(null)
+      },
+    })
+  }
+
+  const handleCloseDeleteModal = () => {
+    setShowDeleteModal(false)
+    setReleaseToDelete(null)
   }
 
   const formatReleaseDateSafe = (value: string | Date | number | null | undefined): string => {
@@ -280,18 +320,35 @@ export function ReleasesRouteComponent() {
                       <td>{formatReleaseDateSafe(rel.createdAt)}</td>
                       <td>{rel.isPromoted === true ? <Badge bg="success">{UI_RELEASE_LIVE_BADGE}</Badge> : '—'}</td>
                       <td>
-                        {rel.isPromoted !== true && (
-                          <Button
-                            variant="outline-primary"
-                            size="sm"
-                            onClick={() => handlePromoteClick({ id: rel.id, version: rel.version })}
-                            disabled={promoteReleaseMutation.isPending}
-                          >
-                            {promoteReleaseMutation.isPending && releaseToPromote?.id === rel.id
-                              ? UI_RELEASE_ACTION_PROMOTING
-                              : UI_RELEASE_ACTION_PROMOTE}
-                          </Button>
-                        )}
+                        <div className="d-flex flex-wrap gap-1">
+                          {rel.isPromoted !== true && (
+                            <Button
+                              variant="outline-primary"
+                              size="sm"
+                              onClick={() => handlePromoteClick({ id: rel.id, version: rel.version })}
+                              disabled={promoteReleaseMutation.isPending}
+                            >
+                              {promoteReleaseMutation.isPending && releaseToPromote?.id === rel.id
+                                ? UI_RELEASE_ACTION_PROMOTING
+                                : UI_RELEASE_ACTION_PROMOTE}
+                            </Button>
+                          )}
+                          {canDelete && (
+                            <Button
+                              variant={UI_BUTTON_VARIANT_OUTLINE_DANGER}
+                              size="sm"
+                              onClick={() =>
+                                handleDeleteClick({ id: rel.id, version: rel.version, fileName: rel.fileName })
+                              }
+                              disabled={deleteReleaseMutation.isPending}
+                              aria-label={`${UI_RELEASE_ACTION_DELETE} ${rel.version}`}
+                            >
+                              {deleteReleaseMutation.isPending && releaseToDelete?.id === rel.id
+                                ? UI_RELEASE_ACTION_DELETING
+                                : UI_RELEASE_ACTION_DELETE}
+                            </Button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -388,6 +445,36 @@ export function ReleasesRouteComponent() {
           label: UI_RELEASE_MODAL_CANCEL,
           onClick: handleClosePromoteModal,
           variant: 'secondary',
+        }}
+      />
+
+      <ModalDialog
+        show={showDeleteModal}
+        onClose={handleCloseDeleteModal}
+        title={UI_RELEASE_CONFIRM_DELETE_TITLE}
+        body={
+          releaseToDelete ? (
+            <>
+              <p className="mb-2">{UI_RELEASE_CONFIRM_DELETE_BODY}</p>
+              <p className="mb-0 text-muted small">
+                {UI_RELEASE_VERSION_PREFIX}
+                {releaseToDelete.version} — {releaseToDelete.fileName}
+              </p>
+            </>
+          ) : null
+        }
+        primaryAction={{
+          id: 'release-delete-confirm',
+          label: deleteReleaseMutation.isPending ? UI_RELEASE_ACTION_DELETING : UI_RELEASE_CONFIRM_DELETE_BUTTON,
+          onClick: handleConfirmDelete,
+          disabled: deleteReleaseMutation.isPending,
+          variant: UI_BUTTON_VARIANT_DANGER,
+        }}
+        secondaryAction={{
+          id: 'release-delete-cancel',
+          label: UI_RELEASE_MODAL_CANCEL,
+          onClick: handleCloseDeleteModal,
+          variant: UI_BUTTON_VARIANT_SECONDARY,
         }}
       />
     </Page>

@@ -19,6 +19,8 @@ import {
 const useAdminProductsMock = vi.hoisted(() => vi.fn())
 const useAdminReleasesMock = vi.hoisted(() => vi.fn())
 const useCreateReleaseMock = vi.hoisted(() => vi.fn())
+const usePromoteReleaseMock = vi.hoisted(() => vi.fn())
+const useDeleteReleaseMock = vi.hoisted(() => vi.fn())
 const useAuthMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/simpleLicense/hooks', async () => {
@@ -28,6 +30,8 @@ vi.mock('@/simpleLicense/hooks', async () => {
     useAdminProducts: useAdminProductsMock,
     useAdminReleases: useAdminReleasesMock,
     useCreateRelease: useCreateReleaseMock,
+    usePromoteRelease: usePromoteReleaseMock,
+    useDeleteRelease: useDeleteReleaseMock,
   }
 })
 
@@ -49,6 +53,18 @@ describe('ReleasesRouteComponent', () => {
       refetch: vi.fn(),
     })
     useCreateReleaseMock.mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+      isSuccess: false,
+      isError: false,
+    })
+    usePromoteReleaseMock.mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+      isSuccess: false,
+      isError: false,
+    })
+    useDeleteReleaseMock.mockReturnValue({
       mutate: vi.fn(),
       isPending: false,
       isSuccess: false,

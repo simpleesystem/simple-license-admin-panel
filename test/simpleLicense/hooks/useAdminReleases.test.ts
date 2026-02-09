@@ -4,7 +4,12 @@ import { renderHookWithQueryClient } from '@test/utils/renderHookWithQueryClient
 import { waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Client } from '@/simpleLicense'
-import { useAdminReleases, useCreateRelease, usePromoteRelease } from '@/simpleLicense/hooks/useAdminReleases'
+import {
+  useAdminReleases,
+  useCreateRelease,
+  useDeleteRelease,
+  usePromoteRelease,
+} from '@/simpleLicense/hooks/useAdminReleases'
 
 describe('useAdminReleases hooks', () => {
   let mockClient: Client
@@ -15,6 +20,7 @@ describe('useAdminReleases hooks', () => {
       listReleases: vi.fn(),
       createRelease: vi.fn(),
       promoteRelease: vi.fn(),
+      deleteRelease: vi.fn(),
     } as unknown as Client
   })
 
@@ -116,6 +122,33 @@ describe('useAdminReleases hooks', () => {
 
       expect(result.current.data).toEqual(release)
       expect(mockClient.promoteRelease).toHaveBeenCalledWith(mockProductId, releaseId)
+      expect(invalidateQueriesSpy).toHaveBeenCalled()
+    })
+  })
+
+  describe('useDeleteRelease', () => {
+    it('deletes release successfully and invalidates queries', async () => {
+      const releaseId = faker.string.uuid()
+      ;(mockClient.deleteRelease as ReturnType<typeof vi.fn>).mockResolvedValue({
+        success: true,
+        data: { id: releaseId },
+      })
+
+      const queryClient = new (await import('@tanstack/react-query')).QueryClient({
+        defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      })
+      const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries')
+
+      const { result } = renderHookWithQueryClient(() => useDeleteRelease(mockClient, mockProductId), { queryClient })
+
+      result.current.mutate(releaseId)
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true)
+      })
+
+      expect(result.current.data).toEqual({ success: true, data: { id: releaseId } })
+      expect(mockClient.deleteRelease).toHaveBeenCalledWith(mockProductId, releaseId)
       expect(invalidateQueriesSpy).toHaveBeenCalled()
     })
   })

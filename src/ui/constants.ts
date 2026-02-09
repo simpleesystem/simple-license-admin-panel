@@ -119,6 +119,8 @@ export const UI_BUTTON_VARIANT_PRIMARY = 'primary' as const
 export const UI_BUTTON_VARIANT_SECONDARY = 'secondary' as const
 export const UI_BUTTON_VARIANT_OUTLINE = 'outline-primary' as const
 export const UI_BUTTON_VARIANT_GHOST = 'link' as const
+export const UI_BUTTON_VARIANT_DANGER = 'danger' as const
+export const UI_BUTTON_VARIANT_OUTLINE_DANGER = 'outline-danger' as const
 
 export const UI_TAG_VARIANT_NEUTRAL = UI_BADGE_VARIANT_SECONDARY
 export const UI_TAG_VARIANT_SUCCESS = UI_BADGE_VARIANT_SUCCESS
@@ -641,6 +643,12 @@ export const UI_RELEASE_FILTER_PRERELEASE_ONLY = 'Pre-releases only' as const
 export const UI_RELEASE_FILTER_STABLE_ONLY = 'Stable only' as const
 export const UI_RELEASE_CONFIRM_PROMOTE_TITLE = 'Set as live release?' as const
 export const UI_RELEASE_CONFIRM_PROMOTE_BODY = 'Clients will receive this release for downloads and updates.' as const
+export const UI_RELEASE_ACTION_DELETE = 'Delete' as const
+export const UI_RELEASE_ACTION_DELETING = 'Deleting…' as const
+export const UI_RELEASE_CONFIRM_DELETE_TITLE = 'Delete this release?' as const
+export const UI_RELEASE_CONFIRM_DELETE_BODY =
+  'This will remove the release from the database. The associated file will be deleted from storage if present. This action cannot be undone.' as const
+export const UI_RELEASE_CONFIRM_DELETE_BUTTON = 'Delete release' as const
 export const UI_RELEASE_VERSION_PREFIX = 'v' as const
 export const UI_RELEASE_MODAL_CANCEL = 'Cancel' as const
 export const UI_PAGE_TITLE_TENANTS = 'Tenants & quotas' as const
