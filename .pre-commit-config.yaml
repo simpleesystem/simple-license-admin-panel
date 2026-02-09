@@ -37,11 +37,7 @@ repos:
           - --indent
           - "2"
         exclude: (\.pre-commit-config\.yaml|.*\.lock|\.github/workflows/.*\.yml|docker-compose.*\.yml|\.do/.*\.yaml|app-platform/.*\.yaml)
-  - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
-    rev: 2.7.3
-    hooks:
-      - id: editorconfig-checker
-        exclude: (node_modules|\.git|dist|coverage|\.md$|\.markdown$|\.sh$|package-lock\.json$|.*\.lock$)
+  # editorconfig-checker removed: upstream fetch_binaries often returns HTTP 500 in CI
   - repo: local
     hooks:
       - id: admin-panel-lint
