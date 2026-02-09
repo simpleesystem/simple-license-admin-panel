@@ -34,6 +34,8 @@ import {
   UI_RELEASE_CONFIRM_PROMOTE_BODY,
   UI_RELEASE_CONFIRM_PROMOTE_TITLE,
   UI_RELEASE_EMPTY_MESSAGE,
+  UI_RELEASE_FILE_MISSING,
+  UI_RELEASE_FILE_PRESENT,
   UI_RELEASE_FILTER_ALL,
   UI_RELEASE_FILTER_PRERELEASE_ONLY,
   UI_RELEASE_FILTER_STABLE_ONLY,
@@ -315,7 +317,19 @@ export function ReleasesRouteComponent() {
                   {releases.map((rel) => (
                     <tr key={rel.id}>
                       <td>{rel.version}</td>
-                      <td>{rel.fileName}</td>
+                      <td>
+                        <span className="d-inline-block me-1">{rel.fileName}</span>
+                        {rel.filePresent === true && (
+                          <Badge bg="success" className="align-text-bottom">
+                            {UI_RELEASE_FILE_PRESENT}
+                          </Badge>
+                        )}
+                        {rel.filePresent === false && (
+                          <Badge bg="danger" className="align-text-bottom">
+                            {UI_RELEASE_FILE_MISSING}
+                          </Badge>
+                        )}
+                      </td>
                       <td>{rel.sizeBytes != null ? `${Number(rel.sizeBytes).toLocaleString()} B` : '—'}</td>
                       <td>{formatReleaseDateSafe(rel.createdAt)}</td>
                       <td>{rel.isPromoted === true ? <Badge bg="success">{UI_RELEASE_LIVE_BADGE}</Badge> : '—'}</td>

@@ -727,6 +727,8 @@ export interface PluginRelease {
   testedWpVersion?: string | null
   isPrerelease: boolean
   isPromoted: boolean
+  /** True if the release file exists in storage (Spaces/local). Set by list releases API. */
+  filePresent?: boolean
   createdAt: string
   updatedAt?: string
 }
