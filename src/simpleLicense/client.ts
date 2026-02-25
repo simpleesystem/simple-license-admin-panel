@@ -63,6 +63,7 @@ import {
   API_ENDPOINT_LICENSES_GET,
   API_ENDPOINT_LICENSES_USAGE,
   API_ENDPOINT_LICENSES_VALIDATE,
+  API_ENDPOINT_PROTECTION_KEYS,
   API_ENDPOINT_UPDATES_CHECK,
   ERROR_CODE_ACTIVATION_LIMIT_EXCEEDED,
   ERROR_CODE_INVALID_CREDENTIALS,
@@ -138,6 +139,7 @@ import type {
   LoginResponse,
   LoginResponseData,
   MetricsResponse,
+  ProtectionSigningPublicKeyResponse,
   ReportUsageRequest,
   ServerStatusResponse,
   SystemStatsResponse,
@@ -419,6 +421,21 @@ export class Client {
     const response = await this.httpClient.post<ApiResponse<CheckUpdateResponse>>(API_ENDPOINT_UPDATES_CHECK, request)
 
     return this.handleApiResponse(response.data, {} as CheckUpdateResponse)
+  }
+
+  async getProtectionSigningPublicKey(
+    productSlug: string,
+    signingKeyId?: string
+  ): Promise<ProtectionSigningPublicKeyResponse> {
+    const queryParams = new URLSearchParams()
+    queryParams.set('product_slug', productSlug)
+    if (typeof signingKeyId === 'string' && signingKeyId.trim().length > 0) {
+      queryParams.set('signing_key_id', signingKeyId)
+    }
+    const url = `${API_ENDPOINT_PROTECTION_KEYS}?${queryParams.toString()}`
+    const response = await this.httpClient.get<ApiResponse<ProtectionSigningPublicKeyResponse>>(url)
+
+    return this.handleApiResponse(response.data, {} as ProtectionSigningPublicKeyResponse)
   }
 
   // Admin API - Licenses

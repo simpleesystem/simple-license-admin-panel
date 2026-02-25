@@ -33,6 +33,7 @@ export const API_ENDPOINT_LICENSES_USAGE = '/api/v1/licenses/usage'
 
 // Update Endpoints
 export const API_ENDPOINT_UPDATES_CHECK = '/api/v1/updates/check'
+export const API_ENDPOINT_PROTECTION_KEYS = '/api/v1/protection/keys'
 
 // Authentication Endpoints
 export const API_ENDPOINT_AUTH_LOGIN = '/api/v1/auth/login'

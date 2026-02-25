@@ -539,6 +539,55 @@ describe('Client', () => {
     })
   })
 
+  describe('getProtectionSigningPublicKey', () => {
+    it('fetches protection signing key metadata using product slug', async () => {
+      const productSlug = 'simplee-voice-assistant'
+      const mockResponse = {
+        data: {
+          success: true,
+          data: {
+            product_slug: productSlug,
+            signing_key_id: 'sva-ed25519-key-1',
+            public_key: faker.string.alphanumeric(86),
+          },
+        },
+        status: 200,
+      }
+
+      mockHttpClient.get.mockResolvedValue(mockResponse)
+
+      const result = await client.getProtectionSigningPublicKey(productSlug)
+
+      expect(mockHttpClient.get).toHaveBeenCalledWith('/api/v1/protection/keys?product_slug=simplee-voice-assistant')
+      expect(result).toEqual(mockResponse.data.data)
+    })
+
+    it('fetches protection signing key metadata using explicit signing key id', async () => {
+      const productSlug = 'simplee-voice-assistant'
+      const signingKeyId = 'sva-ed25519-key-rotated'
+      const mockResponse = {
+        data: {
+          success: true,
+          data: {
+            product_slug: productSlug,
+            signing_key_id: signingKeyId,
+            public_key: faker.string.alphanumeric(86),
+          },
+        },
+        status: 200,
+      }
+
+      mockHttpClient.get.mockResolvedValue(mockResponse)
+
+      const result = await client.getProtectionSigningPublicKey(productSlug, signingKeyId)
+
+      expect(mockHttpClient.get).toHaveBeenCalledWith(
+        '/api/v1/protection/keys?product_slug=simplee-voice-assistant&signing_key_id=sva-ed25519-key-rotated'
+      )
+      expect(result).toEqual(mockResponse.data.data)
+    })
+  })
+
   describe('createProduct', () => {
     it('creates product successfully', async () => {
       const mockResponse = {

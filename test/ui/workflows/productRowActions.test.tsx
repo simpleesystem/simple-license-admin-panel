@@ -173,4 +173,41 @@ describe('ProductRowActions', () => {
 
     expect(container).toBeEmptyDOMElement()
   })
+
+  test('loads and displays protection signing key metadata', async () => {
+    const deleteMutation = mockMutation()
+    const suspendMutation = mockMutation()
+    const resumeMutation = mockMutation()
+    useDeleteProductMock.mockReturnValue(deleteMutation)
+    useSuspendProductMock.mockReturnValue(suspendMutation)
+    useResumeProductMock.mockReturnValue(resumeMutation)
+
+    const product = buildProduct({ slug: 'simplee-voice-assistant', isActive: true })
+    const superuser = buildUser({ role: 'SUPERUSER' })
+    const getProtectionSigningPublicKey = vi.fn(async () => ({
+      product_slug: 'simplee-voice-assistant',
+      signing_key_id: 'sva-ed25519-key-1',
+      public_key: 'zP8nM6RXw3mDb1q9xYwBz9vUuJTrA1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8',
+    }))
+
+    render(
+      <ProductRowActions
+        client={{ getProtectionSigningPublicKey } as unknown as never}
+        productId={product.id}
+        productSlug={product.slug}
+        isActive={product.isActive}
+        currentUser={superuser}
+        vendorId={product.vendorId}
+        onEdit={vi.fn()}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /protection key/i }))
+
+    await waitFor(() => expect(getProtectionSigningPublicKey).toHaveBeenCalledWith('simplee-voice-assistant'))
+
+    const dialog = await screen.findByRole('dialog')
+    expect(within(dialog).getByText('sva-ed25519-key-1')).toBeInTheDocument()
+    expect(within(dialog).getByText('simplee-voice-assistant')).toBeInTheDocument()
+  })
 })

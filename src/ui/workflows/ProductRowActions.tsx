@@ -10,9 +10,11 @@ import {
   UI_BUTTON_VARIANT_GHOST,
   UI_PRODUCT_ACTION_DELETE,
   UI_PRODUCT_ACTION_EDIT,
+  UI_PRODUCT_ACTION_PROTECTION_KEY,
   UI_PRODUCT_ACTION_RESUME,
   UI_PRODUCT_ACTION_SUSPEND,
   UI_PRODUCT_BUTTON_DELETE,
+  UI_PRODUCT_BUTTON_PROTECTION_KEY,
   UI_PRODUCT_BUTTON_RESUME,
   UI_PRODUCT_BUTTON_SUSPEND,
   UI_PRODUCT_CONFIRM_DELETE_BODY,
@@ -27,6 +29,14 @@ import {
   UI_PRODUCT_CONFIRM_SUSPEND_CANCEL,
   UI_PRODUCT_CONFIRM_SUSPEND_CONFIRM,
   UI_PRODUCT_CONFIRM_SUSPEND_TITLE,
+  UI_PRODUCT_PROTECTION_KEY_CLOSE,
+  UI_PRODUCT_PROTECTION_KEY_ERROR,
+  UI_PRODUCT_PROTECTION_KEY_LABEL_PRODUCT,
+  UI_PRODUCT_PROTECTION_KEY_LABEL_PUBLIC_KEY,
+  UI_PRODUCT_PROTECTION_KEY_LABEL_SIGNING_KEY_ID,
+  UI_PRODUCT_PROTECTION_KEY_LOADING,
+  UI_PRODUCT_PROTECTION_KEY_MODAL_TITLE,
+  UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { Stack } from '../layout/Stack'
 import { ModalDialog } from '../overlay/ModalDialog'
@@ -37,6 +47,7 @@ import { notifyCrudError, notifyProductSuccess } from './notifications'
 type ProductRowActionsProps = UiCommonProps & {
   client: Client
   productId: string
+  productSlug: string
   isActive: boolean
   vendorId: string
   onEdit: (product: { id: string }) => void
@@ -47,6 +58,7 @@ type ProductRowActionsProps = UiCommonProps & {
 export function ProductRowActions({
   client,
   productId,
+  productSlug,
   isActive,
   vendorId,
   onEdit,
@@ -61,6 +73,14 @@ export function ProductRowActions({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showSuspendConfirm, setShowSuspendConfirm] = useState(false)
   const [showResumeConfirm, setShowResumeConfirm] = useState(false)
+  const [showProtectionKeyModal, setShowProtectionKeyModal] = useState(false)
+  const [isProtectionKeyLoading, setIsProtectionKeyLoading] = useState(false)
+  const [protectionKeyError, setProtectionKeyError] = useState<string | null>(null)
+  const [protectionKeyMetadata, setProtectionKeyMetadata] = useState<{
+    productSlug: string
+    signingKeyId: string
+    publicKey: string
+  } | null>(null)
 
   const allowUpdate = canUpdateProduct(currentUser ?? null)
   const allowDelete = canDeleteProduct(currentUser ?? null)
@@ -108,6 +128,25 @@ export function ProductRowActions({
       throw error
     } finally {
       setShowResumeConfirm(false)
+    }
+  }
+
+  const handleOpenProtectionKey = async () => {
+    setShowProtectionKeyModal(true)
+    setIsProtectionKeyLoading(true)
+    setProtectionKeyError(null)
+    setProtectionKeyMetadata(null)
+    try {
+      const signingMetadata = await client.getProtectionSigningPublicKey(productSlug)
+      setProtectionKeyMetadata({
+        productSlug: signingMetadata.product_slug,
+        signingKeyId: signingMetadata.signing_key_id,
+        publicKey: signingMetadata.public_key,
+      })
+    } catch {
+      setProtectionKeyError(UI_PRODUCT_PROTECTION_KEY_ERROR)
+    } finally {
+      setIsProtectionKeyLoading(false)
     }
   }
 
@@ -164,6 +203,52 @@ export function ProductRowActions({
             {UI_PRODUCT_BUTTON_DELETE}
           </Button>
         ) : null}
+
+        {allowUpdate && ownsProduct ? (
+          <Button
+            variant={UI_BUTTON_VARIANT_GHOST}
+            onClick={() => {
+              void handleOpenProtectionKey()
+            }}
+            disabled={isProtectionKeyLoading}
+            aria-label={UI_PRODUCT_ACTION_PROTECTION_KEY}
+          >
+            {UI_PRODUCT_BUTTON_PROTECTION_KEY}
+          </Button>
+        ) : null}
+
+        <ModalDialog
+          show={showProtectionKeyModal}
+          onClose={() => setShowProtectionKeyModal(false)}
+          title={UI_PRODUCT_PROTECTION_KEY_MODAL_TITLE}
+          body={
+            isProtectionKeyLoading ? (
+              UI_PRODUCT_PROTECTION_KEY_LOADING
+            ) : protectionKeyError ? (
+              protectionKeyError
+            ) : (
+              <div className="d-flex flex-column gap-2">
+                <div>
+                  <div>{UI_PRODUCT_PROTECTION_KEY_LABEL_PRODUCT}</div>
+                  <code>{protectionKeyMetadata?.productSlug ?? UI_VALUE_PLACEHOLDER}</code>
+                </div>
+                <div>
+                  <div>{UI_PRODUCT_PROTECTION_KEY_LABEL_SIGNING_KEY_ID}</div>
+                  <code>{protectionKeyMetadata?.signingKeyId ?? UI_VALUE_PLACEHOLDER}</code>
+                </div>
+                <div>
+                  <div>{UI_PRODUCT_PROTECTION_KEY_LABEL_PUBLIC_KEY}</div>
+                  <code>{protectionKeyMetadata?.publicKey ?? UI_VALUE_PLACEHOLDER}</code>
+                </div>
+              </div>
+            )
+          }
+          secondaryAction={{
+            id: 'protection-key-close',
+            label: UI_PRODUCT_PROTECTION_KEY_CLOSE,
+            onClick: () => setShowProtectionKeyModal(false),
+          }}
+        />
 
         <ModalDialog
           show={showSuspendConfirm}

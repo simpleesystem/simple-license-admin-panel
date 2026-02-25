@@ -198,6 +198,7 @@ export function ProductManagementPanel({
             <ProductRowActions
               client={client}
               productId={row.id}
+              productSlug={row.slug}
               isActive={row.isActive}
               vendorId={row.vendorId}
               onEdit={setEditingProduct}

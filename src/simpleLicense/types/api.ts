@@ -158,6 +158,12 @@ export interface CheckUpdateResponse {
   update_available: boolean
 }
 
+export interface ProtectionSigningPublicKeyResponse {
+  product_slug: string
+  signing_key_id: string
+  public_key: string
+}
+
 export interface LoginResponseData {
   token: string
   token_type?: string
