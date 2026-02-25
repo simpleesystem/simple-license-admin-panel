@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import Button from 'react-bootstrap/Button'
-import type { Client, User } from '@/simpleLicense'
+import type { Client, ProtectionBuildTokenMetadata, User } from '@/simpleLicense'
 import { useDeleteProduct, useResumeProduct, useSuspendProduct } from '@/simpleLicense'
 import { canDeleteProduct, canUpdateProduct } from '../../app/auth/permissions'
 import { isSystemAdminUser } from '../../app/auth/userUtils'
@@ -8,11 +8,32 @@ import { useNotificationBus } from '../../notifications/useNotificationBus'
 import { adaptMutation } from '../actions/mutationAdapter'
 import {
   UI_BUTTON_VARIANT_GHOST,
+  UI_PRODUCT_ACTION_BUILD_TOKENS,
   UI_PRODUCT_ACTION_DELETE,
   UI_PRODUCT_ACTION_EDIT,
   UI_PRODUCT_ACTION_PROTECTION_KEY,
   UI_PRODUCT_ACTION_RESUME,
   UI_PRODUCT_ACTION_SUSPEND,
+  UI_PRODUCT_BUILD_TOKEN_DEFAULT_EXPIRY_DAYS,
+  UI_PRODUCT_BUILD_TOKENS_CLOSE,
+  UI_PRODUCT_BUILD_TOKENS_CURRENT,
+  UI_PRODUCT_BUILD_TOKENS_EMPTY,
+  UI_PRODUCT_BUILD_TOKENS_ERROR,
+  UI_PRODUCT_BUILD_TOKENS_ISSUE,
+  UI_PRODUCT_BUILD_TOKENS_ISSUING,
+  UI_PRODUCT_BUILD_TOKENS_LABEL_EXPIRES,
+  UI_PRODUCT_BUILD_TOKENS_LABEL_LAST_USED,
+  UI_PRODUCT_BUILD_TOKENS_LABEL_PREFIX,
+  UI_PRODUCT_BUILD_TOKENS_LABEL_STATUS,
+  UI_PRODUCT_BUILD_TOKENS_LOADING,
+  UI_PRODUCT_BUILD_TOKENS_MODAL_TITLE,
+  UI_PRODUCT_BUILD_TOKENS_REVOKE,
+  UI_PRODUCT_BUILD_TOKENS_REVOKING,
+  UI_PRODUCT_BUILD_TOKENS_STATUS_ACTIVE,
+  UI_PRODUCT_BUILD_TOKENS_STATUS_EXPIRED,
+  UI_PRODUCT_BUILD_TOKENS_STATUS_REVOKED,
+  UI_PRODUCT_BUILD_TOKENS_TOKEN_ONCE,
+  UI_PRODUCT_BUTTON_BUILD_TOKENS,
   UI_PRODUCT_BUTTON_DELETE,
   UI_PRODUCT_BUTTON_PROTECTION_KEY,
   UI_PRODUCT_BUTTON_RESUME,
@@ -47,10 +68,10 @@ import { notifyCrudError, notifyProductSuccess } from './notifications'
 type ProductRowActionsProps = UiCommonProps & {
   client: Client
   productId: string
-  productSlug: string
+  productSlug?: string
   isActive: boolean
   vendorId: string
-  onEdit: (product: { id: string }) => void
+  onEdit?: (product: { id: string }) => void
   onCompleted?: () => void
   currentUser?: User | null
 }
@@ -58,7 +79,7 @@ type ProductRowActionsProps = UiCommonProps & {
 export function ProductRowActions({
   client,
   productId,
-  productSlug,
+  productSlug = '',
   isActive,
   vendorId,
   onEdit,
@@ -81,6 +102,13 @@ export function ProductRowActions({
     signingKeyId: string
     publicKey: string
   } | null>(null)
+  const [showBuildTokensModal, setShowBuildTokensModal] = useState(false)
+  const [isBuildTokensLoading, setIsBuildTokensLoading] = useState(false)
+  const [isIssuingBuildToken, setIsIssuingBuildToken] = useState(false)
+  const [revokingBuildTokenId, setRevokingBuildTokenId] = useState<string | null>(null)
+  const [buildTokensError, setBuildTokensError] = useState<string | null>(null)
+  const [buildTokens, setBuildTokens] = useState<ProtectionBuildTokenMetadata[]>([])
+  const [issuedBuildToken, setIssuedBuildToken] = useState<string | null>(null)
 
   const allowUpdate = canUpdateProduct(currentUser ?? null)
   const allowDelete = canDeleteProduct(currentUser ?? null)
@@ -136,6 +164,11 @@ export function ProductRowActions({
     setIsProtectionKeyLoading(true)
     setProtectionKeyError(null)
     setProtectionKeyMetadata(null)
+    if (productSlug.trim().length === 0) {
+      setProtectionKeyError(UI_PRODUCT_PROTECTION_KEY_ERROR)
+      setIsProtectionKeyLoading(false)
+      return
+    }
     try {
       const signingMetadata = await client.getProtectionSigningPublicKey(productSlug)
       setProtectionKeyMetadata({
@@ -149,6 +182,69 @@ export function ProductRowActions({
       setIsProtectionKeyLoading(false)
     }
   }
+
+  const loadBuildTokens = async () => {
+    setIsBuildTokensLoading(true)
+    setBuildTokensError(null)
+    try {
+      const response = await client.listProtectionBuildTokens(productId)
+      setBuildTokens(Array.isArray(response.tokens) ? response.tokens : [])
+    } catch {
+      setBuildTokensError(UI_PRODUCT_BUILD_TOKENS_ERROR)
+    } finally {
+      setIsBuildTokensLoading(false)
+    }
+  }
+
+  const handleOpenBuildTokens = async () => {
+    setShowBuildTokensModal(true)
+    setIssuedBuildToken(null)
+    await loadBuildTokens()
+  }
+
+  const handleIssueBuildToken = async () => {
+    setIsIssuingBuildToken(true)
+    setBuildTokensError(null)
+    try {
+      const response = await client.issueProtectionBuildToken(productId, {
+        expires_in_days: UI_PRODUCT_BUILD_TOKEN_DEFAULT_EXPIRY_DAYS,
+      })
+      setIssuedBuildToken(response.token)
+      await loadBuildTokens()
+    } catch {
+      setBuildTokensError(UI_PRODUCT_BUILD_TOKENS_ERROR)
+    } finally {
+      setIsIssuingBuildToken(false)
+    }
+  }
+
+  const handleRevokeBuildToken = async (tokenId: string) => {
+    setRevokingBuildTokenId(tokenId)
+    setBuildTokensError(null)
+    try {
+      await client.revokeProtectionBuildToken(productId, tokenId)
+      await loadBuildTokens()
+    } catch {
+      setBuildTokensError(UI_PRODUCT_BUILD_TOKENS_ERROR)
+    } finally {
+      setRevokingBuildTokenId(null)
+    }
+  }
+
+  const getBuildTokenStatusLabel = (token: ProtectionBuildTokenMetadata): string => {
+    if (token.revoked_at !== null) {
+      return UI_PRODUCT_BUILD_TOKENS_STATUS_REVOKED
+    }
+    if (token.expires_at !== null) {
+      const expiresAtMs = Date.parse(token.expires_at)
+      if (!Number.isNaN(expiresAtMs) && expiresAtMs <= Date.now()) {
+        return UI_PRODUCT_BUILD_TOKENS_STATUS_EXPIRED
+      }
+    }
+    return UI_PRODUCT_BUILD_TOKENS_STATUS_ACTIVE
+  }
+
+  const getOptionalTimestamp = (value: string | null): string => value ?? UI_VALUE_PLACEHOLDER
 
   if (!canShowButtons) {
     return null
@@ -164,7 +260,7 @@ export function ProductRowActions({
         {allowUpdate && ownsProduct ? (
           <Button
             variant={UI_BUTTON_VARIANT_GHOST}
-            onClick={() => onEdit({ id: productId })}
+            onClick={() => onEdit?.({ id: productId })}
             aria-label={UI_PRODUCT_ACTION_EDIT}
           >
             {UI_PRODUCT_ACTION_EDIT}
@@ -217,6 +313,19 @@ export function ProductRowActions({
           </Button>
         ) : null}
 
+        {allowUpdate && ownsProduct ? (
+          <Button
+            variant={UI_BUTTON_VARIANT_GHOST}
+            onClick={() => {
+              void handleOpenBuildTokens()
+            }}
+            disabled={isBuildTokensLoading || isIssuingBuildToken}
+            aria-label={UI_PRODUCT_ACTION_BUILD_TOKENS}
+          >
+            {UI_PRODUCT_BUTTON_BUILD_TOKENS}
+          </Button>
+        ) : null}
+
         <ModalDialog
           show={showProtectionKeyModal}
           onClose={() => setShowProtectionKeyModal(false)}
@@ -247,6 +356,82 @@ export function ProductRowActions({
             id: 'protection-key-close',
             label: UI_PRODUCT_PROTECTION_KEY_CLOSE,
             onClick: () => setShowProtectionKeyModal(false),
+          }}
+        />
+
+        <ModalDialog
+          show={showBuildTokensModal}
+          onClose={() => setShowBuildTokensModal(false)}
+          title={UI_PRODUCT_BUILD_TOKENS_MODAL_TITLE}
+          body={
+            isBuildTokensLoading ? (
+              UI_PRODUCT_BUILD_TOKENS_LOADING
+            ) : buildTokensError ? (
+              buildTokensError
+            ) : (
+              <div className="d-flex flex-column gap-3">
+                <Button
+                  variant={UI_BUTTON_VARIANT_GHOST}
+                  onClick={() => {
+                    void handleIssueBuildToken()
+                  }}
+                  disabled={isIssuingBuildToken}
+                >
+                  {isIssuingBuildToken ? UI_PRODUCT_BUILD_TOKENS_ISSUING : UI_PRODUCT_BUILD_TOKENS_ISSUE}
+                </Button>
+                {issuedBuildToken !== null ? (
+                  <div className="d-flex flex-column gap-1">
+                    <div>{UI_PRODUCT_BUILD_TOKENS_TOKEN_ONCE}</div>
+                    <code>{issuedBuildToken}</code>
+                  </div>
+                ) : null}
+                <div>{UI_PRODUCT_BUILD_TOKENS_CURRENT}</div>
+                {buildTokens.length === 0 ? (
+                  <div>{UI_PRODUCT_BUILD_TOKENS_EMPTY}</div>
+                ) : (
+                  <div className="d-flex flex-column gap-2">
+                    {buildTokens.map((token) => {
+                      const tokenStatusLabel = getBuildTokenStatusLabel(token)
+                      const isTokenRevokable = tokenStatusLabel === UI_PRODUCT_BUILD_TOKENS_STATUS_ACTIVE
+                      return (
+                        <div key={token.id} className="border rounded p-2 d-flex flex-column gap-1">
+                          <div>
+                            <strong>{UI_PRODUCT_BUILD_TOKENS_LABEL_PREFIX}</strong>: <code>{token.token_prefix}</code>
+                          </div>
+                          <div>
+                            <strong>{UI_PRODUCT_BUILD_TOKENS_LABEL_STATUS}</strong>: {tokenStatusLabel}
+                          </div>
+                          <div>
+                            <strong>{UI_PRODUCT_BUILD_TOKENS_LABEL_EXPIRES}</strong>:{' '}
+                            {getOptionalTimestamp(token.expires_at)}
+                          </div>
+                          <div>
+                            <strong>{UI_PRODUCT_BUILD_TOKENS_LABEL_LAST_USED}</strong>:{' '}
+                            {getOptionalTimestamp(token.last_used_at)}
+                          </div>
+                          <Button
+                            variant={UI_BUTTON_VARIANT_GHOST}
+                            onClick={() => {
+                              void handleRevokeBuildToken(token.id)
+                            }}
+                            disabled={!isTokenRevokable || revokingBuildTokenId === token.id}
+                          >
+                            {revokingBuildTokenId === token.id
+                              ? UI_PRODUCT_BUILD_TOKENS_REVOKING
+                              : UI_PRODUCT_BUILD_TOKENS_REVOKE}
+                          </Button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )
+          }
+          secondaryAction={{
+            id: 'build-tokens-close',
+            label: UI_PRODUCT_BUILD_TOKENS_CLOSE,
+            onClick: () => setShowBuildTokensModal(false),
           }}
         />
 

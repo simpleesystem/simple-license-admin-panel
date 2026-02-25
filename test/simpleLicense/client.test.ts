@@ -588,6 +588,120 @@ describe('Client', () => {
     })
   })
 
+  describe('protection build tokens', () => {
+    it('lists product protection build tokens', async () => {
+      const productId = 'product_ulid_123'
+      const mockResponse = {
+        data: {
+          success: true,
+          data: {
+            product_id: productId,
+            product_slug: 'simplee-voice-assistant',
+            tokens: [
+              {
+                id: 'token_ulid_123',
+                product_id: productId,
+                product_slug: 'simplee-voice-assistant',
+                token_prefix: 'sls_pbt_abc',
+                label: 'Integrator CI',
+                created_by_admin_id: 'admin_ulid_1',
+                expires_at: null,
+                revoked_at: null,
+                last_used_at: null,
+                created_at: faker.date.recent().toISOString(),
+                updated_at: faker.date.recent().toISOString(),
+              },
+            ],
+          },
+        },
+        status: 200,
+      }
+
+      mockHttpClient.get.mockResolvedValue(mockResponse)
+
+      const result = await client.listProtectionBuildTokens(productId)
+
+      expect(mockHttpClient.get).toHaveBeenCalledWith('/api/v1/admin/products/product_ulid_123/protection/build-tokens')
+      expect(result).toEqual(mockResponse.data.data)
+    })
+
+    it('issues a product protection build token', async () => {
+      const productId = 'product_ulid_123'
+      const request = {
+        label: 'Integrator CI',
+        expires_in_days: 30,
+      }
+      const mockResponse = {
+        data: {
+          success: true,
+          data: {
+            token: 'sls_pbt_generated_value',
+            token_meta: {
+              id: 'token_ulid_123',
+              product_id: productId,
+              product_slug: 'simplee-voice-assistant',
+              token_prefix: 'sls_pbt_abc',
+              label: 'Integrator CI',
+              created_by_admin_id: 'admin_ulid_1',
+              expires_at: faker.date.soon().toISOString(),
+              revoked_at: null,
+              last_used_at: null,
+              created_at: faker.date.recent().toISOString(),
+              updated_at: faker.date.recent().toISOString(),
+            },
+          },
+        },
+        status: 200,
+      }
+
+      mockHttpClient.post.mockResolvedValue(mockResponse)
+
+      const result = await client.issueProtectionBuildToken(productId, request)
+
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        '/api/v1/admin/products/product_ulid_123/protection/build-tokens',
+        request
+      )
+      expect(result).toEqual(mockResponse.data.data)
+    })
+
+    it('revokes a product protection build token', async () => {
+      const productId = 'product_ulid_123'
+      const tokenId = 'token_ulid_123'
+      const mockResponse = {
+        data: {
+          success: true,
+          data: {
+            token_meta: {
+              id: tokenId,
+              product_id: productId,
+              product_slug: 'simplee-voice-assistant',
+              token_prefix: 'sls_pbt_abc',
+              label: 'Integrator CI',
+              created_by_admin_id: 'admin_ulid_1',
+              expires_at: null,
+              revoked_at: faker.date.recent().toISOString(),
+              last_used_at: null,
+              created_at: faker.date.recent().toISOString(),
+              updated_at: faker.date.recent().toISOString(),
+            },
+          },
+        },
+        status: 200,
+      }
+
+      mockHttpClient.post.mockResolvedValue(mockResponse)
+
+      const result = await client.revokeProtectionBuildToken(productId, tokenId)
+
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        '/api/v1/admin/products/product_ulid_123/protection/build-tokens/token_ulid_123/revoke',
+        {}
+      )
+      expect(result).toEqual(mockResponse.data.data)
+    })
+  })
+
   describe('createProduct', () => {
     it('creates product successfully', async () => {
       const mockResponse = {

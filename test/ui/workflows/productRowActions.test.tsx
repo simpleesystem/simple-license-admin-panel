@@ -210,4 +210,74 @@ describe('ProductRowActions', () => {
     expect(within(dialog).getByText('sva-ed25519-key-1')).toBeInTheDocument()
     expect(within(dialog).getByText('simplee-voice-assistant')).toBeInTheDocument()
   })
+
+  test('issues and displays protection build token from modal', async () => {
+    const deleteMutation = mockMutation()
+    const suspendMutation = mockMutation()
+    const resumeMutation = mockMutation()
+    useDeleteProductMock.mockReturnValue(deleteMutation)
+    useSuspendProductMock.mockReturnValue(suspendMutation)
+    useResumeProductMock.mockReturnValue(resumeMutation)
+
+    const product = buildProduct({ slug: 'simplee-voice-assistant', isActive: true })
+    const superuser = buildUser({ role: 'SUPERUSER' })
+    const listProtectionBuildTokens = vi.fn(async () => ({
+      product_id: product.id,
+      product_slug: product.slug,
+      tokens: [],
+    }))
+    const issueProtectionBuildToken = vi.fn(async () => ({
+      token: 'sls_pbt_issued_token_value',
+      token_meta: {
+        id: 'token_ulid_123',
+        product_id: product.id,
+        product_slug: product.slug,
+        token_prefix: 'sls_pbt_abc',
+        label: null,
+        created_by_admin_id: 'admin_ulid_1',
+        expires_at: null,
+        revoked_at: null,
+        last_used_at: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    }))
+    const revokeProtectionBuildToken = vi.fn(async () => ({}))
+
+    render(
+      <ProductRowActions
+        client={
+          {
+            getProtectionSigningPublicKey: vi.fn(async () => ({
+              product_slug: product.slug,
+              signing_key_id: 'sva-ed25519-key-1',
+              public_key: 'public_key_value',
+            })),
+            listProtectionBuildTokens,
+            issueProtectionBuildToken,
+            revokeProtectionBuildToken,
+          } as unknown as never
+        }
+        productId={product.id}
+        productSlug={product.slug}
+        isActive={product.isActive}
+        currentUser={superuser}
+        vendorId={product.vendorId}
+        onEdit={vi.fn()}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /build tokens/i }))
+    await waitFor(() => expect(listProtectionBuildTokens).toHaveBeenCalledWith(product.id))
+
+    const dialog = await screen.findByRole('dialog')
+    fireEvent.click(within(dialog).getByRole('button', { name: /issue build token/i }))
+
+    await waitFor(() =>
+      expect(issueProtectionBuildToken).toHaveBeenCalledWith(product.id, {
+        expires_in_days: 30,
+      })
+    )
+    expect(await within(dialog).findByText('sls_pbt_issued_token_value')).toBeInTheDocument()
+  })
 })

@@ -164,6 +164,40 @@ export interface ProtectionSigningPublicKeyResponse {
   public_key: string
 }
 
+export interface ProtectionBuildTokenMetadata {
+  id: string
+  product_id: string
+  product_slug: string
+  token_prefix: string
+  label: string | null
+  created_by_admin_id: string | null
+  expires_at: string | null
+  revoked_at: string | null
+  last_used_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ListProtectionBuildTokensResponse {
+  product_id: string
+  product_slug: string
+  tokens: ProtectionBuildTokenMetadata[]
+}
+
+export interface IssueProtectionBuildTokenRequest {
+  label?: string
+  expires_in_days?: number
+}
+
+export interface IssueProtectionBuildTokenResponse {
+  token: string
+  token_meta: ProtectionBuildTokenMetadata
+}
+
+export interface RevokeProtectionBuildTokenResponse {
+  token_meta: ProtectionBuildTokenMetadata
+}
+
 export interface LoginResponseData {
   token: string
   token_type?: string

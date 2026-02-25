@@ -123,6 +123,8 @@ import type {
   GetQuotaUsageResponse,
   GetUserResponse,
   HealthMetricsResponse,
+  IssueProtectionBuildTokenRequest,
+  IssueProtectionBuildTokenResponse,
   LicenseDataResponse,
   LicenseFeaturesResponse,
   LicenseUsageDetailsResponse,
@@ -131,6 +133,7 @@ import type {
   ListLicensesResponse,
   ListProductsResponse,
   ListProductTiersResponse,
+  ListProtectionBuildTokensResponse,
   ListReleasesResponse,
   ListTenantsResponse,
   ListUsersRequest,
@@ -141,6 +144,7 @@ import type {
   MetricsResponse,
   ProtectionSigningPublicKeyResponse,
   ReportUsageRequest,
+  RevokeProtectionBuildTokenResponse,
   ServerStatusResponse,
   SystemStatsResponse,
   TopLicensesResponse,
@@ -569,6 +573,27 @@ export class Client {
     const response = await this.httpClient.post<ApiResponse<{ success: boolean }>>(url)
 
     return this.handleApiResponse<ActionSuccessResponse>(response.data, { success: true })
+  }
+
+  async listProtectionBuildTokens(productId: string): Promise<ListProtectionBuildTokensResponse> {
+    const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}/protection/build-tokens`
+    const response = await this.httpClient.get<ApiResponse<ListProtectionBuildTokensResponse>>(url)
+    return this.handleApiResponse(response.data, {} as ListProtectionBuildTokensResponse)
+  }
+
+  async issueProtectionBuildToken(
+    productId: string,
+    request: IssueProtectionBuildTokenRequest
+  ): Promise<IssueProtectionBuildTokenResponse> {
+    const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}/protection/build-tokens`
+    const response = await this.httpClient.post<ApiResponse<IssueProtectionBuildTokenResponse>>(url, request)
+    return this.handleApiResponse(response.data, {} as IssueProtectionBuildTokenResponse)
+  }
+
+  async revokeProtectionBuildToken(productId: string, tokenId: string): Promise<RevokeProtectionBuildTokenResponse> {
+    const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}/protection/build-tokens/${encodeURIComponent(tokenId)}/revoke`
+    const response = await this.httpClient.post<ApiResponse<RevokeProtectionBuildTokenResponse>>(url, {})
+    return this.handleApiResponse(response.data, {} as RevokeProtectionBuildTokenResponse)
   }
 
   // Admin API - Releases (plugin release files per product)
