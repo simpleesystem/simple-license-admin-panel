@@ -5,6 +5,8 @@ import {
   UI_PRODUCT_ACTION_DELETE,
   UI_PRODUCT_ACTION_RESUME,
   UI_PRODUCT_ACTION_SUSPEND,
+  UI_PRODUCT_BUILD_TOKENS_ERROR,
+  UI_PRODUCT_PROTECTION_KEY_ERROR,
 } from '../../../src/ui/constants'
 import { ProductRowActions } from '../../../src/ui/workflows/ProductRowActions'
 import { buildProduct } from '../../factories/productFactory'
@@ -211,6 +213,39 @@ describe('ProductRowActions', () => {
     expect(within(dialog).getByText('simplee-voice-assistant')).toBeInTheDocument()
   })
 
+  test('shows protection key error when product slug is missing', async () => {
+    const deleteMutation = mockMutation()
+    const suspendMutation = mockMutation()
+    const resumeMutation = mockMutation()
+    useDeleteProductMock.mockReturnValue(deleteMutation)
+    useSuspendProductMock.mockReturnValue(suspendMutation)
+    useResumeProductMock.mockReturnValue(resumeMutation)
+
+    const product = buildProduct({ isActive: true })
+    const superuser = buildUser({ role: 'SUPERUSER' })
+    const getProtectionSigningPublicKey = vi.fn(async () => ({
+      product_slug: product.slug,
+      signing_key_id: 'sva-ed25519-key-1',
+      public_key: 'public_key_value',
+    }))
+
+    render(
+      <ProductRowActions
+        client={{ getProtectionSigningPublicKey } as unknown as never}
+        productId={product.id}
+        isActive={product.isActive}
+        currentUser={superuser}
+        vendorId={product.vendorId}
+        onEdit={vi.fn()}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /protection key/i }))
+
+    expect(await screen.findByText(UI_PRODUCT_PROTECTION_KEY_ERROR)).toBeInTheDocument()
+    expect(getProtectionSigningPublicKey).not.toHaveBeenCalled()
+  })
+
   test('issues and displays protection build token from modal', async () => {
     const deleteMutation = mockMutation()
     const suspendMutation = mockMutation()
@@ -279,5 +314,63 @@ describe('ProductRowActions', () => {
       })
     )
     expect(await within(dialog).findByText('sls_pbt_issued_token_value')).toBeInTheDocument()
+  })
+
+  test('shows build token error when loading tokens fails', async () => {
+    const deleteMutation = mockMutation()
+    const suspendMutation = mockMutation()
+    const resumeMutation = mockMutation()
+    useDeleteProductMock.mockReturnValue(deleteMutation)
+    useSuspendProductMock.mockReturnValue(suspendMutation)
+    useResumeProductMock.mockReturnValue(resumeMutation)
+
+    const product = buildProduct({ slug: 'simplee-voice-assistant', isActive: true })
+    const superuser = buildUser({ role: 'SUPERUSER' })
+    const listProtectionBuildTokens = vi.fn(async () => {
+      throw new Error('load-failure')
+    })
+
+    render(
+      <ProductRowActions
+        client={
+          {
+            getProtectionSigningPublicKey: vi.fn(async () => ({
+              product_slug: product.slug,
+              signing_key_id: 'sva-ed25519-key-1',
+              public_key: 'public_key_value',
+            })),
+            listProtectionBuildTokens,
+            issueProtectionBuildToken: vi.fn(async () => ({
+              token: 'unused-token',
+              token_meta: {
+                id: 'unused-id',
+                product_id: product.id,
+                product_slug: product.slug,
+                token_prefix: 'unused-prefix',
+                label: null,
+                created_by_admin_id: null,
+                expires_at: null,
+                revoked_at: null,
+                last_used_at: null,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              },
+            })),
+            revokeProtectionBuildToken: vi.fn(async () => ({})),
+          } as unknown as never
+        }
+        productId={product.id}
+        productSlug={product.slug}
+        isActive={product.isActive}
+        currentUser={superuser}
+        vendorId={product.vendorId}
+        onEdit={vi.fn()}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /build tokens/i }))
+
+    expect(await screen.findByText(UI_PRODUCT_BUILD_TOKENS_ERROR)).toBeInTheDocument()
+    await waitFor(() => expect(listProtectionBuildTokens).toHaveBeenCalledWith(product.id))
   })
 })
