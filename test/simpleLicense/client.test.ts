@@ -586,6 +586,31 @@ describe('Client', () => {
       )
       expect(result).toEqual(mockResponse.data.data)
     })
+
+    it('normalizes camelCase protection signing key metadata', async () => {
+      const productSlug = 'simplee-voice-assistant'
+      const mockResponse = {
+        data: {
+          success: true,
+          data: {
+            productSlug,
+            signingKeyId: 'sva-ed25519-key-1',
+            publicKey: faker.string.alphanumeric(86),
+          },
+        },
+        status: 200,
+      }
+
+      mockHttpClient.get.mockResolvedValue(mockResponse)
+
+      const result = await client.getProtectionSigningPublicKey(productSlug)
+
+      expect(result).toEqual({
+        product_slug: mockResponse.data.data.productSlug,
+        signing_key_id: mockResponse.data.data.signingKeyId,
+        public_key: mockResponse.data.data.publicKey,
+      })
+    })
   })
 
   describe('protection build tokens', () => {
@@ -623,6 +648,61 @@ describe('Client', () => {
 
       expect(mockHttpClient.get).toHaveBeenCalledWith('/api/v1/admin/products/product_ulid_123/protection/build-tokens')
       expect(result).toEqual(mockResponse.data.data)
+    })
+
+    it('normalizes camelCase protection build token list responses', async () => {
+      const productId = 'product_ulid_123'
+      const createdAt = faker.date.recent().toISOString()
+      const updatedAt = faker.date.recent().toISOString()
+      const mockResponse = {
+        data: {
+          success: true,
+          data: {
+            productId,
+            productSlug: 'simplee-voice-assistant',
+            tokens: [
+              {
+                id: 'token_ulid_123',
+                productId,
+                productSlug: 'simplee-voice-assistant',
+                tokenPrefix: 'sls_pbt_abc',
+                label: 'Integrator CI',
+                createdByAdminId: 'admin_ulid_1',
+                expiresAt: null,
+                revokedAt: null,
+                lastUsedAt: null,
+                createdAt,
+                updatedAt,
+              },
+            ],
+          },
+        },
+        status: 200,
+      }
+
+      mockHttpClient.get.mockResolvedValue(mockResponse)
+
+      const result = await client.listProtectionBuildTokens(productId)
+
+      expect(result).toEqual({
+        product_id: productId,
+        product_slug: 'simplee-voice-assistant',
+        tokens: [
+          {
+            id: 'token_ulid_123',
+            product_id: productId,
+            product_slug: 'simplee-voice-assistant',
+            token_prefix: 'sls_pbt_abc',
+            label: 'Integrator CI',
+            created_by_admin_id: 'admin_ulid_1',
+            expires_at: null,
+            revoked_at: null,
+            last_used_at: null,
+            created_at: createdAt,
+            updated_at: updatedAt,
+          },
+        ],
+      })
     })
 
     it('issues a product protection build token', async () => {

@@ -142,6 +142,7 @@ import type {
   LoginResponse,
   LoginResponseData,
   MetricsResponse,
+  ProtectionBuildTokenMetadata,
   ProtectionSigningPublicKeyResponse,
   ReportUsageRequest,
   RevokeProtectionBuildTokenResponse,
@@ -438,8 +439,8 @@ export class Client {
     }
     const url = `${API_ENDPOINT_PROTECTION_KEYS}?${queryParams.toString()}`
     const response = await this.httpClient.get<ApiResponse<ProtectionSigningPublicKeyResponse>>(url)
-
-    return this.handleApiResponse(response.data, {} as ProtectionSigningPublicKeyResponse)
+    const rawData = this.handleApiResponse<Record<string, unknown>>(response.data, {})
+    return this.normalizeProtectionSigningPublicKeyResponse(rawData)
   }
 
   // Admin API - Licenses
@@ -578,7 +579,8 @@ export class Client {
   async listProtectionBuildTokens(productId: string): Promise<ListProtectionBuildTokensResponse> {
     const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}/protection/build-tokens`
     const response = await this.httpClient.get<ApiResponse<ListProtectionBuildTokensResponse>>(url)
-    return this.handleApiResponse(response.data, {} as ListProtectionBuildTokensResponse)
+    const rawData = this.handleApiResponse<Record<string, unknown>>(response.data, {})
+    return this.normalizeListProtectionBuildTokensResponse(rawData)
   }
 
   async issueProtectionBuildToken(
@@ -587,13 +589,15 @@ export class Client {
   ): Promise<IssueProtectionBuildTokenResponse> {
     const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}/protection/build-tokens`
     const response = await this.httpClient.post<ApiResponse<IssueProtectionBuildTokenResponse>>(url, request)
-    return this.handleApiResponse(response.data, {} as IssueProtectionBuildTokenResponse)
+    const rawData = this.handleApiResponse<Record<string, unknown>>(response.data, {})
+    return this.normalizeIssueProtectionBuildTokenResponse(rawData)
   }
 
   async revokeProtectionBuildToken(productId: string, tokenId: string): Promise<RevokeProtectionBuildTokenResponse> {
     const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}/protection/build-tokens/${encodeURIComponent(tokenId)}/revoke`
     const response = await this.httpClient.post<ApiResponse<RevokeProtectionBuildTokenResponse>>(url, {})
-    return this.handleApiResponse(response.data, {} as RevokeProtectionBuildTokenResponse)
+    const rawData = this.handleApiResponse<Record<string, unknown>>(response.data, {})
+    return this.normalizeRevokeProtectionBuildTokenResponse(rawData)
   }
 
   // Admin API - Releases (plugin release files per product)
@@ -998,6 +1002,161 @@ export class Client {
   }
 
   // Helper methods - type guards for response parsing
+  private getRecordProperty(
+    source: Record<string, unknown>,
+    snakeCaseKey: string,
+    camelCaseKey: string
+  ): Record<string, unknown> | null {
+    const snakeCaseValue = source[snakeCaseKey]
+    if (typeof snakeCaseValue === 'object' && snakeCaseValue !== null && !Array.isArray(snakeCaseValue)) {
+      return snakeCaseValue as Record<string, unknown>
+    }
+
+    const camelCaseValue = source[camelCaseKey]
+    if (typeof camelCaseValue === 'object' && camelCaseValue !== null && !Array.isArray(camelCaseValue)) {
+      return camelCaseValue as Record<string, unknown>
+    }
+
+    return null
+  }
+
+  private getArrayProperty(source: Record<string, unknown>, key: string): unknown[] {
+    const value = source[key]
+    return Array.isArray(value) ? value : []
+  }
+
+  private getStringProperty(source: Record<string, unknown>, snakeCaseKey: string, camelCaseKey: string): string {
+    const snakeCaseValue = source[snakeCaseKey]
+    if (typeof snakeCaseValue === 'string') {
+      return snakeCaseValue
+    }
+
+    const camelCaseValue = source[camelCaseKey]
+    if (typeof camelCaseValue === 'string') {
+      return camelCaseValue
+    }
+
+    return ''
+  }
+
+  private getNullableStringProperty(
+    source: Record<string, unknown>,
+    snakeCaseKey: string,
+    camelCaseKey: string
+  ): string | null {
+    const snakeCaseValue = source[snakeCaseKey]
+    if (snakeCaseValue === null) {
+      return null
+    }
+    if (typeof snakeCaseValue === 'string') {
+      return snakeCaseValue
+    }
+
+    const camelCaseValue = source[camelCaseKey]
+    if (camelCaseValue === null) {
+      return null
+    }
+    if (typeof camelCaseValue === 'string') {
+      return camelCaseValue
+    }
+
+    return null
+  }
+
+  private assertRequiredString(value: string, fieldName: string): string {
+    if (value.trim().length > 0) {
+      return value
+    }
+
+    throw new ApiException(`API response missing required field: ${fieldName}`, 'INVALID_RESPONSE')
+  }
+
+  private normalizeProtectionSigningPublicKeyResponse(
+    source: Record<string, unknown>
+  ): ProtectionSigningPublicKeyResponse {
+    const productSlug = this.assertRequiredString(
+      this.getStringProperty(source, 'product_slug', 'productSlug'),
+      'product_slug'
+    )
+    const signingKeyId = this.assertRequiredString(
+      this.getStringProperty(source, 'signing_key_id', 'signingKeyId'),
+      'signing_key_id'
+    )
+    const publicKey = this.assertRequiredString(this.getStringProperty(source, 'public_key', 'publicKey'), 'public_key')
+
+    return {
+      product_slug: productSlug,
+      signing_key_id: signingKeyId,
+      public_key: publicKey,
+    }
+  }
+
+  private normalizeProtectionBuildTokenMetadata(source: Record<string, unknown>): ProtectionBuildTokenMetadata {
+    return {
+      id: this.assertRequiredString(this.getStringProperty(source, 'id', 'id'), 'id'),
+      product_id: this.assertRequiredString(this.getStringProperty(source, 'product_id', 'productId'), 'product_id'),
+      product_slug: this.assertRequiredString(
+        this.getStringProperty(source, 'product_slug', 'productSlug'),
+        'product_slug'
+      ),
+      token_prefix: this.assertRequiredString(
+        this.getStringProperty(source, 'token_prefix', 'tokenPrefix'),
+        'token_prefix'
+      ),
+      label: this.getNullableStringProperty(source, 'label', 'label'),
+      created_by_admin_id: this.getNullableStringProperty(source, 'created_by_admin_id', 'createdByAdminId'),
+      expires_at: this.getNullableStringProperty(source, 'expires_at', 'expiresAt'),
+      revoked_at: this.getNullableStringProperty(source, 'revoked_at', 'revokedAt'),
+      last_used_at: this.getNullableStringProperty(source, 'last_used_at', 'lastUsedAt'),
+      created_at: this.assertRequiredString(this.getStringProperty(source, 'created_at', 'createdAt'), 'created_at'),
+      updated_at: this.assertRequiredString(this.getStringProperty(source, 'updated_at', 'updatedAt'), 'updated_at'),
+    }
+  }
+
+  private normalizeListProtectionBuildTokensResponse(
+    source: Record<string, unknown>
+  ): ListProtectionBuildTokensResponse {
+    const tokenSources = this.getArrayProperty(source, 'tokens')
+      .filter((tokenSource) => typeof tokenSource === 'object' && tokenSource !== null)
+      .map((tokenSource) => this.normalizeProtectionBuildTokenMetadata(tokenSource as Record<string, unknown>))
+
+    return {
+      product_id: this.assertRequiredString(this.getStringProperty(source, 'product_id', 'productId'), 'product_id'),
+      product_slug: this.assertRequiredString(
+        this.getStringProperty(source, 'product_slug', 'productSlug'),
+        'product_slug'
+      ),
+      tokens: tokenSources,
+    }
+  }
+
+  private normalizeIssueProtectionBuildTokenResponse(
+    source: Record<string, unknown>
+  ): IssueProtectionBuildTokenResponse {
+    const tokenMetadata = this.getRecordProperty(source, 'token_meta', 'tokenMeta')
+    if (tokenMetadata === null) {
+      throw new ApiException('API response missing required field: token_meta', 'INVALID_RESPONSE')
+    }
+
+    return {
+      token: this.assertRequiredString(this.getStringProperty(source, 'token', 'token'), 'token'),
+      token_meta: this.normalizeProtectionBuildTokenMetadata(tokenMetadata),
+    }
+  }
+
+  private normalizeRevokeProtectionBuildTokenResponse(
+    source: Record<string, unknown>
+  ): RevokeProtectionBuildTokenResponse {
+    const tokenMetadata = this.getRecordProperty(source, 'token_meta', 'tokenMeta')
+    if (tokenMetadata === null) {
+      throw new ApiException('API response missing required field: token_meta', 'INVALID_RESPONSE')
+    }
+
+    return {
+      token_meta: this.normalizeProtectionBuildTokenMetadata(tokenMetadata),
+    }
+  }
+
   private isApiResponse(value: unknown): value is ApiResponse {
     return (
       typeof value === 'object' &&
