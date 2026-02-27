@@ -23,6 +23,7 @@ import {
   HEADER_CONTENT_TYPE,
   HEADER_CORRELATION_ID,
   HEADER_REQUEST_ID,
+  HTTP_SERVICE_UNAVAILABLE,
 } from '../constants'
 import { ApiException, ClientConfigurationException, NetworkException } from '../exceptions/ApiException'
 import type { ErrorDetails } from '../types/api'
@@ -578,8 +579,8 @@ export class AxiosHttpClient implements HttpClientInterface {
     }
     if (error instanceof ApiException) {
       const status = error.errorDetails?.status
-      // Do not retry on 500 (Internal Server Error) to avoid hammering the server
-      return status === 429 || status === 503
+      // Never retry on 429 because retries amplify rate-limit pressure on page load.
+      return status === HTTP_SERVICE_UNAVAILABLE
     }
     return false
   }
