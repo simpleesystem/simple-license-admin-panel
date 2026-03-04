@@ -19,6 +19,7 @@ import {
   UI_PRODUCT_FORM_SUBMIT_UPDATE,
   UI_PRODUCT_TIER_ACTION_DELETE,
   UI_PRODUCT_TIER_BUTTON_CREATE,
+  UI_PRODUCT_TIER_CONFIRM_DELETE_CONFIRM,
   UI_PRODUCT_TIER_FORM_SUBMIT_CREATE,
 } from '../../../../src/ui/constants'
 import { LicenseRowActions } from '../../../../src/ui/workflows/LicenseRowActions'
@@ -217,7 +218,7 @@ describe('Product → Tier → Entitlement → License chain', () => {
     fireEvent.click(screen.getByText(UI_PRODUCT_TIER_ACTION_DELETE))
 
     const dialog = await screen.findByRole('dialog')
-    const confirmButton = within(dialog).getByRole('button', { name: /Delete tier/i })
+    const confirmButton = within(dialog).getByRole('button', { name: UI_PRODUCT_TIER_CONFIRM_DELETE_CONFIRM })
     // Verify button is not disabled before clicking
     expect(confirmButton).not.toBeDisabled()
     fireEvent.click(confirmButton)

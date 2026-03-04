@@ -7,7 +7,11 @@ import { describe, expect, it, vi } from 'vitest'
 import { ReleasesRouteComponent } from '@/routes/releases/ReleasesRoute'
 import {
   UI_PAGE_TITLE_RELEASES,
+  UI_RELEASE_BUTTON_NEW,
   UI_RELEASE_EMPTY_MESSAGE,
+  UI_RELEASE_FORM_FIELD_FILE,
+  UI_RELEASE_FORM_FIELD_VERSION,
+  UI_RELEASE_FORM_SUBMIT,
   UI_RELEASE_SELECT_PRODUCT_BODY,
   UI_RELEASE_SELECT_PRODUCT_PLACEHOLDER,
   UI_RELEASE_STATUS_ACTION_RETRY,
@@ -200,6 +204,59 @@ describe('ReleasesRouteComponent', () => {
     await waitFor(() => {
       expect(screen.getByText(release.version)).toBeInTheDocument()
       expect(screen.getByText(release.fileName)).toBeInTheDocument()
+    })
+  })
+
+  it('shows create upload error feedback inside modal', async () => {
+    const product = buildProduct()
+    const uploadErrorMessage = 'Release upload timed out'
+    useAdminProductsMock.mockReturnValue({
+      data: [product],
+      isLoading: false,
+      isError: false,
+    })
+    useAdminReleasesMock.mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    })
+    useCreateReleaseMock.mockReturnValue({
+      mutate: (_formData: FormData, options?: { onError?: (error: unknown) => void }) => {
+        options?.onError?.(new Error(uploadErrorMessage))
+      },
+      isPending: false,
+      isSuccess: false,
+      isError: false,
+    })
+    useAuthMock.mockReturnValue({
+      user: buildUser({ role: UI_USER_ROLE_SUPERUSER, vendorId: null }),
+      currentUser: buildUser({ role: UI_USER_ROLE_SUPERUSER, vendorId: null }),
+      isAuthenticated: true,
+    })
+
+    renderWithProviders(<ReleasesRouteComponent />)
+
+    const select = screen.getByRole('combobox', { name: UI_RELEASE_SELECT_PRODUCT_PLACEHOLDER })
+    fireEvent.change(select, { target: { value: product.id } })
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: UI_RELEASE_BUTTON_NEW })).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: UI_RELEASE_BUTTON_NEW }))
+
+    const versionInput = await screen.findByLabelText(UI_RELEASE_FORM_FIELD_VERSION)
+    fireEvent.change(versionInput, { target: { value: '1.2.3' } })
+
+    const fileInput = screen.getByLabelText(UI_RELEASE_FORM_FIELD_FILE)
+    const file = new File(['zip-content'], 'plugin.zip', { type: 'application/zip' })
+    fireEvent.change(fileInput, { target: { files: [file] } })
+
+    fireEvent.click(screen.getByRole('button', { name: UI_RELEASE_FORM_SUBMIT }))
+
+    await waitFor(() => {
+      expect(screen.getByText(uploadErrorMessage)).toBeInTheDocument()
     })
   })
 })

@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest'
 import {
   UI_PRODUCT_TIER_ACTION_DELETE,
   UI_PRODUCT_TIER_ACTION_EDIT,
+  UI_PRODUCT_TIER_CONFIRM_DELETE_CONFIRM,
   UI_USER_ROLE_SUPERUSER,
   UI_USER_ROLE_VENDOR_MANAGER,
 } from '../../../src/ui/constants'
@@ -75,7 +76,7 @@ describe('ProductTierRowActions', () => {
     fireEvent.click(screen.getByText(UI_PRODUCT_TIER_ACTION_DELETE))
 
     const dialog = await screen.findByRole('dialog')
-    const confirmButton = within(dialog).getByRole('button', { name: /Delete tier/i })
+    const confirmButton = within(dialog).getByRole('button', { name: UI_PRODUCT_TIER_CONFIRM_DELETE_CONFIRM })
     fireEvent.click(confirmButton)
 
     await waitFor(() =>

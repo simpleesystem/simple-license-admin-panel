@@ -3,7 +3,7 @@ import { Badge, Button, Form, Table } from 'react-bootstrap'
 import { useApiClient } from '../../api/apiContext'
 import { canDeleteRelease, isProductOwnedByUser, isVendorScopedUser } from '../../app/auth/permissions'
 import { useAuth } from '../../app/auth/useAuth'
-import { RELEASE_UPLOAD_FIELD_NAME } from '../../simpleLicense/constants'
+import { ERROR_CODE_UPLOAD_TIMEOUT, RELEASE_UPLOAD_FIELD_NAME } from '../../simpleLicense/constants'
 import {
   useAdminProducts,
   useAdminReleases,
@@ -39,6 +39,8 @@ import {
   UI_RELEASE_FILTER_ALL,
   UI_RELEASE_FILTER_PRERELEASE_ONLY,
   UI_RELEASE_FILTER_STABLE_ONLY,
+  UI_RELEASE_FORM_ERROR_FALLBACK,
+  UI_RELEASE_FORM_ERROR_TIMEOUT_HINT,
   UI_RELEASE_FORM_FIELD_CHANGELOG,
   UI_RELEASE_FORM_FIELD_FILE,
   UI_RELEASE_FORM_FIELD_PRERELEASE,
@@ -83,6 +85,8 @@ export function ReleasesRouteComponent() {
   const [createChangelog, setCreateChangelog] = useState('')
   const [createIsPrerelease, setCreateIsPrerelease] = useState(false)
   const [createFile, setCreateFile] = useState<File | null>(null)
+  const [createErrorMessage, setCreateErrorMessage] = useState<string | null>(null)
+  const [createErrorHint, setCreateErrorHint] = useState<string | null>(null)
   const [sortBy, setSortBy] = useState<'version' | 'createdAt'>('createdAt')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [filterPrerelease, setFilterPrerelease] = useState<boolean | undefined>(undefined)
@@ -130,6 +134,8 @@ export function ReleasesRouteComponent() {
     if (!selectedProductId || !createVersion.trim() || !createFile) {
       return
     }
+    setCreateErrorMessage(null)
+    setCreateErrorHint(null)
     const formData = new FormData()
     formData.append(RELEASE_UPLOAD_FIELD_NAME, createFile)
     formData.append('version', createVersion.trim())
@@ -144,6 +150,18 @@ export function ReleasesRouteComponent() {
         setCreateChangelog('')
         setCreateIsPrerelease(false)
         setCreateFile(null)
+        setCreateErrorMessage(null)
+        setCreateErrorHint(null)
+      },
+      onError: (error) => {
+        const errorMessage =
+          error instanceof Error && error.message.trim().length > 0 ? error.message : UI_RELEASE_FORM_ERROR_FALLBACK
+        const errorCode =
+          typeof error === 'object' && error !== null && 'errorCode' in error && typeof error.errorCode === 'string'
+            ? error.errorCode
+            : ''
+        setCreateErrorMessage(errorMessage)
+        setCreateErrorHint(errorCode === ERROR_CODE_UPLOAD_TIMEOUT ? UI_RELEASE_FORM_ERROR_TIMEOUT_HINT : null)
       },
     })
   }
@@ -154,6 +172,8 @@ export function ReleasesRouteComponent() {
     setCreateChangelog('')
     setCreateIsPrerelease(false)
     setCreateFile(null)
+    setCreateErrorMessage(null)
+    setCreateErrorHint(null)
   }
 
   const handlePromoteClick = (rel: { id: string; version: string }) => {
@@ -379,6 +399,12 @@ export function ReleasesRouteComponent() {
         title={UI_RELEASE_FORM_TITLE}
         body={
           <>
+            {createErrorMessage ? (
+              <div className="alert alert-danger" role="alert">
+                <div>{createErrorMessage}</div>
+                {createErrorHint ? <div className="small mt-1">{createErrorHint}</div> : null}
+              </div>
+            ) : null}
             <Form.Group className="mb-3">
               <Form.Label>{UI_RELEASE_FORM_FIELD_VERSION}</Form.Label>
               <Form.Control
