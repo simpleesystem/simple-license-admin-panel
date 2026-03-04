@@ -29,7 +29,7 @@ export function ProductsRouteComponent() {
   const { data, isLoading, isError, refetch } = useAdminProducts(client)
   const { data: tenantsData } = useAdminTenants(client)
   const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState('true')
   const [page, setPage] = useState(1)
   const [sortState, setSortState] = useState<UiDataTableSortState | undefined>()
 

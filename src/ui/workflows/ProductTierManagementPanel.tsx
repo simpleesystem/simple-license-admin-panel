@@ -16,12 +16,17 @@ import {
   UI_PRODUCT_TIER_COLUMN_HEADER_ACTIONS,
   UI_PRODUCT_TIER_COLUMN_HEADER_CODE,
   UI_PRODUCT_TIER_COLUMN_HEADER_NAME,
+  UI_PRODUCT_TIER_COLUMN_HEADER_STATUS,
   UI_PRODUCT_TIER_COLUMN_ID_ACTIONS,
   UI_PRODUCT_TIER_COLUMN_ID_CODE,
   UI_PRODUCT_TIER_COLUMN_ID_NAME,
+  UI_PRODUCT_TIER_COLUMN_ID_STATUS,
   UI_PRODUCT_TIER_EMPTY_STATE_MESSAGE,
+  UI_PRODUCT_TIER_FILTER_PLACEHOLDER,
   UI_PRODUCT_TIER_FORM_SUBMIT_CREATE,
   UI_PRODUCT_TIER_FORM_SUBMIT_UPDATE,
+  UI_PRODUCT_TIER_STATUS_ACTIVE,
+  UI_PRODUCT_TIER_STATUS_DEACTIVATED,
   UI_SORT_ASC,
   UI_TABLE_PAGINATION_LABEL,
   UI_TABLE_PAGINATION_NEXT,
@@ -29,14 +34,15 @@ import {
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
+import { TableFilter } from '../data/TableFilter'
 import { TableToolbar } from '../data/TableToolbar'
 import { Stack } from '../layout/Stack'
-import type { UiDataTableColumn, UiDataTableSortState, UiSortDirection } from '../types'
+import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
 import { notifyCrudError, notifyProductTierSuccess } from './notifications'
 import { ProductTierFormFlow } from './ProductTierFormFlow'
 import { ProductTierRowActions } from './ProductTierRowActions'
 
-export type ProductTierListItem = Pick<ProductTier, 'id' | 'tierCode' | 'tierName'> & {
+export type ProductTierListItem = Pick<ProductTier, 'id' | 'tierCode' | 'tierName' | 'isActive'> & {
   vendorId: string
 }
 
@@ -68,6 +74,7 @@ export function ProductTierManagementPanel({
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingTier, setEditingTier] = useState<ProductTierListItem | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState('true')
   const [localSortState, setLocalSortState] = useState<UiDataTableSortState | undefined>(undefined)
   const notificationBus = useNotificationBus()
 
@@ -87,7 +94,7 @@ export function ProductTierManagementPanel({
           slug: 'mock-slug',
           name: 'mock-name',
           description: undefined,
-          isActive: true,
+          isActive: tier.isActive,
           suspendedAt: null,
           suspensionReason: null,
           defaultLicenseTermDays: null,
@@ -96,6 +103,12 @@ export function ProductTierManagementPanel({
           updatedAt: new Date().toISOString(),
         } as unknown as Product)
       )
+    }
+
+    // Status filtering (default active only)
+    if (statusFilter) {
+      const isActive = statusFilter === 'true'
+      list = list.filter((tier) => (tier.isActive ?? true) === isActive)
     }
 
     // Search filtering
@@ -132,9 +145,13 @@ export function ProductTierManagementPanel({
     }
 
     return list
-  }, [currentUser, tiers, searchTerm, currentSortState, productId])
+  }, [currentUser, tiers, statusFilter, searchTerm, currentSortState, productId])
   const allowCreate = canCreateProductTier(currentUser ?? null)
   const canView = canViewProductTiers(currentUser ?? null)
+  const statusOptions: UiSelectOption[] = [
+    { value: 'true', label: UI_PRODUCT_TIER_STATUS_ACTIVE },
+    { value: 'false', label: UI_PRODUCT_TIER_STATUS_DEACTIVATED },
+  ]
 
   const toolbar = (
     <TableToolbar
@@ -147,6 +164,13 @@ export function ProductTierManagementPanel({
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{ maxWidth: '250px' }}
             size="sm"
+          />
+          <TableFilter
+            label={UI_PRODUCT_TIER_COLUMN_HEADER_STATUS}
+            value={statusFilter}
+            options={statusOptions}
+            onChange={setStatusFilter}
+            placeholder={UI_PRODUCT_TIER_FILTER_PLACEHOLDER}
           />
         </div>
       }
@@ -195,6 +219,12 @@ export function ProductTierManagementPanel({
         sortable: true,
       },
       {
+        id: UI_PRODUCT_TIER_COLUMN_ID_STATUS,
+        header: UI_PRODUCT_TIER_COLUMN_HEADER_STATUS,
+        cell: (row) => (row.isActive ? UI_PRODUCT_TIER_STATUS_ACTIVE : UI_PRODUCT_TIER_STATUS_DEACTIVATED),
+        sortable: true,
+      },
+      {
         id: UI_PRODUCT_TIER_COLUMN_ID_ACTIONS,
         header: UI_PRODUCT_TIER_COLUMN_HEADER_ACTIONS,
         cell: (row) => {
@@ -205,7 +235,7 @@ export function ProductTierManagementPanel({
             <ProductTierRowActions
               client={client}
               tier={row}
-              onEdit={(tier) => setEditingTier({ ...tier, vendorId: row.vendorId })}
+              onEdit={(tier) => setEditingTier({ ...tier, vendorId: row.vendorId, isActive: row.isActive })}
               onCompleted={onRefresh}
               currentUser={currentUser ?? null}
               vendorId={row.vendorId}

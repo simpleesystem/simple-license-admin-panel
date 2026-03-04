@@ -333,7 +333,7 @@ describe('ProductsRouteComponent', () => {
       expect(screen.getByText('Active Product')).toBeInTheDocument()
     })
 
-    const statusFilter = screen.getByLabelText(/status/i)
+    const statusFilter = screen.getByRole('combobox', { name: /status/i })
     fireEvent.change(statusFilter, { target: { value: 'true' } })
 
     await waitFor(() => {
@@ -371,7 +371,7 @@ describe('ProductsRouteComponent', () => {
       expect(screen.getByText('Active Product')).toBeInTheDocument()
     })
 
-    const statusFilter = screen.getByLabelText(/status/i)
+    const statusFilter = screen.getByRole('combobox', { name: /status/i })
     fireEvent.change(statusFilter, { target: { value: 'false' } })
 
     await waitFor(() => {
@@ -1300,10 +1300,10 @@ describe('ProductsRouteComponent', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Active Product')).toBeInTheDocument()
-      expect(screen.getByText('Inactive Product')).toBeInTheDocument()
+      expect(screen.queryByText('Inactive Product')).toBeNull()
     })
 
-    const statusFilter = screen.getByLabelText(/status/i)
+    const statusFilter = screen.getByRole('combobox', { name: /status/i })
     fireEvent.change(statusFilter, { target: { value: 'true' } })
 
     await waitFor(() => {
@@ -1338,10 +1338,10 @@ describe('ProductsRouteComponent', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Active Product')).toBeInTheDocument()
-      expect(screen.getByText('Inactive Product')).toBeInTheDocument()
+      expect(screen.queryByText('Inactive Product')).toBeNull()
     })
 
-    const statusFilter = screen.getByLabelText(/status/i)
+    const statusFilter = screen.getByRole('combobox', { name: /status/i })
     fireEvent.change(statusFilter, { target: { value: 'false' } })
 
     await waitFor(() => {

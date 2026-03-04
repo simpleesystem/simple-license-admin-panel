@@ -103,7 +103,6 @@ export function ProductManagementPanel({
   const canView = canViewProducts(currentUser ?? null)
 
   const statusOptions: UiSelectOption[] = [
-    { value: '', label: 'Filter by Status' },
     { value: 'true', label: UI_PRODUCT_STATUS_ACTIVE },
     { value: 'false', label: UI_PRODUCT_STATUS_SUSPENDED },
   ]
@@ -123,6 +122,7 @@ export function ProductManagementPanel({
           ) : null}
           {onStatusFilterChange ? (
             <TableFilter
+              label={UI_PRODUCT_COLUMN_HEADER_STATUS}
               value={statusFilter ?? ''}
               options={statusOptions}
               onChange={onStatusFilterChange}

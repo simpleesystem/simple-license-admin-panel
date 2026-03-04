@@ -84,6 +84,7 @@ export function ProductUpdateDialog({
         id: t.id,
         tierCode: t.tierCode,
         tierName: t.tierName,
+        isActive: t.isActive,
         vendorId: product.vendorId,
       }))
 

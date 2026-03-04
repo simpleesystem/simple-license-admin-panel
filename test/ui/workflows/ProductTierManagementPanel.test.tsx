@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { NotificationBusProvider } from '@/notifications/busContext'
 import type { Client, User } from '@/simpleLicense'
@@ -73,8 +73,20 @@ vi.mock('@/ui/workflows/ProductTierRowActions', () => ({
 describe('ProductTierManagementPanel', () => {
   const mockClient = createMockClient()
   const mockTiers: ProductTierListItem[] = [
-    { id: '1', tierCode: 'tier-1', tierName: 'Tier 1', vendorId: 'vendor-1' },
-    { id: '2', tierCode: 'tier-2', tierName: 'Tier 2', vendorId: 'vendor-1' },
+    {
+      id: '1',
+      tierCode: 'tier-1',
+      tierName: 'Tier 1',
+      vendorId: 'vendor-1',
+      isActive: true,
+    },
+    {
+      id: '2',
+      tierCode: 'tier-2',
+      tierName: 'Tier 2',
+      vendorId: 'vendor-1',
+      isActive: false,
+    },
   ]
   const mockOnRefresh = vi.fn()
   const mockOnPageChange = vi.fn()
@@ -96,7 +108,7 @@ describe('ProductTierManagementPanel', () => {
     vi.clearAllMocks()
   })
 
-  it('renders table with tiers', () => {
+  it('renders only active tiers by default', () => {
     render(
       <NotificationBusProvider>
         <ProductTierManagementPanel {...defaultProps} />
@@ -105,7 +117,22 @@ describe('ProductTierManagementPanel', () => {
 
     expect(screen.getByTestId('data-table')).toBeInTheDocument()
     expect(screen.getByText('tier-1')).toBeInTheDocument()
-    expect(screen.getByText('tier-2')).toBeInTheDocument()
+    expect(screen.queryByText('tier-2')).toBeNull()
+  })
+
+  it('renders deactivated tiers when status filter is set to deactivated', async () => {
+    render(
+      <NotificationBusProvider>
+        <ProductTierManagementPanel {...defaultProps} />
+      </NotificationBusProvider>
+    )
+
+    const filterSelect = screen.getByRole('combobox')
+    fireEvent.change(filterSelect, { target: { value: 'false' } })
+
+    await waitFor(() => {
+      expect(screen.getByText('tier-2')).toBeInTheDocument()
+    })
   })
 
   it('renders empty state when no tiers', () => {
