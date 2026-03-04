@@ -69,6 +69,8 @@ import {
   ERROR_CODE_INVALID_CREDENTIALS,
   ERROR_CODE_LICENSE_EXPIRED,
   ERROR_CODE_LICENSE_NOT_FOUND,
+  HTTP_UNAUTHORIZED,
+  RELEASE_UPLOAD_REQUEST_TIMEOUT_MS,
 } from './constants'
 import {
   ActivationLimitExceededException,
@@ -78,7 +80,7 @@ import {
   LicenseNotFoundException,
 } from './exceptions/ApiException'
 import { AxiosHttpClient } from './http/AxiosHttpClient'
-import type { HttpClientInterface } from './http/HttpClientInterface'
+import type { HttpClientInterface, HttpRequestConfig } from './http/HttpClientInterface'
 import type {
   ActionSuccessResponse,
   ActivateLicenseRequest,
@@ -631,9 +633,47 @@ export class Client {
 
   async createRelease(productId: string, formData: FormData): Promise<CreateReleaseResponse> {
     const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}/releases`
-    const response = await this.httpClient.postFormData<ApiResponse<CreateReleaseResponse>>(url, formData)
+    const uploadFormData = this.cloneFormData(formData)
+    try {
+      const response = await this.httpClient.postFormData<ApiResponse<CreateReleaseResponse>>(
+        url,
+        uploadFormData,
+        this.getReleaseUploadRequestConfig()
+      )
+      return this.handleApiResponse(response.data, {} as CreateReleaseResponse)
+    } catch (error) {
+      if (!this.shouldRetryCreateReleaseAfterUnauthorized(error)) {
+        throw error
+      }
+      this.setToken(null)
+      const refreshedToken = await this.restoreSession()
+      if (!refreshedToken) {
+        throw error
+      }
+      const retryFormData = this.cloneFormData(formData)
+      const retryResponse = await this.httpClient.postFormData<ApiResponse<CreateReleaseResponse>>(
+        url,
+        retryFormData,
+        this.getReleaseUploadRequestConfig()
+      )
+      return this.handleApiResponse(retryResponse.data, {} as CreateReleaseResponse)
+    }
+  }
 
-    return this.handleApiResponse(response.data, {} as CreateReleaseResponse)
+  private getReleaseUploadRequestConfig(): HttpRequestConfig {
+    return { timeout: RELEASE_UPLOAD_REQUEST_TIMEOUT_MS }
+  }
+
+  private cloneFormData(source: FormData): FormData {
+    const cloned = new FormData()
+    for (const [key, value] of source.entries()) {
+      cloned.append(key, value)
+    }
+    return cloned
+  }
+
+  private shouldRetryCreateReleaseAfterUnauthorized(error: unknown): error is ApiException {
+    return error instanceof ApiException && error.errorDetails?.status === HTTP_UNAUTHORIZED
   }
 
   async deleteRelease(productId: string, releaseId: string): Promise<{ success: boolean; data: { id: string } }> {

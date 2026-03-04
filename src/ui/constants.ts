@@ -894,13 +894,13 @@ export const UI_PRODUCT_TIER_FORM_SECTION_DETAILS = 'product-tier-details' as co
 export const UI_PRODUCT_TIER_BUTTON_CREATE = 'Create Tier' as const
 export const UI_PRODUCT_TIER_BUTTON_EDIT = 'Edit' as const
 export const UI_PRODUCT_TIER_BUTTON_SAVE = 'Save tier' as const
-export const UI_PRODUCT_TIER_BUTTON_DELETE = 'Deactivate Tier' as const
+export const UI_PRODUCT_TIER_BUTTON_DELETE = 'Delete Tier' as const
 export const UI_PRODUCT_TIER_FORM_SUBMIT_CREATE = 'Create tier' as const
 export const UI_PRODUCT_TIER_FORM_SUBMIT_UPDATE = 'Save tier' as const
 export const UI_PRODUCT_TIER_FORM_PENDING_CREATE = 'Creating tier…' as const
 export const UI_PRODUCT_TIER_FORM_PENDING_UPDATE = 'Saving tier…' as const
 export const UI_PRODUCT_TIER_ACTION_EDIT = 'Edit Tier' as const
-export const UI_PRODUCT_TIER_ACTION_DELETE = 'Deactivate Tier' as const
+export const UI_PRODUCT_TIER_ACTION_DELETE = 'Delete Tier' as const
 export const UI_PRODUCT_TIER_COLUMN_ID_NAME = 'product-tier-name' as const
 export const UI_PRODUCT_TIER_COLUMN_ID_CODE = 'product-tier-code' as const
 export const UI_PRODUCT_TIER_COLUMN_ID_STATUS = 'product-tier-status' as const
@@ -923,10 +923,10 @@ export const UI_PRODUCT_TIER_TOAST_CREATE_SUCCESS = 'Tier created successfully' 
 export const UI_PRODUCT_TIER_TOAST_UPDATE_SUCCESS = 'Tier updated successfully' as const
 export const UI_PRODUCT_TIER_TOAST_DELETE_SUCCESS = 'Tier deactivated successfully' as const
 
-export const UI_PRODUCT_TIER_CONFIRM_DELETE_TITLE = 'Deactivate tier?' as const
+export const UI_PRODUCT_TIER_CONFIRM_DELETE_TITLE = 'Delete tier?' as const
 export const UI_PRODUCT_TIER_CONFIRM_DELETE_BODY =
   'Deactivating a tier disables assignment while preserving existing license records.' as const
-export const UI_PRODUCT_TIER_CONFIRM_DELETE_CONFIRM = 'Deactivate tier' as const
+export const UI_PRODUCT_TIER_CONFIRM_DELETE_CONFIRM = 'Delete tier' as const
 export const UI_PRODUCT_TIER_CONFIRM_DELETE_CANCEL = 'Cancel' as const
 
 export const UI_ENTITLEMENT_FORM_TITLE_CREATE = 'Create Entitlement' as const

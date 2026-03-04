@@ -10,8 +10,12 @@ import {
   ERROR_CODE_INVALID_CREDENTIALS,
   ERROR_CODE_LICENSE_EXPIRED,
   ERROR_CODE_LICENSE_NOT_FOUND,
+  ERROR_CODE_UNAUTHORIZED,
+  HTTP_UNAUTHORIZED,
   LicenseExpiredException,
   LicenseNotFoundException,
+  RELEASE_UPLOAD_FIELD_NAME,
+  RELEASE_UPLOAD_REQUEST_TIMEOUT_MS,
 } from '@/simpleLicense'
 import { Client } from '@/simpleLicense/client'
 import { AxiosHttpClient } from '@/simpleLicense/http/AxiosHttpClient'
@@ -23,6 +27,7 @@ describe('Client', () => {
   let mockHttpClient: {
     get: ReturnType<typeof vi.fn>
     post: ReturnType<typeof vi.fn>
+    postFormData: ReturnType<typeof vi.fn>
     put: ReturnType<typeof vi.fn>
     patch: ReturnType<typeof vi.fn>
     delete: ReturnType<typeof vi.fn>
@@ -33,6 +38,7 @@ describe('Client', () => {
     mockHttpClient = {
       get: vi.fn(),
       post: vi.fn(),
+      postFormData: vi.fn(),
       put: vi.fn(),
       patch: vi.fn(),
       delete: vi.fn(),
@@ -217,6 +223,76 @@ describe('Client', () => {
 
       expect(result).toBeNull()
       expect(client.getToken()).toBeNull()
+    })
+  })
+
+  describe('createRelease', () => {
+    it('retries once after unauthorized by refreshing session', async () => {
+      const axiosMock = await import('axios')
+      const refreshedToken = faker.string.alphanumeric(32)
+      const axiosPostSpy = vi.spyOn(axiosMock.default, 'post').mockResolvedValue({
+        data: { success: true, token: refreshedToken },
+        status: 200,
+      })
+
+      const unauthorizedError = new ApiException('Unauthorized', ERROR_CODE_UNAUTHORIZED, { status: HTTP_UNAUTHORIZED })
+      const createdRelease = {
+        id: faker.string.uuid(),
+        slug: faker.helpers.slugify(faker.commerce.productName()).toLowerCase(),
+        version: faker.system.semver(),
+      }
+
+      mockHttpClient.postFormData
+        .mockRejectedValueOnce(unauthorizedError)
+        .mockResolvedValueOnce({ data: { success: true, data: createdRelease }, status: 201 })
+
+      const formData = new FormData()
+      formData.append(RELEASE_UPLOAD_FIELD_NAME, new Blob([faker.lorem.word()]), faker.system.fileName())
+
+      const result = await client.createRelease(faker.string.uuid(), formData)
+
+      expect(result).toEqual(createdRelease)
+      expect(mockHttpClient.postFormData).toHaveBeenCalledTimes(2)
+      expect(axiosMock.default.post).toHaveBeenCalled()
+      axiosPostSpy.mockRestore()
+    })
+
+    it('throws unauthorized error when refresh fails', async () => {
+      const axiosMock = await import('axios')
+      const axiosPostSpy = vi.spyOn(axiosMock.default, 'post').mockRejectedValue(new Error('Refresh failed'))
+
+      const unauthorizedError = new ApiException('Unauthorized', ERROR_CODE_UNAUTHORIZED, { status: HTTP_UNAUTHORIZED })
+      mockHttpClient.postFormData.mockRejectedValueOnce(unauthorizedError)
+
+      const formData = new FormData()
+      formData.append(RELEASE_UPLOAD_FIELD_NAME, new Blob([faker.lorem.word()]), faker.system.fileName())
+
+      await expect(client.createRelease(faker.string.uuid(), formData)).rejects.toThrow(unauthorizedError)
+      expect(mockHttpClient.postFormData).toHaveBeenCalledTimes(1)
+      axiosPostSpy.mockRestore()
+    })
+
+    it('uses release upload request timeout config', async () => {
+      const createdRelease = {
+        id: faker.string.uuid(),
+        slug: faker.helpers.slugify(faker.commerce.productName()).toLowerCase(),
+        version: faker.system.semver(),
+      }
+      mockHttpClient.postFormData.mockResolvedValue({
+        data: { success: true, data: createdRelease },
+        status: 201,
+      })
+
+      const formData = new FormData()
+      formData.append(RELEASE_UPLOAD_FIELD_NAME, new Blob([faker.lorem.word()]), faker.system.fileName())
+
+      await client.createRelease(faker.string.uuid(), formData)
+
+      expect(mockHttpClient.postFormData).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.any(FormData),
+        expect.objectContaining({ timeout: RELEASE_UPLOAD_REQUEST_TIMEOUT_MS })
+      )
     })
   })
 
