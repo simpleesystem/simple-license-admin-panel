@@ -62,6 +62,8 @@ type HttpClientOptions = {
   onRefreshToken?: () => Promise<string | null>
 }
 
+type RetriableUnauthorizedRequest = AxiosRequestConfigWithMeta & { _retry?: boolean }
+
 export class AxiosHttpClient implements HttpClientInterface {
   private readonly axiosInstance: AxiosInstance
   private authToken: string | null = null
@@ -134,10 +136,10 @@ export class AxiosHttpClient implements HttpClientInterface {
         return response
       },
       (error: AxiosError) => {
-        const originalRequest = error.config as AxiosRequestConfigWithMeta & { _retry?: boolean }
+        const originalRequest = error.config as RetriableUnauthorizedRequest
 
         // Handle 401 Unauthorized with Refresh Token logic
-        if (error.response?.status === 401 && !originalRequest._retry && this.onRefreshToken) {
+        if (this.shouldHandleUnauthorizedWithRefresh(error, originalRequest)) {
           if (this.isRefreshing) {
             return new Promise((resolve, reject) => {
               this.failedQueue.push({ resolve, reject })
@@ -183,6 +185,27 @@ export class AxiosHttpClient implements HttpClientInterface {
         return Promise.reject(this.transformError(error))
       }
     )
+  }
+
+  private shouldHandleUnauthorizedWithRefresh(
+    error: AxiosError,
+    originalRequest: RetriableUnauthorizedRequest
+  ): boolean {
+    if (error.response?.status !== 401) {
+      return false
+    }
+    if (originalRequest._retry) {
+      return false
+    }
+    if (!this.onRefreshToken) {
+      return false
+    }
+    // Never auto-replay FormData payloads from the interceptor; body streams can be consumed on first attempt.
+    return !this.isFormDataPayload(originalRequest.data)
+  }
+
+  private isFormDataPayload(payload: unknown): boolean {
+    return typeof FormData !== 'undefined' && payload instanceof FormData
   }
 
   private transformError(error: AxiosError): ApiException {

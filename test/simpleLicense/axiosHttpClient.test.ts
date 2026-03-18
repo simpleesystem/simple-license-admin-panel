@@ -6,6 +6,10 @@ import { AxiosHttpClient } from '../../src/simpleLicense/http/AxiosHttpClient'
 
 type RetryProbe = {
   shouldRetry: (error: unknown, isIdempotent: boolean, attempt: number) => boolean
+  shouldHandleUnauthorizedWithRefresh: (
+    error: { response?: { status?: number } },
+    request: { _retry?: boolean; data?: unknown }
+  ) => boolean
 }
 
 describe('AxiosHttpClient retry behavior', () => {
@@ -31,5 +35,35 @@ describe('AxiosHttpClient retry behavior', () => {
     const shouldRetry = probe.shouldRetry(unavailableError, true, 0)
 
     expect(shouldRetry).toBe(true)
+  })
+
+  it('does not auto-refresh/retry unauthorized FormData uploads', () => {
+    const client = new AxiosHttpClient('https://license-admin-data.simpleaisystem.com', undefined, {
+      onRefreshToken: async () => null,
+    })
+    const probe = client as unknown as RetryProbe
+    const formData = new FormData()
+    formData.append('file', new Blob(['test']), 'test.zip')
+
+    const shouldHandle = probe.shouldHandleUnauthorizedWithRefresh(
+      { response: { status: 401 } },
+      { _retry: false, data: formData }
+    )
+
+    expect(shouldHandle).toBe(false)
+  })
+
+  it('still auto-refreshes unauthorized JSON requests', () => {
+    const client = new AxiosHttpClient('https://license-admin-data.simpleaisystem.com', undefined, {
+      onRefreshToken: async () => null,
+    })
+    const probe = client as unknown as RetryProbe
+
+    const shouldHandle = probe.shouldHandleUnauthorizedWithRefresh(
+      { response: { status: 401 } },
+      { _retry: false, data: { sample: true } }
+    )
+
+    expect(shouldHandle).toBe(true)
   })
 })
