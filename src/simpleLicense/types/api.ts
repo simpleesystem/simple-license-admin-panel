@@ -697,6 +697,15 @@ export interface AlertThresholdsResponse {
   }
 }
 
+export interface DashboardSnapshotResponse {
+  stats: SystemStatsResponse
+  usage: UsageSummaryResponse
+  trends: UsageTrendsResponse
+  distribution: ActivationDistributionResponse
+  topLicenses: TopLicensesResponse
+  thresholds: AlertThresholdsResponse
+}
+
 // Tenant Backup response
 export interface CreateTenantBackupResponse {
   backup: {

@@ -68,6 +68,7 @@ export const QUERY_KEYS = {
 
   // Admin API - Analytics
   adminAnalytics: {
+    dashboardSnapshot: () => ['admin', 'analytics', 'dashboard-snapshot'] as const,
     stats: () => ['admin', 'analytics', 'stats'] as const,
     usage: () => ['admin', 'analytics', 'usage'] as const,
     trends: () => ['admin', 'analytics', 'trends'] as const,

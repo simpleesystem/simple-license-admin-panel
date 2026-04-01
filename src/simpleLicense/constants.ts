@@ -109,6 +109,7 @@ export const API_ENDPOINT_ADMIN_HEALTH = '/api/v1/admin/health'
 export const API_ENDPOINT_ADMIN_METRICS = '/api/v1/admin/metrics'
 export const API_ENDPOINT_ADMIN_AUDIT_LOGS = '/api/v1/admin/audit/logs'
 export const API_ENDPOINT_ADMIN_AUDIT_VERIFY = '/api/v1/admin/audit/verify'
+export const API_ENDPOINT_ADMIN_DASHBOARD_SNAPSHOT = '/api/v1/admin/dashboard-snapshot'
 
 // License Status Values
 export const LICENSE_STATUS_ACTIVE = 'ACTIVE'

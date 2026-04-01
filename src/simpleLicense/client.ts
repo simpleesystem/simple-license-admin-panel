@@ -12,6 +12,7 @@ import {
   API_ENDPOINT_ADMIN_ANALYTICS_USAGE,
   API_ENDPOINT_ADMIN_AUDIT_LOGS,
   API_ENDPOINT_ADMIN_AUDIT_VERIFY,
+  API_ENDPOINT_ADMIN_DASHBOARD_SNAPSHOT,
   API_ENDPOINT_ADMIN_ENTITLEMENTS_DELETE,
   API_ENDPOINT_ADMIN_ENTITLEMENTS_GET,
   API_ENDPOINT_ADMIN_ENTITLEMENTS_UPDATE,
@@ -109,6 +110,7 @@ import type {
   CreateTenantResponse,
   CreateUserRequest,
   CreateUserResponse,
+  DashboardSnapshotResponse,
   DeactivateLicenseRequest,
   DeactivateLicenseResponse,
   ErrorDetails,
@@ -920,6 +922,13 @@ export class Client {
   }
 
   // Admin API - Analytics
+  async getDashboardSnapshot(): Promise<DashboardSnapshotResponse> {
+    const response = await this.httpClient.get<ApiResponse<DashboardSnapshotResponse>>(
+      API_ENDPOINT_ADMIN_DASHBOARD_SNAPSHOT
+    )
+    return this.handleApiResponse(response.data, {} as DashboardSnapshotResponse)
+  }
+
   async getSystemStats(): Promise<SystemStatsResponse> {
     const response = await this.httpClient.get<ApiResponse<SystemStatsResponse>>(API_ENDPOINT_ADMIN_STATS)
 

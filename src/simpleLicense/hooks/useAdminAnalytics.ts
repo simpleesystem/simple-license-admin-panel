@@ -12,6 +12,7 @@ import type { Client } from '../client'
 import type {
   ActivationDistributionResponse,
   AlertThresholdsResponse,
+  DashboardSnapshotResponse,
   LicenseUsageDetailsResponse,
   SystemStatsResponse,
   TopLicensesResponse,
@@ -29,6 +30,19 @@ export function useSystemStats(
     queryKey: QUERY_KEYS.adminAnalytics.stats(),
     queryFn: async () => {
       return await client.getSystemStats()
+    },
+    ...options,
+  })
+}
+
+export function useDashboardSnapshot(
+  client: Client,
+  options?: Omit<UseQueryOptions<DashboardSnapshotResponse, Error>, 'queryKey' | 'queryFn'>
+) {
+  return useQuery<DashboardSnapshotResponse, Error>({
+    queryKey: QUERY_KEYS.adminAnalytics.dashboardSnapshot(),
+    queryFn: async () => {
+      return await client.getDashboardSnapshot()
     },
     ...options,
   })

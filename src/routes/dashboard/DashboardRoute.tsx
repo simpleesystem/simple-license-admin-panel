@@ -1,8 +1,10 @@
-import { type JSX, useMemo } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { type JSX, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useApiClient } from '../../api/apiContext'
 import { I18N_KEY_DASHBOARD_HEADING, I18N_KEY_DASHBOARD_SUBTITLE } from '../../app/constants'
 import { AdminSystemLiveFeedProvider } from '../../app/live/AdminSystemLiveFeedContext'
+import { QUERY_KEYS, useDashboardSnapshot } from '../../simpleLicense'
 import {
   ActivationDistributionPanel,
   AlertThresholdsPanel,
@@ -43,6 +45,29 @@ const DASHBOARD_COLUMN_CLASS_MAP: Record<DashboardColumnSpan, string> = {
 export function DashboardRouteComponent() {
   const { t } = useTranslation()
   const client = useApiClient()
+  const queryClient = useQueryClient()
+  const [isSnapshotHydrated, setIsSnapshotHydrated] = useState(false)
+  const dashboardSnapshotQuery = useDashboardSnapshot(client, { retry: false })
+
+  useEffect(() => {
+    if (!dashboardSnapshotQuery.data) {
+      return
+    }
+
+    queryClient.setQueryData(QUERY_KEYS.adminAnalytics.stats(), dashboardSnapshotQuery.data.stats)
+    queryClient.setQueryData(QUERY_KEYS.adminAnalytics.usage(), dashboardSnapshotQuery.data.usage)
+    queryClient.setQueryData(QUERY_KEYS.adminAnalytics.trends(), dashboardSnapshotQuery.data.trends)
+    queryClient.setQueryData(QUERY_KEYS.adminAnalytics.distribution(), dashboardSnapshotQuery.data.distribution)
+    queryClient.setQueryData(QUERY_KEYS.adminAnalytics.topLicenses(), dashboardSnapshotQuery.data.topLicenses)
+    queryClient.setQueryData(QUERY_KEYS.adminAnalytics.thresholds(), dashboardSnapshotQuery.data.thresholds)
+    setIsSnapshotHydrated(true)
+  }, [dashboardSnapshotQuery.data, queryClient])
+
+  useEffect(() => {
+    if (dashboardSnapshotQuery.isError) {
+      setIsSnapshotHydrated(true)
+    }
+  }, [dashboardSnapshotQuery.isError])
 
   const sections = useMemo<DashboardSection[]>(
     () => [
@@ -105,15 +130,19 @@ export function DashboardRouteComponent() {
       <Page variant={UI_PAGE_VARIANT_FULL_WIDTH}>
         <Stack direction="column" gap={UI_STACK_GAP_LARGE}>
           <PageHeader title={t(I18N_KEY_DASHBOARD_HEADING)} subtitle={t(I18N_KEY_DASHBOARD_SUBTITLE)} />
-          {sections.map((section) => (
-            <div key={section.id} className={UI_CLASS_SECTION_GRID}>
-              {section.columns.map((column) => (
-                <div key={column.id} className={DASHBOARD_COLUMN_CLASS_MAP[column.span]}>
-                  {column.render()}
-                </div>
-              ))}
-            </div>
-          ))}
+          {isSnapshotHydrated ? (
+            sections.map((section) => (
+              <div key={section.id} className={UI_CLASS_SECTION_GRID}>
+                {section.columns.map((column) => (
+                  <div key={column.id} className={DASHBOARD_COLUMN_CLASS_MAP[column.span]}>
+                    {column.render()}
+                  </div>
+                ))}
+              </div>
+            ))
+          ) : (
+            <div className="text-muted">Loading dashboard data...</div>
+          )}
         </Stack>
       </Page>
     </AdminSystemLiveFeedProvider>
