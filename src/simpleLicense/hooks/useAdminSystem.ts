@@ -1,7 +1,7 @@
 import { type UseQueryOptions, useQuery } from '@tanstack/react-query'
 
 import type { Client } from '../client'
-import type { HealthMetricsResponse, MetricsResponse, ServerStatusResponse } from '../types/api'
+import type { HealthMetricsResponse, HealthSnapshotResponse, MetricsResponse, ServerStatusResponse } from '../types/api'
 import { QUERY_KEYS } from './queryKeys'
 
 export function useServerStatus(
@@ -38,6 +38,19 @@ export function useSystemMetrics(
     queryKey: QUERY_KEYS.adminSystem.metrics(),
     queryFn: async () => {
       return await client.getSystemMetrics()
+    },
+    ...options,
+  })
+}
+
+export function useHealthSnapshot(
+  client: Client,
+  options?: Omit<UseQueryOptions<HealthSnapshotResponse, Error>, 'queryKey' | 'queryFn'>
+) {
+  return useQuery<HealthSnapshotResponse, Error>({
+    queryKey: QUERY_KEYS.adminSystem.healthSnapshot(),
+    queryFn: async () => {
+      return await client.getHealthSnapshot()
     },
     ...options,
   })

@@ -1,8 +1,10 @@
-import { type JSX, useMemo } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { type JSX, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useApiClient } from '../../api/apiContext'
 import { I18N_KEY_HEALTH_HEADING, I18N_KEY_HEALTH_SUBTITLE } from '../../app/constants'
 import { AdminSystemLiveFeedProvider } from '../../app/live/AdminSystemLiveFeedContext'
+import { QUERY_KEYS, useHealthSnapshot } from '../../simpleLicense'
 import {
   HealthMetricsPanel,
   Page,
@@ -38,6 +40,26 @@ const HEALTH_COLUMN_CLASS_MAP: Record<HealthColumnSpan, string> = {
 export function HealthRouteComponent() {
   const { t } = useTranslation()
   const client = useApiClient()
+  const queryClient = useQueryClient()
+  const [isSnapshotHydrated, setIsSnapshotHydrated] = useState(false)
+  const healthSnapshotQuery = useHealthSnapshot(client, { retry: false })
+
+  useEffect(() => {
+    if (!healthSnapshotQuery.data) {
+      return
+    }
+
+    queryClient.setQueryData(QUERY_KEYS.adminSystem.status(), healthSnapshotQuery.data.status)
+    queryClient.setQueryData(QUERY_KEYS.adminSystem.health(), healthSnapshotQuery.data.health)
+    queryClient.setQueryData(QUERY_KEYS.adminSystem.metrics(), healthSnapshotQuery.data.metrics)
+    setIsSnapshotHydrated(true)
+  }, [healthSnapshotQuery.data, queryClient])
+
+  useEffect(() => {
+    if (healthSnapshotQuery.isError) {
+      setIsSnapshotHydrated(true)
+    }
+  }, [healthSnapshotQuery.isError])
 
   const sections = useMemo<HealthSection[]>(
     () => [
@@ -75,15 +97,19 @@ export function HealthRouteComponent() {
       <Page variant={UI_PAGE_VARIANT_FULL_WIDTH}>
         <Stack direction="column" gap={UI_STACK_GAP_LARGE}>
           <PageHeader title={t(I18N_KEY_HEALTH_HEADING)} subtitle={t(I18N_KEY_HEALTH_SUBTITLE)} />
-          {sections.map((section) => (
-            <div key={section.id} className={UI_CLASS_SECTION_GRID}>
-              {section.columns.map((column) => (
-                <div key={column.id} className={HEALTH_COLUMN_CLASS_MAP[column.span]}>
-                  {column.render()}
-                </div>
-              ))}
-            </div>
-          ))}
+          {isSnapshotHydrated ? (
+            sections.map((section) => (
+              <div key={section.id} className={UI_CLASS_SECTION_GRID}>
+                {section.columns.map((column) => (
+                  <div key={column.id} className={HEALTH_COLUMN_CLASS_MAP[column.span]}>
+                    {column.render()}
+                  </div>
+                ))}
+              </div>
+            ))
+          ) : (
+            <div className="text-muted">Loading health data...</div>
+          )}
         </Stack>
       </Page>
     </AdminSystemLiveFeedProvider>

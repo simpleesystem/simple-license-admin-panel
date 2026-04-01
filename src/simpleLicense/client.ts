@@ -17,6 +17,7 @@ import {
   API_ENDPOINT_ADMIN_ENTITLEMENTS_GET,
   API_ENDPOINT_ADMIN_ENTITLEMENTS_UPDATE,
   API_ENDPOINT_ADMIN_HEALTH,
+  API_ENDPOINT_ADMIN_HEALTH_SNAPSHOT,
   API_ENDPOINT_ADMIN_LICENSES_ACTIVATIONS,
   API_ENDPOINT_ADMIN_LICENSES_CREATE,
   API_ENDPOINT_ADMIN_LICENSES_FREEZE,
@@ -127,6 +128,7 @@ import type {
   GetQuotaUsageResponse,
   GetUserResponse,
   HealthMetricsResponse,
+  HealthSnapshotResponse,
   IssueProtectionBuildTokenRequest,
   IssueProtectionBuildTokenResponse,
   LicenseDataResponse,
@@ -913,6 +915,12 @@ export class Client {
     const response = await this.httpClient.get<ApiResponse<HealthMetricsResponse>>(API_ENDPOINT_ADMIN_HEALTH)
 
     return this.handleApiResponse(response.data, {} as HealthMetricsResponse)
+  }
+
+  async getHealthSnapshot(): Promise<HealthSnapshotResponse> {
+    const response = await this.httpClient.get<ApiResponse<HealthSnapshotResponse>>(API_ENDPOINT_ADMIN_HEALTH_SNAPSHOT)
+
+    return this.handleApiResponse(response.data, {} as HealthSnapshotResponse)
   }
 
   async getSystemMetrics(): Promise<MetricsResponse> {

@@ -85,6 +85,7 @@ export const QUERY_KEYS = {
   },
   // Admin API - System Monitoring
   adminSystem: {
+    healthSnapshot: () => ['admin', 'system', 'health-snapshot'] as const,
     status: () => ['admin', 'system', 'status'] as const,
     health: () => ['admin', 'system', 'health'] as const,
     metrics: () => ['admin', 'system', 'metrics'] as const,

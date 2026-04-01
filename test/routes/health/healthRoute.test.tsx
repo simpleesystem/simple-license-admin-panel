@@ -25,8 +25,28 @@ vi.mock('@/ui/workflows/SystemMetricsPanel', () => ({
 }))
 
 describe('HealthRouteComponent', () => {
-  it('renders health header and all monitoring panels', () => {
-    const client = {} as Client
+  it('renders health header and all monitoring panels', async () => {
+    const client = {
+      getHealthSnapshot: async () => ({
+        status: { status: 'healthy', timestamp: new Date().toISOString(), checks: { database: 'ok' } },
+        health: {
+          metrics: {
+            uptime: 1,
+            memory: { rss: 1, heapTotal: 1, heapUsed: 1, external: 1 },
+            cpu: { user: 1, system: 1 },
+          },
+        },
+        metrics: {
+          timestamp: new Date().toISOString(),
+          application: { version: 'test', environment: 'test' },
+          system: {
+            uptime: 1,
+            memory: { rss: 1, heapTotal: 1, heapUsed: 1, external: 1 },
+            cpu: { user: 1, system: 1 },
+          },
+        },
+      }),
+    } as unknown as Client
     const queryClient = new QueryClient({
       defaultOptions: {
         queries: {
@@ -48,8 +68,8 @@ describe('HealthRouteComponent', () => {
     )
 
     expect(screen.getByRole('heading', { name: HEALTH_HEADING })).toBeInTheDocument()
-    expect(screen.getByTestId('system-status-panel')).toBeInTheDocument()
-    expect(screen.getByTestId('health-metrics-panel')).toBeInTheDocument()
-    expect(screen.getByTestId('system-metrics-panel')).toBeInTheDocument()
+    expect(await screen.findByTestId('system-status-panel')).toBeInTheDocument()
+    expect(await screen.findByTestId('health-metrics-panel')).toBeInTheDocument()
+    expect(await screen.findByTestId('system-metrics-panel')).toBeInTheDocument()
   })
 })

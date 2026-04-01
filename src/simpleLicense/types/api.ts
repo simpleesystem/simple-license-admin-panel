@@ -706,6 +706,12 @@ export interface DashboardSnapshotResponse {
   thresholds: AlertThresholdsResponse
 }
 
+export interface HealthSnapshotResponse {
+  status: ServerStatusResponse
+  health: HealthMetricsResponse
+  metrics: MetricsResponse
+}
+
 // Tenant Backup response
 export interface CreateTenantBackupResponse {
   backup: {
