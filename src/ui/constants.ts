@@ -834,6 +834,10 @@ export const UI_PRODUCT_BUILD_TOKENS_CLOSE = 'Close' as const
 export const UI_PRODUCT_BUILD_TOKENS_ISSUE = 'Issue Build Token' as const
 export const UI_PRODUCT_BUILD_TOKENS_ISSUING = 'Issuing token…' as const
 export const UI_PRODUCT_BUILD_TOKENS_TOKEN_ONCE = 'Copy this token now. It is shown only once.' as const
+export const UI_PRODUCT_BUILD_TOKENS_USAGE_NOTE =
+  'Use this token in GitHub Actions for both protection build registration and release upload.' as const
+export const UI_PRODUCT_BUILD_TOKENS_RELEASE_ENDPOINT =
+  'Release upload endpoint: POST /api/v1/releases/register' as const
 export const UI_PRODUCT_BUILD_TOKENS_CURRENT = 'Current tokens' as const
 export const UI_PRODUCT_BUILD_TOKENS_EMPTY = 'No build tokens issued yet.' as const
 export const UI_PRODUCT_BUILD_TOKENS_REVOKE = 'Revoke' as const

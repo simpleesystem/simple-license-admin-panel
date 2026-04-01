@@ -27,12 +27,14 @@ import {
   UI_PRODUCT_BUILD_TOKENS_LABEL_STATUS,
   UI_PRODUCT_BUILD_TOKENS_LOADING,
   UI_PRODUCT_BUILD_TOKENS_MODAL_TITLE,
+  UI_PRODUCT_BUILD_TOKENS_RELEASE_ENDPOINT,
   UI_PRODUCT_BUILD_TOKENS_REVOKE,
   UI_PRODUCT_BUILD_TOKENS_REVOKING,
   UI_PRODUCT_BUILD_TOKENS_STATUS_ACTIVE,
   UI_PRODUCT_BUILD_TOKENS_STATUS_EXPIRED,
   UI_PRODUCT_BUILD_TOKENS_STATUS_REVOKED,
   UI_PRODUCT_BUILD_TOKENS_TOKEN_ONCE,
+  UI_PRODUCT_BUILD_TOKENS_USAGE_NOTE,
   UI_PRODUCT_BUTTON_BUILD_TOKENS,
   UI_PRODUCT_BUTTON_DELETE,
   UI_PRODUCT_BUTTON_PROTECTION_KEY,
@@ -385,6 +387,10 @@ export function ProductRowActions({
                     <code>{issuedBuildToken}</code>
                   </div>
                 ) : null}
+                <div className="d-flex flex-column gap-1">
+                  <div>{UI_PRODUCT_BUILD_TOKENS_USAGE_NOTE}</div>
+                  <code>{UI_PRODUCT_BUILD_TOKENS_RELEASE_ENDPOINT}</code>
+                </div>
                 <div>{UI_PRODUCT_BUILD_TOKENS_CURRENT}</div>
                 {buildTokens.length === 0 ? (
                   <div>{UI_PRODUCT_BUILD_TOKENS_EMPTY}</div>
