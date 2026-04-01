@@ -12,6 +12,17 @@ import type { Client } from '@/simpleLicense'
 
 const DASHBOARD_HEADING = i18nResources.common[I18N_KEY_DASHBOARD_HEADING]
 
+vi.mock('@/simpleLicense', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/simpleLicense')>()
+  return {
+    ...actual,
+    useDashboardSnapshot: vi.fn(() => ({
+      data: undefined,
+      isError: true,
+    })),
+  }
+})
+
 vi.mock('@/ui/workflows/AnalyticsStatsPanel', () => ({
   AnalyticsStatsPanel: () => <div data-testid="analytics-stats-panel" />,
 }))
@@ -37,7 +48,7 @@ vi.mock('@/ui/workflows/AlertThresholdsPanel', () => ({
 }))
 
 describe('DashboardRouteComponent', () => {
-  it('renders dashboard header and all analytics panels', () => {
+  it('renders dashboard header and all analytics panels', async () => {
     const client = {} as Client
     const queryClient = new QueryClient({
       defaultOptions: {
@@ -60,11 +71,11 @@ describe('DashboardRouteComponent', () => {
     )
 
     expect(screen.getByRole('heading', { name: DASHBOARD_HEADING })).toBeInTheDocument()
-    expect(screen.getByTestId('analytics-stats-panel')).toBeInTheDocument()
-    expect(screen.getByTestId('usage-summary-panel')).toBeInTheDocument()
-    expect(screen.getByTestId('usage-trends-panel')).toBeInTheDocument()
-    expect(screen.getByTestId('top-licenses-panel')).toBeInTheDocument()
-    expect(screen.getByTestId('activation-distribution-panel')).toBeInTheDocument()
-    expect(screen.getByTestId('alert-thresholds-panel')).toBeInTheDocument()
+    expect(await screen.findByTestId('analytics-stats-panel')).toBeInTheDocument()
+    expect(await screen.findByTestId('usage-summary-panel')).toBeInTheDocument()
+    expect(await screen.findByTestId('usage-trends-panel')).toBeInTheDocument()
+    expect(await screen.findByTestId('top-licenses-panel')).toBeInTheDocument()
+    expect(await screen.findByTestId('activation-distribution-panel')).toBeInTheDocument()
+    expect(await screen.findByTestId('alert-thresholds-panel')).toBeInTheDocument()
   })
 })
