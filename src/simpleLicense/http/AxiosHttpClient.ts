@@ -13,6 +13,9 @@ import {
   DEFAULT_RETRY_ATTEMPTS,
   DEFAULT_RETRY_DELAY_MS,
   DEFAULT_TIMEOUT_SECONDS,
+  ERROR_CODE_AUTHENTICATION_ERROR,
+  ERROR_CODE_INVALID_TOKEN,
+  ERROR_CODE_UNAUTHORIZED,
   ERROR_MESSAGE_CLIENT_CONFIGURATION,
   ERROR_MESSAGE_NETWORK_NO_RESPONSE,
   ERROR_MESSAGE_NO_RESPONSE,
@@ -23,7 +26,9 @@ import {
   HEADER_CONTENT_TYPE,
   HEADER_CORRELATION_ID,
   HEADER_REQUEST_ID,
+  HTTP_FORBIDDEN,
   HTTP_SERVICE_UNAVAILABLE,
+  HTTP_UNAUTHORIZED,
 } from '../constants'
 import { ApiException, ClientConfigurationException, NetworkException } from '../exceptions/ApiException'
 import type { ErrorDetails } from '../types/api'
@@ -191,7 +196,7 @@ export class AxiosHttpClient implements HttpClientInterface {
     error: AxiosError,
     originalRequest: RetriableUnauthorizedRequest
   ): boolean {
-    if (error.response?.status !== 401) {
+    if (!this.isRefreshableAuthFailure(error)) {
       return false
     }
     if (originalRequest._retry) {
@@ -202,6 +207,35 @@ export class AxiosHttpClient implements HttpClientInterface {
     }
     // Never auto-replay FormData payloads from the interceptor; body streams can be consumed on first attempt.
     return !this.isFormDataPayload(originalRequest.data)
+  }
+
+  private isRefreshableAuthFailure(error: AxiosError): boolean {
+    const status = error.response?.status
+    if (status === HTTP_UNAUTHORIZED) {
+      return true
+    }
+    if (status !== HTTP_FORBIDDEN) {
+      return false
+    }
+
+    // Some deployments return 403 for expired/invalid access tokens.
+    // Allow one refresh attempt when the error code indicates auth failure.
+    const data = error.response?.data
+    if (typeof data !== 'object' || data === null) {
+      return false
+    }
+    const responseError = (data as { error?: unknown }).error
+    if (typeof responseError !== 'object' || responseError === null) {
+      return false
+    }
+    const code = (responseError as { code?: unknown }).code
+    if (typeof code !== 'string') {
+      return false
+    }
+
+    return (
+      code === ERROR_CODE_INVALID_TOKEN || code === ERROR_CODE_UNAUTHORIZED || code === ERROR_CODE_AUTHENTICATION_ERROR
+    )
   }
 
   private isFormDataPayload(payload: unknown): boolean {
