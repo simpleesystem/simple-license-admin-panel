@@ -7,6 +7,7 @@ import { useAuth } from '../../app/auth/useAuth'
 import {
   UI_PAGE_SUBTITLE_TENANTS,
   UI_PAGE_TITLE_TENANTS,
+  UI_PAGE_VARIANT_FULL_WIDTH,
   UI_SECTION_STATUS_ERROR,
   UI_SECTION_STATUS_LOADING,
   UI_SORT_ASC,
@@ -113,7 +114,7 @@ export function TenantsRouteComponent() {
   }
 
   return (
-    <Page>
+    <Page variant={UI_PAGE_VARIANT_FULL_WIDTH}>
       <PageHeader title={UI_PAGE_TITLE_TENANTS} subtitle={UI_PAGE_SUBTITLE_TENANTS} />
 
       {isLoading ? (

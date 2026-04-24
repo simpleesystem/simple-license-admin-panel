@@ -1,6 +1,5 @@
 import type { User } from '@/simpleLicense'
 import {
-  UI_NAV_ID_ANALYTICS,
   UI_NAV_ID_AUDIT,
   UI_NAV_ID_DASHBOARD,
   UI_NAV_ID_HEALTH,
@@ -9,7 +8,6 @@ import {
   UI_NAV_ID_RELEASES,
   UI_NAV_ID_TENANTS,
   UI_NAV_ID_USERS,
-  UI_NAV_LABEL_ANALYTICS,
   UI_NAV_LABEL_AUDIT,
   UI_NAV_LABEL_DASHBOARD,
   UI_NAV_LABEL_HEALTH,
@@ -22,7 +20,6 @@ import {
 import type { PermissionKey, Permissions } from '../auth/permissions'
 import { isSystemAdminUser, isVendorScopedUser } from '../auth/userUtils'
 import {
-  ROUTE_PATH_ANALYTICS,
   ROUTE_PATH_AUDIT,
   ROUTE_PATH_DASHBOARD,
   ROUTE_PATH_HEALTH,
@@ -85,13 +82,6 @@ const NAV_DEFINITIONS: readonly NavDefinition[] = [
     label: UI_NAV_LABEL_USERS,
     href: ROUTE_PATH_USERS,
     permission: 'manageUsers',
-    matchStrategy: 'startsWith',
-  },
-  {
-    id: UI_NAV_ID_ANALYTICS,
-    label: UI_NAV_LABEL_ANALYTICS,
-    href: ROUTE_PATH_ANALYTICS,
-    permission: 'viewAnalytics',
     matchStrategy: 'startsWith',
   },
   {

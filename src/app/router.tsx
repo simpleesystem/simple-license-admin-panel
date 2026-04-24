@@ -130,6 +130,7 @@ const analyticsRoute = createRoute({
   path: ROUTE_PATH_ANALYTICS,
   beforeLoad: ({ context, location }) => {
     assertPermission(context, location, 'viewAnalytics')
+    throw redirect({ to: ROUTE_PATH_DASHBOARD })
   },
   component: AnalyticsRouteComponent,
 })

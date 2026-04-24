@@ -7,6 +7,7 @@ import { useAuth } from '../../app/auth/useAuth'
 import {
   UI_PAGE_SUBTITLE_USERS,
   UI_PAGE_TITLE_USERS,
+  UI_PAGE_VARIANT_FULL_WIDTH,
   UI_SECTION_STATUS_ERROR,
   UI_SECTION_STATUS_LOADING,
   UI_TABLE_PAGE_SIZE_DEFAULT,
@@ -82,7 +83,7 @@ export function UsersRouteComponent() {
   }
 
   return (
-    <Page>
+    <Page variant={UI_PAGE_VARIANT_FULL_WIDTH}>
       <PageHeader title={UI_PAGE_TITLE_USERS} subtitle={UI_PAGE_SUBTITLE_USERS} />
 
       {isLoading ? (

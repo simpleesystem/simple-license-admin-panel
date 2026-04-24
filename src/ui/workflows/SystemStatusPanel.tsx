@@ -1,7 +1,7 @@
 /* c8 ignore file */
 /* istanbul ignore file */
 
-import { useMemo } from 'react'
+import { type ReactNode, useMemo } from 'react'
 import Button from 'react-bootstrap/Button'
 import type { Client } from '@/simpleLicense'
 import { useServerStatus } from '@/simpleLicense'
@@ -84,6 +84,31 @@ const formatDatabaseState = (activeConnections: number | string | null | undefin
 
 const defaultNumberFormatter = new Intl.NumberFormat()
 
+const toDisplayCase = (value: string): string => {
+  const normalized = value.replace(/[_-]+/g, ' ').trim()
+  if (normalized.length === 0) {
+    return UI_VALUE_PLACEHOLDER
+  }
+
+  return normalized
+    .split(/\s+/)
+    .map((segment) => {
+      if (segment.length === 0) {
+        return segment
+      }
+      const lower = segment.toLowerCase()
+      return lower.charAt(0).toUpperCase() + lower.slice(1)
+    })
+    .join(' ')
+}
+
+const splitPipeSegments = (value: string): string[] => {
+  return value
+    .split(/\s*\|\s*/)
+    .map((segment) => segment.trim())
+    .filter((segment) => segment.length > 0)
+}
+
 const normalizeHealthSummary = (value: unknown): string | undefined => {
   if (!value) {
     return undefined
@@ -104,7 +129,7 @@ const normalizeHealthSummary = (value: unknown): string | undefined => {
   }
 
   const resolveComposite = (status?: string, message?: string) => {
-    const parts = [status, message].filter(Boolean)
+    const parts = [status, message].filter(Boolean).map((segment) => toDisplayCase(segment as string))
     return parts.length > 0 ? parts.join(' - ') : undefined
   }
 
@@ -113,7 +138,7 @@ const normalizeHealthSummary = (value: unknown): string | undefined => {
     if (normalized) {
       return formatHealthState(normalized)
     }
-    return value
+    return toDisplayCase(value)
   }
 
   if (typeof value === 'object') {
@@ -198,7 +223,22 @@ const formatConnectionPool = (candidate: unknown): string | undefined => {
   return `${UI_SYSTEM_STATUS_VALUE_DATABASE_POOL_PREFIX}: ${segments.join(UI_VALUE_SEPARATOR)}`
 }
 
-const normalizeDatabaseSummary = (value: unknown): string | undefined => {
+const renderPipeSeparatedValue = (value: string): ReactNode => {
+  const segments = splitPipeSegments(value)
+  if (segments.length <= 1) {
+    return toDisplayCase(value)
+  }
+
+  return (
+    <span className="d-inline-flex flex-column gap-1">
+      {segments.map((segment, index) => (
+        <span key={`${index}-${segment}`}>{toDisplayCase(segment)}</span>
+      ))}
+    </span>
+  )
+}
+
+const normalizeDatabaseSummary = (value: unknown): ReactNode | undefined => {
   if (value === null || value === undefined) {
     return undefined
   }
@@ -208,7 +248,12 @@ const normalizeDatabaseSummary = (value: unknown): string | undefined => {
   }
 
   if (typeof value === 'string') {
-    return formatDatabaseState(value) ?? normalizeHealthSummary(value) ?? value
+    const state = formatDatabaseState(value)
+    if (state) {
+      return renderPipeSeparatedValue(state)
+    }
+    const normalized = normalizeHealthSummary(value)
+    return normalized ? renderPipeSeparatedValue(normalized) : UI_VALUE_PLACEHOLDER
   }
 
   if (typeof value === 'object') {
@@ -219,15 +264,26 @@ const normalizeDatabaseSummary = (value: unknown): string | undefined => {
     const normalizedStatus = normalizeHealthSummary(status)
     const poolSummary = formatConnectionPool(value)
     if (poolSummary && normalizedStatus) {
-      return `${normalizedStatus}${UI_VALUE_SEPARATOR}${poolSummary}`
+      return (
+        <span className="d-inline-flex flex-column gap-1">
+          <span>{toDisplayCase(normalizedStatus)}</span>
+          {renderPipeSeparatedValue(poolSummary)}
+        </span>
+      )
     }
     if (poolSummary) {
-      return poolSummary
+      return renderPipeSeparatedValue(poolSummary)
     }
     if (normalizedStatus) {
-      return message ? `${normalizedStatus} (${message})` : normalizedStatus
+      const formattedMessage = message ? toDisplayCase(message) : undefined
+      return formattedMessage
+        ? `${toDisplayCase(normalizedStatus)} (${formattedMessage})`
+        : toDisplayCase(normalizedStatus)
     }
-    const composite = [status, message].filter(Boolean).join(' - ')
+    const composite = [status, message]
+      .filter(Boolean)
+      .map((segment) => toDisplayCase(segment as string))
+      .join(' - ')
     if (composite) {
       return composite
     }

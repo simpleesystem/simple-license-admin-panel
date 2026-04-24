@@ -17,6 +17,7 @@ import {
   UI_BUTTON_VARIANT_SECONDARY,
   UI_PAGE_SUBTITLE_RELEASES,
   UI_PAGE_TITLE_RELEASES,
+  UI_PAGE_VARIANT_FULL_WIDTH,
   UI_RELEASE_ACTION_DELETE,
   UI_RELEASE_ACTION_DELETING,
   UI_RELEASE_ACTION_PROMOTE,
@@ -232,7 +233,7 @@ export function ReleasesRouteComponent() {
   }
 
   return (
-    <Page>
+    <Page variant={UI_PAGE_VARIANT_FULL_WIDTH}>
       <Stack direction="column" gap="medium">
         <PageHeader title={UI_PAGE_TITLE_RELEASES} subtitle={UI_PAGE_SUBTITLE_RELEASES} />
         <Form.Group className="mb-3">

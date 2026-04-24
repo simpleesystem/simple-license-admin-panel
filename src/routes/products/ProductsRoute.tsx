@@ -7,6 +7,7 @@ import { useAuth } from '../../app/auth/useAuth'
 import {
   UI_PAGE_SUBTITLE_PRODUCTS,
   UI_PAGE_TITLE_PRODUCTS,
+  UI_PAGE_VARIANT_FULL_WIDTH,
   UI_PRODUCT_STATUS_ACTION_RETRY,
   UI_PRODUCT_STATUS_ERROR_BODY,
   UI_PRODUCT_STATUS_ERROR_TITLE,
@@ -128,7 +129,7 @@ export function ProductsRouteComponent() {
   }
 
   return (
-    <Page>
+    <Page variant={UI_PAGE_VARIANT_FULL_WIDTH}>
       <PageHeader title={UI_PAGE_TITLE_PRODUCTS} subtitle={UI_PAGE_SUBTITLE_PRODUCTS} />
 
       {isLoading ? (
