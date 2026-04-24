@@ -624,8 +624,8 @@ export class Client {
     }
     const url = searchParams.toString() ? `${baseUrl}?${searchParams.toString()}` : baseUrl
     const response = await this.httpClient.get<ApiResponse<ListReleasesResponse>>(url)
-
-    return this.handleApiResponse(response.data, [])
+    const rawData = this.handleApiResponse<unknown>(response.data, [])
+    return this.normalizeListReleasesResponse(rawData)
   }
 
   async promoteRelease(productId: string, releaseId: string): Promise<CreateReleaseResponse> {
@@ -939,8 +939,8 @@ export class Client {
 
   async getSystemStats(): Promise<SystemStatsResponse> {
     const response = await this.httpClient.get<ApiResponse<SystemStatsResponse>>(API_ENDPOINT_ADMIN_STATS)
-
-    return this.handleApiResponse(response.data, {} as SystemStatsResponse)
+    const rawData = this.handleApiResponse<Record<string, unknown>>(response.data, {})
+    return this.normalizeSystemStatsResponse(rawData)
   }
 
   async getLicenseUsageDetails(
@@ -965,8 +965,8 @@ export class Client {
 
   async getUsageSummaries(): Promise<UsageSummaryResponse> {
     const response = await this.httpClient.get<ApiResponse<UsageSummaryResponse>>(API_ENDPOINT_ADMIN_ANALYTICS_USAGE)
-
-    return this.handleApiResponse(response.data, {} as UsageSummaryResponse)
+    const rawData = this.handleApiResponse<unknown>(response.data, {})
+    return this.normalizeUsageSummariesResponse(rawData)
   }
 
   async getUsageTrends(): Promise<UsageTrendsResponse> {
@@ -1059,6 +1059,117 @@ export class Client {
   }
 
   // Helper methods - type guards for response parsing
+  private normalizeSystemStatsResponse(source: Record<string, unknown>): SystemStatsResponse {
+    const nestedStatsCandidate = this.getRecordProperty(source, 'stats', 'stats')
+    const statsSource = nestedStatsCandidate ?? source
+
+    const activeLicenses = this.toSafeNumber(statsSource.active_licenses ?? statsSource.activeLicenses)
+    const expiredLicenses = this.toSafeNumber(statsSource.expired_licenses ?? statsSource.expiredLicenses)
+    const totalCustomers = this.toSafeNumber(
+      statsSource.total_customers ??
+        statsSource.totalCustomers ??
+        statsSource.unique_customers ??
+        statsSource.uniqueCustomers
+    )
+    const totalActivations = this.toSafeNumber(statsSource.total_activations ?? statsSource.totalActivations)
+
+    return {
+      stats: {
+        active_licenses: activeLicenses,
+        expired_licenses: expiredLicenses,
+        total_customers: totalCustomers,
+        total_activations: totalActivations,
+      },
+    }
+  }
+
+  private normalizeUsageSummariesResponse(source: unknown): UsageSummaryResponse {
+    if (Array.isArray(source)) {
+      return { summaries: source as UsageSummaryResponse['summaries'] }
+    }
+
+    if (typeof source !== 'object' || source === null) {
+      return { summaries: [] }
+    }
+
+    const sourceRecord = source as Record<string, unknown>
+    const summaries = sourceRecord.summaries
+    if (Array.isArray(summaries)) {
+      return { summaries: summaries as UsageSummaryResponse['summaries'] }
+    }
+
+    return { summaries: [] }
+  }
+
+  private normalizeListReleasesResponse(source: unknown): ListReleasesResponse {
+    if (!Array.isArray(source)) {
+      return []
+    }
+
+    return source
+      .filter((release): release is Record<string, unknown> => typeof release === 'object' && release !== null)
+      .map((release) => this.normalizePluginRelease(release))
+  }
+
+  private normalizePluginRelease(source: Record<string, unknown>): ListReleasesResponse[number] {
+    return {
+      id: this.getStringProperty(source, 'id', 'id'),
+      slug: this.getStringProperty(source, 'slug', 'slug'),
+      version: this.getStringProperty(source, 'version', 'version'),
+      fileName: this.getStringProperty(source, 'file_name', 'fileName'),
+      sizeBytes: this.toSafeNumber(source.size_bytes ?? source.sizeBytes),
+      changelogMd: this.getNullableStringProperty(source, 'changelog_md', 'changelogMd'),
+      requiredTier: this.getNullableStringProperty(source, 'required_tier', 'requiredTier'),
+      minWpVersion: this.getNullableStringProperty(source, 'min_wp_version', 'minWpVersion'),
+      testedWpVersion: this.getNullableStringProperty(source, 'tested_wp_version', 'testedWpVersion'),
+      isPrerelease: this.toSafeBoolean(source.is_prerelease ?? source.isPrerelease),
+      isPromoted: this.toSafeBoolean(source.is_promoted ?? source.isPromoted),
+      filePresent:
+        source.file_present === undefined && source.filePresent === undefined
+          ? undefined
+          : this.toSafeBoolean(source.file_present ?? source.filePresent),
+      createdAt: this.getStringProperty(source, 'created_at', 'createdAt'),
+      updatedAt: this.getStringProperty(source, 'updated_at', 'updatedAt'),
+    }
+  }
+
+  private toSafeNumber(value: unknown): number {
+    if (typeof value === 'number' && !Number.isNaN(value)) {
+      return value
+    }
+
+    if (typeof value === 'string') {
+      const parsed = Number(value)
+      if (!Number.isNaN(parsed)) {
+        return parsed
+      }
+    }
+
+    return 0
+  }
+
+  private toSafeBoolean(value: unknown): boolean {
+    if (typeof value === 'boolean') {
+      return value
+    }
+
+    if (typeof value === 'string') {
+      const lowered = value.toLowerCase()
+      if (lowered === 'true') {
+        return true
+      }
+      if (lowered === 'false') {
+        return false
+      }
+    }
+
+    if (typeof value === 'number') {
+      return value > 0
+    }
+
+    return false
+  }
+
   private getRecordProperty(
     source: Record<string, unknown>,
     snakeCaseKey: string,

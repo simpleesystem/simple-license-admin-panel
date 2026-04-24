@@ -221,7 +221,7 @@ export function ReleasesRouteComponent() {
   }
 
   const formatReleaseDateSafe = (value: string | Date | number | null | undefined): string => {
-    if (value == null) {
+    if (value == null || (typeof value === 'string' && value.trim().length === 0)) {
       return '—'
     }
     try {

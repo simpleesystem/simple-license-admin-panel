@@ -10,7 +10,7 @@ import { ApiProvider } from '../api/ApiProvider'
 import { AppErrorBoundary } from '../errors/AppErrorBoundary'
 import { NotificationBusProvider } from '../notifications/bus'
 import { DEFAULT_NOTIFICATION_EVENT } from '../notifications/constants'
-import { ToastProvider } from '../notifications/ToastProvider'
+import { NotificationBannerProvider } from '../notifications/ToastProvider'
 import { useNotificationBus } from '../notifications/useNotificationBus'
 import { AbilityProvider } from './abilities/AbilityProvider'
 import { createTrackingClient } from './analytics/tracking'
@@ -71,7 +71,7 @@ function AppProvidersInner({ children, queryClient: externalQueryClient, apiClie
                   <AbilityProvider>
                     <NotificationBusProvider>
                       <QueryErrorNotifierBridge />
-                      <ToastProvider />
+                      <NotificationBannerProvider />
                       <RouterContextBridge queryClient={queryClient}>
                         <SurfaceRenderer />
                         <AppErrorBoundary>{children ?? <RouterProvider router={router} />}</AppErrorBoundary>

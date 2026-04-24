@@ -279,7 +279,7 @@ export const UI_ARIA_LABEL_TABLE_TOOLBAR = 'Table controls'
 
 export const UI_CLASS_TABLE_TOOLBAR = 'd-flex flex-wrap justify-content-between align-items-center gap-3 mb-3'
 
-export const UI_CLASS_SUMMARY_LIST = 'row row-cols-1 row-cols-md-2 g-3'
+export const UI_CLASS_SUMMARY_LIST = 'row row-cols-1 row-cols-md-2 g-3 list-unstyled mb-0'
 export const UI_CLASS_SUMMARY_CARD = 'p-3 border rounded bg-body'
 export const UI_CLASS_SUMMARY_VALUE = 'h4 mb-0'
 export const UI_ARIA_LABEL_SUMMARY_LIST = 'Summary cards'

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Toast, ToastContainer } from 'react-bootstrap'
+import Alert from 'react-bootstrap/Alert'
 import { useTranslation } from 'react-i18next'
 
 import {
@@ -19,10 +19,9 @@ import { useNotificationBus } from './useNotificationBus'
 
 type ToastItem = ToastNotificationPayload & {
   key: string
-  visible: boolean
 }
 
-const getVariantStyle = (variant?: NotificationVariant) => {
+const getVariantStyle = (variant?: NotificationVariant): 'success' | 'danger' | 'warning' | 'info' => {
   switch (variant) {
     case NOTIFICATION_VARIANT_SUCCESS:
       return 'success'
@@ -31,20 +30,7 @@ const getVariantStyle = (variant?: NotificationVariant) => {
     case NOTIFICATION_VARIANT_WARNING:
       return 'warning'
     default:
-      return 'light'
-  }
-}
-
-const getVariantHeaderClass = (variant?: NotificationVariant) => {
-  switch (variant) {
-    case NOTIFICATION_VARIANT_SUCCESS:
-      return 'text-success'
-    case NOTIFICATION_VARIANT_ERROR:
-      return 'text-danger'
-    case NOTIFICATION_VARIANT_WARNING:
-      return 'text-warning'
-    default:
-      return ''
+      return 'info'
   }
 }
 
@@ -59,7 +45,7 @@ const formatToastContent = (value: unknown, fallback?: () => string): string => 
   return ''
 }
 
-export function ToastProvider() {
+export function NotificationBannerProvider() {
   const bus = useNotificationBus()
   const { t } = useTranslation()
   const [toasts, setToasts] = useState<ToastItem[]>([])
@@ -79,8 +65,12 @@ export function ToastProvider() {
         }
 
         // Add new toast
-        return [...prev, { ...payload, key, visible: true }]
+        return [...prev, { ...payload, key }]
       })
+
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((item) => item.key !== key))
+      }, DEFAULT_NOTIFICATION_DURATION)
     }
 
     bus.on(NOTIFICATION_EVENT_TOAST, handler)
@@ -94,57 +84,41 @@ export function ToastProvider() {
     setToasts((prev) => prev.filter((item) => item.key !== key))
   }, [])
 
-  // Map position constant to Bootstrap ToastContainer position
-  // 'bottom-right' -> 'bottom-end'
-  // 'top-right' -> 'top-end', etc.
-  // Assuming DEFAULT_NOTIFICATION_POSITION is 'bottom-right' or similar
-  const positionMap: Record<
-    string,
-    | 'top-start'
-    | 'top-center'
-    | 'top-end'
-    | 'middle-start'
-    | 'middle-center'
-    | 'middle-end'
-    | 'bottom-start'
-    | 'bottom-center'
-    | 'bottom-end'
-  > = {
-    'top-left': 'top-start',
-    'top-center': 'top-center',
-    'top-right': 'top-end',
-    'bottom-left': 'bottom-start',
-    'bottom-center': 'bottom-center',
-    'bottom-right': 'bottom-end',
+  const alignmentByPosition: Record<string, string> = {
+    'top-left': 'justify-content-start',
+    'bottom-left': 'justify-content-start',
+    'top-center': 'justify-content-center',
+    'bottom-center': 'justify-content-center',
+    'top-right': 'justify-content-end',
+    'bottom-right': 'justify-content-end',
+  }
+  const bannerAlignmentClass = alignmentByPosition[String(DEFAULT_NOTIFICATION_POSITION)] ?? 'justify-content-end'
+
+  if (toasts.length === 0) {
+    return null
   }
 
-  const bsPosition = positionMap[DEFAULT_NOTIFICATION_POSITION] || 'bottom-end'
-
   return (
-    <div data-testid={TEST_ID_NOTIFICATION_PORTAL} aria-live="polite" aria-atomic="true" className="position-relative">
-      <ToastContainer className="p-3" position={bsPosition} style={{ zIndex: 1090, position: 'fixed' }}>
-        {toasts.map((toast) => (
-          <Toast
-            key={toast.key}
-            onClose={() => removeToast(toast.key)}
-            show={toast.visible}
-            delay={DEFAULT_NOTIFICATION_DURATION}
-            autohide={true}
-            bg={getVariantStyle(toast.variant) === 'light' ? 'light' : undefined}
-          >
-            <Toast.Header>
-              <strong className={`me-auto ${getVariantHeaderClass(toast.variant)}`}>
-                {formatToastContent(toast.message, () => t(toast.titleKey))}
-              </strong>
-            </Toast.Header>
-            {toast.descriptionKey ? (
-              <Toast.Body className={getVariantStyle(toast.variant) !== 'light' ? 'text-white' : ''}>
-                {formatToastContent(t(toast.descriptionKey))}
-              </Toast.Body>
-            ) : null}
-          </Toast>
-        ))}
-      </ToastContainer>
+    <div data-testid={TEST_ID_NOTIFICATION_PORTAL} aria-live="polite" aria-atomic="true" className="px-3 pt-3">
+      <div className={`d-flex flex-column gap-2 ${bannerAlignmentClass}`}>
+        {toasts.map((toast) => {
+          const title = formatToastContent(toast.message, () => t(toast.titleKey))
+          const description = toast.descriptionKey ? formatToastContent(t(toast.descriptionKey)) : ''
+          return (
+            <Alert
+              key={toast.key}
+              variant={getVariantStyle(toast.variant)}
+              dismissible={true}
+              onClose={() => removeToast(toast.key)}
+              className="mb-0"
+              style={{ maxWidth: '56rem', width: '100%' }}
+            >
+              <div className="fw-semibold">{title}</div>
+              {description ? <div className="small mt-1">{description}</div> : null}
+            </Alert>
+          )
+        })}
+      </div>
     </div>
   )
 }
