@@ -5,6 +5,7 @@ import { useLicenseActivations } from '@/simpleLicense'
 import { canViewActivations, isActivationOwnedByUser, isVendorScopedUser } from '../../app/auth/permissions'
 import { isSystemAdminUser } from '../../app/auth/userUtils'
 import {
+  UI_CLASS_PANEL_ACTION_BUTTON,
   UI_COLUMN_ID_LICENSE_ACTIVATION_ACTIVATED_AT,
   UI_COLUMN_ID_LICENSE_ACTIVATION_CLIENT_VERSION,
   UI_COLUMN_ID_LICENSE_ACTIVATION_DOMAIN,
@@ -39,6 +40,7 @@ import {
 } from '../constants'
 import { DataTable } from '../data/DataTable'
 import { InlineAlert } from '../feedback/InlineAlert'
+import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn } from '../types'
 
@@ -181,14 +183,13 @@ export function LicenseActivationsPanel({
 
   return (
     <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
-        <div className="d-flex flex-column gap-1">
-          <h2 className="h5 mb-0">{title}</h2>
-          <p className="text-muted mb-0">{UI_LICENSE_ACTIVATIONS_DESCRIPTION}</p>
-        </div>
-        <div className="d-flex flex-wrap align-items-center gap-2">
+      <PanelHeader
+        title={title}
+        description={UI_LICENSE_ACTIVATIONS_DESCRIPTION}
+        actions={
           <Button
             variant="outline-secondary"
+            className={UI_CLASS_PANEL_ACTION_BUTTON}
             onClick={() => activationsQuery.refetch()}
             disabled={activationsQuery.isFetching}
             aria-busy={activationsQuery.isFetching}
@@ -197,8 +198,8 @@ export function LicenseActivationsPanel({
               ? UI_LICENSE_ACTIVATIONS_REFRESH_PENDING
               : UI_LICENSE_ACTIVATIONS_REFRESH_LABEL}
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       <DataTable
         data={rows}

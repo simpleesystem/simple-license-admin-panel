@@ -21,6 +21,7 @@ import {
   UI_ANALYTICS_SUMMARY_REFRESH_LABEL,
   UI_ANALYTICS_SUMMARY_REFRESH_PENDING,
   UI_ANALYTICS_SUMMARY_TITLE,
+  UI_CLASS_PANEL_ACTION_BUTTON,
   UI_COLUMN_ID_ANALYTICS_ACTIVATIONS,
   UI_COLUMN_ID_ANALYTICS_LICENSE,
   UI_COLUMN_ID_ANALYTICS_PEAK_CONCURRENCY,
@@ -35,6 +36,7 @@ import {
 } from '../constants'
 import { DataTable } from '../data/DataTable'
 import { InlineAlert } from '../feedback/InlineAlert'
+import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn } from '../types'
 
@@ -122,22 +124,21 @@ export function UsageSummaryPanel({ client, title = UI_ANALYTICS_SUMMARY_TITLE, 
 
   return (
     <Stack direction="column" gap="small">
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
-        <div className="d-flex flex-column gap-1">
-          <h2 className="h5 mb-0">{title}</h2>
-          <p className="text-muted mb-0">{UI_ANALYTICS_SUMMARY_DESCRIPTION}</p>
-        </div>
-        <div className="d-flex flex-wrap align-items-center gap-2">
+      <PanelHeader
+        title={title}
+        description={UI_ANALYTICS_SUMMARY_DESCRIPTION}
+        actions={
           <Button
             variant="outline-secondary"
+            className={UI_CLASS_PANEL_ACTION_BUTTON}
             onClick={() => void refetch()}
             disabled={isFetching}
             aria-busy={isFetching}
           >
             {isFetching || isQueryLoading ? UI_ANALYTICS_SUMMARY_REFRESH_PENDING : UI_ANALYTICS_SUMMARY_REFRESH_LABEL}
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {isLoading ? (
         <InlineAlert variant="info" title={UI_ANALYTICS_SUMMARY_LOADING_TITLE}>

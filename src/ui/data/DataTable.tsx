@@ -12,10 +12,12 @@ import {
   UI_CLASS_TABLE_DENSITY_MAP,
   UI_CLASS_TABLE_EMPTY_STATE,
   UI_CLASS_TABLE_HEADER_CELL,
+  UI_CLASS_TABLE_HEADER_CONTENT,
   UI_CLASS_TABLE_SELECTION_CELL,
   UI_CLASS_TABLE_SORT_BUTTON,
   UI_CLASS_TABLE_SPINNER,
   UI_CLASS_TABLE_WRAPPER,
+  UI_CLASS_TEXT_ALIGN_MAP,
   UI_ICON_SORT_ASCENDING,
   UI_ICON_SORT_DEFAULT,
   UI_ICON_SORT_DESCENDING,
@@ -112,6 +114,7 @@ export function DataTable<TData>({
 
   const allSelected = showSelection && data.length > 0 && data.every((row) => isRowSelected(row))
   const showEmptyState = !isLoading && data.length === 0
+  const cellSpan = columns.length + (showSelection ? 1 : 0)
 
   return (
     <VisibilityGate ability={ability} permissionKey={permissionKey} permissionFallback={permissionFallback}>
@@ -138,11 +141,15 @@ export function DataTable<TData>({
                 return (
                   <th
                     key={column.id}
-                    className={UI_CLASS_TABLE_HEADER_CELL}
+                    className={composeClassNames(
+                      UI_CLASS_TABLE_HEADER_CELL,
+                      column.textAlign ? UI_CLASS_TEXT_ALIGN_MAP[column.textAlign] : undefined,
+                      column.widthClass
+                    )}
                     scope="col"
                     aria-sort={column.sortable ? resolveAriaSort(column.id) : undefined}
                   >
-                    <div className="d-flex align-items-center gap-2">
+                    <div className={UI_CLASS_TABLE_HEADER_CONTENT}>
                       <span>{column.header}</span>
                       {column.sortable && onSort ? (
                         <button
@@ -163,34 +170,52 @@ export function DataTable<TData>({
             </tr>
           </thead>
           <tbody>
-            {data.map((row) => {
-              const key = rowKey(row)
-              return (
-                <tr key={key}>
-                  {showSelection ? (
-                    <td className={UI_CLASS_TABLE_SELECTION_CELL}>
-                      <Form.Check
-                        type="checkbox"
-                        aria-label={`Select row ${key}`}
-                        checked={isRowSelected(row)}
-                        onChange={() => handleToggleRow(row)}
-                      />
-                    </td>
-                  ) : null}
-                  {columns.map((column) => (
-                    <td key={column.id}>{column.cell(row)}</td>
-                  ))}
-                </tr>
-              )
-            })}
+            {showEmptyState ? (
+              <tr>
+                <td colSpan={cellSpan} className={UI_CLASS_TABLE_EMPTY_STATE}>
+                  {emptyState}
+                </td>
+              </tr>
+            ) : null}
+            {isLoading ? (
+              <tr>
+                <td colSpan={cellSpan} className={UI_CLASS_TABLE_SPINNER}>
+                  <Spinner animation="border" />
+                </td>
+              </tr>
+            ) : null}
+            {!showEmptyState && !isLoading
+              ? data.map((row) => {
+                  const key = rowKey(row)
+                  return (
+                    <tr key={key}>
+                      {showSelection ? (
+                        <td className={UI_CLASS_TABLE_SELECTION_CELL}>
+                          <Form.Check
+                            type="checkbox"
+                            aria-label={`Select row ${key}`}
+                            checked={isRowSelected(row)}
+                            onChange={() => handleToggleRow(row)}
+                          />
+                        </td>
+                      ) : null}
+                      {columns.map((column) => (
+                        <td
+                          key={column.id}
+                          className={composeClassNames(
+                            column.textAlign ? UI_CLASS_TEXT_ALIGN_MAP[column.textAlign] : undefined,
+                            column.widthClass
+                          )}
+                        >
+                          {column.cell(row)}
+                        </td>
+                      ))}
+                    </tr>
+                  )
+                })
+              : null}
           </tbody>
         </table>
-        {showEmptyState ? <div className={UI_CLASS_TABLE_EMPTY_STATE}>{emptyState}</div> : null}
-        {isLoading ? (
-          <div className={UI_CLASS_TABLE_SPINNER}>
-            <Spinner animation="border" />
-          </div>
-        ) : null}
       </div>
       {footer ? <div className="mt-3">{footer}</div> : null}
     </VisibilityGate>

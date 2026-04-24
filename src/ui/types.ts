@@ -298,6 +298,12 @@ export type PageHeaderProps = UiCommonProps & {
   breadcrumbs?: ReactNode
 }
 
+export type PanelHeaderProps = UiCommonProps & {
+  title: ReactNode
+  description?: ReactNode
+  actions?: ReactNode
+}
+
 export type StackProps = PropsWithChildren<
   UiCommonProps & {
     gap?: UiStackGap

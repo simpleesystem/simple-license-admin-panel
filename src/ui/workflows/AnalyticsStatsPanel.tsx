@@ -19,6 +19,7 @@ import {
   UI_ANALYTICS_STATS_REFRESH_LABEL,
   UI_ANALYTICS_STATS_REFRESH_PENDING,
   UI_ANALYTICS_STATS_TITLE,
+  UI_CLASS_PANEL_ACTION_BUTTON,
   UI_STACK_GAP_SMALL,
   UI_SUMMARY_ID_ANALYTICS_STATS_ACTIVATIONS,
   UI_SUMMARY_ID_ANALYTICS_STATS_ACTIVE,
@@ -28,6 +29,7 @@ import {
 } from '../constants'
 import { SummaryList } from '../data/SummaryList'
 import { InlineAlert } from '../feedback/InlineAlert'
+import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiSummaryCardItem } from '../types'
 import { BadgeText } from '../typography/BadgeText'
@@ -118,23 +120,24 @@ export function AnalyticsStatsPanel({ client, title = UI_ANALYTICS_STATS_TITLE }
 
   return (
     <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
-        <div className="d-flex flex-column gap-1">
-          <h2 className="h5 mb-0">{title}</h2>
-          <p className="text-muted mb-0">{UI_ANALYTICS_STATS_DESCRIPTION}</p>
-        </div>
-        <div className="d-flex flex-wrap align-items-center gap-2">
-          <BadgeText text={liveStatusBadge.text} variant={liveStatusBadge.variant} />
-          <Button
-            variant="outline-secondary"
-            onClick={refresh}
-            disabled={isFetching || isLoading}
-            aria-busy={isFetching || isLoading}
-          >
-            {isFetching || isLoading ? UI_ANALYTICS_STATS_REFRESH_PENDING : UI_ANALYTICS_STATS_REFRESH_LABEL}
-          </Button>
-        </div>
-      </div>
+      <PanelHeader
+        title={title}
+        description={UI_ANALYTICS_STATS_DESCRIPTION}
+        actions={
+          <>
+            <BadgeText text={liveStatusBadge.text} variant={liveStatusBadge.variant} />
+            <Button
+              variant="outline-secondary"
+              className={UI_CLASS_PANEL_ACTION_BUTTON}
+              onClick={refresh}
+              disabled={isFetching || isLoading}
+              aria-busy={isFetching || isLoading}
+            >
+              {isFetching || isLoading ? UI_ANALYTICS_STATS_REFRESH_PENDING : UI_ANALYTICS_STATS_REFRESH_LABEL}
+            </Button>
+          </>
+        }
+      />
 
       {renderContent()}
     </Stack>

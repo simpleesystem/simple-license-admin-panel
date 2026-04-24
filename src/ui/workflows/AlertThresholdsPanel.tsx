@@ -25,10 +25,12 @@ import {
   UI_ANALYTICS_ALERT_THRESHOLDS_LOADING_TITLE,
   UI_ANALYTICS_ALERT_THRESHOLDS_TITLE,
   UI_BUTTON_LABEL_EDIT_ALERT_THRESHOLDS,
+  UI_CLASS_PANEL_ACTION_BUTTON,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { SummaryList } from '../data/SummaryList'
 import { InlineAlert } from '../feedback/InlineAlert'
+import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiSummaryCardItem } from '../types'
 import { AlertThresholdsFormFlow } from './AlertThresholdsFormFlow'
@@ -105,15 +107,15 @@ export function AlertThresholdsPanel({
 
   return (
     <Stack direction="column" gap="small">
-      <div className="d-flex justify-content-between align-items-center">
-        <div>
-          <h2 className="h5 mb-1">{title}</h2>
-          <p className="text-muted mb-0">{UI_ANALYTICS_ALERT_THRESHOLDS_DESCRIPTION}</p>
-        </div>
-        <Button variant="outline-primary" onClick={() => setShowModal(true)}>
-          {UI_BUTTON_LABEL_EDIT_ALERT_THRESHOLDS}
-        </Button>
-      </div>
+      <PanelHeader
+        title={title}
+        description={UI_ANALYTICS_ALERT_THRESHOLDS_DESCRIPTION}
+        actions={
+          <Button variant="outline-primary" className={UI_CLASS_PANEL_ACTION_BUTTON} onClick={() => setShowModal(true)}>
+            {UI_BUTTON_LABEL_EDIT_ALERT_THRESHOLDS}
+          </Button>
+        }
+      />
 
       {isLoading ? (
         <InlineAlert variant="info" title={UI_ANALYTICS_ALERT_THRESHOLDS_LOADING_TITLE}>

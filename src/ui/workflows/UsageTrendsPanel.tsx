@@ -7,6 +7,7 @@ import {
   UI_ANALYTICS_COLUMN_PERIOD,
   UI_ANALYTICS_COLUMN_USAGE_REPORTS,
   UI_ANALYTICS_COLUMN_VALIDATIONS,
+  UI_CLASS_PANEL_ACTION_BUTTON,
   UI_COLUMN_ID_ANALYTICS_ACTIVATIONS,
   UI_COLUMN_ID_ANALYTICS_PERIOD,
   UI_COLUMN_ID_ANALYTICS_USAGE_REPORTS,
@@ -24,6 +25,7 @@ import {
 } from '../constants'
 import { DataTable } from '../data/DataTable'
 import { InlineAlert } from '../feedback/InlineAlert'
+import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn } from '../types'
 
@@ -86,24 +88,21 @@ export function UsageTrendsPanel({ client, title = UI_USAGE_TRENDS_TITLE }: Usag
 
   return (
     <Stack direction="column" gap="small">
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
-        <div className="d-flex flex-column gap-1">
-          <h2 className="h5 mb-0">{title}</h2>
-          <span className="text-muted small">
-            {trendsQuery.data ? `${trendsQuery.data.periodStart} → ${trendsQuery.data.periodEnd}` : null}
-          </span>
-        </div>
-        <div className="d-flex flex-wrap align-items-center gap-2">
+      <PanelHeader
+        title={title}
+        description={trendsQuery.data ? `${trendsQuery.data.periodStart} → ${trendsQuery.data.periodEnd}` : null}
+        actions={
           <Button
             variant="outline-secondary"
+            className={UI_CLASS_PANEL_ACTION_BUTTON}
             onClick={() => void refetch()}
             disabled={isFetching}
             aria-busy={isFetching}
           >
             {isFetching || isLoading ? UI_USAGE_TRENDS_REFRESH_PENDING : UI_USAGE_TRENDS_REFRESH_LABEL}
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {trendsQuery.isLoading ? (
         <InlineAlert variant="info" title={UI_USAGE_TRENDS_LOADING_TITLE}>
