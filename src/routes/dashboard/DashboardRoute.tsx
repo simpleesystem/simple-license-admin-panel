@@ -69,19 +69,33 @@ export function DashboardRouteComponent() {
     }
   }, [dashboardSnapshotQuery.isError])
 
+  // Layout note: every panel below either renders a wide multi-column table
+  // (Top Licenses: 6 cols; Activation Distribution: 3 cols + numbers; Usage
+  // Summaries: 6 cols; AnalyticsStats: a 2x2 KPI grid that itself wants
+  // breathing room) or a stat-card grid that needs full width on common
+  // viewports to render without overflow. Half-width side-by-side caused
+  // header truncation ("Refresh top licenses" wrapping under the heading,
+  // "PEAK CONCUR..." cut off, "USAGE REPO..." cut off). Stack each panel
+  // full-width and let DataTable handle its own horizontal scroll if a row
+  // ever exceeds the viewport.
   const sections = useMemo<DashboardSection[]>(
     () => [
       {
-        id: 'dashboard-overview',
+        id: 'dashboard-analytics-stats',
         columns: [
           {
-            id: 'dashboard-analytics-stats',
-            span: 'half',
+            id: 'dashboard-analytics-stats-panel',
+            span: 'full',
             render: () => <AnalyticsStatsPanel client={client} />,
           },
+        ],
+      },
+      {
+        id: 'dashboard-usage-summary',
+        columns: [
           {
-            id: 'dashboard-usage-summary',
-            span: 'half',
+            id: 'dashboard-usage-summary-panel',
+            span: 'full',
             render: () => <UsageSummaryPanel client={client} />,
           },
         ],
@@ -101,12 +115,17 @@ export function DashboardRouteComponent() {
         columns: [
           {
             id: 'dashboard-top-licenses-panel',
-            span: 'half',
+            span: 'full',
             render: () => <TopLicensesPanel client={client} />,
           },
+        ],
+      },
+      {
+        id: 'dashboard-activation-distribution',
+        columns: [
           {
-            id: 'dashboard-activation-distribution',
-            span: 'half',
+            id: 'dashboard-activation-distribution-panel',
+            span: 'full',
             render: () => <ActivationDistributionPanel client={client} />,
           },
         ],

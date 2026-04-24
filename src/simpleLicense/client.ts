@@ -934,7 +934,45 @@ export class Client {
     const response = await this.httpClient.get<ApiResponse<DashboardSnapshotResponse>>(
       API_ENDPOINT_ADMIN_DASHBOARD_SNAPSHOT
     )
-    return this.handleApiResponse(response.data, {} as DashboardSnapshotResponse)
+    const raw = this.handleApiResponse<Record<string, unknown>>(response.data, {})
+    return this.normalizeDashboardSnapshotResponse(raw)
+  }
+
+  /**
+   * Normalize each embedded slice of the dashboard snapshot through the same
+   * normalizer the corresponding individual getter uses.
+   *
+   * Why this matters: `DashboardRoute` pre-hydrates each per-panel React Query
+   * cache (`adminAnalytics.stats()`, `adminAnalytics.usage()`, etc.) with the
+   * matching slice from this snapshot so panels render instantly without each
+   * one issuing a separate request. If we hydrate with un-normalized server
+   * shapes (snake_case vs camelCase vs un-wrapped) the consuming panels read
+   * `undefined` and fall back to their empty-state UI. The first Refresh click
+   * then fires `getSystemStats()` / `getUsageSummaries()` directly, those DO
+   * normalize, and the panel suddenly populates — which is the exact
+   * "doesn't populate until I hit refresh" symptom users see.
+   *
+   * Slices without a dedicated normalizer (distribution, topLicenses,
+   * thresholds) are passed through; their type definitions already match the
+   * server's canonical shape today. If that ever drifts, add a normalizer
+   * here rather than fixing it in two places.
+   */
+  private normalizeDashboardSnapshotResponse(source: Record<string, unknown>): DashboardSnapshotResponse {
+    const statsSlice = (source.stats ?? {}) as Record<string, unknown>
+    const usageSlice = source.usage
+    const trendsSlice = source.trends
+    const distributionSlice = source.distribution as ActivationDistributionResponse | undefined
+    const topLicensesSlice = source.topLicenses as TopLicensesResponse | undefined
+    const thresholdsSlice = source.thresholds as AlertThresholdsResponse | undefined
+
+    return {
+      stats: this.normalizeSystemStatsResponse(statsSlice),
+      usage: this.normalizeUsageSummariesResponse(usageSlice),
+      trends: this.normalizeUsageTrendsResponse(trendsSlice),
+      distribution: distributionSlice ?? ({} as ActivationDistributionResponse),
+      topLicenses: topLicensesSlice ?? ({} as TopLicensesResponse),
+      thresholds: thresholdsSlice ?? ({} as AlertThresholdsResponse),
+    }
   }
 
   async getSystemStats(): Promise<SystemStatsResponse> {
@@ -971,8 +1009,9 @@ export class Client {
 
   async getUsageTrends(): Promise<UsageTrendsResponse> {
     const response = await this.httpClient.get<ApiResponse<UsageTrendsResponse>>(API_ENDPOINT_ADMIN_ANALYTICS_TRENDS)
+    const rawData = this.handleApiResponse<unknown>(response.data, {})
 
-    return this.handleApiResponse(response.data, {} as UsageTrendsResponse)
+    return this.normalizeUsageTrendsResponse(rawData)
   }
 
   async getActivationDistribution(): Promise<ActivationDistributionResponse> {
@@ -1099,6 +1138,50 @@ export class Client {
     }
 
     return { summaries: [] }
+  }
+
+  private normalizeUsageTrendsResponse(source: unknown): UsageTrendsResponse {
+    if (Array.isArray(source)) {
+      return {
+        periodStart: '',
+        periodEnd: '',
+        groupBy: 'day',
+        trends: this.normalizeUsageTrendRows(source),
+      }
+    }
+
+    if (typeof source !== 'object' || source === null) {
+      return {
+        periodStart: '',
+        periodEnd: '',
+        groupBy: 'day',
+        trends: [],
+      }
+    }
+
+    const sourceRecord = source as Record<string, unknown>
+    const trends = this.normalizeUsageTrendRows(Array.isArray(sourceRecord.trends) ? sourceRecord.trends : [])
+
+    return {
+      periodStart: this.getStringProperty(sourceRecord, 'period_start', 'periodStart'),
+      periodEnd: this.getStringProperty(sourceRecord, 'period_end', 'periodEnd'),
+      groupBy: this.getStringProperty(sourceRecord, 'group_by', 'groupBy') || 'day',
+      trends,
+    }
+  }
+
+  private normalizeUsageTrendRows(source: unknown[]): UsageTrendsResponse['trends'] {
+    return source
+      .filter((trend): trend is Record<string, unknown> => typeof trend === 'object' && trend !== null)
+      .map((trend) => ({
+        period: this.getStringProperty(trend, 'period', 'period'),
+        totalActivations: this.toSafeNumber(trend.total_activations ?? trend.totalActivations),
+        totalValidations: this.toSafeNumber(trend.total_validations ?? trend.totalValidations),
+        totalUsageReports: this.toSafeNumber(trend.total_usage_reports ?? trend.totalUsageReports),
+        uniqueDomains: this.toSafeNumber(trend.unique_domains ?? trend.uniqueDomains),
+        uniqueIPs: this.toSafeNumber(trend.unique_ips ?? trend.uniqueIPs),
+        peakConcurrency: this.toSafeNumber(trend.peak_concurrency ?? trend.peakConcurrency),
+      }))
   }
 
   private normalizeListReleasesResponse(source: unknown): ListReleasesResponse {

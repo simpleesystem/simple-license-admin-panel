@@ -12,6 +12,8 @@ import {
   UI_COLUMN_ID_ANALYTICS_PERIOD,
   UI_COLUMN_ID_ANALYTICS_USAGE_REPORTS,
   UI_COLUMN_ID_ANALYTICS_VALIDATIONS,
+  UI_DATE_FORMAT_LOCALE,
+  UI_DATE_FORMAT_OPTIONS,
   UI_USAGE_TRENDS_EMPTY_BODY,
   UI_USAGE_TRENDS_EMPTY_STATE,
   UI_USAGE_TRENDS_EMPTY_TITLE,
@@ -42,9 +44,49 @@ type TrendRow = {
   totalUsageReports: number
 }
 
+const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+const MONTH_KEY_PATTERN = /^\d{4}-\d{2}$/
+
+const toDate = (value: string): Date | null => {
+  if (DATE_KEY_PATTERN.test(value)) {
+    const [year, month, day] = value.split('-').map(Number)
+    if (year && month && day) {
+      return new Date(year, month - 1, day)
+    }
+  }
+
+  if (MONTH_KEY_PATTERN.test(value)) {
+    const [year, month] = value.split('-').map(Number)
+    if (year && month) {
+      return new Date(year, month - 1, 1)
+    }
+  }
+
+  const parsed = new Date(value)
+  return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
+const formatDateValue = (value: string, formatter: Intl.DateTimeFormat) => {
+  const parsed = toDate(value)
+  return parsed ? formatter.format(parsed) : value
+}
+
+const formatDateRange = (
+  periodStart: string | undefined,
+  periodEnd: string | undefined,
+  formatter: Intl.DateTimeFormat
+) => {
+  if (!periodStart || !periodEnd) {
+    return null
+  }
+
+  return `${formatDateValue(periodStart, formatter)} - ${formatDateValue(periodEnd, formatter)}`
+}
+
 export function UsageTrendsPanel({ client, title = UI_USAGE_TRENDS_TITLE }: UsageTrendsPanelProps) {
   const trendsQuery = useUsageTrends(client, { retry: false })
   const { isFetching, isLoading, refetch } = trendsQuery
+  const dateFormatter = useMemo(() => new Intl.DateTimeFormat(UI_DATE_FORMAT_LOCALE, UI_DATE_FORMAT_OPTIONS), [])
 
   const rows = useMemo<readonly TrendRow[]>(() => {
     return (
@@ -58,12 +100,17 @@ export function UsageTrendsPanel({ client, title = UI_USAGE_TRENDS_TITLE }: Usag
     )
   }, [trendsQuery.data])
 
+  const periodDescription = useMemo(
+    () => formatDateRange(trendsQuery.data?.periodStart, trendsQuery.data?.periodEnd, dateFormatter),
+    [dateFormatter, trendsQuery.data?.periodEnd, trendsQuery.data?.periodStart]
+  )
+
   const columns = useMemo<UiDataTableColumn<TrendRow>[]>(
     () => [
       {
         id: UI_COLUMN_ID_ANALYTICS_PERIOD,
         header: UI_ANALYTICS_COLUMN_PERIOD,
-        cell: (row) => row.period,
+        cell: (row) => formatDateValue(row.period, dateFormatter),
       },
       {
         id: UI_COLUMN_ID_ANALYTICS_ACTIVATIONS,
@@ -81,7 +128,7 @@ export function UsageTrendsPanel({ client, title = UI_USAGE_TRENDS_TITLE }: Usag
         cell: (row) => row.totalUsageReports.toLocaleString(),
       },
     ],
-    []
+    [dateFormatter]
   )
 
   const isEmpty = rows.length === 0
@@ -90,7 +137,7 @@ export function UsageTrendsPanel({ client, title = UI_USAGE_TRENDS_TITLE }: Usag
     <Stack direction="column" gap="small">
       <PanelHeader
         title={title}
-        description={trendsQuery.data ? `${trendsQuery.data.periodStart} → ${trendsQuery.data.periodEnd}` : null}
+        description={periodDescription}
         actions={
           <Button
             variant="outline-secondary"

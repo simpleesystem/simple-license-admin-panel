@@ -6,6 +6,54 @@ import { ENV_VAR_API_BASE_URL } from '../src/app/constants'
 import { handlers } from './msw/handlers'
 import { server } from './msw/server'
 
+const createMemoryStorage = (): Storage => {
+  const storage = new Map<string, string>()
+
+  return {
+    get length() {
+      return storage.size
+    },
+    clear: () => {
+      storage.clear()
+    },
+    getItem: (key: string) => storage.get(key) ?? null,
+    key: (index: number) => Array.from(storage.keys())[index] ?? null,
+    removeItem: (key: string) => {
+      storage.delete(key)
+    },
+    setItem: (key: string, value: string) => {
+      storage.set(key, String(value))
+    },
+  }
+}
+
+const ensureLocalStorage = () => {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  try {
+    const storage = window.localStorage
+    if (
+      storage &&
+      typeof storage.clear === 'function' &&
+      typeof storage.getItem === 'function' &&
+      typeof storage.setItem === 'function'
+    ) {
+      return
+    }
+  } catch {
+    // Fall through to the memory-backed shim when the environment blocks storage access.
+  }
+
+  Object.defineProperty(window, 'localStorage', {
+    configurable: true,
+    value: createMemoryStorage(),
+  })
+}
+
+ensureLocalStorage()
+
 const mutableEnv = import.meta.env as Record<string, string | undefined>
 if (!mutableEnv[ENV_VAR_API_BASE_URL]) {
   mutableEnv[ENV_VAR_API_BASE_URL] = 'http://localhost:4000'

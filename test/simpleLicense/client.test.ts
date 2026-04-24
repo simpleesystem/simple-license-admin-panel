@@ -2575,6 +2575,88 @@ describe('Client', () => {
     })
   })
 
+  describe('getDashboardSnapshot', () => {
+    it('normalizes embedded stats so per-panel cache hydration works without a manual refresh', async () => {
+      // Server returns the inner stats shape un-wrapped (no { stats: ... }).
+      // The dashboard route hydrates QUERY_KEYS.adminAnalytics.stats() with this
+      // slice and AnalyticsStatsPanel reads `data.stats.active_licenses`.
+      // If we don't normalize, the panel reads `undefined` and shows empty
+      // until the user clicks Refresh -- which is the bug we're fixing.
+      const mockResponse = {
+        data: {
+          success: true,
+          data: {
+            stats: {
+              active_licenses: 7,
+              expired_licenses: 3,
+              total_customers: 5,
+              total_activations: 42,
+            },
+            usage: { summaries: [] },
+            trends: { trends: [] },
+            distribution: { distribution: [] },
+            topLicenses: { licenses: [] },
+            thresholds: {
+              high: { activations: 0, validations: 0, concurrency: 0 },
+              medium: { activations: 0, validations: 0, concurrency: 0 },
+            },
+          },
+        },
+        status: 200,
+      }
+
+      mockHttpClient.get.mockResolvedValue(mockResponse)
+
+      const result = await client.getDashboardSnapshot()
+
+      expect(result.stats).toEqual({
+        stats: {
+          active_licenses: 7,
+          expired_licenses: 3,
+          total_customers: 5,
+          total_activations: 42,
+        },
+      })
+      expect(result.usage).toEqual({ summaries: [] })
+      expect(result.trends).toBeDefined()
+      expect(result.distribution).toBeDefined()
+      expect(result.topLicenses).toBeDefined()
+      expect(result.thresholds).toBeDefined()
+    })
+
+    it('coerces camelCase server fields and tolerates a doubly-wrapped stats slice', async () => {
+      const mockResponse = {
+        data: {
+          success: true,
+          data: {
+            stats: {
+              stats: {
+                activeLicenses: 1,
+                expiredLicenses: 2,
+                totalCustomers: 3,
+                totalActivations: 4,
+              },
+            },
+            usage: [],
+          },
+        },
+        status: 200,
+      }
+
+      mockHttpClient.get.mockResolvedValue(mockResponse)
+
+      const result = await client.getDashboardSnapshot()
+
+      expect(result.stats.stats).toEqual({
+        active_licenses: 1,
+        expired_licenses: 2,
+        total_customers: 3,
+        total_activations: 4,
+      })
+      expect(result.usage).toEqual({ summaries: [] })
+    })
+  })
+
   describe('getUsageSummaries', () => {
     it('gets usage summaries successfully', async () => {
       const mockResponse = {
@@ -2614,6 +2696,52 @@ describe('Client', () => {
 
       expect(result).toBeDefined()
       expect(mockHttpClient.get).toHaveBeenCalled()
+    })
+
+    it('normalizes snake_case trend rows returned by the API', async () => {
+      const mockResponse = {
+        data: {
+          success: true,
+          data: {
+            period_start: '2026-03-25T00:00:00.000Z',
+            period_end: '2026-04-24T23:59:59.000Z',
+            group_by: 'day',
+            trends: [
+              {
+                period: '2026-04-24',
+                total_activations: '3',
+                total_validations: 7,
+                total_usage_reports: '11',
+                unique_domains: 2,
+                unique_ips: '4',
+                peak_concurrency: 5,
+              },
+            ],
+          },
+        },
+        status: 200,
+      }
+
+      mockHttpClient.get.mockResolvedValue(mockResponse)
+
+      const result = await client.getUsageTrends()
+
+      expect(result).toEqual({
+        periodStart: '2026-03-25T00:00:00.000Z',
+        periodEnd: '2026-04-24T23:59:59.000Z',
+        groupBy: 'day',
+        trends: [
+          {
+            period: '2026-04-24',
+            totalActivations: 3,
+            totalValidations: 7,
+            totalUsageReports: 11,
+            uniqueDomains: 2,
+            uniqueIPs: 4,
+            peakConcurrency: 5,
+          },
+        ],
+      })
     })
   })
 
