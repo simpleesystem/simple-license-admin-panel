@@ -90,6 +90,7 @@ import type {
   ActivationDistributionResponse,
   AlertThresholdsResponse,
   ApiResponse,
+  AuditLogEntry,
   AuditLogFilters,
   AuditVerificationParams,
   AuditVerificationResponse,
@@ -1074,8 +1075,9 @@ export class Client {
         : API_ENDPOINT_ADMIN_AUDIT_LOGS
 
     const response = await this.httpClient.get<ApiResponse<GetAuditLogsResponse>>(url)
+    const rawData = this.handleApiResponse<unknown>(response.data, {})
 
-    return this.handleApiResponse(response.data, {} as GetAuditLogsResponse)
+    return this.normalizeAuditLogsResponse(rawData)
   }
 
   async verifyAuditChain(params?: AuditVerificationParams): Promise<AuditVerificationResponse> {
@@ -1182,6 +1184,40 @@ export class Client {
         uniqueIPs: this.toSafeNumber(trend.unique_ips ?? trend.uniqueIPs),
         peakConcurrency: this.toSafeNumber(trend.peak_concurrency ?? trend.peakConcurrency),
       }))
+  }
+
+  private normalizeAuditLogsResponse(source: unknown): GetAuditLogsResponse {
+    if (typeof source !== 'object' || source === null) {
+      return { logs: [], total: 0 }
+    }
+
+    const sourceRecord = source as Record<string, unknown>
+    const rawLogs = Array.isArray(sourceRecord.logs) ? sourceRecord.logs : []
+
+    return {
+      logs: rawLogs
+        .filter((log): log is Record<string, unknown> => typeof log === 'object' && log !== null)
+        .map((log) => this.normalizeAuditLogEntry(log)),
+      total: this.toSafeNumber(sourceRecord.total),
+    }
+  }
+
+  private normalizeAuditLogEntry(source: Record<string, unknown>): AuditLogEntry {
+    return {
+      id: this.getStringProperty(source, 'id', 'id'),
+      adminId: this.getNullableStringProperty(source, 'admin_id', 'adminId'),
+      adminUsername: this.getNullableStringProperty(source, 'admin_username', 'adminUsername'),
+      vendorId: this.getNullableStringProperty(source, 'vendor_id', 'vendorId'),
+      action: this.getStringProperty(source, 'action', 'action'),
+      resourceType: this.getStringProperty(source, 'resource_type', 'resourceType'),
+      resourceId: this.getNullableStringProperty(source, 'resource_id', 'resourceId'),
+      details: this.getRecordProperty(source, 'details', 'details'),
+      ipAddress: this.getNullableStringProperty(source, 'ip_address', 'ipAddress'),
+      userAgent: this.getNullableStringProperty(source, 'user_agent', 'userAgent'),
+      accessMethod: this.getStringProperty(source, 'access_method', 'accessMethod'),
+      unixUser: this.getNullableStringProperty(source, 'unix_user', 'unixUser'),
+      createdAt: this.getStringProperty(source, 'created_at', 'createdAt'),
+    }
   }
 
   private normalizeListReleasesResponse(source: unknown): ListReleasesResponse {

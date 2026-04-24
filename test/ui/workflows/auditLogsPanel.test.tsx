@@ -14,6 +14,7 @@ import {
   UI_AUDIT_LOGS_LOADING_BODY,
   UI_AUDIT_LOGS_LOADING_TITLE,
   UI_AUDIT_LOGS_TITLE,
+  UI_VALUE_PLACEHOLDER,
 } from '../../../src/ui/constants'
 import { AuditLogsPanel } from '../../../src/ui/workflows/AuditLogsPanel'
 
@@ -83,6 +84,28 @@ describe('AuditLogsPanel', () => {
 
     expect(screen.getByText(logs[0].action)).toBeInTheDocument()
     expect(screen.getByText(logs[0].resourceType)).toBeInTheDocument()
+  })
+
+  test('renders placeholder instead of crashing when audit timestamp is invalid', async () => {
+    const client = createMockClient()
+    const logs = [
+      {
+        ...buildAuditLog(),
+        createdAt: '',
+      },
+    ]
+    useAuditLogsMock.mockReturnValue({
+      data: { logs, total: logs.length },
+      isLoading: false,
+      isError: false,
+    })
+
+    renderWithProviders(<AuditLogsPanel client={client} />, client)
+
+    await waitFor(() => {
+      expect(screen.getByText(UI_AUDIT_LOGS_TITLE)).toBeInTheDocument()
+    })
+    expect(screen.getByText(UI_VALUE_PLACEHOLDER)).toBeInTheDocument()
   })
 
   test('renders loading state', () => {

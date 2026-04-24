@@ -70,6 +70,19 @@ const formatValue = (value: unknown) => {
   return String(value)
 }
 
+const formatDateTimeValue = (value: string, formatter: Intl.DateTimeFormat) => {
+  if (value.trim().length === 0) {
+    return UI_VALUE_PLACEHOLDER
+  }
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return UI_VALUE_PLACEHOLDER
+  }
+
+  return formatter.format(date)
+}
+
 export function AuditLogsPanel({
   client,
   title = UI_AUDIT_LOGS_TITLE,
@@ -117,7 +130,7 @@ export function AuditLogsPanel({
       {
         id: UI_COLUMN_ID_AUDIT_LOG_TIMESTAMP,
         header: UI_AUDIT_LOGS_COLUMN_TIMESTAMP,
-        cell: (row) => dateTimeFormatter.format(new Date(row.createdAt)),
+        cell: (row) => formatDateTimeValue(row.createdAt, dateTimeFormatter),
         textAlign: UI_TEXT_ALIGN_END,
       },
       {

@@ -2745,6 +2745,62 @@ describe('Client', () => {
     })
   })
 
+  describe('getAuditLogs', () => {
+    it('normalizes snake_case audit rows returned by the API', async () => {
+      const mockResponse = {
+        data: {
+          success: true,
+          data: {
+            logs: [
+              {
+                id: 'audit-log-1',
+                admin_id: 'admin-1',
+                admin_username: 'casey',
+                vendor_id: null,
+                action: 'UPDATE',
+                resource_type: 'LICENSE',
+                resource_id: 'license-1',
+                details: { status: 'SUSPENDED' },
+                ip_address: '127.0.0.1',
+                user_agent: 'vitest',
+                access_method: 'UI_API',
+                unix_user: null,
+                created_at: '2026-04-24T23:15:34.000Z',
+              },
+            ],
+            total: '1',
+          },
+        },
+        status: 200,
+      }
+
+      mockHttpClient.get.mockResolvedValue(mockResponse)
+
+      const result = await client.getAuditLogs()
+
+      expect(result).toEqual({
+        logs: [
+          {
+            id: 'audit-log-1',
+            adminId: 'admin-1',
+            adminUsername: 'casey',
+            vendorId: null,
+            action: 'UPDATE',
+            resourceType: 'LICENSE',
+            resourceId: 'license-1',
+            details: { status: 'SUSPENDED' },
+            ipAddress: '127.0.0.1',
+            userAgent: 'vitest',
+            accessMethod: 'UI_API',
+            unixUser: null,
+            createdAt: '2026-04-24T23:15:34.000Z',
+          },
+        ],
+        total: 1,
+      })
+    })
+  })
+
   describe('getActivationDistribution', () => {
     it('gets activation distribution successfully', async () => {
       const mockResponse = {
