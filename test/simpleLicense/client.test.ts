@@ -2799,6 +2799,32 @@ describe('Client', () => {
         total: 1,
       })
     })
+
+    it('sends pagination and sorting parameters when fetching audit logs', async () => {
+      const mockResponse = {
+        data: {
+          success: true,
+          data: {
+            logs: [],
+            total: 0,
+          },
+        },
+        status: 200,
+      }
+
+      mockHttpClient.get.mockResolvedValue(mockResponse)
+
+      await client.getAuditLogs({
+        limit: 25,
+        offset: 50,
+        sortBy: 'action',
+        sortDirection: 'asc',
+      })
+
+      expect(mockHttpClient.get).toHaveBeenCalledWith(
+        '/api/v1/admin/audit/logs?limit=25&offset=50&sortBy=action&sortDirection=asc'
+      )
+    })
   })
 
   describe('getActivationDistribution', () => {

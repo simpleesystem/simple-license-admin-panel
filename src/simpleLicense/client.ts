@@ -1068,6 +1068,12 @@ export class Client {
     if (typeof filters?.offset === 'number') {
       queryParams.append('offset', String(filters.offset))
     }
+    if (filters?.sortBy) {
+      queryParams.append('sortBy', filters.sortBy)
+    }
+    if (filters?.sortDirection) {
+      queryParams.append('sortDirection', filters.sortDirection)
+    }
 
     const url =
       queryParams.size > 0

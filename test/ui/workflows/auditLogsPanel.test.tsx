@@ -6,6 +6,8 @@ import type { AuditLogEntry, Client } from '@/simpleLicense'
 
 import { ApiContext } from '../../../src/api/apiContext'
 import {
+  UI_AUDIT_LOGS_COLUMN_TIMESTAMP,
+  UI_AUDIT_LOGS_DEFAULT_LIMIT,
   UI_AUDIT_LOGS_DETAILS_PREVIEW_LIMIT,
   UI_AUDIT_LOGS_EMPTY_STATE,
   UI_AUDIT_LOGS_ERROR_BODY,
@@ -17,6 +19,8 @@ import {
   UI_AUDIT_LOGS_TABLE_CLASS,
   UI_AUDIT_LOGS_TITLE,
   UI_AUDIT_LOGS_USER_AGENT_PREVIEW_LIMIT,
+  UI_SORT_BUTTON_LABEL_PREFIX,
+  UI_TABLE_PAGINATION_NEXT,
   UI_TEST_ID_DATA_TABLE,
   UI_VALUE_PLACEHOLDER,
 } from '../../../src/ui/constants'
@@ -201,7 +205,50 @@ describe('AuditLogsPanel', () => {
 
     await waitFor(() => {
       const lastCall = useAuditLogsMock.mock.calls.at(-1)
-      expect(lastCall?.[1]).toMatchObject({ action: 'DELETE' })
+      expect(lastCall?.[1]).toMatchObject({
+        action: 'DELETE',
+        limit: UI_AUDIT_LOGS_DEFAULT_LIMIT,
+        offset: 0,
+        sortBy: 'createdAt',
+        sortDirection: 'desc',
+      })
+    })
+  })
+
+  test('requests the next audit page and applies sortable headers', async () => {
+    const client = createMockClient()
+    useAuditLogsMock.mockReturnValue({
+      data: { logs: [buildAuditLog()], total: UI_AUDIT_LOGS_DEFAULT_LIMIT + 1 },
+      isLoading: false,
+      isError: false,
+    })
+
+    renderWithProviders(<AuditLogsPanel client={client} />, client)
+
+    await waitFor(() => {
+      expect(screen.getByText(UI_AUDIT_LOGS_TITLE)).toBeInTheDocument()
+    })
+    fireEvent.click(screen.getByRole('button', { name: UI_TABLE_PAGINATION_NEXT }))
+
+    await waitFor(() => {
+      const lastCall = useAuditLogsMock.mock.calls.at(-1)
+      expect(lastCall?.[1]).toMatchObject({
+        limit: UI_AUDIT_LOGS_DEFAULT_LIMIT,
+        offset: UI_AUDIT_LOGS_DEFAULT_LIMIT,
+      })
+    })
+
+    fireEvent.click(
+      screen.getByRole('button', { name: `${UI_SORT_BUTTON_LABEL_PREFIX} ${UI_AUDIT_LOGS_COLUMN_TIMESTAMP}` })
+    )
+
+    await waitFor(() => {
+      const lastCall = useAuditLogsMock.mock.calls.at(-1)
+      expect(lastCall?.[1]).toMatchObject({
+        offset: 0,
+        sortBy: 'createdAt',
+        sortDirection: 'asc',
+      })
     })
   })
 })

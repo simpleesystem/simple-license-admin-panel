@@ -657,6 +657,8 @@ export interface AuditLogFilters {
   resourceId?: string
   limit?: number
   offset?: number
+  sortBy?: 'createdAt' | 'adminUsername' | 'action' | 'resourceType' | 'resourceId' | 'ipAddress'
+  sortDirection?: 'asc' | 'desc'
 }
 
 export interface AuditVerificationResponse {

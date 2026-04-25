@@ -29,7 +29,17 @@ import {
   UI_AUDIT_LOGS_LOADING_BODY,
   UI_AUDIT_LOGS_LOADING_TITLE,
   UI_AUDIT_LOGS_METADATA_CELL_CLASS,
+  UI_AUDIT_LOGS_PAGE_SIZE_LABEL,
+  UI_AUDIT_LOGS_PAGE_SIZE_OPTIONS,
   UI_AUDIT_LOGS_PANEL_CLASS,
+  UI_AUDIT_LOGS_RANGE_LABEL,
+  UI_AUDIT_LOGS_RANGE_SEPARATOR,
+  UI_AUDIT_LOGS_SORT_ACTION,
+  UI_AUDIT_LOGS_SORT_ADMIN,
+  UI_AUDIT_LOGS_SORT_CREATED_AT,
+  UI_AUDIT_LOGS_SORT_IP,
+  UI_AUDIT_LOGS_SORT_RESOURCE_ID,
+  UI_AUDIT_LOGS_SORT_RESOURCE_TYPE,
   UI_AUDIT_LOGS_TABLE_CLASS,
   UI_AUDIT_LOGS_TITLE,
   UI_AUDIT_LOGS_TOTAL_LABEL,
@@ -48,14 +58,19 @@ import {
   UI_FIELD_AUDIT_FILTER_ADMIN,
   UI_FIELD_AUDIT_FILTER_RESOURCE_ID,
   UI_FIELD_AUDIT_FILTER_RESOURCE_TYPE,
+  UI_SORT_DESC,
   UI_STACK_GAP_SMALL,
+  UI_TABLE_PAGE_STATUS_PREFIX,
+  UI_TABLE_PAGE_STATUS_SEPARATOR,
+  UI_TABLE_PAGINATION_NEXT,
+  UI_TABLE_PAGINATION_PREVIOUS,
   UI_TEXT_ALIGN_END,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
 import { InlineAlert } from '../feedback/InlineAlert'
 import { Stack } from '../layout/Stack'
-import type { UiDataTableColumn } from '../types'
+import type { UiDataTableColumn, UiDataTableSortState } from '../types'
 
 type AuditLogsPanelProps = {
   client: Client
@@ -65,6 +80,16 @@ type AuditLogsPanelProps = {
 }
 
 type AuditLogRow = AuditLogEntry
+type AuditLogSortBy = NonNullable<AuditLogFilters['sortBy']>
+
+const AUDIT_LOG_SORT_BY_COLUMN: Record<string, AuditLogSortBy> = {
+  [UI_COLUMN_ID_AUDIT_LOG_TIMESTAMP]: UI_AUDIT_LOGS_SORT_CREATED_AT,
+  [UI_COLUMN_ID_AUDIT_LOG_ADMIN]: UI_AUDIT_LOGS_SORT_ADMIN,
+  [UI_COLUMN_ID_AUDIT_LOG_ACTION]: UI_AUDIT_LOGS_SORT_ACTION,
+  [UI_COLUMN_ID_AUDIT_LOG_RESOURCE_TYPE]: UI_AUDIT_LOGS_SORT_RESOURCE_TYPE,
+  [UI_COLUMN_ID_AUDIT_LOG_RESOURCE_ID]: UI_AUDIT_LOGS_SORT_RESOURCE_ID,
+  [UI_COLUMN_ID_AUDIT_LOG_IP]: UI_AUDIT_LOGS_SORT_IP,
+}
 
 const formatValue = (value: unknown) => {
   if (value === null || value === undefined || value === '') {
@@ -117,6 +142,12 @@ export function AuditLogsPanel({
 }: AuditLogsPanelProps) {
   const [filters, setFilters] = useState<AuditLogFilters>(initialFilters ?? {})
   const [formState, setFormState] = useState<AuditLogFilters>(initialFilters ?? {})
+  const [currentPageSize, setCurrentPageSize] = useState(pageSize)
+  const [pageIndex, setPageIndex] = useState(0)
+  const [sortState, setSortState] = useState<UiDataTableSortState>({
+    columnId: UI_COLUMN_ID_AUDIT_LOG_TIMESTAMP,
+    direction: UI_SORT_DESC,
+  })
   const dateTimeFormatter = useMemo(
     () => new Intl.DateTimeFormat(UI_DATE_FORMAT_LOCALE, UI_DATE_TIME_FORMAT_OPTIONS),
     []
@@ -125,9 +156,12 @@ export function AuditLogsPanel({
   const queryFilters = useMemo(() => {
     return {
       ...filters,
-      limit: pageSize,
+      limit: currentPageSize,
+      offset: pageIndex * currentPageSize,
+      sortBy: AUDIT_LOG_SORT_BY_COLUMN[sortState.columnId] ?? UI_AUDIT_LOGS_SORT_CREATED_AT,
+      sortDirection: sortState.direction,
     }
-  }, [filters, pageSize])
+  }, [currentPageSize, filters, pageIndex, sortState.columnId, sortState.direction])
 
   const auditLogsQuery = useAuditLogs(client, queryFilters, { retry: false })
   const rows = auditLogsQuery.data?.logs ?? []
@@ -143,12 +177,33 @@ export function AuditLogsPanel({
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    setPageIndex(0)
     setFilters(formState)
   }
 
   const handleReset = () => {
     setFormState({})
     setFilters({})
+    setPageIndex(0)
+  }
+
+  const handlePageSizeChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    const nextPageSize = Number(event.currentTarget.value)
+    setCurrentPageSize(nextPageSize)
+    setPageIndex(0)
+  }
+
+  const handleSort = (columnId: string, direction: UiDataTableSortState['direction']) => {
+    setSortState({ columnId, direction })
+    setPageIndex(0)
+  }
+
+  const handlePreviousPage = () => {
+    setPageIndex((previousPageIndex) => Math.max(previousPageIndex - 1, 0))
+  }
+
+  const handleNextPage = () => {
+    setPageIndex((previousPageIndex) => previousPageIndex + 1)
   }
 
   const columns = useMemo<UiDataTableColumn<AuditLogRow>[]>(() => {
@@ -158,31 +213,37 @@ export function AuditLogsPanel({
         header: UI_AUDIT_LOGS_COLUMN_TIMESTAMP,
         cell: (row) => formatDateTimeValue(row.createdAt, dateTimeFormatter),
         textAlign: UI_TEXT_ALIGN_END,
+        sortable: true,
       },
       {
         id: UI_COLUMN_ID_AUDIT_LOG_ADMIN,
         header: UI_AUDIT_LOGS_COLUMN_ADMIN,
         cell: (row) => renderAuditCell(row.adminUsername ?? row.adminId),
+        sortable: true,
       },
       {
         id: UI_COLUMN_ID_AUDIT_LOG_ACTION,
         header: UI_AUDIT_LOGS_COLUMN_ACTION,
         cell: (row) => formatValue(row.action),
+        sortable: true,
       },
       {
         id: UI_COLUMN_ID_AUDIT_LOG_RESOURCE_TYPE,
         header: UI_AUDIT_LOGS_COLUMN_RESOURCE_TYPE,
         cell: (row) => formatValue(row.resourceType),
+        sortable: true,
       },
       {
         id: UI_COLUMN_ID_AUDIT_LOG_RESOURCE_ID,
         header: UI_AUDIT_LOGS_COLUMN_RESOURCE_ID,
         cell: (row) => renderAuditCell(row.resourceId, UI_AUDIT_LOGS_METADATA_CELL_CLASS),
+        sortable: true,
       },
       {
         id: UI_COLUMN_ID_AUDIT_LOG_IP,
         header: UI_AUDIT_LOGS_COLUMN_IP,
         cell: (row) => renderAuditCell(row.ipAddress, UI_AUDIT_LOGS_METADATA_CELL_CLASS),
+        sortable: true,
       },
       {
         id: UI_COLUMN_ID_AUDIT_LOG_USER_AGENT,
@@ -213,6 +274,63 @@ export function AuditLogsPanel({
       </InlineAlert>
     )
   }
+
+  const totalPages = Math.max(Math.ceil(totalEntries / currentPageSize), 1)
+  const currentPage = pageIndex + 1
+  const rangeStart = rows.length > 0 ? pageIndex * currentPageSize + 1 : 0
+  const rangeEnd = pageIndex * currentPageSize + rows.length
+  const canNavigatePrevious = pageIndex > 0
+  const canNavigateNext = rangeEnd < totalEntries
+  const tableFooter = (
+    <div className="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between gap-3">
+      <div className="d-flex flex-wrap align-items-center gap-2">
+        <Form.Label className="mb-0" htmlFor="audit-logs-page-size">
+          {UI_AUDIT_LOGS_PAGE_SIZE_LABEL}
+        </Form.Label>
+        <Form.Select
+          id="audit-logs-page-size"
+          size="sm"
+          value={currentPageSize}
+          onChange={handlePageSizeChange}
+          className="w-auto"
+        >
+          {UI_AUDIT_LOGS_PAGE_SIZE_OPTIONS.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </Form.Select>
+        <span className="text-muted small">
+          {UI_AUDIT_LOGS_RANGE_LABEL} {rangeStart.toLocaleString()} {UI_AUDIT_LOGS_RANGE_SEPARATOR}{' '}
+          {rangeEnd.toLocaleString()} / {totalEntries.toLocaleString()}
+        </span>
+      </div>
+      <div className="d-flex flex-wrap align-items-center gap-2">
+        <span className="text-muted small">
+          {UI_TABLE_PAGE_STATUS_PREFIX} {currentPage.toLocaleString()} {UI_TABLE_PAGE_STATUS_SEPARATOR}{' '}
+          {totalPages.toLocaleString()}
+        </span>
+        <Button
+          type="button"
+          variant="outline-secondary"
+          size="sm"
+          onClick={handlePreviousPage}
+          disabled={!canNavigatePrevious}
+        >
+          {UI_TABLE_PAGINATION_PREVIOUS}
+        </Button>
+        <Button
+          type="button"
+          variant="outline-secondary"
+          size="sm"
+          onClick={handleNextPage}
+          disabled={!canNavigateNext}
+        >
+          {UI_TABLE_PAGINATION_NEXT}
+        </Button>
+      </div>
+    </div>
+  )
 
   return (
     <Stack direction="column" gap={UI_STACK_GAP_SMALL} className={UI_AUDIT_LOGS_PANEL_CLASS}>
@@ -277,6 +395,9 @@ export function AuditLogsPanel({
         rowKey={(row) => row.id}
         emptyState={UI_AUDIT_LOGS_EMPTY_STATE}
         className={UI_AUDIT_LOGS_TABLE_CLASS}
+        sortState={sortState}
+        onSort={handleSort}
+        footer={tableFooter}
       />
     </Stack>
   )
