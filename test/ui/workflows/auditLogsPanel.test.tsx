@@ -6,6 +6,7 @@ import type { AuditLogEntry, Client } from '@/simpleLicense'
 
 import { ApiContext } from '../../../src/api/apiContext'
 import {
+  UI_AUDIT_LOGS_DETAILS_PREVIEW_LIMIT,
   UI_AUDIT_LOGS_EMPTY_STATE,
   UI_AUDIT_LOGS_ERROR_BODY,
   UI_AUDIT_LOGS_ERROR_TITLE,
@@ -13,7 +14,10 @@ import {
   UI_AUDIT_LOGS_FILTER_APPLY_LABEL,
   UI_AUDIT_LOGS_LOADING_BODY,
   UI_AUDIT_LOGS_LOADING_TITLE,
+  UI_AUDIT_LOGS_TABLE_CLASS,
   UI_AUDIT_LOGS_TITLE,
+  UI_AUDIT_LOGS_USER_AGENT_PREVIEW_LIMIT,
+  UI_TEST_ID_DATA_TABLE,
   UI_VALUE_PLACEHOLDER,
 } from '../../../src/ui/constants'
 import { AuditLogsPanel } from '../../../src/ui/workflows/AuditLogsPanel'
@@ -106,6 +110,36 @@ describe('AuditLogsPanel', () => {
       expect(screen.getByText(UI_AUDIT_LOGS_TITLE)).toBeInTheDocument()
     })
     expect(screen.getByText(UI_VALUE_PLACEHOLDER)).toBeInTheDocument()
+  })
+
+  test('constrains long audit metadata inside the table wrapper', async () => {
+    const client = createMockClient()
+    const longUserAgent = faker.string.alpha(UI_AUDIT_LOGS_USER_AGENT_PREVIEW_LIMIT + 20)
+    const longDetails = { args: faker.string.alpha(UI_AUDIT_LOGS_DETAILS_PREVIEW_LIMIT + 20) }
+    const formattedDetails = JSON.stringify(longDetails)
+    const logs = [
+      {
+        ...buildAuditLog(),
+        userAgent: longUserAgent,
+        details: longDetails,
+      },
+    ]
+    useAuditLogsMock.mockReturnValue({
+      data: { logs, total: logs.length },
+      isLoading: false,
+      isError: false,
+    })
+
+    renderWithProviders(<AuditLogsPanel client={client} />, client)
+
+    await waitFor(() => {
+      expect(screen.getByText(UI_AUDIT_LOGS_TITLE)).toBeInTheDocument()
+    })
+    expect(screen.getByTestId(UI_TEST_ID_DATA_TABLE).parentElement).toHaveClass(UI_AUDIT_LOGS_TABLE_CLASS)
+    expect(screen.getByText(`${longUserAgent.slice(0, UI_AUDIT_LOGS_USER_AGENT_PREVIEW_LIMIT)}…`)).toBeInTheDocument()
+    expect(screen.getByText(`${formattedDetails.slice(0, UI_AUDIT_LOGS_DETAILS_PREVIEW_LIMIT)}…`)).toBeInTheDocument()
+    expect(screen.queryByText(longUserAgent)).not.toBeInTheDocument()
+    expect(screen.queryByText(formattedDetails)).not.toBeInTheDocument()
   })
 
   test('renders loading state', () => {

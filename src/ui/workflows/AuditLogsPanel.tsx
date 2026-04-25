@@ -5,6 +5,7 @@ import type { AuditLogEntry, AuditLogFilters, Client } from '@/simpleLicense'
 import { useAuditLogs } from '@/simpleLicense'
 
 import {
+  UI_AUDIT_LOGS_CELL_CLASS,
   UI_AUDIT_LOGS_COLUMN_ACTION,
   UI_AUDIT_LOGS_COLUMN_ADMIN,
   UI_AUDIT_LOGS_COLUMN_DETAILS,
@@ -15,6 +16,7 @@ import {
   UI_AUDIT_LOGS_COLUMN_USER_AGENT,
   UI_AUDIT_LOGS_DEFAULT_LIMIT,
   UI_AUDIT_LOGS_DESCRIPTION,
+  UI_AUDIT_LOGS_DETAILS_PREVIEW_LIMIT,
   UI_AUDIT_LOGS_EMPTY_STATE,
   UI_AUDIT_LOGS_ERROR_BODY,
   UI_AUDIT_LOGS_ERROR_TITLE,
@@ -26,8 +28,12 @@ import {
   UI_AUDIT_LOGS_FILTER_RESOURCE_TYPE_LABEL,
   UI_AUDIT_LOGS_LOADING_BODY,
   UI_AUDIT_LOGS_LOADING_TITLE,
+  UI_AUDIT_LOGS_METADATA_CELL_CLASS,
+  UI_AUDIT_LOGS_PANEL_CLASS,
+  UI_AUDIT_LOGS_TABLE_CLASS,
   UI_AUDIT_LOGS_TITLE,
   UI_AUDIT_LOGS_TOTAL_LABEL,
+  UI_AUDIT_LOGS_USER_AGENT_PREVIEW_LIMIT,
   UI_COLUMN_ID_AUDIT_LOG_ACTION,
   UI_COLUMN_ID_AUDIT_LOG_ADMIN,
   UI_COLUMN_ID_AUDIT_LOG_DETAILS,
@@ -83,6 +89,26 @@ const formatDateTimeValue = (value: string, formatter: Intl.DateTimeFormat) => {
   return formatter.format(date)
 }
 
+const truncateValue = (value: string, maxLength: number) => {
+  if (value.length <= maxLength || value === UI_VALUE_PLACEHOLDER) {
+    return value
+  }
+
+  return `${value.slice(0, maxLength)}…`
+}
+
+const renderAuditCell = (value: unknown, className: string = UI_AUDIT_LOGS_CELL_CLASS, previewLimit?: number) => {
+  const formattedValue = formatValue(value)
+  const displayValue = previewLimit ? truncateValue(formattedValue, previewLimit) : formattedValue
+  const title = formattedValue === UI_VALUE_PLACEHOLDER ? undefined : formattedValue
+
+  return (
+    <span className={className} title={title}>
+      {displayValue}
+    </span>
+  )
+}
+
 export function AuditLogsPanel({
   client,
   title = UI_AUDIT_LOGS_TITLE,
@@ -136,7 +162,7 @@ export function AuditLogsPanel({
       {
         id: UI_COLUMN_ID_AUDIT_LOG_ADMIN,
         header: UI_AUDIT_LOGS_COLUMN_ADMIN,
-        cell: (row) => formatValue(row.adminUsername ?? row.adminId),
+        cell: (row) => renderAuditCell(row.adminUsername ?? row.adminId),
       },
       {
         id: UI_COLUMN_ID_AUDIT_LOG_ACTION,
@@ -151,22 +177,23 @@ export function AuditLogsPanel({
       {
         id: UI_COLUMN_ID_AUDIT_LOG_RESOURCE_ID,
         header: UI_AUDIT_LOGS_COLUMN_RESOURCE_ID,
-        cell: (row) => formatValue(row.resourceId),
+        cell: (row) => renderAuditCell(row.resourceId, UI_AUDIT_LOGS_METADATA_CELL_CLASS),
       },
       {
         id: UI_COLUMN_ID_AUDIT_LOG_IP,
         header: UI_AUDIT_LOGS_COLUMN_IP,
-        cell: (row) => formatValue(row.ipAddress),
+        cell: (row) => renderAuditCell(row.ipAddress, UI_AUDIT_LOGS_METADATA_CELL_CLASS),
       },
       {
         id: UI_COLUMN_ID_AUDIT_LOG_USER_AGENT,
         header: UI_AUDIT_LOGS_COLUMN_USER_AGENT,
-        cell: (row) => formatValue(row.userAgent),
+        cell: (row) => renderAuditCell(row.userAgent, UI_AUDIT_LOGS_CELL_CLASS, UI_AUDIT_LOGS_USER_AGENT_PREVIEW_LIMIT),
       },
       {
         id: UI_COLUMN_ID_AUDIT_LOG_DETAILS,
         header: UI_AUDIT_LOGS_COLUMN_DETAILS,
-        cell: (row) => formatValue(row.details),
+        cell: (row) =>
+          renderAuditCell(row.details, UI_AUDIT_LOGS_METADATA_CELL_CLASS, UI_AUDIT_LOGS_DETAILS_PREVIEW_LIMIT),
       },
     ]
   }, [dateTimeFormatter])
@@ -188,7 +215,7 @@ export function AuditLogsPanel({
   }
 
   return (
-    <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
+    <Stack direction="column" gap={UI_STACK_GAP_SMALL} className={UI_AUDIT_LOGS_PANEL_CLASS}>
       <div className="d-flex flex-column gap-1">
         <h2 className="h5 mb-0">{title}</h2>
         <p className="text-muted mb-0">{UI_AUDIT_LOGS_DESCRIPTION}</p>
@@ -244,7 +271,13 @@ export function AuditLogsPanel({
         </div>
       </Form>
 
-      <DataTable data={rows} columns={columns} rowKey={(row) => row.id} emptyState={UI_AUDIT_LOGS_EMPTY_STATE} />
+      <DataTable
+        data={rows}
+        columns={columns}
+        rowKey={(row) => row.id}
+        emptyState={UI_AUDIT_LOGS_EMPTY_STATE}
+        className={UI_AUDIT_LOGS_TABLE_CLASS}
+      />
     </Stack>
   )
 }
