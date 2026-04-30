@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useAdminUsers } from '@/simpleLicense'
 
 import { useApiClient } from '../../api/apiContext'
@@ -17,35 +17,36 @@ import {
   UI_USER_STATUS_LOADING_BODY,
   UI_USER_STATUS_LOADING_TITLE,
 } from '../../ui/constants'
+import { useTableState } from '../../ui/data/useTableState'
 import { SectionStatus } from '../../ui/feedback/SectionStatus'
 import { Page } from '../../ui/layout/Page'
 import { PageHeader } from '../../ui/layout/PageHeader'
-import type { UiDataTableSortState, UiSortDirection } from '../../ui/types'
 import { UserManagementPanel } from '../../ui/workflows/UserManagementPanel'
 
 export function UsersRouteComponent() {
   const client = useApiClient()
   const { user: currentUser } = useAuth()
-  const [page, setPage] = useState(1)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [sortState, setSortState] = useState<UiDataTableSortState | undefined>()
-  const [roleFilter, setRoleFilter] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
-  const [vendorFilter, setVendorFilter] = useState('')
+  const tableState = useTableState({
+    initialFilters: {
+      role: '',
+      status: '',
+      vendorId: '',
+    },
+  })
 
   const filters = useMemo(() => {
     const baseParams = {
-      page,
+      page: tableState.page,
       limit: UI_TABLE_PAGE_SIZE_DEFAULT,
-      search: searchTerm || undefined,
-      role: roleFilter || undefined,
-      status: statusFilter || undefined,
+      search: tableState.searchTerm || undefined,
+      role: tableState.filters.role || undefined,
+      status: tableState.filters.status || undefined,
     }
     if (isVendorScopedUser(currentUser) && currentUser?.vendorId) {
       return { ...baseParams, vendor_id: currentUser.vendorId }
     }
-    return { ...baseParams, vendor_id: vendorFilter || undefined }
-  }, [currentUser, page, searchTerm, roleFilter, statusFilter, vendorFilter])
+    return { ...baseParams, vendor_id: tableState.filters.vendorId || undefined }
+  }, [currentUser, tableState.filters, tableState.page, tableState.searchTerm])
 
   const { data, isLoading, isError, refetch } = useAdminUsers(client, filters)
 
@@ -65,21 +66,6 @@ export function UsersRouteComponent() {
 
   const handleRefresh = () => {
     void refetch()
-  }
-
-  const handleSearch = (term: string) => {
-    setSearchTerm(term)
-    setPage(1)
-  }
-
-  const handleFilterChange = (setter: (val: string) => void) => (val: string) => {
-    setter(val)
-    setPage(1)
-  }
-
-  const handleSort = (columnId: string, direction: UiSortDirection) => {
-    setSortState({ columnId, direction })
-    // TODO: Pass sort params to API when supported
   }
 
   return (
@@ -113,19 +99,19 @@ export function UsersRouteComponent() {
           users={users}
           currentUser={currentUser ?? undefined}
           onRefresh={handleRefresh}
-          page={page}
+          page={tableState.page}
           totalPages={totalPages}
-          onPageChange={setPage}
-          searchTerm={searchTerm}
-          onSearchChange={handleSearch}
-          sortState={sortState}
-          onSortChange={handleSort}
-          roleFilter={roleFilter}
-          statusFilter={statusFilter}
-          vendorFilter={vendorFilter}
-          onRoleFilterChange={handleFilterChange(setRoleFilter)}
-          onStatusFilterChange={handleFilterChange(setStatusFilter)}
-          onVendorFilterChange={handleFilterChange(setVendorFilter)}
+          onPageChange={tableState.setPage}
+          searchTerm={tableState.searchTerm}
+          onSearchChange={tableState.setSearchTerm}
+          sortState={tableState.sortState}
+          onSortChange={tableState.setSortState}
+          roleFilter={tableState.filters.role}
+          statusFilter={tableState.filters.status}
+          vendorFilter={tableState.filters.vendorId}
+          onRoleFilterChange={(value) => tableState.setFilter('role', value)}
+          onStatusFilterChange={(value) => tableState.setFilter('status', value)}
+          onVendorFilterChange={(value) => tableState.setFilter('vendorId', value)}
         />
       ) : null}
     </Page>

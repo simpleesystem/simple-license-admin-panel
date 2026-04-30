@@ -1,16 +1,11 @@
 import { useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
-import Form from 'react-bootstrap/Form'
 import type { Client, User } from '@/simpleLicense'
 import { useAdminTenants } from '@/simpleLicense'
 import { canCreateUser, canDeleteUser, canUpdateUser } from '../../app/auth/permissions'
 import { useNotificationBus } from '../../notifications/useNotificationBus'
 import {
   UI_BUTTON_VARIANT_PRIMARY,
-  UI_BUTTON_VARIANT_SECONDARY,
-  UI_TABLE_PAGINATION_LABEL,
-  UI_TABLE_PAGINATION_NEXT,
-  UI_TABLE_PAGINATION_PREVIOUS,
   UI_TABLE_SEARCH_PLACEHOLDER,
   UI_USER_BUTTON_CREATE,
   UI_USER_COLUMN_HEADER_ACTIONS,
@@ -54,8 +49,9 @@ import {
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
+import { TableControls } from '../data/TableControls'
 import { TableFilter } from '../data/TableFilter'
-import { TableToolbar } from '../data/TableToolbar'
+import { TablePaginationFooter } from '../data/TablePaginationFooter'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
 import { notifyCrudError, notifyUserSuccess } from './notifications'
@@ -150,16 +146,14 @@ export function UserManagementPanel({
   ]
 
   const toolbar = (
-    <TableToolbar
-      start={
-        <div className="d-flex flex-wrap gap-2 align-items-center">
-          <Form.Control
-            type="search"
-            placeholder={UI_TABLE_SEARCH_PLACEHOLDER}
-            value={searchTerm}
-            onChange={(event) => onSearchChange(event.target.value)}
-            style={{ maxWidth: '300px' }}
-          />
+    <TableControls
+      search={{
+        value: searchTerm,
+        onChange: onSearchChange,
+        placeholder: UI_TABLE_SEARCH_PLACEHOLDER,
+      }}
+      filters={
+        <>
           {onRoleFilterChange ? (
             <TableFilter
               value={roleFilter}
@@ -184,9 +178,9 @@ export function UserManagementPanel({
               placeholder="All Vendors"
             />
           ) : null}
-        </div>
+        </>
       }
-      end={
+      actions={
         canCreate ? (
           <Button variant={UI_BUTTON_VARIANT_PRIMARY} onClick={() => setShowCreateModal(true)}>
             {UI_USER_BUTTON_CREATE}
@@ -194,26 +188,6 @@ export function UserManagementPanel({
         ) : null
       }
     />
-  )
-
-  const pagination = (
-    <Stack direction="row" gap="small" justify="end" aria-label={UI_TABLE_PAGINATION_LABEL}>
-      <Button variant={UI_BUTTON_VARIANT_SECONDARY} onClick={() => onPageChange(page - 1)} disabled={page <= 1}>
-        {UI_TABLE_PAGINATION_PREVIOUS}
-      </Button>
-      <div className="d-flex align-items-center px-2">
-        <span>
-          {page} / {totalPages}
-        </span>
-      </div>
-      <Button
-        variant={UI_BUTTON_VARIANT_SECONDARY}
-        onClick={() => onPageChange(page + 1)}
-        disabled={page >= totalPages}
-      >
-        {UI_TABLE_PAGINATION_NEXT}
-      </Button>
-    </Stack>
   )
 
   const columns: UiDataTableColumn<UserListItem>[] = useMemo(
@@ -301,7 +275,7 @@ export function UserManagementPanel({
         sortState={sortState}
         onSort={onSortChange}
         toolbar={toolbar}
-        footer={pagination}
+        footer={<TablePaginationFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />}
       />
 
       <UserFormFlow

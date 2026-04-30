@@ -76,8 +76,10 @@ export const UI_FIELD_METADATA = 'metadata' as const
 export const UI_TABLE_DENSITY_COMPACT = 'compact' as const
 export const UI_TABLE_DENSITY_COMFORTABLE = 'comfortable' as const
 export const UI_TABLE_DENSITY_SPACIOUS = 'spacious' as const
+export const UI_TABLE_PAGE_INITIAL = 1 as const
 export const UI_TABLE_PAGE_SIZE_DEFAULT = 10 as const
 export const UI_TABLE_SEARCH_PLACEHOLDER = 'Search' as const
+export const UI_TABLE_SEARCH_MAX_WIDTH = '300px' as const
 export const UI_TABLE_PAGINATION_PREVIOUS = 'Previous' as const
 export const UI_TABLE_PAGINATION_NEXT = 'Next' as const
 export const UI_TABLE_PAGINATION_LABEL = 'Table pagination' as const
@@ -288,6 +290,7 @@ export const UI_ICON_SORT_DESCENDING = '▼'
 export const UI_ARIA_LABEL_TABLE_TOOLBAR = 'Table controls'
 
 export const UI_CLASS_TABLE_TOOLBAR = 'd-flex flex-wrap justify-content-between align-items-center gap-3 mb-3'
+export const UI_CLASS_TABLE_CONTROL_GROUP = 'd-flex flex-wrap gap-2 align-items-center'
 
 export const UI_CLASS_SUMMARY_LIST = 'row row-cols-1 row-cols-md-2 g-3 list-unstyled mb-0'
 export const UI_CLASS_SUMMARY_CARD = 'p-3 border rounded bg-body'

@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
-import Form from 'react-bootstrap/Form'
 import type { Client, License, LicenseStatus, User } from '@/simpleLicense'
 import {
   canCreateLicense,
@@ -11,7 +10,6 @@ import {
 } from '../../app/auth/permissions'
 import {
   UI_BUTTON_VARIANT_PRIMARY,
-  UI_BUTTON_VARIANT_SECONDARY,
   UI_LICENSE_BUTTON_CREATE,
   UI_LICENSE_COLUMN_HEADER_ACTIONS,
   UI_LICENSE_COLUMN_HEADER_CUSTOMER,
@@ -31,15 +29,13 @@ import {
   UI_LICENSE_STATUS_INACTIVE,
   UI_LICENSE_STATUS_REVOKED,
   UI_LICENSE_STATUS_SUSPENDED,
-  UI_TABLE_PAGINATION_LABEL,
-  UI_TABLE_PAGINATION_NEXT,
-  UI_TABLE_PAGINATION_PREVIOUS,
   UI_TABLE_SEARCH_PLACEHOLDER,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
+import { TableControls } from '../data/TableControls'
 import { TableFilter } from '../data/TableFilter'
-import { TableToolbar } from '../data/TableToolbar'
+import { TablePaginationFooter } from '../data/TablePaginationFooter'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
 import { LicenseFormFlow } from './LicenseFormFlow'
@@ -115,29 +111,27 @@ export function LicenseManagementPanel({
   ]
 
   const toolbar = (
-    <TableToolbar
-      start={
-        <div className="d-flex flex-wrap gap-2 align-items-center">
-          {onSearchChange ? (
-            <Form.Control
-              type="search"
-              placeholder={UI_TABLE_SEARCH_PLACEHOLDER}
-              value={searchTerm}
-              onChange={(event) => onSearchChange(event.target.value)}
-              style={{ maxWidth: '300px' }}
-            />
-          ) : null}
-          {onStatusFilterChange ? (
-            <TableFilter
-              value={statusFilter ?? ''}
-              options={statusOptions}
-              onChange={onStatusFilterChange}
-              placeholder="All Statuses"
-            />
-          ) : null}
-        </div>
+    <TableControls
+      search={
+        onSearchChange
+          ? {
+              value: searchTerm,
+              onChange: onSearchChange,
+              placeholder: UI_TABLE_SEARCH_PLACEHOLDER,
+            }
+          : undefined
       }
-      end={
+      filters={
+        onStatusFilterChange ? (
+          <TableFilter
+            value={statusFilter ?? ''}
+            options={statusOptions}
+            onChange={onStatusFilterChange}
+            placeholder="All Statuses"
+          />
+        ) : null
+      }
+      actions={
         allowCreate ? (
           <Button variant={UI_BUTTON_VARIANT_PRIMARY} onClick={() => setShowCreate(true)}>
             {UI_LICENSE_BUTTON_CREATE}
@@ -145,26 +139,6 @@ export function LicenseManagementPanel({
         ) : null
       }
     />
-  )
-
-  const pagination = (
-    <Stack direction="row" gap="small" justify="end" aria-label={UI_TABLE_PAGINATION_LABEL}>
-      <Button variant={UI_BUTTON_VARIANT_SECONDARY} onClick={() => onPageChange(page - 1)} disabled={page <= 1}>
-        {UI_TABLE_PAGINATION_PREVIOUS}
-      </Button>
-      <div className="d-flex align-items-center px-2">
-        <span>
-          {page} / {totalPages}
-        </span>
-      </div>
-      <Button
-        variant={UI_BUTTON_VARIANT_SECONDARY}
-        onClick={() => onPageChange(page + 1)}
-        disabled={page >= totalPages}
-      >
-        {UI_TABLE_PAGINATION_NEXT}
-      </Button>
-    </Stack>
   )
 
   const columns: UiDataTableColumn<LicenseListItem>[] = useMemo(
@@ -240,7 +214,7 @@ export function LicenseManagementPanel({
         sortState={sortState}
         onSort={onSortChange}
         toolbar={toolbar}
-        footer={pagination}
+        footer={<TablePaginationFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />}
       />
 
       {allowCreate ? (

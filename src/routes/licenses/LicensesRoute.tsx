@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { License } from '@/simpleLicense'
 import { useAdminLicenses, useAdminProducts } from '@/simpleLicense'
 
@@ -7,6 +7,11 @@ import { canViewLicenses, isLicenseOwnedByUser, isVendorScopedUser } from '../..
 import { useAuth } from '../../app/auth/useAuth'
 import { useLogger } from '../../app/logging/loggerContext'
 import {
+  UI_LICENSE_COLUMN_ID_CUSTOMER,
+  UI_LICENSE_COLUMN_ID_DOMAIN,
+  UI_LICENSE_COLUMN_ID_PRODUCT,
+  UI_LICENSE_COLUMN_ID_STATUS,
+  UI_LICENSE_COLUMN_ID_TIER,
   UI_LICENSE_STATUS_ACTION_RETRY,
   UI_LICENSE_STATUS_ERROR_BODY,
   UI_LICENSE_STATUS_ERROR_TITLE,
@@ -18,12 +23,12 @@ import {
   UI_SECTION_STATUS_ERROR,
   UI_SECTION_STATUS_LOADING,
   UI_SORT_ASC,
-  UI_TABLE_PAGE_SIZE_DEFAULT,
 } from '../../ui/constants'
+import { useDataTableState } from '../../ui/data/useDataTableState'
+import { useTableState } from '../../ui/data/useTableState'
 import { SectionStatus } from '../../ui/feedback/SectionStatus'
 import { Page } from '../../ui/layout/Page'
 import { PageHeader } from '../../ui/layout/PageHeader'
-import type { UiDataTableSortState, UiSortDirection } from '../../ui/types'
 import type { LicenseListItem } from '../../ui/workflows/LicenseManagementPanel'
 import { LicenseManagementPanel } from '../../ui/workflows/LicenseManagementPanel'
 
@@ -33,10 +38,11 @@ export function LicensesRouteComponent() {
   const { user: currentUser } = useAuth()
   const { data, isLoading, isError, refetch } = useAdminLicenses(client)
   const { data: productsData } = useAdminProducts(client)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
-  const [page, setPage] = useState(1)
-  const [sortState, setSortState] = useState<UiDataTableSortState | undefined>()
+  const tableState = useTableState({
+    initialFilters: {
+      status: '',
+    },
+  })
   const [tierOptions, setTierOptions] = useState<{ value: string; label: string }[]>([])
 
   useEffect(() => {
@@ -77,10 +83,9 @@ export function LicensesRouteComponent() {
     void fetchTiers()
   }, [client, productsData, logger])
 
-  const allFilteredLicenses = useMemo<LicenseListItem[]>(() => {
+  const visibleLicenses = useMemo<LicenseListItem[]>(() => {
     let list = Array.isArray(data) ? (data as LicenseListItem[]) : ((data?.data as LicenseListItem[]) ?? [])
 
-    // Vendor Scoping
     if (isVendorScopedUser(currentUser)) {
       list = list.filter((license) => {
         // LicenseListItem is compatible with License for ownership checks
@@ -88,55 +93,39 @@ export function LicensesRouteComponent() {
       })
     }
 
-    // Search Filtering
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase()
-      list = list.filter(
-        (license) =>
-          license.customerEmail?.toLowerCase().includes(term) || license.productSlug?.toLowerCase().includes(term)
-      )
-    }
-
-    // Status Filtering
-    if (statusFilter) {
-      list = list.filter((license) => license.status === statusFilter)
-    }
-
-    // Sorting
-    if (sortState) {
-      list = [...list].sort((a, b) => {
-        const aValue = a[sortState.columnId as keyof typeof a]
-        const bValue = b[sortState.columnId as keyof typeof b]
-
-        if (aValue === bValue) {
-          return 0
-        }
-
-        // Handle null/undefined
-        if (aValue === null || aValue === undefined) {
-          return 1
-        }
-        if (bValue === null || bValue === undefined) {
-          return -1
-        }
-
-        const compareResult = aValue < bValue ? -1 : 1
-        return sortState.direction === UI_SORT_ASC ? compareResult : -compareResult
-      })
-    } else {
-      // Default sort by customer email asc
-      list = [...list].sort((a, b) => (a.customerEmail ?? '').localeCompare(b.customerEmail ?? ''))
-    }
-
     return list
-  }, [currentUser, data, searchTerm, statusFilter, sortState])
+  }, [currentUser, data])
 
-  const paginatedLicenses = useMemo(() => {
-    const startIndex = (page - 1) * UI_TABLE_PAGE_SIZE_DEFAULT
-    return allFilteredLicenses.slice(startIndex, startIndex + UI_TABLE_PAGE_SIZE_DEFAULT)
-  }, [allFilteredLicenses, page])
+  const searchLicenses = useCallback(
+    (license: LicenseListItem, term: string) =>
+      license.customerEmail?.toLowerCase().includes(term) || license.productSlug?.toLowerCase().includes(term),
+    []
+  )
 
-  const totalPages = Math.max(1, Math.ceil(allFilteredLicenses.length / UI_TABLE_PAGE_SIZE_DEFAULT))
+  const compareText = useCallback(
+    (getValue: (license: LicenseListItem) => string | null | undefined) => (a: LicenseListItem, b: LicenseListItem) =>
+      (getValue(a) ?? '').localeCompare(getValue(b) ?? '', undefined, { numeric: true, sensitivity: 'base' }),
+    []
+  )
+
+  const sortComparators = useMemo(
+    () => ({
+      [UI_LICENSE_COLUMN_ID_CUSTOMER]: compareText((license) => license.customerEmail),
+      [UI_LICENSE_COLUMN_ID_PRODUCT]: compareText((license) => license.productSlug),
+      [UI_LICENSE_COLUMN_ID_DOMAIN]: compareText((license) => license.domain),
+      [UI_LICENSE_COLUMN_ID_TIER]: compareText((license) => license.tierCode),
+      [UI_LICENSE_COLUMN_ID_STATUS]: compareText((license) => license.status),
+    }),
+    [compareText]
+  )
+
+  const licenseTable = useDataTableState({
+    data: visibleLicenses,
+    initialSort: { columnId: UI_LICENSE_COLUMN_ID_CUSTOMER, direction: UI_SORT_ASC },
+    search: searchLicenses,
+    filter: (license) => !tableState.filters.status || license.status === tableState.filters.status,
+    sortComparators,
+  })
 
   const productOptions = useMemo(() => {
     const list = Array.isArray(productsData) ? productsData : (productsData?.data ?? [])
@@ -147,20 +136,6 @@ export function LicensesRouteComponent() {
 
   const handleRefresh = () => {
     void refetch()
-  }
-
-  const handleSearch = (term: string) => {
-    setSearchTerm(term)
-    setPage(1)
-  }
-
-  const handleStatusFilterChange = (status: string) => {
-    setStatusFilter(status)
-    setPage(1)
-  }
-
-  const handleSort = (columnId: string, direction: UiSortDirection) => {
-    setSortState({ columnId, direction })
   }
 
   return (
@@ -191,18 +166,21 @@ export function LicensesRouteComponent() {
       {!isLoading && !isError && canView ? (
         <LicenseManagementPanel
           client={client}
-          licenses={paginatedLicenses}
+          licenses={licenseTable.rows}
           currentUser={currentUser ?? undefined}
           onRefresh={handleRefresh}
-          searchTerm={searchTerm}
-          onSearchChange={handleSearch}
-          statusFilter={statusFilter}
-          onStatusFilterChange={handleStatusFilterChange}
-          page={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-          sortState={sortState}
-          onSortChange={handleSort}
+          searchTerm={licenseTable.searchTerm}
+          onSearchChange={licenseTable.setSearchTerm}
+          statusFilter={tableState.filters.status}
+          onStatusFilterChange={(value) => {
+            tableState.setFilter('status', value)
+            licenseTable.goToPage(1)
+          }}
+          page={licenseTable.page}
+          totalPages={licenseTable.totalPages}
+          onPageChange={licenseTable.goToPage}
+          sortState={licenseTable.sortState}
+          onSortChange={licenseTable.onSort}
           productOptions={productOptions}
           tierOptions={tierOptions}
         />
