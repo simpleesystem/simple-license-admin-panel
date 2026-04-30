@@ -64,7 +64,7 @@ describe('AuditLogsPanel integration', () => {
     expect(screen.getByText(UI_AUDIT_LOGS_TITLE)).toBeInTheDocument()
     expect(screen.getByText('CREATE')).toBeInTheDocument()
 
-    fireEvent.change(screen.getByLabelText(/action/i), { target: { value: 'DELETE' } })
+    fireEvent.change(screen.getByRole('textbox', { name: /^action$/i }), { target: { value: 'DELETE' } })
     fireEvent.click(screen.getByText(UI_AUDIT_LOGS_FILTER_APPLY_LABEL))
     fireEvent.click(screen.getByText(UI_AUDIT_LOGS_FILTER_RESET_LABEL))
   })

@@ -59,7 +59,7 @@ describe('UsageTrendsPanel integration', () => {
     renderWithProviders(<UsageTrendsPanel client={mockClient} />, { client: mockClient })
 
     expect(await screen.findByText(UI_USAGE_TRENDS_TITLE)).toBeInTheDocument()
-    expect(screen.getByText('2024-01')).toBeInTheDocument()
+    expect(screen.getByText('Jan 1, 2024')).toBeInTheDocument()
   })
 
   test('shows loading, empty, and error states', async () => {
