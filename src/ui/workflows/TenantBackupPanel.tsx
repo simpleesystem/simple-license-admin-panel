@@ -21,6 +21,7 @@ import {
 } from '../constants'
 import { SummaryList } from '../data/SummaryList'
 import { InlineAlert } from '../feedback/InlineAlert'
+import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiKeyValueItem } from '../types'
 
@@ -75,10 +76,7 @@ export function TenantBackupPanel({
 
   return (
     <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
-      <div className="d-flex flex-column gap-1">
-        <h2 className="h5 mb-0">{title}</h2>
-        <p className="text-muted mb-0">{UI_TENANT_BACKUP_DESCRIPTION}</p>
-      </div>
+      <PanelHeader title={title} description={UI_TENANT_BACKUP_DESCRIPTION} />
 
       {status === 'success' ? <InlineAlert variant="success" title={UI_TENANT_BACKUP_SUCCESS} /> : null}
       {status === 'error' ? <InlineAlert variant="danger" title={UI_TENANT_BACKUP_ERROR} /> : null}

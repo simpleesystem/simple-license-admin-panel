@@ -847,6 +847,21 @@ export const UI_TENANT_CONFIRM_RESUME_CANCEL = 'Cancel' as const
 export const UI_TENANT_QUOTA_FORM_ID = 'tenant-quota' as const
 export const UI_TENANT_QUOTA_FORM_TITLE = 'Tenant Quotas' as const
 export const UI_TENANT_QUOTA_SECTION_LIMITS = 'limits' as const
+export const UI_TENANT_QUOTA_PANEL_TITLE = 'Quota Limits' as const
+export const UI_TENANT_QUOTA_PANEL_DESCRIPTION =
+  'Track and adjust tenant-specific product and activation limits.' as const
+export const UI_TENANT_QUOTA_EDIT_BUTTON = 'Edit Quotas' as const
+export const UI_TENANT_QUOTA_SAVE_BUTTON = 'Save quotas' as const
+export const UI_TENANT_QUOTA_PRODUCTS_LABEL = 'Products (used / max)' as const
+export const UI_TENANT_QUOTA_ACTIVATIONS_LABEL = 'Activations (used / max)' as const
+export const UI_TENANT_QUOTA_PER_PRODUCT_LABEL = 'Per-product activations' as const
+export const UI_TENANT_QUOTA_LOADING_TITLE = 'Loading quota data' as const
+export const UI_TENANT_QUOTA_LOADING_BODY = 'Fetching the latest limits…' as const
+export const UI_TENANT_QUOTA_ERROR_TITLE = 'Unable to load quotas' as const
+export const UI_TENANT_QUOTA_ERROR_BODY = 'Please try again after refreshing the page.' as const
+export const UI_TENANT_QUOTA_SUMMARY_ID_PRODUCTS = 'products-count' as const
+export const UI_TENANT_QUOTA_SUMMARY_ID_ACTIVATIONS = 'activations-count' as const
+export const UI_TENANT_QUOTA_SUMMARY_ID_PER_PRODUCT = 'per-product' as const
 
 export const UI_PRODUCT_PANEL_TITLE = 'Product catalog' as const
 export const UI_PRODUCT_PANEL_DESCRIPTION = 'Manage product catalog entries, slugs, and availability.' as const

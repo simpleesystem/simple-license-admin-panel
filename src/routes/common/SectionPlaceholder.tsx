@@ -1,6 +1,11 @@
 import type { ReactNode } from 'react'
 
-import { UI_PAGE_PLACEHOLDER_BODY, UI_PAGE_PLACEHOLDER_TITLE, UI_STACK_GAP_MEDIUM } from '../../ui/constants'
+import {
+  UI_PAGE_PLACEHOLDER_BODY,
+  UI_PAGE_PLACEHOLDER_TITLE,
+  UI_PAGE_VARIANT_CONSTRAINED,
+  UI_STACK_GAP_MEDIUM,
+} from '../../ui/constants'
 import { Page } from '../../ui/layout/Page'
 import { PageHeader } from '../../ui/layout/PageHeader'
 import { Stack } from '../../ui/layout/Stack'
@@ -34,7 +39,7 @@ export function SectionPlaceholder({ title, subtitle, body, testMode }: SectionP
   }
 
   return (
-    <Page>
+    <Page variant={UI_PAGE_VARIANT_CONSTRAINED}>
       <Stack direction="column" gap={UI_STACK_GAP_MEDIUM}>
         <PageHeader title={title} subtitle={subtitle} />
         <EmptyState title={UI_PAGE_PLACEHOLDER_TITLE} body={bodyContent} />

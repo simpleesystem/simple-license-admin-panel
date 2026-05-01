@@ -4,7 +4,7 @@ import { createPermissionSet } from '../../../src/app/auth/permissions'
 import {
   I18N_KEY_NOT_FOUND_BODY,
   I18N_KEY_NOT_FOUND_TITLE,
-  ROUTE_PATH_ANALYTICS,
+  ROUTE_PATH_DASHBOARD,
   ROUTE_PATH_PRODUCTS,
   ROUTE_PATH_ROOT,
   ROUTE_PATH_TENANTS,
@@ -89,12 +89,12 @@ describe('router configuration', () => {
     expect(computeFirstAllowedRoute(authState)).toBe(ROUTE_PATH_USERS)
   })
 
-  it('prefers analytics route when analytics permission is available', () => {
+  it('prefers dashboard when analytics permission is available', () => {
     const authState = createAuthenticatedState({
       permissions: createPermissionSet({ viewAnalytics: true }),
     })
 
-    expect(computeFirstAllowedRoute(authState)).toBe(ROUTE_PATH_ANALYTICS)
+    expect(computeFirstAllowedRoute(authState)).toBe(ROUTE_PATH_DASHBOARD)
   })
 
   it('falls back to root route when no permissions are available', () => {

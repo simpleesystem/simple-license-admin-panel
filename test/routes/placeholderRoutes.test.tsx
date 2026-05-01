@@ -3,9 +3,8 @@ import i18n from 'i18next'
 import type { JSX } from 'react'
 import { initReactI18next } from 'react-i18next'
 import { beforeAll, describe, test } from 'vitest'
-import { APP_DEFAULT_LANGUAGE, APP_I18N_DEFAULT_NAMESPACE, I18N_KEY_DASHBOARD_HEADING } from '../../src/app/constants'
+import { APP_DEFAULT_LANGUAGE, APP_I18N_DEFAULT_NAMESPACE } from '../../src/app/constants'
 import { i18nResources } from '../../src/app/i18n/resources'
-import { AnalyticsRouteComponent } from '../../src/routes/analytics/AnalyticsRoute'
 import { AuditRouteComponent } from '../../src/routes/audit/AuditRoute'
 import { SectionPlaceholder } from '../../src/routes/common/SectionPlaceholder'
 import { LicensesRouteComponent } from '../../src/routes/licenses/LicensesRoute'
@@ -14,7 +13,6 @@ import { TenantsRouteComponent } from '../../src/routes/tenants/TenantsRoute'
 import { UsersRouteComponent } from '../../src/routes/users/UsersRoute'
 import {
   UI_PAGE_PLACEHOLDER_TITLE,
-  UI_PAGE_TITLE_ANALYTICS,
   UI_PAGE_TITLE_AUDIT,
   UI_PAGE_TITLE_LICENSES,
   UI_PAGE_TITLE_PRODUCTS,
@@ -55,15 +53,6 @@ describe('placeholder routes', () => {
       expect(screen.queryByText(UI_PAGE_PLACEHOLDER_TITLE)).toBeNull()
     })
   }
-
-  test('renders analytics route content', async () => {
-    renderWithProviders(<AnalyticsRouteComponent />)
-    expect(
-      await screen.findByText(i18nResources[APP_I18N_DEFAULT_NAMESPACE][I18N_KEY_DASHBOARD_HEADING])
-    ).toBeInTheDocument()
-    expect(screen.queryByText(UI_PAGE_TITLE_ANALYTICS)).toBeNull()
-    expect(screen.queryByText(UI_PAGE_PLACEHOLDER_TITLE)).toBeNull()
-  })
 
   test('renders users route content', async () => {
     renderWithProviders(<UsersRouteComponent />)

@@ -66,22 +66,6 @@ export function ActivationDistributionPanel({
     ]
   }, [])
 
-  if (distributionQuery.isLoading) {
-    return (
-      <InlineAlert variant="info" title={UI_ANALYTICS_DISTRIBUTION_LOADING_TITLE}>
-        {UI_ANALYTICS_DISTRIBUTION_LOADING_BODY}
-      </InlineAlert>
-    )
-  }
-
-  if (distributionQuery.isError) {
-    return (
-      <InlineAlert variant="danger" title={UI_ANALYTICS_DISTRIBUTION_ERROR_TITLE}>
-        {UI_ANALYTICS_DISTRIBUTION_ERROR_BODY}
-      </InlineAlert>
-    )
-  }
-
   const rows = distributionQuery.data?.distribution ?? []
 
   return (
@@ -104,12 +88,22 @@ export function ActivationDistributionPanel({
         }
       />
 
-      <DataTable
-        data={rows}
-        columns={columns}
-        rowKey={(row) => row.licenseKey}
-        emptyState={UI_ANALYTICS_DISTRIBUTION_EMPTY_STATE}
-      />
+      {distributionQuery.isLoading ? (
+        <InlineAlert variant="info" title={UI_ANALYTICS_DISTRIBUTION_LOADING_TITLE}>
+          {UI_ANALYTICS_DISTRIBUTION_LOADING_BODY}
+        </InlineAlert>
+      ) : distributionQuery.isError ? (
+        <InlineAlert variant="danger" title={UI_ANALYTICS_DISTRIBUTION_ERROR_TITLE}>
+          {UI_ANALYTICS_DISTRIBUTION_ERROR_BODY}
+        </InlineAlert>
+      ) : (
+        <DataTable
+          data={rows}
+          columns={columns}
+          rowKey={(row) => row.licenseKey}
+          emptyState={UI_ANALYTICS_DISTRIBUTION_EMPTY_STATE}
+        />
+      )}
     </Stack>
   )
 }

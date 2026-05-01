@@ -1,7 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query'
 import { createRootRouteWithContext, createRoute, createRouter, redirect } from '@tanstack/react-router'
 import type { AdminRole } from '@/simpleLicense'
-import { AnalyticsRouteComponent } from '../routes/analytics/AnalyticsRoute'
 import { AuditRouteComponent } from '../routes/audit/AuditRoute'
 import { LoginRoute as AuthRouteComponent } from '../routes/auth/LoginRoute'
 import { DashboardRouteComponent } from '../routes/dashboard/DashboardRoute'
@@ -132,7 +131,6 @@ const analyticsRoute = createRoute({
     assertPermission(context, location, 'viewAnalytics')
     throw redirect({ to: ROUTE_PATH_DASHBOARD })
   },
-  component: AnalyticsRouteComponent,
 })
 
 const healthRoute = createRoute({
@@ -265,7 +263,7 @@ export const computeFirstAllowedRoute = (authState: AuthStateSnapshot | undefine
     return ROUTE_PATH_USERS
   }
   if (authState.permissions.viewAnalytics) {
-    return ROUTE_PATH_ANALYTICS
+    return ROUTE_PATH_DASHBOARD
   }
   return ROUTE_PATH_ROOT
 }

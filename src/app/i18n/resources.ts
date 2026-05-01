@@ -16,6 +16,7 @@ import {
   I18N_KEY_AUTH_SUBMIT,
   I18N_KEY_AUTH_SUBTITLE,
   I18N_KEY_DASHBOARD_HEADING,
+  I18N_KEY_DASHBOARD_LOADING,
   I18N_KEY_DASHBOARD_SUBTITLE,
   I18N_KEY_FORM_PASSWORD_LABEL,
   I18N_KEY_FORM_PASSWORD_REQUIRED,
@@ -23,6 +24,7 @@ import {
   I18N_KEY_FORM_USERNAME_LABEL,
   I18N_KEY_FORM_USERNAME_REQUIRED,
   I18N_KEY_HEALTH_HEADING,
+  I18N_KEY_HEALTH_LOADING,
   I18N_KEY_HEALTH_SUBTITLE,
   I18N_KEY_NOT_FOUND_BODY,
   I18N_KEY_NOT_FOUND_TITLE,
@@ -46,6 +48,7 @@ export const i18nResources: ResourceBundle = {
     [I18N_KEY_APP_ERROR_RESET]: 'Try again',
     [I18N_KEY_DASHBOARD_HEADING]: 'Operational overview',
     [I18N_KEY_DASHBOARD_SUBTITLE]: 'Live licensing insights, usage trends, and system capacity.',
+    [I18N_KEY_DASHBOARD_LOADING]: 'Loading dashboard data…',
     [I18N_KEY_AUTH_HEADING]: 'Authenticate to continue',
     [I18N_KEY_AUTH_SUBTITLE]: 'Use your admin credentials to access the control panel.',
     [I18N_KEY_AUTH_SUBMIT]: 'Sign in',
@@ -65,6 +68,7 @@ export const i18nResources: ResourceBundle = {
     [I18N_KEY_SESSION_EXPIRED_BODY]: 'For security reasons you have been signed out. Please authenticate again.',
     [I18N_KEY_HEALTH_HEADING]: 'System health',
     [I18N_KEY_HEALTH_SUBTITLE]: 'Live status, metrics, and reliability signals for the platform.',
+    [I18N_KEY_HEALTH_LOADING]: 'Loading health data…',
   },
 }
 

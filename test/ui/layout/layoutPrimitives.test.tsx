@@ -66,20 +66,20 @@ describe('Layout primitives', () => {
     expect(getByText(sidebar).parentElement).toHaveClass('w-25', { exact: false })
   })
 
-  test('Page uses constrained container by default', () => {
+  test('Page uses full width container by default', () => {
     const { getByTestId } = render(<Page>{faker.lorem.words(2)}</Page>)
 
-    expect(getByTestId(UI_TEST_ID_PAGE)).toHaveClass(UI_CLASS_PAGE_CONSTRAINED, { exact: false })
+    expect(getByTestId(UI_TEST_ID_PAGE)).toHaveClass(UI_CLASS_PAGE_FULL_WIDTH, { exact: false })
   })
 
-  test('Page switches to full width variant when requested', () => {
+  test('Page switches to constrained variant when requested', () => {
     const { getByTestId } = render(
-      <Page variant="fullWidth" fullHeight={true}>
+      <Page variant="constrained" fullHeight={true}>
         {faker.lorem.words(2)}
       </Page>
     )
 
-    expect(getByTestId(UI_TEST_ID_PAGE)).toHaveClass(UI_CLASS_PAGE_FULL_WIDTH, UI_CLASS_PAGE_FULL_HEIGHT, {
+    expect(getByTestId(UI_TEST_ID_PAGE)).toHaveClass(UI_CLASS_PAGE_CONSTRAINED, UI_CLASS_PAGE_FULL_HEIGHT, {
       exact: false,
     })
   })

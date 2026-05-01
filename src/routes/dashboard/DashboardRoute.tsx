@@ -2,7 +2,11 @@ import { useQueryClient } from '@tanstack/react-query'
 import { type JSX, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useApiClient } from '../../api/apiContext'
-import { I18N_KEY_DASHBOARD_HEADING, I18N_KEY_DASHBOARD_SUBTITLE } from '../../app/constants'
+import {
+  I18N_KEY_DASHBOARD_HEADING,
+  I18N_KEY_DASHBOARD_LOADING,
+  I18N_KEY_DASHBOARD_SUBTITLE,
+} from '../../app/constants'
 import { AdminSystemLiveFeedProvider } from '../../app/live/AdminSystemLiveFeedContext'
 import { QUERY_KEYS, useDashboardSnapshot } from '../../simpleLicense'
 import {
@@ -160,7 +164,7 @@ export function DashboardRouteComponent() {
               </div>
             ))
           ) : (
-            <div className="text-muted">Loading dashboard data...</div>
+            <div className="text-muted">{t(I18N_KEY_DASHBOARD_LOADING)}</div>
           )}
         </Stack>
       </Page>

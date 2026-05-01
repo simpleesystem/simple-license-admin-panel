@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { type JSX, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useApiClient } from '../../api/apiContext'
-import { I18N_KEY_HEALTH_HEADING, I18N_KEY_HEALTH_SUBTITLE } from '../../app/constants'
+import { I18N_KEY_HEALTH_HEADING, I18N_KEY_HEALTH_LOADING, I18N_KEY_HEALTH_SUBTITLE } from '../../app/constants'
 import { AdminSystemLiveFeedProvider } from '../../app/live/AdminSystemLiveFeedContext'
 import { QUERY_KEYS, useHealthSnapshot } from '../../simpleLicense'
 import {
@@ -108,7 +108,7 @@ export function HealthRouteComponent() {
               </div>
             ))
           ) : (
-            <div className="text-muted">Loading health data...</div>
+            <div className="text-muted">{t(I18N_KEY_HEALTH_LOADING)}</div>
           )}
         </Stack>
       </Page>

@@ -9,7 +9,7 @@ export function RootRouteComponent() {
   return (
     <PasswordResetGate>
       <AppShell testId={TEST_ID_APP_SHELL} topBar={<PersistentHeader />}>
-        <Container fluid={true} className="py-4 d-flex flex-column flex-grow-1">
+        <Container fluid={true} className="p-0 d-flex flex-column flex-grow-1">
           <Outlet />
         </Container>
       </AppShell>

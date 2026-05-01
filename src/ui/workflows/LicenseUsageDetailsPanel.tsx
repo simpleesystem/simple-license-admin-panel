@@ -33,6 +33,7 @@ import {
 } from '../constants'
 import { DataTable } from '../data/DataTable'
 import { InlineAlert } from '../feedback/InlineAlert'
+import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn } from '../types'
 
@@ -170,10 +171,7 @@ export function LicenseUsageDetailsPanel({
 
   return (
     <Stack direction="column" gap="small">
-      <div className="d-flex flex-column gap-1">
-        <h2 className="h5 mb-0">{title}</h2>
-        <p className="text-muted mb-0">{UI_ANALYTICS_LICENSE_DETAILS_DESCRIPTION}</p>
-      </div>
+      <PanelHeader title={title} description={UI_ANALYTICS_LICENSE_DETAILS_DESCRIPTION} />
 
       <DataTable
         data={rows}

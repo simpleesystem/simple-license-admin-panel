@@ -33,6 +33,8 @@ export const I18N_KEY_SESSION_EXPIRED_TITLE = 'session.expired.title' as const
 export const I18N_KEY_SESSION_EXPIRED_BODY = 'session.expired.body' as const
 export const I18N_KEY_HEALTH_HEADING = 'health.heading' as const
 export const I18N_KEY_HEALTH_SUBTITLE = 'health.subtitle' as const
+export const I18N_KEY_DASHBOARD_LOADING = 'dashboard.loading' as const
+export const I18N_KEY_HEALTH_LOADING = 'health.loading' as const
 
 export const ROUTE_ID_ROOT = 'route.root' as const
 export const ROUTE_ID_DASHBOARD = 'route.dashboard' as const

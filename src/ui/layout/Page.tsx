@@ -3,7 +3,6 @@ import {
   UI_CLASS_PAGE_CONSTRAINED,
   UI_CLASS_PAGE_FULL_HEIGHT,
   UI_CLASS_PAGE_FULL_WIDTH,
-  UI_PAGE_VARIANT_CONSTRAINED,
   UI_PAGE_VARIANT_FULL_WIDTH,
   UI_TEST_ID_PAGE,
 } from '../constants'
@@ -12,7 +11,7 @@ import { composeClassNames } from '../utils/classNames'
 import { VisibilityGate } from '../utils/PermissionGate'
 
 export function Page({
-  variant = UI_PAGE_VARIANT_CONSTRAINED,
+  variant = UI_PAGE_VARIANT_FULL_WIDTH,
   fullHeight,
   className,
   testId,

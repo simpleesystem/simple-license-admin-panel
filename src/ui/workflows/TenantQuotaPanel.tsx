@@ -3,8 +3,27 @@ import Button from 'react-bootstrap/Button'
 import type { Client } from '@/simpleLicense'
 import { useQuotaConfig, useQuotaUsage } from '@/simpleLicense'
 
+import {
+  UI_BUTTON_VARIANT_OUTLINE,
+  UI_TENANT_QUOTA_ACTIVATIONS_LABEL,
+  UI_TENANT_QUOTA_EDIT_BUTTON,
+  UI_TENANT_QUOTA_ERROR_BODY,
+  UI_TENANT_QUOTA_ERROR_TITLE,
+  UI_TENANT_QUOTA_LOADING_BODY,
+  UI_TENANT_QUOTA_LOADING_TITLE,
+  UI_TENANT_QUOTA_PANEL_DESCRIPTION,
+  UI_TENANT_QUOTA_PANEL_TITLE,
+  UI_TENANT_QUOTA_PER_PRODUCT_LABEL,
+  UI_TENANT_QUOTA_PRODUCTS_LABEL,
+  UI_TENANT_QUOTA_SAVE_BUTTON,
+  UI_TENANT_QUOTA_SUMMARY_ID_ACTIVATIONS,
+  UI_TENANT_QUOTA_SUMMARY_ID_PER_PRODUCT,
+  UI_TENANT_QUOTA_SUMMARY_ID_PRODUCTS,
+  UI_VALUE_PLACEHOLDER,
+} from '../constants'
 import { SummaryList } from '../data/SummaryList'
 import { InlineAlert } from '../feedback/InlineAlert'
+import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiSummaryCardItem } from '../types'
 import { TenantQuotaFormFlow } from './TenantQuotaFormFlow'
@@ -18,12 +37,17 @@ type TenantQuotaPanelProps = {
 
 const formatValue = (value?: number | null) => {
   if (value === undefined || value === null) {
-    return '—'
+    return UI_VALUE_PLACEHOLDER
   }
   return value.toLocaleString()
 }
 
-export function TenantQuotaPanel({ client, tenantId, title = 'Quota Limits', onUpdated }: TenantQuotaPanelProps) {
+export function TenantQuotaPanel({
+  client,
+  tenantId,
+  title = UI_TENANT_QUOTA_PANEL_TITLE,
+  onUpdated,
+}: TenantQuotaPanelProps) {
   const [showModal, setShowModal] = useState(false)
   const usageQuery = useQuotaUsage(client, tenantId, { retry: false })
   const configQuery = useQuotaConfig(client, tenantId, { retry: false })
@@ -35,18 +59,18 @@ export function TenantQuotaPanel({ client, tenantId, title = 'Quota Limits', onU
 
     return [
       {
-        id: 'products-count',
-        label: 'Products (used / max)',
+        id: UI_TENANT_QUOTA_SUMMARY_ID_PRODUCTS,
+        label: UI_TENANT_QUOTA_PRODUCTS_LABEL,
         value: `${usageQuery.data.usage.products_count.toLocaleString()} / ${formatValue(usageQuery.data.usage.max_products)}`,
       },
       {
-        id: 'activations-count',
-        label: 'Activations (used / max)',
+        id: UI_TENANT_QUOTA_SUMMARY_ID_ACTIVATIONS,
+        label: UI_TENANT_QUOTA_ACTIVATIONS_LABEL,
         value: `${usageQuery.data.usage.activations_count.toLocaleString()} / ${formatValue(usageQuery.data.usage.max_activations_total)}`,
       },
       {
-        id: 'per-product',
-        label: 'Per-product activations',
+        id: UI_TENANT_QUOTA_SUMMARY_ID_PER_PRODUCT,
+        label: UI_TENANT_QUOTA_PER_PRODUCT_LABEL,
         value: formatValue(usageQuery.data.usage.max_activations_per_product),
       },
     ]
@@ -62,23 +86,23 @@ export function TenantQuotaPanel({ client, tenantId, title = 'Quota Limits', onU
 
   return (
     <Stack direction="column" gap="small">
-      <div className="d-flex justify-content-between align-items-center">
-        <div>
-          <h2 className="h5 mb-1">{title}</h2>
-          <p className="text-muted mb-0">Track and adjust tenant-specific product and activation limits.</p>
-        </div>
-        <Button variant="outline-primary" onClick={() => setShowModal(true)}>
-          Edit Quotas
-        </Button>
-      </div>
+      <PanelHeader
+        title={title}
+        description={UI_TENANT_QUOTA_PANEL_DESCRIPTION}
+        actions={
+          <Button variant={UI_BUTTON_VARIANT_OUTLINE} onClick={() => setShowModal(true)}>
+            {UI_TENANT_QUOTA_EDIT_BUTTON}
+          </Button>
+        }
+      />
 
       {isLoading ? (
-        <InlineAlert variant="info" title="Loading quota data">
-          Fetching the latest limits…
+        <InlineAlert variant="info" title={UI_TENANT_QUOTA_LOADING_TITLE}>
+          {UI_TENANT_QUOTA_LOADING_BODY}
         </InlineAlert>
       ) : hasError ? (
-        <InlineAlert variant="danger" title="Unable to load quotas">
-          Please try again after refreshing the page.
+        <InlineAlert variant="danger" title={UI_TENANT_QUOTA_ERROR_TITLE}>
+          {UI_TENANT_QUOTA_ERROR_BODY}
         </InlineAlert>
       ) : (
         <SummaryList items={usageItems} />
@@ -89,7 +113,7 @@ export function TenantQuotaPanel({ client, tenantId, title = 'Quota Limits', onU
         tenantId={tenantId}
         show={showModal}
         onClose={() => setShowModal(false)}
-        submitLabel="Save quotas"
+        submitLabel={UI_TENANT_QUOTA_SAVE_BUTTON}
         defaultValues={configQuery.data?.config}
         onSuccess={handleSuccess}
       />

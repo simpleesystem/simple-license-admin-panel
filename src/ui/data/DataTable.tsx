@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { type ReactNode, useEffect } from 'react'
 
 import Form from 'react-bootstrap/Form'
 import Spinner from 'react-bootstrap/Spinner'
@@ -115,6 +115,18 @@ export function DataTable<TData>({
   const allSelected = showSelection && data.length > 0 && data.every((row) => isRowSelected(row))
   const showEmptyState = !isLoading && data.length === 0
   const cellSpan = columns.length + (showSelection ? 1 : 0)
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) {
+      return
+    }
+    if (!onSort) {
+      const offenders = columns.filter((column) => column.sortable).map((column) => column.id)
+      if (offenders.length > 0) {
+        console.warn(`[DataTable] Columns marked sortable but no onSort handler was provided: ${offenders.join(', ')}.`)
+      }
+    }
+  }, [columns, onSort])
 
   return (
     <VisibilityGate ability={ability} permissionKey={permissionKey} permissionFallback={permissionFallback}>

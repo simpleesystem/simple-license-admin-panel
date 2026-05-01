@@ -91,22 +91,6 @@ export function TopLicensesPanel({ client, title = UI_ANALYTICS_TOP_LICENSES_TIT
     ]
   }, [dateFormatter])
 
-  if (topLicensesQuery.isLoading) {
-    return (
-      <InlineAlert variant="info" title={UI_ANALYTICS_TOP_LICENSES_LOADING_TITLE}>
-        {UI_ANALYTICS_TOP_LICENSES_LOADING_BODY}
-      </InlineAlert>
-    )
-  }
-
-  if (topLicensesQuery.isError) {
-    return (
-      <InlineAlert variant="danger" title={UI_ANALYTICS_TOP_LICENSES_ERROR_TITLE}>
-        {UI_ANALYTICS_TOP_LICENSES_ERROR_BODY}
-      </InlineAlert>
-    )
-  }
-
   const rows = (topLicensesQuery.data?.licenses ?? []).slice(0, rowLimit)
 
   return (
@@ -129,12 +113,22 @@ export function TopLicensesPanel({ client, title = UI_ANALYTICS_TOP_LICENSES_TIT
         }
       />
 
-      <DataTable
-        data={rows}
-        columns={columns}
-        rowKey={(row) => row.licenseKey}
-        emptyState={UI_ANALYTICS_TOP_LICENSES_EMPTY_STATE}
-      />
+      {topLicensesQuery.isLoading ? (
+        <InlineAlert variant="info" title={UI_ANALYTICS_TOP_LICENSES_LOADING_TITLE}>
+          {UI_ANALYTICS_TOP_LICENSES_LOADING_BODY}
+        </InlineAlert>
+      ) : topLicensesQuery.isError ? (
+        <InlineAlert variant="danger" title={UI_ANALYTICS_TOP_LICENSES_ERROR_TITLE}>
+          {UI_ANALYTICS_TOP_LICENSES_ERROR_BODY}
+        </InlineAlert>
+      ) : (
+        <DataTable
+          data={rows}
+          columns={columns}
+          rowKey={(row) => row.licenseKey}
+          emptyState={UI_ANALYTICS_TOP_LICENSES_EMPTY_STATE}
+        />
+      )}
     </Stack>
   )
 }
