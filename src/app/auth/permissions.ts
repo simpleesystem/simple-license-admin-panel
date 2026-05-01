@@ -384,6 +384,28 @@ export const isActivationOwnedByUser = (user: User | null, activation: LicenseAc
 
 // These were referenced in UI components but missing from exports
 export const canViewEntitlements = canViewProducts
-export const isEntitlementOwnedByUser = isProductOwnedByUser
 export const canViewProductTiers = canViewProducts
-export const isProductTierOwnedByUser = isProductOwnedByUser
+
+// Tiers and entitlements are scoped to a vendor via the product they belong to. We
+// only need to compare vendor ids, so accept any object with an optional vendorId
+// rather than synthesising a fake Product just to satisfy isProductOwnedByUser.
+type VendorScopedRecord = { vendorId?: string | null }
+
+const isOwnedByVendor = (user: User | null, record: VendorScopedRecord | null): boolean => {
+  if (!user || !record) {
+    return false
+  }
+  if (isSystemAdminUser(user)) {
+    return true
+  }
+  if (user.vendorId && record.vendorId) {
+    return user.vendorId === record.vendorId
+  }
+  return false
+}
+
+export const isEntitlementOwnedByUser = (user: User | null, entitlement: VendorScopedRecord | null): boolean =>
+  isOwnedByVendor(user, entitlement)
+
+export const isProductTierOwnedByUser = (user: User | null, tier: VendorScopedRecord | null): boolean =>
+  isOwnedByVendor(user, tier)

@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
-import Form from 'react-bootstrap/Form'
 import type { Client, Tenant, User } from '@/simpleLicense'
 import {
   canCreateTenant,
@@ -12,10 +11,8 @@ import {
 import { useNotificationBus } from '../../notifications/useNotificationBus'
 import {
   UI_BUTTON_VARIANT_PRIMARY,
-  UI_BUTTON_VARIANT_SECONDARY,
-  UI_TABLE_PAGINATION_LABEL,
-  UI_TABLE_PAGINATION_NEXT,
-  UI_TABLE_PAGINATION_PREVIOUS,
+  UI_TABLE_FILTER_LABEL_STATUS,
+  UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
   UI_TABLE_SEARCH_PLACEHOLDER,
   UI_TENANT_BUTTON_CREATE,
   UI_TENANT_COLUMN_HEADER_ACTIONS,
@@ -29,6 +26,8 @@ import {
   UI_TENANT_EMPTY_STATE_MESSAGE,
   UI_TENANT_FORM_SUBMIT_CREATE,
   UI_TENANT_FORM_SUBMIT_UPDATE,
+  UI_TENANT_PANEL_DESCRIPTION,
+  UI_TENANT_PANEL_TITLE,
   UI_TENANT_STATUS_ACTIVE,
   UI_TENANT_STATUS_LABEL_ACTIVE,
   UI_TENANT_STATUS_LABEL_SUSPENDED,
@@ -36,8 +35,10 @@ import {
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
+import { TableControls } from '../data/TableControls'
 import { TableFilter } from '../data/TableFilter'
-import { TableToolbar } from '../data/TableToolbar'
+import { TablePaginationFooter } from '../data/TablePaginationFooter'
+import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
 import { formatTenantCreatedAt } from '../utils/formatUtils'
@@ -93,35 +94,33 @@ export function TenantManagementPanel({
   const canView = canViewTenants(currentUser ?? null)
 
   const statusOptions: UiSelectOption[] = [
-    { value: '', label: 'Filter by Status' },
+    { value: '', label: UI_TABLE_FILTER_LABEL_STATUS },
     { value: UI_TENANT_STATUS_ACTIVE, label: UI_TENANT_STATUS_LABEL_ACTIVE },
     { value: UI_TENANT_STATUS_SUSPENDED, label: UI_TENANT_STATUS_LABEL_SUSPENDED },
   ]
 
   const toolbar = (
-    <TableToolbar
-      start={
-        <div className="d-flex flex-wrap gap-2 align-items-center">
-          {onSearchChange ? (
-            <Form.Control
-              type="search"
-              placeholder={UI_TABLE_SEARCH_PLACEHOLDER}
-              value={searchTerm}
-              onChange={(event) => onSearchChange(event.target.value)}
-              style={{ maxWidth: '300px' }}
-            />
-          ) : null}
-          {onStatusFilterChange ? (
-            <TableFilter
-              value={statusFilter ?? ''}
-              options={statusOptions}
-              onChange={onStatusFilterChange}
-              placeholder="All Statuses"
-            />
-          ) : null}
-        </div>
+    <TableControls
+      search={
+        onSearchChange
+          ? {
+              value: searchTerm,
+              onChange: onSearchChange,
+              placeholder: UI_TABLE_SEARCH_PLACEHOLDER,
+            }
+          : undefined
       }
-      end={
+      filters={
+        onStatusFilterChange ? (
+          <TableFilter
+            value={statusFilter ?? ''}
+            options={statusOptions}
+            onChange={onStatusFilterChange}
+            placeholder={UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES}
+          />
+        ) : null
+      }
+      actions={
         allowCreate ? (
           <Button variant={UI_BUTTON_VARIANT_PRIMARY} onClick={() => setShowCreateModal(true)}>
             {UI_TENANT_BUTTON_CREATE}
@@ -129,26 +128,6 @@ export function TenantManagementPanel({
         ) : null
       }
     />
-  )
-
-  const pagination = (
-    <Stack direction="row" gap="small" justify="end" aria-label={UI_TABLE_PAGINATION_LABEL}>
-      <Button variant={UI_BUTTON_VARIANT_SECONDARY} onClick={() => onPageChange(page - 1)} disabled={page <= 1}>
-        {UI_TABLE_PAGINATION_PREVIOUS}
-      </Button>
-      <div className="d-flex align-items-center px-2">
-        <span>
-          {page} / {totalPages}
-        </span>
-      </div>
-      <Button
-        variant={UI_BUTTON_VARIANT_SECONDARY}
-        onClick={() => onPageChange(page + 1)}
-        disabled={page >= totalPages}
-      >
-        {UI_TABLE_PAGINATION_NEXT}
-      </Button>
-    </Stack>
   )
 
   const columns: UiDataTableColumn<TenantListItem>[] = useMemo(
@@ -204,6 +183,8 @@ export function TenantManagementPanel({
 
   return (
     <Stack direction="column" gap="medium">
+      <PanelHeader title={UI_TENANT_PANEL_TITLE} description={UI_TENANT_PANEL_DESCRIPTION} />
+
       <DataTable
         data={canView ? visibleTenants : []}
         columns={columns}
@@ -212,7 +193,7 @@ export function TenantManagementPanel({
         sortState={sortState}
         onSort={onSortChange}
         toolbar={toolbar}
-        footer={pagination}
+        footer={<TablePaginationFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />}
       />
 
       {allowCreate ? (

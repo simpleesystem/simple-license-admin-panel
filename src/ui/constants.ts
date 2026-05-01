@@ -85,6 +85,12 @@ export const UI_TABLE_PAGINATION_NEXT = 'Next' as const
 export const UI_TABLE_PAGINATION_LABEL = 'Table pagination' as const
 export const UI_TABLE_PAGE_STATUS_PREFIX = 'Page' as const
 export const UI_TABLE_PAGE_STATUS_SEPARATOR = 'of' as const
+export const UI_TABLE_FILTER_LABEL_STATUS = 'Filter by Status' as const
+export const UI_TABLE_FILTER_LABEL_ROLE = 'Filter by Role' as const
+export const UI_TABLE_FILTER_LABEL_VENDOR = 'Filter by Vendor' as const
+export const UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES = 'All Statuses' as const
+export const UI_TABLE_FILTER_PLACEHOLDER_ALL_ROLES = 'All Roles' as const
+export const UI_TABLE_FILTER_PLACEHOLDER_ALL_VENDORS = 'All Vendors' as const
 
 export const UI_SORT_ASC = 'asc' as const
 export const UI_SORT_DESC = 'desc' as const
@@ -769,6 +775,9 @@ export const UI_USER_VENDOR_PLACEHOLDER = 'Select vendor' as const
 export const UI_USER_FIELD_LABEL_ROLE = 'Role' as const
 export const UI_USER_FIELD_LABEL_VENDOR = 'Vendor' as const
 
+export const UI_TENANT_PANEL_TITLE = 'Tenant directory' as const
+export const UI_TENANT_PANEL_DESCRIPTION = 'Search, filter, and manage organizations on this license server.' as const
+
 export const UI_TENANT_FORM_TITLE_CREATE = 'Create Tenant' as const
 export const UI_TENANT_FORM_TITLE_UPDATE = 'Update Tenant' as const
 export const UI_TENANT_FORM_ID_CREATE = 'create-tenant' as const
@@ -822,6 +831,9 @@ export const UI_TENANT_CONFIRM_RESUME_CANCEL = 'Cancel' as const
 export const UI_TENANT_QUOTA_FORM_ID = 'tenant-quota' as const
 export const UI_TENANT_QUOTA_FORM_TITLE = 'Tenant Quotas' as const
 export const UI_TENANT_QUOTA_SECTION_LIMITS = 'limits' as const
+
+export const UI_PRODUCT_PANEL_TITLE = 'Product catalog' as const
+export const UI_PRODUCT_PANEL_DESCRIPTION = 'Manage product catalog entries, slugs, and availability.' as const
 
 export const UI_PRODUCT_FORM_TITLE_CREATE = 'Create Product' as const
 export const UI_PRODUCT_FORM_DESCRIPTION_CREATE =
@@ -919,6 +931,11 @@ export const UI_PRODUCT_CONFIRM_RESUME_BODY = 'Resuming this product will allow 
 export const UI_PRODUCT_CONFIRM_RESUME_CONFIRM = 'Resume product' as const
 export const UI_PRODUCT_CONFIRM_RESUME_CANCEL = 'Cancel' as const
 
+export const UI_PRODUCT_TIER_PANEL_TITLE = 'Product tiers' as const
+export const UI_PRODUCT_TIER_PANEL_DESCRIPTION =
+  'Define the tiers customers can subscribe to for this product.' as const
+export const UI_PRODUCT_TIER_SEARCH_PLACEHOLDER = 'Search tiers' as const
+
 export const UI_PRODUCT_TIER_FORM_TITLE_CREATE = 'Create Product Tier' as const
 export const UI_PRODUCT_TIER_FORM_TITLE_UPDATE = 'Update Product Tier' as const
 export const UI_PRODUCT_TIER_FORM_ID_CREATE = 'create-product-tier' as const
@@ -961,6 +978,13 @@ export const UI_PRODUCT_TIER_CONFIRM_DELETE_BODY =
   'Deactivating a tier disables assignment while preserving existing license records.' as const
 export const UI_PRODUCT_TIER_CONFIRM_DELETE_CONFIRM = 'Delete tier' as const
 export const UI_PRODUCT_TIER_CONFIRM_DELETE_CANCEL = 'Cancel' as const
+
+export const UI_ENTITLEMENT_PANEL_TITLE = 'Entitlements' as const
+export const UI_ENTITLEMENT_PANEL_DESCRIPTION =
+  'Define entitlement keys and default values that ship with each tier.' as const
+export const UI_ENTITLEMENT_SEARCH_PLACEHOLDER = 'Search entitlements' as const
+export const UI_ENTITLEMENT_COLUMN_ID_TIERS = 'entitlement-tiers' as const
+export const UI_ENTITLEMENT_COLUMN_HEADER_TIERS = 'Tiers' as const
 
 export const UI_ENTITLEMENT_FORM_TITLE_CREATE = 'Create Entitlement' as const
 export const UI_ENTITLEMENT_FORM_TITLE_UPDATE = 'Update Entitlement' as const

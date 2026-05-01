@@ -1,17 +1,16 @@
 import { useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
-import Form from 'react-bootstrap/Form'
-import type { Client, Product, ProductTier, User } from '@/simpleLicense'
+import type { Client, ProductTier, User } from '@/simpleLicense'
 import {
   canCreateProductTier,
   canUpdateProductTier,
   canViewProductTiers,
   isProductTierOwnedByUser,
+  isVendorScopedUser,
 } from '../../app/auth/permissions'
 import { useNotificationBus } from '../../notifications/useNotificationBus'
 import {
   UI_BUTTON_VARIANT_PRIMARY,
-  UI_BUTTON_VARIANT_SECONDARY,
   UI_PRODUCT_TIER_BUTTON_CREATE,
   UI_PRODUCT_TIER_COLUMN_HEADER_ACTIONS,
   UI_PRODUCT_TIER_COLUMN_HEADER_CODE,
@@ -25,17 +24,20 @@ import {
   UI_PRODUCT_TIER_FILTER_PLACEHOLDER,
   UI_PRODUCT_TIER_FORM_SUBMIT_CREATE,
   UI_PRODUCT_TIER_FORM_SUBMIT_UPDATE,
+  UI_PRODUCT_TIER_PANEL_DESCRIPTION,
+  UI_PRODUCT_TIER_PANEL_TITLE,
+  UI_PRODUCT_TIER_SEARCH_PLACEHOLDER,
   UI_PRODUCT_TIER_STATUS_ACTIVE,
   UI_PRODUCT_TIER_STATUS_DEACTIVATED,
   UI_SORT_ASC,
-  UI_TABLE_PAGINATION_LABEL,
-  UI_TABLE_PAGINATION_NEXT,
-  UI_TABLE_PAGINATION_PREVIOUS,
+  UI_TABLE_FILTER_LABEL_STATUS,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
+import { TableControls } from '../data/TableControls'
 import { TableFilter } from '../data/TableFilter'
-import { TableToolbar } from '../data/TableToolbar'
+import { TablePaginationFooter } from '../data/TablePaginationFooter'
+import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
 import { notifyCrudError, notifyProductTierSuccess } from './notifications'
@@ -81,37 +83,20 @@ export function ProductTierManagementPanel({
   const currentSortState = sortState ?? localSortState
   const handleSortChange = onSortChange ?? ((columnId, direction) => setLocalSortState({ columnId, direction }))
 
-  const visibleTiers = useMemo(() => {
-    let list = tiers
-    const isSuperUser = currentUser?.role === 'SUPERUSER' || currentUser?.role === 'ADMIN'
+  const isVendorScoped = isVendorScopedUser(currentUser ?? null)
 
-    // Vendor filtering
-    if (currentUser?.vendorId && !isSuperUser) {
-      list = list.filter((tier) =>
-        isProductTierOwnedByUser(currentUser ?? null, {
-          ...tier,
-          productId,
-          slug: 'mock-slug',
-          name: 'mock-name',
-          description: undefined,
-          isActive: tier.isActive,
-          suspendedAt: null,
-          suspensionReason: null,
-          defaultLicenseTermDays: null,
-          defaultMaxActivations: null,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        } as unknown as Product)
-      )
+  const visibleTiers = useMemo(() => {
+    let list: readonly ProductTierListItem[] = tiers
+
+    if (isVendorScoped) {
+      list = list.filter((tier) => isProductTierOwnedByUser(currentUser ?? null, tier))
     }
 
-    // Status filtering (default active only)
     if (statusFilter) {
       const isActive = statusFilter === 'true'
       list = list.filter((tier) => (tier.isActive ?? true) === isActive)
     }
 
-    // Search filtering
     if (searchTerm) {
       const term = searchTerm.toLowerCase()
       list = list.filter(
@@ -119,9 +104,8 @@ export function ProductTierManagementPanel({
       )
     }
 
-    // Sorting
     if (currentSortState) {
-      list = [...list].sort((a, b) => {
+      const sorted = [...list].sort((a, b) => {
         const aValue = a[currentSortState.columnId as keyof ProductTierListItem]
         const bValue = b[currentSortState.columnId as keyof ProductTierListItem]
 
@@ -142,10 +126,11 @@ export function ProductTierManagementPanel({
         const cmp = aValue < bValue ? -1 : 1
         return currentSortState.direction === UI_SORT_ASC ? cmp : -cmp
       })
+      list = sorted
     }
 
     return list
-  }, [currentUser, tiers, statusFilter, searchTerm, currentSortState, productId])
+  }, [currentUser, tiers, statusFilter, searchTerm, currentSortState, isVendorScoped])
   const allowCreate = canCreateProductTier(currentUser ?? null)
   const canView = canViewProductTiers(currentUser ?? null)
   const statusOptions: UiSelectOption[] = [
@@ -154,27 +139,22 @@ export function ProductTierManagementPanel({
   ]
 
   const toolbar = (
-    <TableToolbar
-      start={
-        <div className="d-flex align-items-center gap-3">
-          <Form.Control
-            type="search"
-            placeholder="Search tiers..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ maxWidth: '250px' }}
-            size="sm"
-          />
-          <TableFilter
-            label={UI_PRODUCT_TIER_COLUMN_HEADER_STATUS}
-            value={statusFilter}
-            options={statusOptions}
-            onChange={setStatusFilter}
-            placeholder={UI_PRODUCT_TIER_FILTER_PLACEHOLDER}
-          />
-        </div>
+    <TableControls
+      search={{
+        value: searchTerm,
+        onChange: setSearchTerm,
+        placeholder: UI_PRODUCT_TIER_SEARCH_PLACEHOLDER,
+      }}
+      filters={
+        <TableFilter
+          label={UI_TABLE_FILTER_LABEL_STATUS}
+          value={statusFilter}
+          options={statusOptions}
+          onChange={setStatusFilter}
+          placeholder={UI_PRODUCT_TIER_FILTER_PLACEHOLDER}
+        />
       }
-      end={
+      actions={
         allowCreate ? (
           <Button variant={UI_BUTTON_VARIANT_PRIMARY} onClick={() => setShowCreateModal(true)}>
             {UI_PRODUCT_TIER_BUTTON_CREATE}
@@ -182,26 +162,6 @@ export function ProductTierManagementPanel({
         ) : null
       }
     />
-  )
-
-  const pagination = (
-    <Stack direction="row" gap="small" justify="end" aria-label={UI_TABLE_PAGINATION_LABEL}>
-      <Button variant={UI_BUTTON_VARIANT_SECONDARY} onClick={() => onPageChange(page - 1)} disabled={page <= 1}>
-        {UI_TABLE_PAGINATION_PREVIOUS}
-      </Button>
-      <div className="d-flex align-items-center px-2">
-        <span>
-          {page} / {totalPages}
-        </span>
-      </div>
-      <Button
-        variant={UI_BUTTON_VARIANT_SECONDARY}
-        onClick={() => onPageChange(page + 1)}
-        disabled={page >= totalPages}
-      >
-        {UI_TABLE_PAGINATION_NEXT}
-      </Button>
-    </Stack>
   )
 
   const columns: UiDataTableColumn<ProductTierListItem>[] = useMemo(
@@ -258,6 +218,8 @@ export function ProductTierManagementPanel({
 
   return (
     <Stack direction="column" gap="medium">
+      <PanelHeader title={UI_PRODUCT_TIER_PANEL_TITLE} description={UI_PRODUCT_TIER_PANEL_DESCRIPTION} />
+
       <DataTable
         data={canView ? visibleTiers : []}
         columns={columns}
@@ -266,7 +228,7 @@ export function ProductTierManagementPanel({
         sortState={currentSortState}
         onSort={handleSortChange}
         toolbar={toolbar}
-        footer={pagination}
+        footer={<TablePaginationFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />}
       />
 
       {allowCreate ? (

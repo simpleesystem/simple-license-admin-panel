@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
-import Form from 'react-bootstrap/Form'
 import type { Client, Product, User } from '@/simpleLicense'
 import {
   canCreateProduct,
@@ -12,7 +11,6 @@ import {
 import { useNotificationBus } from '../../notifications/useNotificationBus'
 import {
   UI_BUTTON_VARIANT_PRIMARY,
-  UI_BUTTON_VARIANT_SECONDARY,
   UI_PRODUCT_BUTTON_CREATE,
   UI_PRODUCT_COLUMN_HEADER_ACTIONS,
   UI_PRODUCT_COLUMN_HEADER_NAME,
@@ -26,17 +24,19 @@ import {
   UI_PRODUCT_COLUMN_ID_VENDOR,
   UI_PRODUCT_EMPTY_STATE_MESSAGE,
   UI_PRODUCT_FORM_SUBMIT_CREATE,
+  UI_PRODUCT_PANEL_DESCRIPTION,
+  UI_PRODUCT_PANEL_TITLE,
   UI_PRODUCT_STATUS_ACTIVE,
   UI_PRODUCT_STATUS_SUSPENDED,
-  UI_TABLE_PAGINATION_LABEL,
-  UI_TABLE_PAGINATION_NEXT,
-  UI_TABLE_PAGINATION_PREVIOUS,
+  UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
   UI_TABLE_SEARCH_PLACEHOLDER,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
+import { TableControls } from '../data/TableControls'
 import { TableFilter } from '../data/TableFilter'
-import { TableToolbar } from '../data/TableToolbar'
+import { TablePaginationFooter } from '../data/TablePaginationFooter'
+import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
 import { notifyCrudError, notifyProductSuccess } from './notifications'
@@ -108,30 +108,28 @@ export function ProductManagementPanel({
   ]
 
   const toolbar = (
-    <TableToolbar
-      start={
-        <div className="d-flex flex-wrap gap-2 align-items-center">
-          {onSearchChange ? (
-            <Form.Control
-              type="search"
-              placeholder={UI_TABLE_SEARCH_PLACEHOLDER}
-              value={searchTerm}
-              onChange={(event) => onSearchChange(event.target.value)}
-              style={{ maxWidth: '300px' }}
-            />
-          ) : null}
-          {onStatusFilterChange ? (
-            <TableFilter
-              label={UI_PRODUCT_COLUMN_HEADER_STATUS}
-              value={statusFilter ?? ''}
-              options={statusOptions}
-              onChange={onStatusFilterChange}
-              placeholder="All Statuses"
-            />
-          ) : null}
-        </div>
+    <TableControls
+      search={
+        onSearchChange
+          ? {
+              value: searchTerm,
+              onChange: onSearchChange,
+              placeholder: UI_TABLE_SEARCH_PLACEHOLDER,
+            }
+          : undefined
       }
-      end={
+      filters={
+        onStatusFilterChange ? (
+          <TableFilter
+            label={UI_PRODUCT_COLUMN_HEADER_STATUS}
+            value={statusFilter ?? ''}
+            options={statusOptions}
+            onChange={onStatusFilterChange}
+            placeholder={UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES}
+          />
+        ) : null
+      }
+      actions={
         allowCreate ? (
           <Button variant={UI_BUTTON_VARIANT_PRIMARY} onClick={() => setShowCreate(true)}>
             {UI_PRODUCT_BUTTON_CREATE}
@@ -139,26 +137,6 @@ export function ProductManagementPanel({
         ) : null
       }
     />
-  )
-
-  const pagination = (
-    <Stack direction="row" gap="small" justify="end" aria-label={UI_TABLE_PAGINATION_LABEL}>
-      <Button variant={UI_BUTTON_VARIANT_SECONDARY} onClick={() => onPageChange(page - 1)} disabled={page <= 1}>
-        {UI_TABLE_PAGINATION_PREVIOUS}
-      </Button>
-      <div className="d-flex align-items-center px-2">
-        <span>
-          {page} / {totalPages}
-        </span>
-      </div>
-      <Button
-        variant={UI_BUTTON_VARIANT_SECONDARY}
-        onClick={() => onPageChange(page + 1)}
-        disabled={page >= totalPages}
-      >
-        {UI_TABLE_PAGINATION_NEXT}
-      </Button>
-    </Stack>
   )
 
   const columns: UiDataTableColumn<ProductListItem>[] = useMemo(
@@ -225,6 +203,8 @@ export function ProductManagementPanel({
 
   return (
     <Stack direction="column" gap="medium">
+      <PanelHeader title={UI_PRODUCT_PANEL_TITLE} description={UI_PRODUCT_PANEL_DESCRIPTION} />
+
       <DataTable
         data={canView ? visibleProducts : []}
         columns={columns}
@@ -233,7 +213,7 @@ export function ProductManagementPanel({
         sortState={sortState}
         onSort={onSortChange}
         toolbar={toolbar}
-        footer={pagination}
+        footer={<TablePaginationFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />}
       />
 
       {allowCreate ? (

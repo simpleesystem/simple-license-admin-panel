@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react'
 import Badge from 'react-bootstrap/Badge'
 import Button from 'react-bootstrap/Button'
-import Form from 'react-bootstrap/Form'
-import type { Client, Product, User } from '@/simpleLicense'
+import type { Client, User } from '@/simpleLicense'
 import {
   canCreateEntitlement,
   canUpdateEntitlement,
@@ -13,30 +12,33 @@ import {
 import { useNotificationBus } from '../../notifications/useNotificationBus'
 import {
   UI_BUTTON_VARIANT_PRIMARY,
-  UI_BUTTON_VARIANT_SECONDARY,
   UI_ENTITLEMENT_BUTTON_CREATE,
   UI_ENTITLEMENT_COLUMN_HEADER_ACTIONS,
   UI_ENTITLEMENT_COLUMN_HEADER_DEFAULT_VALUE,
   UI_ENTITLEMENT_COLUMN_HEADER_KEY,
+  UI_ENTITLEMENT_COLUMN_HEADER_TIERS,
   UI_ENTITLEMENT_COLUMN_HEADER_VALUE_TYPE,
   UI_ENTITLEMENT_COLUMN_ID_ACTIONS,
   UI_ENTITLEMENT_COLUMN_ID_DEFAULT_VALUE,
   UI_ENTITLEMENT_COLUMN_ID_KEY,
+  UI_ENTITLEMENT_COLUMN_ID_TIERS,
   UI_ENTITLEMENT_COLUMN_ID_VALUE_TYPE,
   UI_ENTITLEMENT_EMPTY_STATE_MESSAGE,
   UI_ENTITLEMENT_FORM_SUBMIT_CREATE,
   UI_ENTITLEMENT_FORM_SUBMIT_UPDATE,
+  UI_ENTITLEMENT_PANEL_DESCRIPTION,
+  UI_ENTITLEMENT_PANEL_TITLE,
+  UI_ENTITLEMENT_SEARCH_PLACEHOLDER,
   UI_ENTITLEMENT_VALUE_LABEL_BOOLEAN,
   UI_ENTITLEMENT_VALUE_LABEL_NUMBER,
   UI_ENTITLEMENT_VALUE_LABEL_STRING,
   UI_SORT_ASC,
-  UI_TABLE_PAGINATION_LABEL,
-  UI_TABLE_PAGINATION_NEXT,
-  UI_TABLE_PAGINATION_PREVIOUS,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
-import { TableToolbar } from '../data/TableToolbar'
+import { TableControls } from '../data/TableControls'
+import { TablePaginationFooter } from '../data/TablePaginationFooter'
+import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
 import { notifyCrudError, notifyProductEntitlementSuccess } from './notifications'
@@ -83,24 +85,19 @@ export function ProductEntitlementManagementPanel({
 
   const isVendorScoped = isVendorScopedUser(currentUser ?? null)
   const visibleEntitlements = useMemo(() => {
-    let list = entitlements
+    let list: readonly ProductEntitlementListItem[] = entitlements
 
-    // Vendor filtering
     if (isVendorScoped) {
-      list = list.filter((entitlement) =>
-        isEntitlementOwnedByUser(currentUser ?? null, entitlement as unknown as Product)
-      )
+      list = list.filter((entitlement) => isEntitlementOwnedByUser(currentUser ?? null, entitlement))
     }
 
-    // Search filtering
     if (searchTerm) {
       const term = searchTerm.toLowerCase()
       list = list.filter((entitlement) => entitlement.key.toLowerCase().includes(term))
     }
 
-    // Sorting
     if (currentSortState) {
-      list = [...list].sort((a, b) => {
+      const sorted = [...list].sort((a, b) => {
         const aValue = a[currentSortState.columnId as keyof ProductEntitlementListItem]
         const bValue = b[currentSortState.columnId as keyof ProductEntitlementListItem]
 
@@ -122,6 +119,7 @@ export function ProductEntitlementManagementPanel({
         const cmp = aValue < bValue ? -1 : 1
         return currentSortState.direction === UI_SORT_ASC ? cmp : -cmp
       })
+      list = sorted
     }
 
     return list
@@ -139,20 +137,13 @@ export function ProductEntitlementManagementPanel({
   }
 
   const toolbar = (
-    <TableToolbar
-      start={
-        <div className="d-flex align-items-center gap-3">
-          <Form.Control
-            type="search"
-            placeholder="Search entitlements..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ maxWidth: '250px' }}
-            size="sm"
-          />
-        </div>
-      }
-      end={
+    <TableControls
+      search={{
+        value: searchTerm,
+        onChange: setSearchTerm,
+        placeholder: UI_ENTITLEMENT_SEARCH_PLACEHOLDER,
+      }}
+      actions={
         allowCreate ? (
           <Button variant={UI_BUTTON_VARIANT_PRIMARY} onClick={() => setShowCreateModal(true)}>
             {UI_ENTITLEMENT_BUTTON_CREATE}
@@ -160,26 +151,6 @@ export function ProductEntitlementManagementPanel({
         ) : null
       }
     />
-  )
-
-  const pagination = (
-    <Stack direction="row" gap="small" justify="end" aria-label={UI_TABLE_PAGINATION_LABEL}>
-      <Button variant={UI_BUTTON_VARIANT_SECONDARY} onClick={() => onPageChange(page - 1)} disabled={page <= 1}>
-        {UI_TABLE_PAGINATION_PREVIOUS}
-      </Button>
-      <div className="d-flex align-items-center px-2">
-        <span>
-          {page} / {totalPages}
-        </span>
-      </div>
-      <Button
-        variant={UI_BUTTON_VARIANT_SECONDARY}
-        onClick={() => onPageChange(page + 1)}
-        disabled={page >= totalPages}
-      >
-        {UI_TABLE_PAGINATION_NEXT}
-      </Button>
-    </Stack>
   )
 
   const columns: UiDataTableColumn<ProductEntitlementListItem>[] = useMemo(
@@ -227,8 +198,8 @@ export function ProductEntitlementManagementPanel({
         sortable: false,
       },
       {
-        id: 'tiers',
-        header: 'Tiers',
+        id: UI_ENTITLEMENT_COLUMN_ID_TIERS,
+        header: UI_ENTITLEMENT_COLUMN_HEADER_TIERS,
         cell: (row) => {
           if (!row.productTiers || row.productTiers.length === 0) {
             return UI_VALUE_PLACEHOLDER
@@ -269,6 +240,8 @@ export function ProductEntitlementManagementPanel({
 
   return (
     <Stack direction="column" gap="medium">
+      <PanelHeader title={UI_ENTITLEMENT_PANEL_TITLE} description={UI_ENTITLEMENT_PANEL_DESCRIPTION} />
+
       <DataTable
         data={canView ? visibleEntitlements : []}
         columns={columns}
@@ -277,7 +250,7 @@ export function ProductEntitlementManagementPanel({
         sortState={currentSortState}
         onSort={handleSortChange}
         toolbar={toolbar}
-        footer={pagination}
+        footer={<TablePaginationFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />}
       />
 
       {allowCreate ? (

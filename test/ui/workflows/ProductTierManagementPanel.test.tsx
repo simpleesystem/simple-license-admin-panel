@@ -5,6 +5,7 @@ import type { Client, User } from '@/simpleLicense'
 import {
   UI_PRODUCT_TIER_BUTTON_CREATE,
   UI_PRODUCT_TIER_EMPTY_STATE_MESSAGE,
+  UI_PRODUCT_TIER_SEARCH_PLACEHOLDER,
   UI_USER_ROLE_SUPERUSER,
 } from '@/ui/constants'
 import { type ProductTierListItem, ProductTierManagementPanel } from '@/ui/workflows/ProductTierManagementPanel'
@@ -152,7 +153,7 @@ describe('ProductTierManagementPanel', () => {
       </NotificationBusProvider>
     )
 
-    const searchInput = screen.getByPlaceholderText('Search tiers...')
+    const searchInput = screen.getByPlaceholderText(UI_PRODUCT_TIER_SEARCH_PLACEHOLDER)
     fireEvent.change(searchInput, { target: { value: 'test' } })
     // Search is handled internally by sorting/filtering in useMemo, not via prop callback in this component
     // But we verify input exists and accepts value

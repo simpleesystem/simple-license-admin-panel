@@ -6,6 +6,11 @@ import { canCreateUser, canDeleteUser, canUpdateUser } from '../../app/auth/perm
 import { useNotificationBus } from '../../notifications/useNotificationBus'
 import {
   UI_BUTTON_VARIANT_PRIMARY,
+  UI_TABLE_FILTER_LABEL_ROLE,
+  UI_TABLE_FILTER_LABEL_STATUS,
+  UI_TABLE_FILTER_PLACEHOLDER_ALL_ROLES,
+  UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
+  UI_TABLE_FILTER_PLACEHOLDER_ALL_VENDORS,
   UI_TABLE_SEARCH_PLACEHOLDER,
   UI_USER_BUTTON_CREATE,
   UI_USER_COLUMN_HEADER_ACTIONS,
@@ -127,7 +132,7 @@ export function UserManagementPanel({
   }, [tenantsQuery.data])
 
   const roleOptions: UiSelectOption[] = [
-    { value: '', label: 'Filter by Role' },
+    { value: '', label: UI_TABLE_FILTER_LABEL_ROLE },
     { value: UI_USER_ROLE_SUPERUSER, label: UI_USER_ROLE_LABEL_SUPERUSER },
     { value: UI_USER_ROLE_ADMIN, label: UI_USER_ROLE_LABEL_ADMIN },
     { value: UI_USER_ROLE_VENDOR_MANAGER, label: UI_USER_ROLE_LABEL_VENDOR_MANAGER },
@@ -139,7 +144,7 @@ export function UserManagementPanel({
   ]
 
   const statusOptions: UiSelectOption[] = [
-    { value: '', label: 'Filter by Status' },
+    { value: '', label: UI_TABLE_FILTER_LABEL_STATUS },
     { value: UI_USER_STATUS_ACTIVE, label: UI_USER_STATUS_LABEL_ACTIVE },
     { value: UI_USER_STATUS_DISABLED, label: UI_USER_STATUS_LABEL_DISABLED },
     { value: UI_USER_STATUS_DELETED, label: UI_USER_STATUS_LABEL_DELETED },
@@ -159,7 +164,7 @@ export function UserManagementPanel({
               value={roleFilter}
               options={roleOptions}
               onChange={onRoleFilterChange}
-              placeholder="All Roles"
+              placeholder={UI_TABLE_FILTER_PLACEHOLDER_ALL_ROLES}
             />
           ) : null}
           {onStatusFilterChange ? (
@@ -167,7 +172,7 @@ export function UserManagementPanel({
               value={statusFilter}
               options={statusOptions}
               onChange={onStatusFilterChange}
-              placeholder="All Statuses"
+              placeholder={UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES}
             />
           ) : null}
           {onVendorFilterChange && currentUser?.role !== UI_USER_ROLE_VENDOR_MANAGER ? (
@@ -175,7 +180,7 @@ export function UserManagementPanel({
               value={vendorFilter}
               options={vendorOptions}
               onChange={onVendorFilterChange}
-              placeholder="All Vendors"
+              placeholder={UI_TABLE_FILTER_PLACEHOLDER_ALL_VENDORS}
             />
           ) : null}
         </>

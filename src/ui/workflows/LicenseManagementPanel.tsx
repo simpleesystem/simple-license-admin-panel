@@ -29,6 +29,8 @@ import {
   UI_LICENSE_STATUS_INACTIVE,
   UI_LICENSE_STATUS_REVOKED,
   UI_LICENSE_STATUS_SUSPENDED,
+  UI_TABLE_FILTER_LABEL_STATUS,
+  UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
   UI_TABLE_SEARCH_PLACEHOLDER,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
@@ -103,7 +105,7 @@ export function LicenseManagementPanel({
   const canView = canViewLicenses(currentUser ?? null)
 
   const statusOptions: UiSelectOption[] = [
-    { value: '', label: 'Filter by Status' },
+    { value: '', label: UI_TABLE_FILTER_LABEL_STATUS },
     { value: 'ACTIVE', label: UI_LICENSE_STATUS_ACTIVE },
     { value: 'INACTIVE', label: UI_LICENSE_STATUS_INACTIVE },
     { value: 'SUSPENDED', label: UI_LICENSE_STATUS_SUSPENDED },
@@ -127,7 +129,7 @@ export function LicenseManagementPanel({
             value={statusFilter ?? ''}
             options={statusOptions}
             onChange={onStatusFilterChange}
-            placeholder="All Statuses"
+            placeholder={UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES}
           />
         ) : null
       }

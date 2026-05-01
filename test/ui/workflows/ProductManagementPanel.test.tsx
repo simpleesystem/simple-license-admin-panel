@@ -185,7 +185,7 @@ describe('ProductManagementPanel', () => {
       </NotificationBusProvider>
     )
 
-    expect(screen.getByText('1 / 5')).toBeInTheDocument()
+    expect(screen.getByText(/1\s+of\s+5/)).toBeInTheDocument()
   })
 
   it('handles page change', () => {
