@@ -44,6 +44,8 @@ import {
   UI_AUDIT_LOGS_TITLE,
   UI_AUDIT_LOGS_TOTAL_LABEL,
   UI_AUDIT_LOGS_USER_AGENT_PREVIEW_LIMIT,
+  UI_BUTTON_VARIANT_PRIMARY,
+  UI_BUTTON_VARIANT_SECONDARY,
   UI_COLUMN_ID_AUDIT_LOG_ACTION,
   UI_COLUMN_ID_AUDIT_LOG_ADMIN,
   UI_COLUMN_ID_AUDIT_LOG_DETAILS,
@@ -59,16 +61,15 @@ import {
   UI_FIELD_AUDIT_FILTER_RESOURCE_ID,
   UI_FIELD_AUDIT_FILTER_RESOURCE_TYPE,
   UI_SORT_DESC,
-  UI_STACK_GAP_SMALL,
-  UI_TABLE_PAGE_STATUS_PREFIX,
-  UI_TABLE_PAGE_STATUS_SEPARATOR,
-  UI_TABLE_PAGINATION_NEXT,
-  UI_TABLE_PAGINATION_PREVIOUS,
+  UI_STACK_GAP_MEDIUM,
   UI_TEXT_ALIGN_END,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
+import { TableControls } from '../data/TableControls'
+import { TablePaginationFooter } from '../data/TablePaginationFooter'
 import { InlineAlert } from '../feedback/InlineAlert'
+import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState } from '../types'
 
@@ -134,6 +135,68 @@ const renderAuditCell = (value: unknown, className: string = UI_AUDIT_LOGS_CELL_
   )
 }
 
+type AuditLogsFilterBarProps = {
+  formState: AuditLogFilters
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void
+  onReset: () => void
+}
+
+function AuditLogsFilterBar({ formState, onChange, onSubmit, onReset }: AuditLogsFilterBarProps) {
+  return (
+    <Form className="row g-2 align-items-end w-100" onSubmit={onSubmit}>
+      <Form.Group className="col-12 col-md-3" controlId={UI_FIELD_AUDIT_FILTER_ADMIN}>
+        <Form.Label className="small text-muted mb-1">{UI_AUDIT_LOGS_FILTER_ADMIN_LABEL}</Form.Label>
+        <Form.Control
+          name={UI_FIELD_AUDIT_FILTER_ADMIN}
+          size="sm"
+          value={formState.adminId ?? ''}
+          onChange={onChange}
+        />
+      </Form.Group>
+
+      <Form.Group className="col-12 col-md-3" controlId={UI_FIELD_AUDIT_FILTER_ACTION}>
+        <Form.Label className="small text-muted mb-1">{UI_AUDIT_LOGS_FILTER_ACTION_LABEL}</Form.Label>
+        <Form.Control
+          name={UI_FIELD_AUDIT_FILTER_ACTION}
+          size="sm"
+          value={formState.action ?? ''}
+          onChange={onChange}
+        />
+      </Form.Group>
+
+      <Form.Group className="col-12 col-md-3" controlId={UI_FIELD_AUDIT_FILTER_RESOURCE_TYPE}>
+        <Form.Label className="small text-muted mb-1">{UI_AUDIT_LOGS_FILTER_RESOURCE_TYPE_LABEL}</Form.Label>
+        <Form.Control
+          name={UI_FIELD_AUDIT_FILTER_RESOURCE_TYPE}
+          size="sm"
+          value={formState.resourceType ?? ''}
+          onChange={onChange}
+        />
+      </Form.Group>
+
+      <Form.Group className="col-12 col-md-3" controlId={UI_FIELD_AUDIT_FILTER_RESOURCE_ID}>
+        <Form.Label className="small text-muted mb-1">{UI_AUDIT_LOGS_FILTER_RESOURCE_ID_LABEL}</Form.Label>
+        <Form.Control
+          name={UI_FIELD_AUDIT_FILTER_RESOURCE_ID}
+          size="sm"
+          value={formState.resourceId ?? ''}
+          onChange={onChange}
+        />
+      </Form.Group>
+
+      <div className="col-12 d-flex flex-wrap gap-2">
+        <Button type="submit" variant={UI_BUTTON_VARIANT_PRIMARY} size="sm">
+          {UI_AUDIT_LOGS_FILTER_APPLY_LABEL}
+        </Button>
+        <Button type="button" variant={UI_BUTTON_VARIANT_SECONDARY} size="sm" onClick={onReset}>
+          {UI_AUDIT_LOGS_FILTER_RESET_LABEL}
+        </Button>
+      </div>
+    </Form>
+  )
+}
+
 export function AuditLogsPanel({
   client,
   title = UI_AUDIT_LOGS_TITLE,
@@ -187,9 +250,8 @@ export function AuditLogsPanel({
     setPageIndex(0)
   }
 
-  const handlePageSizeChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    const nextPageSize = Number(event.currentTarget.value)
-    setCurrentPageSize(nextPageSize)
+  const handlePageSizeChange = (size: number) => {
+    setCurrentPageSize(size)
     setPageIndex(0)
   }
 
@@ -198,12 +260,8 @@ export function AuditLogsPanel({
     setPageIndex(0)
   }
 
-  const handlePreviousPage = () => {
-    setPageIndex((previousPageIndex) => Math.max(previousPageIndex - 1, 0))
-  }
-
-  const handleNextPage = () => {
-    setPageIndex((previousPageIndex) => previousPageIndex + 1)
+  const handlePageChange = (nextPage: number) => {
+    setPageIndex(Math.max(0, nextPage - 1))
   }
 
   const columns = useMemo<UiDataTableColumn<AuditLogRow>[]>(() => {
@@ -259,19 +317,27 @@ export function AuditLogsPanel({
     ]
   }, [dateTimeFormatter])
 
+  const panelDescription = `${UI_AUDIT_LOGS_DESCRIPTION} ${UI_AUDIT_LOGS_TOTAL_LABEL}: ${totalEntries.toLocaleString()}`
+
   if (auditLogsQuery.isLoading) {
     return (
-      <InlineAlert variant="info" title={UI_AUDIT_LOGS_LOADING_TITLE}>
-        {UI_AUDIT_LOGS_LOADING_BODY}
-      </InlineAlert>
+      <Stack direction="column" gap={UI_STACK_GAP_MEDIUM} className={UI_AUDIT_LOGS_PANEL_CLASS}>
+        <PanelHeader title={title} description={panelDescription} />
+        <InlineAlert variant="info" title={UI_AUDIT_LOGS_LOADING_TITLE}>
+          {UI_AUDIT_LOGS_LOADING_BODY}
+        </InlineAlert>
+      </Stack>
     )
   }
 
   if (auditLogsQuery.isError) {
     return (
-      <InlineAlert variant="danger" title={UI_AUDIT_LOGS_ERROR_TITLE}>
-        {UI_AUDIT_LOGS_ERROR_BODY}
-      </InlineAlert>
+      <Stack direction="column" gap={UI_STACK_GAP_MEDIUM} className={UI_AUDIT_LOGS_PANEL_CLASS}>
+        <PanelHeader title={title} description={panelDescription} />
+        <InlineAlert variant="danger" title={UI_AUDIT_LOGS_ERROR_TITLE}>
+          {UI_AUDIT_LOGS_ERROR_BODY}
+        </InlineAlert>
+      </Stack>
     )
   }
 
@@ -279,115 +345,42 @@ export function AuditLogsPanel({
   const currentPage = pageIndex + 1
   const rangeStart = rows.length > 0 ? pageIndex * currentPageSize + 1 : 0
   const rangeEnd = pageIndex * currentPageSize + rows.length
-  const canNavigatePrevious = pageIndex > 0
-  const canNavigateNext = rangeEnd < totalEntries
-  const tableFooter = (
-    <div className="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between gap-3">
-      <div className="d-flex flex-wrap align-items-center gap-2">
-        <Form.Label className="mb-0" htmlFor="audit-logs-page-size">
-          {UI_AUDIT_LOGS_PAGE_SIZE_LABEL}
-        </Form.Label>
-        <Form.Select
-          id="audit-logs-page-size"
-          size="sm"
-          value={currentPageSize}
-          onChange={handlePageSizeChange}
-          className="w-auto"
-        >
-          {UI_AUDIT_LOGS_PAGE_SIZE_OPTIONS.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </Form.Select>
-        <span className="text-muted small">
-          {UI_AUDIT_LOGS_RANGE_LABEL} {rangeStart.toLocaleString()} {UI_AUDIT_LOGS_RANGE_SEPARATOR}{' '}
-          {rangeEnd.toLocaleString()} / {totalEntries.toLocaleString()}
-        </span>
-      </div>
-      <div className="d-flex flex-wrap align-items-center gap-2">
-        <span className="text-muted small">
-          {UI_TABLE_PAGE_STATUS_PREFIX} {currentPage.toLocaleString()} {UI_TABLE_PAGE_STATUS_SEPARATOR}{' '}
-          {totalPages.toLocaleString()}
-        </span>
-        <Button
-          type="button"
-          variant="outline-secondary"
-          size="sm"
-          onClick={handlePreviousPage}
-          disabled={!canNavigatePrevious}
-        >
-          {UI_TABLE_PAGINATION_PREVIOUS}
-        </Button>
-        <Button
-          type="button"
-          variant="outline-secondary"
-          size="sm"
-          onClick={handleNextPage}
-          disabled={!canNavigateNext}
-        >
-          {UI_TABLE_PAGINATION_NEXT}
-        </Button>
-      </div>
-    </div>
+  const summary = (
+    <>
+      {UI_AUDIT_LOGS_RANGE_LABEL} {rangeStart.toLocaleString()} {UI_AUDIT_LOGS_RANGE_SEPARATOR}{' '}
+      {rangeEnd.toLocaleString()} / {totalEntries.toLocaleString()}
+    </>
+  )
+
+  const toolbar = (
+    <TableControls
+      filters={
+        <AuditLogsFilterBar
+          formState={formState}
+          onChange={handleFilterChange}
+          onSubmit={handleSubmit}
+          onReset={handleReset}
+        />
+      }
+    />
+  )
+
+  const footer = (
+    <TablePaginationFooter
+      page={currentPage}
+      totalPages={totalPages}
+      onPageChange={handlePageChange}
+      pageSize={currentPageSize}
+      pageSizeOptions={UI_AUDIT_LOGS_PAGE_SIZE_OPTIONS}
+      onPageSizeChange={handlePageSizeChange}
+      pageSizeLabel={UI_AUDIT_LOGS_PAGE_SIZE_LABEL}
+      summary={summary}
+    />
   )
 
   return (
-    <Stack direction="column" gap={UI_STACK_GAP_SMALL} className={UI_AUDIT_LOGS_PANEL_CLASS}>
-      <div className="d-flex flex-column gap-1">
-        <h2 className="h5 mb-0">{title}</h2>
-        <p className="text-muted mb-0">{UI_AUDIT_LOGS_DESCRIPTION}</p>
-        <span className="text-muted small">
-          {UI_AUDIT_LOGS_TOTAL_LABEL}: {totalEntries.toLocaleString()}
-        </span>
-      </div>
-
-      <Form className="row g-3 align-items-end" onSubmit={handleSubmit}>
-        <Form.Group className="col-12 col-md-3" controlId={UI_FIELD_AUDIT_FILTER_ADMIN}>
-          <Form.Label>{UI_AUDIT_LOGS_FILTER_ADMIN_LABEL}</Form.Label>
-          <Form.Control
-            name={UI_FIELD_AUDIT_FILTER_ADMIN}
-            value={formState.adminId ?? ''}
-            onChange={handleFilterChange}
-          />
-        </Form.Group>
-
-        <Form.Group className="col-12 col-md-3" controlId={UI_FIELD_AUDIT_FILTER_ACTION}>
-          <Form.Label>{UI_AUDIT_LOGS_FILTER_ACTION_LABEL}</Form.Label>
-          <Form.Control
-            name={UI_FIELD_AUDIT_FILTER_ACTION}
-            value={formState.action ?? ''}
-            onChange={handleFilterChange}
-          />
-        </Form.Group>
-
-        <Form.Group className="col-12 col-md-3" controlId={UI_FIELD_AUDIT_FILTER_RESOURCE_TYPE}>
-          <Form.Label>{UI_AUDIT_LOGS_FILTER_RESOURCE_TYPE_LABEL}</Form.Label>
-          <Form.Control
-            name={UI_FIELD_AUDIT_FILTER_RESOURCE_TYPE}
-            value={formState.resourceType ?? ''}
-            onChange={handleFilterChange}
-          />
-        </Form.Group>
-
-        <Form.Group className="col-12 col-md-3" controlId={UI_FIELD_AUDIT_FILTER_RESOURCE_ID}>
-          <Form.Label>{UI_AUDIT_LOGS_FILTER_RESOURCE_ID_LABEL}</Form.Label>
-          <Form.Control
-            name={UI_FIELD_AUDIT_FILTER_RESOURCE_ID}
-            value={formState.resourceId ?? ''}
-            onChange={handleFilterChange}
-          />
-        </Form.Group>
-
-        <div className="col-12 d-flex flex-wrap gap-2">
-          <Button type="submit" variant="primary">
-            {UI_AUDIT_LOGS_FILTER_APPLY_LABEL}
-          </Button>
-          <Button type="button" variant="outline-secondary" onClick={handleReset}>
-            {UI_AUDIT_LOGS_FILTER_RESET_LABEL}
-          </Button>
-        </div>
-      </Form>
+    <Stack direction="column" gap={UI_STACK_GAP_MEDIUM} className={UI_AUDIT_LOGS_PANEL_CLASS}>
+      <PanelHeader title={title} description={panelDescription} />
 
       <DataTable
         data={rows}
@@ -397,7 +390,8 @@ export function AuditLogsPanel({
         className={UI_AUDIT_LOGS_TABLE_CLASS}
         sortState={sortState}
         onSort={handleSort}
-        footer={tableFooter}
+        toolbar={toolbar}
+        footer={footer}
       />
     </Stack>
   )

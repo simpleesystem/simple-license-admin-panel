@@ -28,6 +28,31 @@ describe('TablePaginationFooter', () => {
     fireEvent.click(screen.getByRole('button', { name: UI_TABLE_PAGINATION_PREVIOUS }))
     expect(onPageChange).toHaveBeenCalledWith(2)
   })
+
+  it('renders the optional page-size selector and summary slot', () => {
+    const onPageChange = vi.fn()
+    const onPageSizeChange = vi.fn()
+
+    render(
+      <TablePaginationFooter
+        page={2}
+        totalPages={5}
+        onPageChange={onPageChange}
+        pageSize={25}
+        pageSizeOptions={[10, 25, 50]}
+        onPageSizeChange={onPageSizeChange}
+        pageSizeLabel="Rows per page"
+        summary={<span data-testid="summary">Showing 26 to 50 / 100</span>}
+      />
+    )
+
+    const pageSizeSelect = screen.getByLabelText(/rows per page/i)
+    expect(pageSizeSelect).toHaveValue('25')
+    fireEvent.change(pageSizeSelect, { target: { value: '50' } })
+    expect(onPageSizeChange).toHaveBeenCalledWith(50)
+
+    expect(screen.getByTestId('summary')).toHaveTextContent('Showing 26 to 50 / 100')
+  })
 })
 
 describe('TableControls', () => {
