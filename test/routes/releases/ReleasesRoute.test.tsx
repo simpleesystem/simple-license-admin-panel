@@ -12,8 +12,8 @@ import {
   UI_RELEASE_FORM_FIELD_FILE,
   UI_RELEASE_FORM_FIELD_VERSION,
   UI_RELEASE_FORM_SUBMIT,
+  UI_RELEASE_PRODUCT_FILTER_LABEL,
   UI_RELEASE_SELECT_PRODUCT_BODY,
-  UI_RELEASE_SELECT_PRODUCT_PLACEHOLDER,
   UI_RELEASE_STATUS_ACTION_RETRY,
   UI_RELEASE_STATUS_ERROR_TITLE,
   UI_RELEASE_STATUS_LOADING_TITLE,
@@ -81,7 +81,7 @@ describe('ReleasesRouteComponent', () => {
     renderWithProviders(<ReleasesRouteComponent />)
 
     expect(screen.getByRole('heading', { name: UI_PAGE_TITLE_RELEASES })).toBeInTheDocument()
-    expect(screen.getByRole('combobox', { name: UI_RELEASE_SELECT_PRODUCT_PLACEHOLDER })).toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: UI_RELEASE_PRODUCT_FILTER_LABEL })).toBeInTheDocument()
     expect(screen.getByText(UI_RELEASE_SELECT_PRODUCT_BODY)).toBeInTheDocument()
   })
 
@@ -106,7 +106,7 @@ describe('ReleasesRouteComponent', () => {
 
     renderWithProviders(<ReleasesRouteComponent />)
 
-    const select = screen.getByRole('combobox', { name: UI_RELEASE_SELECT_PRODUCT_PLACEHOLDER })
+    const select = screen.getByRole('combobox', { name: UI_RELEASE_PRODUCT_FILTER_LABEL })
     fireEvent.change(select, { target: { value: product.id } })
 
     await waitFor(() => {
@@ -136,7 +136,7 @@ describe('ReleasesRouteComponent', () => {
 
     renderWithProviders(<ReleasesRouteComponent />)
 
-    const select = screen.getByRole('combobox', { name: UI_RELEASE_SELECT_PRODUCT_PLACEHOLDER })
+    const select = screen.getByRole('combobox', { name: UI_RELEASE_PRODUCT_FILTER_LABEL })
     fireEvent.change(select, { target: { value: product.id } })
 
     await waitFor(() => {
@@ -168,7 +168,7 @@ describe('ReleasesRouteComponent', () => {
 
     renderWithProviders(<ReleasesRouteComponent />)
 
-    const select = screen.getByRole('combobox', { name: UI_RELEASE_SELECT_PRODUCT_PLACEHOLDER })
+    const select = screen.getByRole('combobox', { name: UI_RELEASE_PRODUCT_FILTER_LABEL })
     fireEvent.change(select, { target: { value: product.id } })
 
     await waitFor(() => {
@@ -198,7 +198,7 @@ describe('ReleasesRouteComponent', () => {
 
     renderWithProviders(<ReleasesRouteComponent />)
 
-    const select = screen.getByRole('combobox', { name: UI_RELEASE_SELECT_PRODUCT_PLACEHOLDER })
+    const select = screen.getByRole('combobox', { name: UI_RELEASE_PRODUCT_FILTER_LABEL })
     fireEvent.change(select, { target: { value: product.id } })
 
     await waitFor(() => {
@@ -237,7 +237,7 @@ describe('ReleasesRouteComponent', () => {
 
     renderWithProviders(<ReleasesRouteComponent />)
 
-    const select = screen.getByRole('combobox', { name: UI_RELEASE_SELECT_PRODUCT_PLACEHOLDER })
+    const select = screen.getByRole('combobox', { name: UI_RELEASE_PRODUCT_FILTER_LABEL })
     fireEvent.change(select, { target: { value: product.id } })
 
     await waitFor(() => {

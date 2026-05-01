@@ -1,116 +1,62 @@
-import { useMemo, useState } from 'react'
-import { Badge, Button, Form, Table } from 'react-bootstrap'
+import { useCallback, useMemo } from 'react'
+import Button from 'react-bootstrap/Button'
+
+import type { PluginRelease } from '@/simpleLicense'
+
 import { useApiClient } from '../../api/apiContext'
 import { canDeleteRelease, isProductOwnedByUser, isVendorScopedUser } from '../../app/auth/permissions'
 import { useAuth } from '../../app/auth/useAuth'
-import { ERROR_CODE_UPLOAD_TIMEOUT, RELEASE_UPLOAD_FIELD_NAME } from '../../simpleLicense/constants'
+import { useAdminProducts, useAdminReleases } from '../../simpleLicense/hooks'
 import {
-  useAdminProducts,
-  useAdminReleases,
-  useCreateRelease,
-  useDeleteRelease,
-  usePromoteRelease,
-} from '../../simpleLicense/hooks'
-import {
-  UI_BUTTON_VARIANT_DANGER,
-  UI_BUTTON_VARIANT_OUTLINE_DANGER,
-  UI_BUTTON_VARIANT_SECONDARY,
   UI_PAGE_SUBTITLE_RELEASES,
   UI_PAGE_TITLE_RELEASES,
   UI_PAGE_VARIANT_FULL_WIDTH,
-  UI_RELEASE_ACTION_DELETE,
-  UI_RELEASE_ACTION_DELETING,
-  UI_RELEASE_ACTION_PROMOTE,
-  UI_RELEASE_ACTION_PROMOTING,
-  UI_RELEASE_BUTTON_NEW,
-  UI_RELEASE_COLUMN_ACTIONS,
-  UI_RELEASE_COLUMN_CREATED,
-  UI_RELEASE_COLUMN_FILE,
-  UI_RELEASE_COLUMN_SIZE,
-  UI_RELEASE_COLUMN_STATUS,
-  UI_RELEASE_COLUMN_VERSION,
-  UI_RELEASE_CONFIRM_DELETE_BODY,
-  UI_RELEASE_CONFIRM_DELETE_BUTTON,
-  UI_RELEASE_CONFIRM_DELETE_TITLE,
-  UI_RELEASE_CONFIRM_PROMOTE_BODY,
-  UI_RELEASE_CONFIRM_PROMOTE_TITLE,
-  UI_RELEASE_EMPTY_MESSAGE,
-  UI_RELEASE_FILE_MISSING,
-  UI_RELEASE_FILE_PRESENT,
-  UI_RELEASE_FILTER_ALL,
-  UI_RELEASE_FILTER_PRERELEASE_ONLY,
-  UI_RELEASE_FILTER_STABLE_ONLY,
-  UI_RELEASE_FORM_ERROR_FALLBACK,
-  UI_RELEASE_FORM_ERROR_TIMEOUT_HINT,
-  UI_RELEASE_FORM_FIELD_CHANGELOG,
-  UI_RELEASE_FORM_FIELD_FILE,
-  UI_RELEASE_FORM_FIELD_PRERELEASE,
-  UI_RELEASE_FORM_FIELD_VERSION,
-  UI_RELEASE_FORM_PENDING,
-  UI_RELEASE_FORM_SUBMIT,
-  UI_RELEASE_FORM_TITLE,
-  UI_RELEASE_FORM_VERSION_PLACEHOLDER,
-  UI_RELEASE_LIVE_BADGE,
-  UI_RELEASE_MODAL_CANCEL,
-  UI_RELEASE_SELECT_PRODUCT_BODY,
-  UI_RELEASE_SELECT_PRODUCT_PLACEHOLDER,
-  UI_RELEASE_SORT_ASC,
-  UI_RELEASE_SORT_DATE,
-  UI_RELEASE_SORT_DESC,
-  UI_RELEASE_SORT_VERSION,
+  UI_RELEASE_COLUMN_ID_CREATED,
+  UI_RELEASE_COLUMN_ID_FILE,
+  UI_RELEASE_COLUMN_ID_SIZE,
+  UI_RELEASE_COLUMN_ID_STATUS,
+  UI_RELEASE_COLUMN_ID_VERSION,
+  UI_RELEASE_FILTER_VALUE_ALL,
+  UI_RELEASE_FILTER_VALUE_PRERELEASE,
+  UI_RELEASE_FILTER_VALUE_STABLE,
   UI_RELEASE_STATUS_ACTION_RETRY,
   UI_RELEASE_STATUS_ERROR_BODY,
   UI_RELEASE_STATUS_ERROR_TITLE,
   UI_RELEASE_STATUS_LOADING_BODY,
   UI_RELEASE_STATUS_LOADING_TITLE,
-  UI_RELEASE_VERSION_PREFIX,
   UI_SECTION_STATUS_ERROR,
   UI_SECTION_STATUS_LOADING,
+  UI_SORT_DESC,
 } from '../../ui/constants'
+import { useDataTableState } from '../../ui/data/useDataTableState'
+import { useTableState } from '../../ui/data/useTableState'
 import { SectionStatus } from '../../ui/feedback/SectionStatus'
 import { Page } from '../../ui/layout/Page'
 import { PageHeader } from '../../ui/layout/PageHeader'
-import { Stack } from '../../ui/layout/Stack'
-import { ModalDialog } from '../../ui/overlay/ModalDialog'
 import type { UiSelectOption } from '../../ui/types'
-import { EmptyState } from '../../ui/typography/EmptyState'
-import { formatDate as formatReleaseDate } from '../../utils/date'
+import type { ReleaseListItem } from '../../ui/workflows/ReleasesPanel'
+import { ReleasesPanel } from '../../ui/workflows/ReleasesPanel'
+
+type ReleaseFilters = {
+  productId: string
+  channel: string
+}
 
 export function ReleasesRouteComponent() {
   const client = useApiClient()
   const { user: currentUser } = useAuth()
   const { data: productsData } = useAdminProducts(client)
-  const [selectedProductId, setSelectedProductId] = useState('')
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [createVersion, setCreateVersion] = useState('')
-  const [createChangelog, setCreateChangelog] = useState('')
-  const [createIsPrerelease, setCreateIsPrerelease] = useState(false)
-  const [createFile, setCreateFile] = useState<File | null>(null)
-  const [createErrorMessage, setCreateErrorMessage] = useState<string | null>(null)
-  const [createErrorHint, setCreateErrorHint] = useState<string | null>(null)
-  const [sortBy, setSortBy] = useState<'version' | 'createdAt'>('createdAt')
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
-  const [filterPrerelease, setFilterPrerelease] = useState<boolean | undefined>(undefined)
-  const [showPromoteModal, setShowPromoteModal] = useState(false)
-  const [releaseToPromote, setReleaseToPromote] = useState<{ id: string; version: string } | null>(null)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [releaseToDelete, setReleaseToDelete] = useState<{ id: string; version: string; fileName: string } | null>(null)
 
-  const listParams = useMemo(
-    () => ({
-      sortBy,
-      sortOrder,
-      isPrerelease: filterPrerelease,
-    }),
-    [sortBy, sortOrder, filterPrerelease]
-  )
+  const tableState = useTableState<ReleaseFilters>({
+    initialFilters: { productId: '', channel: UI_RELEASE_FILTER_VALUE_ALL },
+  })
 
-  const productOptions = useMemo((): UiSelectOption[] => {
+  const selectedProductId = tableState.filters.productId
+
+  const productOptions = useMemo<UiSelectOption[]>(() => {
     const list = Array.isArray(productsData) ? productsData : (productsData?.data ?? [])
-    let filtered = list
-    if (currentUser && isVendorScopedUser(currentUser)) {
-      filtered = list.filter((p) => isProductOwnedByUser(currentUser, p))
-    }
+    const filtered =
+      currentUser && isVendorScopedUser(currentUser) ? list.filter((p) => isProductOwnedByUser(currentUser, p)) : list
     return filtered.map((p) => ({ value: p.id, label: `${p.name} (${p.slug})` }))
   }, [productsData, currentUser])
 
@@ -120,404 +66,124 @@ export function ReleasesRouteComponent() {
     isError: releasesError,
     refetch: refetchReleases,
   } = useAdminReleases(client, selectedProductId, {
-    params: listParams,
     enabled: Boolean(selectedProductId),
   })
 
-  const createReleaseMutation = useCreateRelease(client, selectedProductId)
-  const promoteReleaseMutation = usePromoteRelease(client, selectedProductId)
-  const deleteReleaseMutation = useDeleteRelease(client, selectedProductId)
-  const canDelete = currentUser ? canDeleteRelease(currentUser) : false
+  const releases = useMemo<ReleaseListItem[]>(
+    () => (Array.isArray(releasesData) ? (releasesData as PluginRelease[]) : []),
+    [releasesData]
+  )
 
-  const releases = Array.isArray(releasesData) ? releasesData : []
+  const searchReleases = useCallback((release: ReleaseListItem, term: string) => {
+    const needle = term.toLowerCase()
+    return release.version.toLowerCase().includes(needle) || release.fileName.toLowerCase().includes(needle)
+  }, [])
 
-  const handleCreateSubmit = () => {
-    if (!selectedProductId || !createVersion.trim() || !createFile) {
-      return
-    }
-    setCreateErrorMessage(null)
-    setCreateErrorHint(null)
-    const formData = new FormData()
-    formData.append(RELEASE_UPLOAD_FIELD_NAME, createFile)
-    formData.append('version', createVersion.trim())
-    if (createChangelog.trim()) {
-      formData.append('changelogMd', createChangelog.trim())
-    }
-    formData.append('isPrerelease', String(createIsPrerelease))
-    createReleaseMutation.mutate(formData, {
-      onSuccess: () => {
-        setShowCreateModal(false)
-        setCreateVersion('')
-        setCreateChangelog('')
-        setCreateIsPrerelease(false)
-        setCreateFile(null)
-        setCreateErrorMessage(null)
-        setCreateErrorHint(null)
-      },
-      onError: (error) => {
-        const errorMessage =
-          error instanceof Error && error.message.trim().length > 0 ? error.message : UI_RELEASE_FORM_ERROR_FALLBACK
-        const errorCode =
-          typeof error === 'object' && error !== null && 'errorCode' in error && typeof error.errorCode === 'string'
-            ? error.errorCode
-            : ''
-        setCreateErrorMessage(errorMessage)
-        setCreateErrorHint(errorCode === ERROR_CODE_UPLOAD_TIMEOUT ? UI_RELEASE_FORM_ERROR_TIMEOUT_HINT : null)
-      },
-    })
+  const compareText = useCallback(
+    (getValue: (release: ReleaseListItem) => string | null | undefined) => (a: ReleaseListItem, b: ReleaseListItem) =>
+      (getValue(a) ?? '').localeCompare(getValue(b) ?? '', undefined, { numeric: true, sensitivity: 'base' }),
+    []
+  )
+
+  const sortComparators = useMemo(
+    () => ({
+      [UI_RELEASE_COLUMN_ID_VERSION]: compareText((release) => release.version),
+      [UI_RELEASE_COLUMN_ID_FILE]: compareText((release) => release.fileName),
+      [UI_RELEASE_COLUMN_ID_SIZE]: (a: ReleaseListItem, b: ReleaseListItem) =>
+        Number(a.sizeBytes ?? 0) - Number(b.sizeBytes ?? 0),
+      [UI_RELEASE_COLUMN_ID_CREATED]: compareText((release) => release.createdAt),
+      [UI_RELEASE_COLUMN_ID_STATUS]: (a: ReleaseListItem, b: ReleaseListItem) =>
+        Number(Boolean(a.isPromoted)) - Number(Boolean(b.isPromoted)),
+    }),
+    [compareText]
+  )
+
+  const channelFilter = tableState.filters.channel
+
+  const releasesTable = useDataTableState<ReleaseListItem>({
+    data: releases,
+    initialSort: { columnId: UI_RELEASE_COLUMN_ID_CREATED, direction: UI_SORT_DESC },
+    search: searchReleases,
+    filter: (release) => {
+      if (channelFilter === UI_RELEASE_FILTER_VALUE_PRERELEASE) {
+        return Boolean(release.isPrerelease)
+      }
+      if (channelFilter === UI_RELEASE_FILTER_VALUE_STABLE) {
+        return !release.isPrerelease
+      }
+      return true
+    },
+    sortComparators,
+  })
+
+  const allowCreate = Boolean(selectedProductId)
+  const allowPromote = Boolean(selectedProductId)
+  const allowDelete = currentUser ? canDeleteRelease(currentUser) : false
+
+  const handleRefresh = () => {
+    void refetchReleases()
   }
 
-  const handleCloseCreateModal = () => {
-    setShowCreateModal(false)
-    setCreateVersion('')
-    setCreateChangelog('')
-    setCreateIsPrerelease(false)
-    setCreateFile(null)
-    setCreateErrorMessage(null)
-    setCreateErrorHint(null)
+  const handleProductChange = (productId: string) => {
+    tableState.setFilter('productId', productId)
+    releasesTable.goToPage(1)
   }
 
-  const handlePromoteClick = (rel: { id: string; version: string }) => {
-    setReleaseToPromote(rel)
-    setShowPromoteModal(true)
+  const handleChannelChange = (value: string) => {
+    tableState.setFilter('channel', value)
+    releasesTable.goToPage(1)
   }
 
-  const handleConfirmPromote = () => {
-    if (!releaseToPromote) {
-      return
-    }
-    promoteReleaseMutation.mutate(releaseToPromote.id, {
-      onSuccess: () => {
-        setShowPromoteModal(false)
-        setReleaseToPromote(null)
-      },
-    })
-  }
-
-  const handleClosePromoteModal = () => {
-    setShowPromoteModal(false)
-    setReleaseToPromote(null)
-  }
-
-  const handleDeleteClick = (rel: { id: string; version: string; fileName: string }) => {
-    setReleaseToDelete(rel)
-    setShowDeleteModal(true)
-  }
-
-  const handleConfirmDelete = () => {
-    if (!releaseToDelete) {
-      return
-    }
-    deleteReleaseMutation.mutate(releaseToDelete.id, {
-      onSuccess: () => {
-        setShowDeleteModal(false)
-        setReleaseToDelete(null)
-      },
-    })
-  }
-
-  const handleCloseDeleteModal = () => {
-    setShowDeleteModal(false)
-    setReleaseToDelete(null)
-  }
-
-  const formatReleaseDateSafe = (value: string | Date | number | null | undefined): string => {
-    if (value == null || (typeof value === 'string' && value.trim().length === 0)) {
-      return '—'
-    }
-    try {
-      return formatReleaseDate(value)
-    } catch {
-      return typeof value === 'string' ? value : '—'
-    }
-  }
+  const showLoading = Boolean(selectedProductId) && releasesLoading
+  const showError = Boolean(selectedProductId) && releasesError
 
   return (
     <Page variant={UI_PAGE_VARIANT_FULL_WIDTH}>
-      <Stack direction="column" gap="medium">
-        <PageHeader title={UI_PAGE_TITLE_RELEASES} subtitle={UI_PAGE_SUBTITLE_RELEASES} />
-        <Form.Group className="mb-3">
-          <Form.Label>{UI_RELEASE_SELECT_PRODUCT_PLACEHOLDER}</Form.Label>
-          <Form.Select
-            value={selectedProductId}
-            onChange={(e) => setSelectedProductId(e.target.value)}
-            aria-label={UI_RELEASE_SELECT_PRODUCT_PLACEHOLDER}
-          >
-            <option value="">{UI_RELEASE_SELECT_PRODUCT_PLACEHOLDER}</option>
-            {productOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </Form.Select>
-        </Form.Group>
+      <PageHeader title={UI_PAGE_TITLE_RELEASES} subtitle={UI_PAGE_SUBTITLE_RELEASES} />
 
-        {!selectedProductId && (
-          <EmptyState title={UI_RELEASE_SELECT_PRODUCT_PLACEHOLDER} body={UI_RELEASE_SELECT_PRODUCT_BODY} />
-        )}
+      {showLoading ? (
+        <SectionStatus
+          status={UI_SECTION_STATUS_LOADING}
+          title={UI_RELEASE_STATUS_LOADING_TITLE}
+          message={UI_RELEASE_STATUS_LOADING_BODY}
+        />
+      ) : null}
 
-        {selectedProductId && releasesLoading && (
-          <SectionStatus
-            status={UI_SECTION_STATUS_LOADING}
-            title={UI_RELEASE_STATUS_LOADING_TITLE}
-            message={UI_RELEASE_STATUS_LOADING_BODY}
-          />
-        )}
+      {showError ? (
+        <SectionStatus
+          status={UI_SECTION_STATUS_ERROR}
+          title={UI_RELEASE_STATUS_ERROR_TITLE}
+          message={UI_RELEASE_STATUS_ERROR_BODY}
+          actions={
+            <Button variant="secondary" size="sm" onClick={handleRefresh}>
+              {UI_RELEASE_STATUS_ACTION_RETRY}
+            </Button>
+          }
+        />
+      ) : null}
 
-        {selectedProductId && releasesError && (
-          <SectionStatus
-            status={UI_SECTION_STATUS_ERROR}
-            title={UI_RELEASE_STATUS_ERROR_TITLE}
-            message={UI_RELEASE_STATUS_ERROR_BODY}
-            actions={
-              <Button variant="secondary" size="sm" onClick={() => refetchReleases()}>
-                {UI_RELEASE_STATUS_ACTION_RETRY}
-              </Button>
-            }
-          />
-        )}
-
-        {selectedProductId && !releasesLoading && !releasesError && (
-          <>
-            <div className="d-flex flex-wrap gap-2 justify-content-between align-items-center">
-              <div className="d-flex flex-wrap gap-2 align-items-center">
-                <Form.Select
-                  size="sm"
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as 'version' | 'createdAt')}
-                  aria-label={UI_RELEASE_SORT_VERSION}
-                  style={{ width: 'auto' }}
-                >
-                  <option value="createdAt">{UI_RELEASE_SORT_DATE}</option>
-                  <option value="version">{UI_RELEASE_SORT_VERSION}</option>
-                </Form.Select>
-                <Form.Select
-                  size="sm"
-                  value={sortOrder}
-                  onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
-                  aria-label={UI_RELEASE_SORT_ASC}
-                  style={{ width: 'auto' }}
-                >
-                  <option value="desc">{UI_RELEASE_SORT_DESC}</option>
-                  <option value="asc">{UI_RELEASE_SORT_ASC}</option>
-                </Form.Select>
-                <Form.Select
-                  size="sm"
-                  value={filterPrerelease === undefined ? 'all' : filterPrerelease ? 'prerelease' : 'stable'}
-                  onChange={(e) => {
-                    const v = e.target.value
-                    setFilterPrerelease(v === 'all' ? undefined : v === 'prerelease')
-                  }}
-                  aria-label={UI_RELEASE_FILTER_ALL}
-                  style={{ width: 'auto' }}
-                >
-                  <option value="all">{UI_RELEASE_FILTER_ALL}</option>
-                  <option value="prerelease">{UI_RELEASE_FILTER_PRERELEASE_ONLY}</option>
-                  <option value="stable">{UI_RELEASE_FILTER_STABLE_ONLY}</option>
-                </Form.Select>
-              </div>
-              <Button variant="primary" onClick={() => setShowCreateModal(true)}>
-                {UI_RELEASE_BUTTON_NEW}
-              </Button>
-            </div>
-            {releases.length === 0 ? (
-              <EmptyState title={UI_RELEASE_EMPTY_MESSAGE} body={UI_RELEASE_EMPTY_MESSAGE} />
-            ) : (
-              <Table striped={true} bordered={true} hover={true} responsive={true}>
-                <thead>
-                  <tr>
-                    <th>{UI_RELEASE_COLUMN_VERSION}</th>
-                    <th>{UI_RELEASE_COLUMN_FILE}</th>
-                    <th>{UI_RELEASE_COLUMN_SIZE}</th>
-                    <th>{UI_RELEASE_COLUMN_CREATED}</th>
-                    <th>{UI_RELEASE_COLUMN_STATUS}</th>
-                    <th>{UI_RELEASE_COLUMN_ACTIONS}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {releases.map((rel) => (
-                    <tr key={rel.id}>
-                      <td>{rel.version}</td>
-                      <td>
-                        <span className="d-inline-block me-1">{rel.fileName}</span>
-                        {rel.filePresent === true && (
-                          <Badge bg="success" className="align-text-bottom">
-                            {UI_RELEASE_FILE_PRESENT}
-                          </Badge>
-                        )}
-                        {rel.filePresent === false && (
-                          <Badge bg="danger" className="align-text-bottom">
-                            {UI_RELEASE_FILE_MISSING}
-                          </Badge>
-                        )}
-                      </td>
-                      <td>{rel.sizeBytes != null ? `${Number(rel.sizeBytes).toLocaleString()} B` : '—'}</td>
-                      <td>{formatReleaseDateSafe(rel.createdAt)}</td>
-                      <td>{rel.isPromoted === true ? <Badge bg="success">{UI_RELEASE_LIVE_BADGE}</Badge> : '—'}</td>
-                      <td>
-                        <div className="d-flex flex-wrap gap-1">
-                          {rel.isPromoted !== true && (
-                            <Button
-                              variant="outline-primary"
-                              size="sm"
-                              onClick={() => handlePromoteClick({ id: rel.id, version: rel.version })}
-                              disabled={promoteReleaseMutation.isPending}
-                            >
-                              {promoteReleaseMutation.isPending && releaseToPromote?.id === rel.id
-                                ? UI_RELEASE_ACTION_PROMOTING
-                                : UI_RELEASE_ACTION_PROMOTE}
-                            </Button>
-                          )}
-                          {canDelete && (
-                            <Button
-                              variant={UI_BUTTON_VARIANT_OUTLINE_DANGER}
-                              size="sm"
-                              onClick={() =>
-                                handleDeleteClick({ id: rel.id, version: rel.version, fileName: rel.fileName })
-                              }
-                              disabled={deleteReleaseMutation.isPending}
-                              aria-label={`${UI_RELEASE_ACTION_DELETE} ${rel.version}`}
-                            >
-                              {deleteReleaseMutation.isPending && releaseToDelete?.id === rel.id
-                                ? UI_RELEASE_ACTION_DELETING
-                                : UI_RELEASE_ACTION_DELETE}
-                            </Button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-            )}
-          </>
-        )}
-      </Stack>
-
-      <ModalDialog
-        show={showCreateModal}
-        onClose={handleCloseCreateModal}
-        title={UI_RELEASE_FORM_TITLE}
-        body={
-          <>
-            {createErrorMessage ? (
-              <div className="alert alert-danger" role="alert">
-                <div>{createErrorMessage}</div>
-                {createErrorHint ? <div className="small mt-1">{createErrorHint}</div> : null}
-              </div>
-            ) : null}
-            <Form.Group className="mb-3">
-              <Form.Label>{UI_RELEASE_FORM_FIELD_VERSION}</Form.Label>
-              <Form.Control
-                type="text"
-                value={createVersion}
-                onChange={(e) => setCreateVersion(e.target.value)}
-                placeholder={UI_RELEASE_FORM_VERSION_PLACEHOLDER}
-                aria-label={UI_RELEASE_FORM_FIELD_VERSION}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>{UI_RELEASE_FORM_FIELD_FILE}</Form.Label>
-              <Form.Control
-                type="file"
-                accept=".zip"
-                onChange={(e) => {
-                  const file = (e.target as HTMLInputElement).files?.[0]
-                  setCreateFile(file ?? null)
-                }}
-                aria-label={UI_RELEASE_FORM_FIELD_FILE}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>{UI_RELEASE_FORM_FIELD_CHANGELOG}</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={3}
-                value={createChangelog}
-                onChange={(e) => setCreateChangelog(e.target.value)}
-                aria-label={UI_RELEASE_FORM_FIELD_CHANGELOG}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Check
-                type="checkbox"
-                id="release-prerelease"
-                label={UI_RELEASE_FORM_FIELD_PRERELEASE}
-                checked={createIsPrerelease}
-                onChange={(e) => setCreateIsPrerelease((e.target as HTMLInputElement).checked)}
-              />
-            </Form.Group>
-          </>
-        }
-        primaryAction={{
-          id: 'release-upload-submit',
-          label: createReleaseMutation.isPending ? UI_RELEASE_FORM_PENDING : UI_RELEASE_FORM_SUBMIT,
-          onClick: handleCreateSubmit,
-          disabled: !createVersion.trim() || !createFile || createReleaseMutation.isPending,
-        }}
-        secondaryAction={{
-          id: 'release-upload-cancel',
-          label: UI_RELEASE_MODAL_CANCEL,
-          onClick: handleCloseCreateModal,
-          variant: 'secondary',
-        }}
-      />
-
-      <ModalDialog
-        show={showPromoteModal}
-        onClose={handleClosePromoteModal}
-        title={UI_RELEASE_CONFIRM_PROMOTE_TITLE}
-        body={
-          releaseToPromote ? (
-            <p>
-              {UI_RELEASE_CONFIRM_PROMOTE_BODY} ({UI_RELEASE_VERSION_PREFIX}
-              {releaseToPromote.version})
-            </p>
-          ) : null
-        }
-        primaryAction={{
-          id: 'release-promote-confirm',
-          label: promoteReleaseMutation.isPending ? UI_RELEASE_ACTION_PROMOTING : UI_RELEASE_ACTION_PROMOTE,
-          onClick: handleConfirmPromote,
-          disabled: promoteReleaseMutation.isPending,
-        }}
-        secondaryAction={{
-          id: 'release-promote-cancel',
-          label: UI_RELEASE_MODAL_CANCEL,
-          onClick: handleClosePromoteModal,
-          variant: 'secondary',
-        }}
-      />
-
-      <ModalDialog
-        show={showDeleteModal}
-        onClose={handleCloseDeleteModal}
-        title={UI_RELEASE_CONFIRM_DELETE_TITLE}
-        body={
-          releaseToDelete ? (
-            <>
-              <p className="mb-2">{UI_RELEASE_CONFIRM_DELETE_BODY}</p>
-              <p className="mb-0 text-muted small">
-                {UI_RELEASE_VERSION_PREFIX}
-                {releaseToDelete.version} — {releaseToDelete.fileName}
-              </p>
-            </>
-          ) : null
-        }
-        primaryAction={{
-          id: 'release-delete-confirm',
-          label: deleteReleaseMutation.isPending ? UI_RELEASE_ACTION_DELETING : UI_RELEASE_CONFIRM_DELETE_BUTTON,
-          onClick: handleConfirmDelete,
-          disabled: deleteReleaseMutation.isPending,
-          variant: UI_BUTTON_VARIANT_DANGER,
-        }}
-        secondaryAction={{
-          id: 'release-delete-cancel',
-          label: UI_RELEASE_MODAL_CANCEL,
-          onClick: handleCloseDeleteModal,
-          variant: UI_BUTTON_VARIANT_SECONDARY,
-        }}
-      />
+      {!showLoading && !showError ? (
+        <ReleasesPanel
+          client={client}
+          releases={releasesTable.rows}
+          selectedProductId={selectedProductId}
+          productOptions={productOptions}
+          onProductChange={handleProductChange}
+          searchTerm={releasesTable.searchTerm}
+          onSearchChange={releasesTable.setSearchTerm}
+          channelFilter={channelFilter}
+          onChannelFilterChange={handleChannelChange}
+          page={releasesTable.page}
+          totalPages={releasesTable.totalPages}
+          onPageChange={releasesTable.goToPage}
+          sortState={releasesTable.sortState}
+          onSortChange={releasesTable.onSort}
+          allowCreate={allowCreate}
+          allowPromote={allowPromote}
+          allowDelete={allowDelete}
+          onRefresh={handleRefresh}
+        />
+      ) : null}
     </Page>
   )
 }
