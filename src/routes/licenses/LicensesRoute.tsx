@@ -96,11 +96,13 @@ export function LicensesRouteComponent() {
     return list
   }, [currentUser, data])
 
-  const searchLicenses = useCallback(
-    (license: LicenseListItem, term: string) =>
-      license.customerEmail?.toLowerCase().includes(term) || license.productSlug?.toLowerCase().includes(term),
-    []
-  )
+  const searchLicenses = useCallback((license: LicenseListItem, term: string) => {
+    const needle = term.toLowerCase()
+    return (
+      (license.customerEmail?.toLowerCase().includes(needle) ?? false) ||
+      (license.productSlug?.toLowerCase().includes(needle) ?? false)
+    )
+  }, [])
 
   const compareText = useCallback(
     (getValue: (license: LicenseListItem) => string | null | undefined) => (a: LicenseListItem, b: LicenseListItem) =>

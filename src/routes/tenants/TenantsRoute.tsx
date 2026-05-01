@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo } from 'react'
+import type { Tenant } from '@/simpleLicense'
 import { useAdminTenants } from '@/simpleLicense'
 
 import { useApiClient } from '../../api/apiContext'
@@ -10,107 +11,78 @@ import {
   UI_PAGE_VARIANT_FULL_WIDTH,
   UI_SECTION_STATUS_ERROR,
   UI_SECTION_STATUS_LOADING,
-  UI_SORT_ASC,
-  UI_TABLE_PAGE_SIZE_DEFAULT,
+  UI_SORT_DESC,
+  UI_TENANT_COLUMN_ID_CREATED,
+  UI_TENANT_COLUMN_ID_NAME,
+  UI_TENANT_COLUMN_ID_STATUS,
   UI_TENANT_STATUS_ACTION_RETRY,
   UI_TENANT_STATUS_ERROR_BODY,
   UI_TENANT_STATUS_ERROR_TITLE,
   UI_TENANT_STATUS_LOADING_BODY,
   UI_TENANT_STATUS_LOADING_TITLE,
 } from '../../ui/constants'
+import { useDataTableState } from '../../ui/data/useDataTableState'
+import { useTableState } from '../../ui/data/useTableState'
 import { SectionStatus } from '../../ui/feedback/SectionStatus'
 import { Page } from '../../ui/layout/Page'
 import { PageHeader } from '../../ui/layout/PageHeader'
-import type { UiDataTableSortState, UiSortDirection } from '../../ui/types'
+import type { TenantListItem } from '../../ui/workflows/TenantManagementPanel'
 import { TenantManagementPanel } from '../../ui/workflows/TenantManagementPanel'
 
 export function TenantsRouteComponent() {
   const client = useApiClient()
   const { user: currentUser } = useAuth()
   const { data, isLoading, isError, refetch } = useAdminTenants(client)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
-  const [page, setPage] = useState(1)
-  const [sortState, setSortState] = useState<UiDataTableSortState | undefined>()
+  const tableState = useTableState({
+    initialFilters: {
+      status: '',
+    },
+  })
 
-  const allFilteredTenants = useMemo(() => {
-    let list = Array.isArray(data) ? data : (data?.data ?? [])
-
-    // Vendor Scoping
+  const visibleTenants = useMemo<TenantListItem[]>(() => {
+    let list: TenantListItem[] = Array.isArray(data) ? data : (data?.data ?? [])
     if (isVendorScopedUser(currentUser)) {
-      list = list.filter((tenant) => isTenantOwnedByUser(currentUser, tenant))
+      list = list.filter((tenant) => isTenantOwnedByUser(currentUser, tenant as unknown as Tenant))
     }
-
-    // Search Filtering
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase()
-      list = list.filter((tenant) => tenant.name.toLowerCase().includes(term))
-    }
-
-    // Status Filtering
-    if (statusFilter) {
-      list = list.filter((tenant) => tenant.status === statusFilter)
-    }
-
-    // Sorting
-    if (sortState) {
-      list = [...list].sort((a, b) => {
-        const aValue = a[sortState.columnId as keyof typeof a]
-        const bValue = b[sortState.columnId as keyof typeof b]
-
-        if (aValue === bValue) {
-          return 0
-        }
-
-        // Handle null/undefined
-        if (aValue === null || aValue === undefined) {
-          return 1
-        }
-        if (bValue === null || bValue === undefined) {
-          return -1
-        }
-
-        const compareResult = aValue < bValue ? -1 : 1
-        return sortState.direction === UI_SORT_ASC ? compareResult : -compareResult
-      })
-    } else {
-      // Default sort by createdAt desc if available, otherwise name asc
-      list = [...list].sort((a, b) => {
-        if (a.createdAt && b.createdAt) {
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        }
-        return a.name.localeCompare(b.name)
-      })
-    }
-
     return list
-  }, [currentUser, data, searchTerm, statusFilter, sortState])
+  }, [currentUser, data])
 
-  const paginatedTenants = useMemo(() => {
-    const startIndex = (page - 1) * UI_TABLE_PAGE_SIZE_DEFAULT
-    return allFilteredTenants.slice(startIndex, startIndex + UI_TABLE_PAGE_SIZE_DEFAULT)
-  }, [allFilteredTenants, page])
+  const searchTenants = useCallback(
+    (tenant: TenantListItem, term: string) => tenant.name.toLowerCase().includes(term.toLowerCase()),
+    []
+  )
 
-  const totalPages = Math.max(1, Math.ceil(allFilteredTenants.length / UI_TABLE_PAGE_SIZE_DEFAULT))
+  const compareText = useCallback(
+    (getValue: (tenant: TenantListItem) => string | null | undefined) => (a: TenantListItem, b: TenantListItem) =>
+      (getValue(a) ?? '').localeCompare(getValue(b) ?? '', undefined, { numeric: true, sensitivity: 'base' }),
+    []
+  )
+
+  const sortComparators = useMemo(
+    () => ({
+      [UI_TENANT_COLUMN_ID_NAME]: compareText((tenant) => tenant.name),
+      [UI_TENANT_COLUMN_ID_STATUS]: compareText((tenant) => tenant.status),
+      [UI_TENANT_COLUMN_ID_CREATED]: (a: TenantListItem, b: TenantListItem) => {
+        const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0
+        const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0
+        return aTime - bTime
+      },
+    }),
+    [compareText]
+  )
+
+  const tenantTable = useDataTableState({
+    data: visibleTenants,
+    initialSort: { columnId: UI_TENANT_COLUMN_ID_CREATED, direction: UI_SORT_DESC },
+    search: searchTenants,
+    filter: (tenant) => !tableState.filters.status || tenant.status === tableState.filters.status,
+    sortComparators,
+  })
 
   const canView = canViewTenants(currentUser)
 
   const handleRefresh = () => {
     void refetch()
-  }
-
-  const handleSearch = (term: string) => {
-    setSearchTerm(term)
-    setPage(1)
-  }
-
-  const handleStatusFilterChange = (status: string) => {
-    setStatusFilter(status)
-    setPage(1)
-  }
-
-  const handleSort = (columnId: string, direction: UiSortDirection) => {
-    setSortState({ columnId, direction })
   }
 
   return (
@@ -141,18 +113,21 @@ export function TenantsRouteComponent() {
       {!isLoading && !isError && canView ? (
         <TenantManagementPanel
           client={client}
-          tenants={paginatedTenants}
+          tenants={tenantTable.rows}
           currentUser={currentUser ?? undefined}
           onRefresh={handleRefresh}
-          searchTerm={searchTerm}
-          onSearchChange={handleSearch}
-          statusFilter={statusFilter}
-          onStatusFilterChange={handleStatusFilterChange}
-          page={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-          sortState={sortState}
-          onSortChange={handleSort}
+          searchTerm={tenantTable.searchTerm}
+          onSearchChange={tenantTable.setSearchTerm}
+          statusFilter={tableState.filters.status}
+          onStatusFilterChange={(value) => {
+            tableState.setFilter('status', value)
+            tenantTable.goToPage(1)
+          }}
+          page={tenantTable.page}
+          totalPages={tenantTable.totalPages}
+          onPageChange={tenantTable.goToPage}
+          sortState={tenantTable.sortState}
+          onSortChange={tenantTable.onSort}
         />
       ) : null}
     </Page>

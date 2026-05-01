@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo } from 'react'
+import type { Product } from '@/simpleLicense'
 import { useAdminProducts, useAdminTenants } from '@/simpleLicense'
 
 import { useApiClient } from '../../api/apiContext'
@@ -8,6 +9,10 @@ import {
   UI_PAGE_SUBTITLE_PRODUCTS,
   UI_PAGE_TITLE_PRODUCTS,
   UI_PAGE_VARIANT_FULL_WIDTH,
+  UI_PRODUCT_COLUMN_ID_NAME,
+  UI_PRODUCT_COLUMN_ID_SLUG,
+  UI_PRODUCT_COLUMN_ID_STATUS,
+  UI_PRODUCT_COLUMN_ID_VENDOR,
   UI_PRODUCT_STATUS_ACTION_RETRY,
   UI_PRODUCT_STATUS_ERROR_BODY,
   UI_PRODUCT_STATUS_ERROR_TITLE,
@@ -16,12 +21,14 @@ import {
   UI_SECTION_STATUS_ERROR,
   UI_SECTION_STATUS_LOADING,
   UI_SORT_ASC,
-  UI_TABLE_PAGE_SIZE_DEFAULT,
 } from '../../ui/constants'
+import { useDataTableState } from '../../ui/data/useDataTableState'
+import { useTableState } from '../../ui/data/useTableState'
 import { SectionStatus } from '../../ui/feedback/SectionStatus'
 import { Page } from '../../ui/layout/Page'
 import { PageHeader } from '../../ui/layout/PageHeader'
-import type { UiDataTableSortState, UiSelectOption, UiSortDirection } from '../../ui/types'
+import type { UiSelectOption } from '../../ui/types'
+import type { ProductListItem } from '../../ui/workflows/ProductManagementPanel'
 import { ProductManagementPanel } from '../../ui/workflows/ProductManagementPanel'
 
 export function ProductsRouteComponent() {
@@ -29,71 +36,35 @@ export function ProductsRouteComponent() {
   const { user: currentUser } = useAuth()
   const { data, isLoading, isError, refetch } = useAdminProducts(client)
   const { data: tenantsData } = useAdminTenants(client)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState('true')
-  const [page, setPage] = useState(1)
-  const [sortState, setSortState] = useState<UiDataTableSortState | undefined>()
+  const tableState = useTableState({
+    initialFilters: {
+      status: 'true',
+    },
+  })
 
-  const allFilteredProducts = useMemo(() => {
-    let list = Array.isArray(data) ? data : (data?.data ?? [])
+  const visibleProducts = useMemo<ProductListItem[]>(() => {
+    const list = Array.isArray(data) ? data : (data?.data ?? [])
     const tenants = Array.isArray(tenantsData) ? tenantsData : (tenantsData?.data ?? [])
-    const tenantMap = new Map(tenants.map((t) => [t.id, t.name]))
+    const tenantMap = new Map(tenants.map((tenant) => [tenant.id, tenant.name]))
 
-    // Map vendor names
-    list = list.map((product) => ({
-      ...product,
+    let mapped = list.map<ProductListItem>((product) => ({
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      description: product.description ?? undefined,
+      isActive: product.isActive,
+      vendorId: product.vendorId,
       vendorName: tenantMap.get(product.vendorId),
     }))
 
-    // Vendor Scoping
     if (isVendorScopedUser(currentUser)) {
-      list = list.filter((product) => isProductOwnedByUser(currentUser, product))
+      mapped = mapped.filter((product) => isProductOwnedByUser(currentUser, product as unknown as Product))
     }
 
-    // Search Filtering
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase()
-      list = list.filter(
-        (product) => product.name.toLowerCase().includes(term) || product.slug.toLowerCase().includes(term)
-      )
-    }
+    return mapped
+  }, [currentUser, data, tenantsData])
 
-    // Status Filtering
-    if (statusFilter) {
-      const isActive = statusFilter === 'true'
-      list = list.filter((product) => product.isActive === isActive)
-    }
-
-    // Sorting
-    if (sortState) {
-      list = [...list].sort((a, b) => {
-        const aValue = a[sortState.columnId as keyof typeof a]
-        const bValue = b[sortState.columnId as keyof typeof b]
-
-        if (aValue === bValue) {
-          return 0
-        }
-
-        // Handle null/undefined
-        if (aValue === null || aValue === undefined) {
-          return 1
-        }
-        if (bValue === null || bValue === undefined) {
-          return -1
-        }
-
-        const compareResult = aValue < bValue ? -1 : 1
-        return sortState.direction === UI_SORT_ASC ? compareResult : -compareResult
-      })
-    } else {
-      // Default sort by name asc
-      list = [...list].sort((a, b) => a.name.localeCompare(b.name))
-    }
-
-    return list
-  }, [currentUser, data, tenantsData, searchTerm, statusFilter, sortState])
-
-  const vendorOptions = useMemo((): UiSelectOption[] => {
+  const vendorOptions = useMemo<UiSelectOption[]>(() => {
     const tenants = Array.isArray(tenantsData) ? tenantsData : (tenantsData?.data ?? [])
     return tenants.map((tenant) => ({
       value: tenant.id,
@@ -101,31 +72,46 @@ export function ProductsRouteComponent() {
     }))
   }, [tenantsData])
 
-  const paginatedProducts = useMemo(() => {
-    const startIndex = (page - 1) * UI_TABLE_PAGE_SIZE_DEFAULT
-    return allFilteredProducts.slice(startIndex, startIndex + UI_TABLE_PAGE_SIZE_DEFAULT)
-  }, [allFilteredProducts, page])
+  const searchProducts = useCallback((product: ProductListItem, term: string) => {
+    const needle = term.toLowerCase()
+    return product.name.toLowerCase().includes(needle) || product.slug.toLowerCase().includes(needle)
+  }, [])
 
-  const totalPages = Math.max(1, Math.ceil(allFilteredProducts.length / UI_TABLE_PAGE_SIZE_DEFAULT))
+  const compareText = useCallback(
+    (getValue: (product: ProductListItem) => string | null | undefined) => (a: ProductListItem, b: ProductListItem) =>
+      (getValue(a) ?? '').localeCompare(getValue(b) ?? '', undefined, { numeric: true, sensitivity: 'base' }),
+    []
+  )
+
+  const sortComparators = useMemo(
+    () => ({
+      [UI_PRODUCT_COLUMN_ID_NAME]: compareText((product) => product.name),
+      [UI_PRODUCT_COLUMN_ID_SLUG]: compareText((product) => product.slug),
+      [UI_PRODUCT_COLUMN_ID_STATUS]: (a: ProductListItem, b: ProductListItem) =>
+        Number(b.isActive) - Number(a.isActive),
+      [UI_PRODUCT_COLUMN_ID_VENDOR]: compareText((product) => product.vendorName ?? product.vendorId),
+    }),
+    [compareText]
+  )
+
+  const productTable = useDataTableState({
+    data: visibleProducts,
+    initialSort: { columnId: UI_PRODUCT_COLUMN_ID_NAME, direction: UI_SORT_ASC },
+    search: searchProducts,
+    filter: (product) => {
+      const status = tableState.filters.status
+      if (!status) {
+        return true
+      }
+      return product.isActive === (status === 'true')
+    },
+    sortComparators,
+  })
 
   const canView = canViewProducts(currentUser)
 
   const handleRefresh = () => {
     void refetch()
-  }
-
-  const handleSearch = (term: string) => {
-    setSearchTerm(term)
-    setPage(1)
-  }
-
-  const handleStatusFilterChange = (status: string) => {
-    setStatusFilter(status)
-    setPage(1)
-  }
-
-  const handleSort = (columnId: string, direction: UiSortDirection) => {
-    setSortState({ columnId, direction })
   }
 
   return (
@@ -156,19 +142,22 @@ export function ProductsRouteComponent() {
       {!isLoading && !isError && canView ? (
         <ProductManagementPanel
           client={client}
-          products={paginatedProducts}
+          products={productTable.rows}
           currentUser={currentUser ?? undefined}
           vendorOptions={vendorOptions}
           onRefresh={handleRefresh}
-          searchTerm={searchTerm}
-          onSearchChange={handleSearch}
-          statusFilter={statusFilter}
-          onStatusFilterChange={handleStatusFilterChange}
-          page={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-          sortState={sortState}
-          onSortChange={handleSort}
+          searchTerm={productTable.searchTerm}
+          onSearchChange={productTable.setSearchTerm}
+          statusFilter={tableState.filters.status}
+          onStatusFilterChange={(value) => {
+            tableState.setFilter('status', value)
+            productTable.goToPage(1)
+          }}
+          page={productTable.page}
+          totalPages={productTable.totalPages}
+          onPageChange={productTable.goToPage}
+          sortState={productTable.sortState}
+          onSortChange={productTable.onSort}
         />
       ) : null}
     </Page>
