@@ -5,6 +5,7 @@ import Form from 'react-bootstrap/Form'
 
 import {
   UI_BUTTON_VARIANT_SECONDARY,
+  UI_SIZE_SMALL,
   UI_TABLE_PAGE_STATUS_SEPARATOR,
   UI_TABLE_PAGINATION_LABEL,
   UI_TABLE_PAGINATION_NEXT,
@@ -58,7 +59,7 @@ export function TablePaginationFooter({
               ) : null}
               <Form.Select
                 id={pageSizeId}
-                size="sm"
+                size={UI_SIZE_SMALL}
                 value={pageSize}
                 onChange={handlePageSizeChange}
                 className="w-auto"

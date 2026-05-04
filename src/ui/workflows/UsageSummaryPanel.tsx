@@ -1,9 +1,11 @@
 import { useMemo } from 'react'
-import Button from 'react-bootstrap/Button'
 import type { Client, UsageSummaryResponse } from '@/simpleLicense'
 import { useUsageSummaries } from '@/simpleLicense'
 
+import { RefreshActionButton } from '../actions/RefreshActionButton'
 import {
+  UI_ALERT_VARIANT_DANGER,
+  UI_ALERT_VARIANT_INFO,
   UI_ANALYTICS_COLUMN_ACTIVATIONS,
   UI_ANALYTICS_COLUMN_LICENSE_ID,
   UI_ANALYTICS_COLUMN_PEAK_CONCURRENCY,
@@ -21,7 +23,6 @@ import {
   UI_ANALYTICS_SUMMARY_REFRESH_LABEL,
   UI_ANALYTICS_SUMMARY_REFRESH_PENDING,
   UI_ANALYTICS_SUMMARY_TITLE,
-  UI_CLASS_PANEL_ACTION_BUTTON,
   UI_COLUMN_ID_ANALYTICS_ACTIVATIONS,
   UI_COLUMN_ID_ANALYTICS_LICENSE,
   UI_COLUMN_ID_ANALYTICS_PEAK_CONCURRENCY,
@@ -31,6 +32,7 @@ import {
   UI_COLUMN_ID_ANALYTICS_VALIDATIONS,
   UI_DATE_FORMAT_LOCALE,
   UI_DATE_FORMAT_OPTIONS,
+  UI_STACK_GAP_SMALL,
   UI_TEXT_ALIGN_END,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
@@ -123,29 +125,26 @@ export function UsageSummaryPanel({ client, title = UI_ANALYTICS_SUMMARY_TITLE, 
   const hasError = usageSummariesQuery.isError
 
   return (
-    <Stack direction="column" gap="small">
+    <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
       <PanelHeader
         title={title}
         description={UI_ANALYTICS_SUMMARY_DESCRIPTION}
         actions={
-          <Button
-            variant="outline-secondary"
-            className={UI_CLASS_PANEL_ACTION_BUTTON}
-            onClick={() => void refetch()}
-            disabled={isFetching}
-            aria-busy={isFetching}
-          >
-            {isFetching || isQueryLoading ? UI_ANALYTICS_SUMMARY_REFRESH_PENDING : UI_ANALYTICS_SUMMARY_REFRESH_LABEL}
-          </Button>
+          <RefreshActionButton
+            onRefresh={() => void refetch()}
+            isPending={isFetching || isQueryLoading}
+            idleLabel={UI_ANALYTICS_SUMMARY_REFRESH_LABEL}
+            pendingLabel={UI_ANALYTICS_SUMMARY_REFRESH_PENDING}
+          />
         }
       />
 
       {isLoading ? (
-        <InlineAlert variant="info" title={UI_ANALYTICS_SUMMARY_LOADING_TITLE}>
+        <InlineAlert variant={UI_ALERT_VARIANT_INFO} title={UI_ANALYTICS_SUMMARY_LOADING_TITLE}>
           {UI_ANALYTICS_SUMMARY_LOADING_BODY}
         </InlineAlert>
       ) : hasError ? (
-        <InlineAlert variant="danger" title={UI_ANALYTICS_SUMMARY_ERROR_TITLE}>
+        <InlineAlert variant={UI_ALERT_VARIANT_DANGER} title={UI_ANALYTICS_SUMMARY_ERROR_TITLE}>
           {UI_ANALYTICS_SUMMARY_ERROR_BODY}
         </InlineAlert>
       ) : (

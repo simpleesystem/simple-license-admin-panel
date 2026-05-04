@@ -6,6 +6,9 @@ import {
   UI_CLASS_CARD_COLUMN_MAP,
   UI_CLASS_CARD_LIST_CARD,
   UI_CLASS_CARD_LIST_GRID,
+  UI_CLASS_FLEX_BETWEEN_START_MB2,
+  UI_CLASS_HEADING_H5_RESET,
+  UI_CLASS_MARGIN_TOP_MEDIUM,
   UI_CLASS_TEXT_MUTED,
   UI_FORM_ROW_COLUMNS_TWO,
   UI_TEST_ID_CARD_LIST,
@@ -55,12 +58,12 @@ export function CardList({
               onKeyDown={handleCardKeyDown(item.onClick)}
             >
               <Card.Body>
-                <div className="d-flex justify-content-between align-items-start mb-2">
-                  <Card.Title className="h5 mb-0">{item.title}</Card.Title>
+                <div className={UI_CLASS_FLEX_BETWEEN_START_MB2}>
+                  <Card.Title className={UI_CLASS_HEADING_H5_RESET}>{item.title}</Card.Title>
                   {item.icon}
                 </div>
                 {item.subtitle ? <Card.Subtitle className={UI_CLASS_TEXT_MUTED}>{item.subtitle}</Card.Subtitle> : null}
-                {item.body ? <Card.Text className="mt-3">{item.body}</Card.Text> : null}
+                {item.body ? <Card.Text className={UI_CLASS_MARGIN_TOP_MEDIUM}>{item.body}</Card.Text> : null}
               </Card.Body>
               {item.footer ? <Card.Footer>{item.footer}</Card.Footer> : null}
             </Card>

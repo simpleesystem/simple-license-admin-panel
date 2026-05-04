@@ -30,6 +30,7 @@ import {
   UI_PRODUCT_TIER_STATUS_ACTIVE,
   UI_PRODUCT_TIER_STATUS_DEACTIVATED,
   UI_SORT_ASC,
+  UI_STACK_GAP_MEDIUM,
   UI_TABLE_FILTER_LABEL_STATUS,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
@@ -217,7 +218,7 @@ export function ProductTierManagementPanel({
   }
 
   return (
-    <Stack direction="column" gap="medium">
+    <Stack direction="column" gap={UI_STACK_GAP_MEDIUM}>
       <PanelHeader title={UI_PRODUCT_TIER_PANEL_TITLE} description={UI_PRODUCT_TIER_PANEL_DESCRIPTION} />
 
       <DataTable

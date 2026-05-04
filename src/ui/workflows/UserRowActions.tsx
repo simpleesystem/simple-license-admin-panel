@@ -6,6 +6,7 @@ import { useNotificationBus } from '../../notifications/useNotificationBus'
 import { adaptMutation } from '../actions/mutationAdapter'
 import {
   UI_BUTTON_VARIANT_GHOST,
+  UI_STACK_GAP_SMALL,
   UI_USER_ACTION_DELETE,
   UI_USER_ACTION_EDIT,
   UI_USER_BUTTON_DELETE,
@@ -74,7 +75,7 @@ export function UserRowActions({
       permissionKey={rest.permissionKey}
       permissionFallback={rest.permissionFallback}
     >
-      <Stack direction="row" gap="small" {...rest}>
+      <Stack direction="row" gap={UI_STACK_GAP_SMALL} {...rest}>
         {canEdit ? (
           <Button variant={UI_BUTTON_VARIANT_GHOST} onClick={() => onEdit(user)} aria-label={UI_USER_ACTION_EDIT}>
             {UI_USER_ACTION_EDIT}

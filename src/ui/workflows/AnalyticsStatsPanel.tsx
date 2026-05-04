@@ -1,10 +1,13 @@
 import { useMemo } from 'react'
-import Button from 'react-bootstrap/Button'
 import type { Client } from '@/simpleLicense'
 import { useSystemStats } from '@/simpleLicense'
 import { useAdminSystemLiveFeed } from '../../app/live/useAdminSystemLiveFeed'
 import { useLiveStatusBadgeModel } from '../../app/live/useLiveStatusBadgeModel'
+import { RefreshActionButton } from '../actions/RefreshActionButton'
 import {
+  UI_ALERT_VARIANT_DANGER,
+  UI_ALERT_VARIANT_INFO,
+  UI_ALERT_VARIANT_WARNING,
   UI_ANALYTICS_STATS_DESCRIPTION,
   UI_ANALYTICS_STATS_EMPTY_BODY,
   UI_ANALYTICS_STATS_EMPTY_TITLE,
@@ -19,7 +22,6 @@ import {
   UI_ANALYTICS_STATS_REFRESH_LABEL,
   UI_ANALYTICS_STATS_REFRESH_PENDING,
   UI_ANALYTICS_STATS_TITLE,
-  UI_CLASS_PANEL_ACTION_BUTTON,
   UI_STACK_GAP_SMALL,
   UI_SUMMARY_ID_ANALYTICS_STATS_ACTIVATIONS,
   UI_SUMMARY_ID_ANALYTICS_STATS_ACTIVE,
@@ -93,7 +95,7 @@ export function AnalyticsStatsPanel({ client, title = UI_ANALYTICS_STATS_TITLE }
   const renderContent = () => {
     if (shouldShowLoading) {
       return (
-        <InlineAlert variant="info" title={UI_ANALYTICS_STATS_LOADING_TITLE}>
+        <InlineAlert variant={UI_ALERT_VARIANT_INFO} title={UI_ANALYTICS_STATS_LOADING_TITLE}>
           {UI_ANALYTICS_STATS_LOADING_BODY}
         </InlineAlert>
       )
@@ -101,7 +103,7 @@ export function AnalyticsStatsPanel({ client, title = UI_ANALYTICS_STATS_TITLE }
 
     if (shouldShowError) {
       return (
-        <InlineAlert variant="danger" title={UI_ANALYTICS_STATS_ERROR_TITLE}>
+        <InlineAlert variant={UI_ALERT_VARIANT_DANGER} title={UI_ANALYTICS_STATS_ERROR_TITLE}>
           {UI_ANALYTICS_STATS_ERROR_BODY}
         </InlineAlert>
       )
@@ -109,7 +111,7 @@ export function AnalyticsStatsPanel({ client, title = UI_ANALYTICS_STATS_TITLE }
 
     if (shouldShowEmpty) {
       return (
-        <InlineAlert variant="warning" title={UI_ANALYTICS_STATS_EMPTY_TITLE}>
+        <InlineAlert variant={UI_ALERT_VARIANT_WARNING} title={UI_ANALYTICS_STATS_EMPTY_TITLE}>
           {UI_ANALYTICS_STATS_EMPTY_BODY}
         </InlineAlert>
       )
@@ -126,15 +128,12 @@ export function AnalyticsStatsPanel({ client, title = UI_ANALYTICS_STATS_TITLE }
         actions={
           <>
             <BadgeText text={liveStatusBadge.text} variant={liveStatusBadge.variant} />
-            <Button
-              variant="outline-secondary"
-              className={UI_CLASS_PANEL_ACTION_BUTTON}
-              onClick={refresh}
-              disabled={isFetching || isLoading}
-              aria-busy={isFetching || isLoading}
-            >
-              {isFetching || isLoading ? UI_ANALYTICS_STATS_REFRESH_PENDING : UI_ANALYTICS_STATS_REFRESH_LABEL}
-            </Button>
+            <RefreshActionButton
+              onRefresh={refresh}
+              isPending={isFetching || isLoading}
+              idleLabel={UI_ANALYTICS_STATS_REFRESH_LABEL}
+              pendingLabel={UI_ANALYTICS_STATS_REFRESH_PENDING}
+            />
           </>
         }
       />

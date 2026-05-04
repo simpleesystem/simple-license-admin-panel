@@ -6,6 +6,10 @@ import { ERROR_CODE_UPLOAD_TIMEOUT, RELEASE_UPLOAD_FIELD_NAME } from '../../simp
 import { useCreateRelease } from '../../simpleLicense/hooks'
 import {
   UI_BUTTON_VARIANT_SECONDARY,
+  UI_CLASS_ALERT_DANGER,
+  UI_CLASS_FORM_FIELD,
+  UI_CLASS_SMALL_MARGIN_TOP,
+  UI_FORM_TEXTAREA_MIN_ROWS,
   UI_RELEASE_FORM_ERROR_FALLBACK,
   UI_RELEASE_FORM_ERROR_TIMEOUT_HINT,
   UI_RELEASE_FORM_FIELD_CHANGELOG,
@@ -93,12 +97,12 @@ export function ReleaseFormFlow({ client, productId, show, onClose, onSuccess, o
       body={
         <>
           {errorMessage ? (
-            <div className="alert alert-danger" role="alert">
+            <div className={UI_CLASS_ALERT_DANGER} role="alert">
               <div>{errorMessage}</div>
-              {errorHint ? <div className="small mt-1">{errorHint}</div> : null}
+              {errorHint ? <div className={UI_CLASS_SMALL_MARGIN_TOP}>{errorHint}</div> : null}
             </div>
           ) : null}
-          <Form.Group className="mb-3">
+          <Form.Group className={UI_CLASS_FORM_FIELD}>
             <Form.Label>{UI_RELEASE_FORM_FIELD_VERSION}</Form.Label>
             <Form.Control
               type="text"
@@ -108,7 +112,7 @@ export function ReleaseFormFlow({ client, productId, show, onClose, onSuccess, o
               aria-label={UI_RELEASE_FORM_FIELD_VERSION}
             />
           </Form.Group>
-          <Form.Group className="mb-3">
+          <Form.Group className={UI_CLASS_FORM_FIELD}>
             <Form.Label>{UI_RELEASE_FORM_FIELD_FILE}</Form.Label>
             <Form.Control
               type="file"
@@ -120,17 +124,17 @@ export function ReleaseFormFlow({ client, productId, show, onClose, onSuccess, o
               aria-label={UI_RELEASE_FORM_FIELD_FILE}
             />
           </Form.Group>
-          <Form.Group className="mb-3">
+          <Form.Group className={UI_CLASS_FORM_FIELD}>
             <Form.Label>{UI_RELEASE_FORM_FIELD_CHANGELOG}</Form.Label>
             <Form.Control
               as="textarea"
-              rows={3}
+              rows={UI_FORM_TEXTAREA_MIN_ROWS}
               value={changelog}
               onChange={(e) => setChangelog(e.target.value)}
               aria-label={UI_RELEASE_FORM_FIELD_CHANGELOG}
             />
           </Form.Group>
-          <Form.Group className="mb-3">
+          <Form.Group className={UI_CLASS_FORM_FIELD}>
             <Form.Check
               type="checkbox"
               id="release-prerelease"

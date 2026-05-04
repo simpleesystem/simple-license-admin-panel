@@ -9,6 +9,7 @@ import {
   HealthMetricsPanel,
   Page,
   PageHeader,
+  RouteStatus,
   Stack,
   SystemMetricsPanel,
   SystemStatusPanel,
@@ -108,7 +109,7 @@ export function HealthRouteComponent() {
               </div>
             ))
           ) : (
-            <div className="text-muted">{t(I18N_KEY_HEALTH_LOADING)}</div>
+            <RouteStatus isLoading={true} loadingTitle={t(I18N_KEY_HEALTH_LOADING)} />
           )}
         </Stack>
       </Page>

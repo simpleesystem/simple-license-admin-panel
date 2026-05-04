@@ -4,6 +4,9 @@ import { useLicenseUsageDetails } from '@/simpleLicense'
 import { canViewLicenses } from '../../app/auth/permissions'
 import { isSystemAdminUser } from '../../app/auth/userUtils'
 import {
+  UI_ALERT_VARIANT_DANGER,
+  UI_ALERT_VARIANT_INFO,
+  UI_ALERT_VARIANT_WARNING,
   UI_ANALYTICS_COLUMN_ACTIVATIONS,
   UI_ANALYTICS_COLUMN_PEAK_CONCURRENCY,
   UI_ANALYTICS_COLUMN_PERIOD,
@@ -28,6 +31,7 @@ import {
   UI_COLUMN_ID_ANALYTICS_VALIDATIONS,
   UI_DATE_FORMAT_LOCALE,
   UI_DATE_FORMAT_OPTIONS,
+  UI_STACK_GAP_SMALL,
   UI_TEXT_ALIGN_END,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
@@ -139,7 +143,7 @@ export function LicenseUsageDetailsPanel({
 
   if (!allowView || (!isSystemAdmin && licenseVendorId && licenseVendorId !== currentUser?.vendorId)) {
     return (
-      <InlineAlert variant="danger" title={UI_ANALYTICS_LICENSE_DETAILS_ERROR_TITLE}>
+      <InlineAlert variant={UI_ALERT_VARIANT_DANGER} title={UI_ANALYTICS_LICENSE_DETAILS_ERROR_TITLE}>
         {UI_ANALYTICS_LICENSE_DETAILS_ERROR_BODY}
       </InlineAlert>
     )
@@ -147,7 +151,7 @@ export function LicenseUsageDetailsPanel({
 
   if (!licenseKey) {
     return (
-      <InlineAlert variant="warning" title={UI_ANALYTICS_LICENSE_DETAILS_ERROR_TITLE}>
+      <InlineAlert variant={UI_ALERT_VARIANT_WARNING} title={UI_ANALYTICS_LICENSE_DETAILS_ERROR_TITLE}>
         {UI_ANALYTICS_LICENSE_DETAILS_ERROR_BODY}
       </InlineAlert>
     )
@@ -155,7 +159,7 @@ export function LicenseUsageDetailsPanel({
 
   if (detailsQuery.isLoading) {
     return (
-      <InlineAlert variant="info" title={UI_ANALYTICS_LICENSE_DETAILS_LOADING_TITLE}>
+      <InlineAlert variant={UI_ALERT_VARIANT_INFO} title={UI_ANALYTICS_LICENSE_DETAILS_LOADING_TITLE}>
         {UI_ANALYTICS_LICENSE_DETAILS_LOADING_BODY}
       </InlineAlert>
     )
@@ -163,14 +167,14 @@ export function LicenseUsageDetailsPanel({
 
   if (detailsQuery.isError) {
     return (
-      <InlineAlert variant="danger" title={UI_ANALYTICS_LICENSE_DETAILS_ERROR_TITLE}>
+      <InlineAlert variant={UI_ALERT_VARIANT_DANGER} title={UI_ANALYTICS_LICENSE_DETAILS_ERROR_TITLE}>
         {UI_ANALYTICS_LICENSE_DETAILS_ERROR_BODY}
       </InlineAlert>
     )
   }
 
   return (
-    <Stack direction="column" gap="small">
+    <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
       <PanelHeader title={title} description={UI_ANALYTICS_LICENSE_DETAILS_DESCRIPTION} />
 
       <DataTable

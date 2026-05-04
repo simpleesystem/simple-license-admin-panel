@@ -8,8 +8,6 @@ import {
   UI_PAGE_SUBTITLE_USERS,
   UI_PAGE_TITLE_USERS,
   UI_PAGE_VARIANT_FULL_WIDTH,
-  UI_SECTION_STATUS_ERROR,
-  UI_SECTION_STATUS_LOADING,
   UI_TABLE_PAGE_SIZE_DEFAULT,
   UI_USER_STATUS_ACTION_RETRY,
   UI_USER_STATUS_ERROR_BODY,
@@ -18,7 +16,7 @@ import {
   UI_USER_STATUS_LOADING_TITLE,
 } from '../../ui/constants'
 import { useTableState } from '../../ui/data/useTableState'
-import { SectionStatus } from '../../ui/feedback/SectionStatus'
+import { RouteStatus } from '../../ui/feedback/RouteStatus'
 import { Page } from '../../ui/layout/Page'
 import { PageHeader } from '../../ui/layout/PageHeader'
 import { UserManagementPanel } from '../../ui/workflows/UserManagementPanel'
@@ -72,26 +70,16 @@ export function UsersRouteComponent() {
     <Page variant={UI_PAGE_VARIANT_FULL_WIDTH}>
       <PageHeader title={UI_PAGE_TITLE_USERS} subtitle={UI_PAGE_SUBTITLE_USERS} />
 
-      {isLoading ? (
-        <SectionStatus
-          status={UI_SECTION_STATUS_LOADING}
-          title={UI_USER_STATUS_LOADING_TITLE}
-          message={UI_USER_STATUS_LOADING_BODY}
-        />
-      ) : null}
-
-      {isError ? (
-        <SectionStatus
-          status={UI_SECTION_STATUS_ERROR}
-          title={UI_USER_STATUS_ERROR_TITLE}
-          message={UI_USER_STATUS_ERROR_BODY}
-          actions={
-            <button type="button" className="btn btn-secondary" onClick={handleRefresh}>
-              {UI_USER_STATUS_ACTION_RETRY}
-            </button>
-          }
-        />
-      ) : null}
+      <RouteStatus
+        isLoading={isLoading}
+        isError={isError}
+        loadingTitle={UI_USER_STATUS_LOADING_TITLE}
+        loadingMessage={UI_USER_STATUS_LOADING_BODY}
+        errorTitle={UI_USER_STATUS_ERROR_TITLE}
+        errorMessage={UI_USER_STATUS_ERROR_BODY}
+        retryLabel={UI_USER_STATUS_ACTION_RETRY}
+        onRetry={handleRefresh}
+      />
 
       {!isLoading && !isError && canView ? (
         <UserManagementPanel

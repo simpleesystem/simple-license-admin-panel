@@ -2,13 +2,16 @@
 /* istanbul ignore file */
 
 import { type ReactNode, useMemo } from 'react'
-import Button from 'react-bootstrap/Button'
 import type { Client } from '@/simpleLicense'
 import { useServerStatus } from '@/simpleLicense'
 import { useAdminSystemLiveFeed } from '../../app/live/useAdminSystemLiveFeed'
 import { useLiveStatusBadgeModel } from '../../app/live/useLiveStatusBadgeModel'
+import { RefreshActionButton } from '../actions/RefreshActionButton'
 import {
-  UI_CLASS_PANEL_ACTION_BUTTON,
+  UI_ALERT_VARIANT_DANGER,
+  UI_ALERT_VARIANT_INFO,
+  UI_ALERT_VARIANT_WARNING,
+  UI_CLASS_INLINE_COLUMN_GAP_SMALL,
   UI_DATE_FORMAT_LOCALE,
   UI_DATE_TIME_FORMAT_OPTIONS,
   UI_STACK_GAP_SMALL,
@@ -232,7 +235,7 @@ const renderPipeSeparatedValue = (value: string): ReactNode => {
   }
 
   return (
-    <span className="d-inline-flex flex-column gap-1">
+    <span className={UI_CLASS_INLINE_COLUMN_GAP_SMALL}>
       {segments.map((segment, index) => (
         <span key={`${index}-${segment}`}>{toDisplayCase(segment)}</span>
       ))}
@@ -267,7 +270,7 @@ const normalizeDatabaseSummary = (value: unknown): ReactNode | undefined => {
     const poolSummary = formatConnectionPool(value)
     if (poolSummary && normalizedStatus) {
       return (
-        <span className="d-inline-flex flex-column gap-1">
+        <span className={UI_CLASS_INLINE_COLUMN_GAP_SMALL}>
           <span>{toDisplayCase(normalizedStatus)}</span>
           {renderPipeSeparatedValue(poolSummary)}
         </span>
@@ -348,7 +351,7 @@ export function SystemStatusPanel({ client, title = UI_SYSTEM_STATUS_TITLE }: Sy
     if (summaryItems.length === 0) {
       if ((isLoading || isFetching) && !statusData) {
         return (
-          <InlineAlert variant="info" title={UI_SYSTEM_STATUS_LOADING_TITLE}>
+          <InlineAlert variant={UI_ALERT_VARIANT_INFO} title={UI_SYSTEM_STATUS_LOADING_TITLE}>
             {UI_SYSTEM_STATUS_LOADING_BODY}
           </InlineAlert>
         )
@@ -356,14 +359,14 @@ export function SystemStatusPanel({ client, title = UI_SYSTEM_STATUS_TITLE }: Sy
 
       if (isError && !statusData) {
         return (
-          <InlineAlert variant="danger" title={UI_SYSTEM_STATUS_ERROR_TITLE}>
+          <InlineAlert variant={UI_ALERT_VARIANT_DANGER} title={UI_SYSTEM_STATUS_ERROR_TITLE}>
             {UI_SYSTEM_STATUS_ERROR_BODY}
           </InlineAlert>
         )
       }
 
       return (
-        <InlineAlert variant="warning" title={UI_SYSTEM_STATUS_EMPTY_TITLE}>
+        <InlineAlert variant={UI_ALERT_VARIANT_WARNING} title={UI_SYSTEM_STATUS_EMPTY_TITLE}>
           {UI_SYSTEM_STATUS_EMPTY_BODY}
         </InlineAlert>
       )
@@ -381,15 +384,12 @@ export function SystemStatusPanel({ client, title = UI_SYSTEM_STATUS_TITLE }: Sy
         actions={
           <>
             <BadgeText text={liveStatusBadge.text} variant={liveStatusBadge.variant} />
-            <Button
-              variant="outline-secondary"
-              className={UI_CLASS_PANEL_ACTION_BUTTON}
-              onClick={refresh}
-              disabled={isFetching || isLoading}
-              aria-busy={isFetching || isLoading}
-            >
-              {isFetching || isLoading ? UI_SYSTEM_STATUS_REFRESH_PENDING : UI_SYSTEM_STATUS_REFRESH_LABEL}
-            </Button>
+            <RefreshActionButton
+              onRefresh={refresh}
+              isPending={isFetching || isLoading}
+              idleLabel={UI_SYSTEM_STATUS_REFRESH_LABEL}
+              pendingLabel={UI_SYSTEM_STATUS_REFRESH_PENDING}
+            />
           </>
         }
       />

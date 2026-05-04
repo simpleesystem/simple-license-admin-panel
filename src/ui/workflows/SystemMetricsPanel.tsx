@@ -2,13 +2,17 @@
 /* istanbul ignore file */
 
 import { useCallback, useMemo } from 'react'
-import Button from 'react-bootstrap/Button'
 import type { Client, MetricObject, MetricsResponse, MetricValue } from '@/simpleLicense'
 import { useSystemMetrics } from '@/simpleLicense'
 import { useAdminSystemLiveFeed } from '../../app/live/useAdminSystemLiveFeed'
 import { useLiveStatusBadgeModel } from '../../app/live/useLiveStatusBadgeModel'
+import { RefreshActionButton } from '../actions/RefreshActionButton'
 import {
-  UI_CLASS_PANEL_ACTION_BUTTON,
+  UI_ALERT_VARIANT_DANGER,
+  UI_ALERT_VARIANT_INFO,
+  UI_ALERT_VARIANT_WARNING,
+  UI_CLASS_FLEX_COLUMN_GAP_LARGE,
+  UI_CLASS_FLEX_COLUMN_GAP_MEDIUM,
   UI_DATE_FORMAT_LOCALE,
   UI_DATE_TIME_FORMAT_OPTIONS,
   UI_SECTION_ID_SYSTEM_METRICS_APPLICATION,
@@ -439,7 +443,7 @@ export function SystemMetricsPanel({ client, title = UI_SYSTEM_METRICS_TITLE }: 
     if (!metricsSource || sections.length === 0) {
       if ((isLoading || isFetching) && !metricsSource) {
         return (
-          <InlineAlert variant="info" title={UI_SYSTEM_METRICS_LOADING_TITLE}>
+          <InlineAlert variant={UI_ALERT_VARIANT_INFO} title={UI_SYSTEM_METRICS_LOADING_TITLE}>
             {UI_SYSTEM_METRICS_LOADING_BODY}
           </InlineAlert>
         )
@@ -447,23 +451,23 @@ export function SystemMetricsPanel({ client, title = UI_SYSTEM_METRICS_TITLE }: 
 
       if (isError && !metricsSource) {
         return (
-          <InlineAlert variant="danger" title={UI_SYSTEM_METRICS_ERROR_TITLE}>
+          <InlineAlert variant={UI_ALERT_VARIANT_DANGER} title={UI_SYSTEM_METRICS_ERROR_TITLE}>
             {UI_SYSTEM_METRICS_ERROR_BODY}
           </InlineAlert>
         )
       }
 
       return (
-        <InlineAlert variant="warning" title={UI_SYSTEM_METRICS_EMPTY_TITLE}>
+        <InlineAlert variant={UI_ALERT_VARIANT_WARNING} title={UI_SYSTEM_METRICS_EMPTY_TITLE}>
           {UI_SYSTEM_METRICS_EMPTY_BODY}
         </InlineAlert>
       )
     }
 
     return (
-      <div className="d-flex flex-column gap-3">
+      <div className={UI_CLASS_FLEX_COLUMN_GAP_LARGE}>
         {sections.map((section) => (
-          <div key={section.id} className="d-flex flex-column gap-2">
+          <div key={section.id} className={UI_CLASS_FLEX_COLUMN_GAP_MEDIUM}>
             <h3 className="h6 mb-0">{section.title}</h3>
             <SummaryList items={section.items} />
           </div>
@@ -480,15 +484,12 @@ export function SystemMetricsPanel({ client, title = UI_SYSTEM_METRICS_TITLE }: 
         actions={
           <>
             <BadgeText text={liveStatusBadge.text} variant={liveStatusBadge.variant} />
-            <Button
-              variant="outline-secondary"
-              className={UI_CLASS_PANEL_ACTION_BUTTON}
-              onClick={refresh}
-              disabled={isFetching || isLoading}
-              aria-busy={isFetching || isLoading}
-            >
-              {isFetching || isLoading ? UI_SYSTEM_METRICS_REFRESH_PENDING : UI_SYSTEM_METRICS_REFRESH_LABEL}
-            </Button>
+            <RefreshActionButton
+              onRefresh={refresh}
+              isPending={isFetching || isLoading}
+              idleLabel={UI_SYSTEM_METRICS_REFRESH_LABEL}
+              pendingLabel={UI_SYSTEM_METRICS_REFRESH_PENDING}
+            />
           </>
         }
       />

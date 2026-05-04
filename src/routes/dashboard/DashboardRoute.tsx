@@ -15,6 +15,7 @@ import {
   AnalyticsStatsPanel,
   Page,
   PageHeader,
+  RouteStatus,
   Stack,
   TopLicensesPanel,
   UI_CLASS_SECTION_COLUMN_FULL,
@@ -164,7 +165,7 @@ export function DashboardRouteComponent() {
               </div>
             ))
           ) : (
-            <div className="text-muted">{t(I18N_KEY_DASHBOARD_LOADING)}</div>
+            <RouteStatus isLoading={true} loadingTitle={t(I18N_KEY_DASHBOARD_LOADING)} />
           )}
         </Stack>
       </Page>

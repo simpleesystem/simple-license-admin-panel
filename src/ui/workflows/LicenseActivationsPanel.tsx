@@ -1,11 +1,13 @@
 import { useMemo } from 'react'
-import Button from 'react-bootstrap/Button'
 import type { Client, LicenseActivation, User } from '@/simpleLicense'
 import { useLicenseActivations } from '@/simpleLicense'
 import { canViewActivations, isActivationOwnedByUser, isVendorScopedUser } from '../../app/auth/permissions'
 import { isSystemAdminUser } from '../../app/auth/userUtils'
+import { RefreshActionButton } from '../actions/RefreshActionButton'
 import {
-  UI_CLASS_PANEL_ACTION_BUTTON,
+  UI_ALERT_VARIANT_DANGER,
+  UI_ALERT_VARIANT_INFO,
+  UI_ALERT_VARIANT_WARNING,
   UI_COLUMN_ID_LICENSE_ACTIVATION_ACTIVATED_AT,
   UI_COLUMN_ID_LICENSE_ACTIVATION_CLIENT_VERSION,
   UI_COLUMN_ID_LICENSE_ACTIVATION_DOMAIN,
@@ -151,7 +153,7 @@ export function LicenseActivationsPanel({
       !isActivationOwnedByUser(currentUser ?? null, { vendorId: licenseVendorId } as LicenseActivation))
   ) {
     return (
-      <InlineAlert variant="danger" title={UI_LICENSE_ACTIVATIONS_ERROR_TITLE}>
+      <InlineAlert variant={UI_ALERT_VARIANT_DANGER} title={UI_LICENSE_ACTIVATIONS_ERROR_TITLE}>
         {UI_LICENSE_ACTIVATIONS_ERROR_BODY}
       </InlineAlert>
     )
@@ -159,7 +161,7 @@ export function LicenseActivationsPanel({
 
   if (!licenseKey) {
     return (
-      <InlineAlert variant="warning" title={UI_LICENSE_ACTIVATIONS_ERROR_TITLE}>
+      <InlineAlert variant={UI_ALERT_VARIANT_WARNING} title={UI_LICENSE_ACTIVATIONS_ERROR_TITLE}>
         {UI_LICENSE_ACTIVATIONS_ERROR_BODY}
       </InlineAlert>
     )
@@ -167,7 +169,7 @@ export function LicenseActivationsPanel({
 
   if (activationsQuery.isLoading) {
     return (
-      <InlineAlert variant="info" title={UI_LICENSE_ACTIVATIONS_LOADING_TITLE}>
+      <InlineAlert variant={UI_ALERT_VARIANT_INFO} title={UI_LICENSE_ACTIVATIONS_LOADING_TITLE}>
         {UI_LICENSE_ACTIVATIONS_LOADING_BODY}
       </InlineAlert>
     )
@@ -175,7 +177,7 @@ export function LicenseActivationsPanel({
 
   if (activationsQuery.isError) {
     return (
-      <InlineAlert variant="danger" title={UI_LICENSE_ACTIVATIONS_ERROR_TITLE}>
+      <InlineAlert variant={UI_ALERT_VARIANT_DANGER} title={UI_LICENSE_ACTIVATIONS_ERROR_TITLE}>
         {UI_LICENSE_ACTIVATIONS_ERROR_BODY}
       </InlineAlert>
     )
@@ -187,17 +189,12 @@ export function LicenseActivationsPanel({
         title={title}
         description={UI_LICENSE_ACTIVATIONS_DESCRIPTION}
         actions={
-          <Button
-            variant="outline-secondary"
-            className={UI_CLASS_PANEL_ACTION_BUTTON}
-            onClick={() => activationsQuery.refetch()}
-            disabled={activationsQuery.isFetching}
-            aria-busy={activationsQuery.isFetching}
-          >
-            {activationsQuery.isFetching
-              ? UI_LICENSE_ACTIVATIONS_REFRESH_PENDING
-              : UI_LICENSE_ACTIVATIONS_REFRESH_LABEL}
-          </Button>
+          <RefreshActionButton
+            onRefresh={() => void activationsQuery.refetch()}
+            isPending={activationsQuery.isFetching}
+            idleLabel={UI_LICENSE_ACTIVATIONS_REFRESH_LABEL}
+            pendingLabel={UI_LICENSE_ACTIVATIONS_REFRESH_PENDING}
+          />
         }
       />
 

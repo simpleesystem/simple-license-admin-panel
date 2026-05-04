@@ -2,7 +2,7 @@ import type { ChangeEvent } from 'react'
 import { useId } from 'react'
 import Form from 'react-bootstrap/Form'
 
-import { UI_CLASS_MARGIN_RESET } from '../constants'
+import { UI_CLASS_MARGIN_RESET, UI_SIZE_SMALL } from '../constants'
 import type { UiSelectOption } from '../types'
 
 export type TableFilterProps = {
@@ -33,7 +33,7 @@ export function TableFilter({ label, value, options, onChange, placeholder, clas
       ) : null}
       <Form.Select
         id={selectId}
-        size="sm"
+        size={UI_SIZE_SMALL}
         value={value}
         onChange={handleChange}
         disabled={disabled}

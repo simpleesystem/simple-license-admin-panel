@@ -4,6 +4,9 @@ import type { Client, CreateTenantBackupResponse } from '@/simpleLicense'
 import { useCreateTenantBackup } from '@/simpleLicense'
 
 import {
+  UI_ALERT_VARIANT_DANGER,
+  UI_ALERT_VARIANT_SUCCESS,
+  UI_BUTTON_VARIANT_PRIMARY,
   UI_STACK_GAP_SMALL,
   UI_SUMMARY_ID_TENANT_BACKUP_LAST_RUN,
   UI_SUMMARY_ID_TENANT_BACKUP_NAME,
@@ -78,11 +81,13 @@ export function TenantBackupPanel({
     <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
       <PanelHeader title={title} description={UI_TENANT_BACKUP_DESCRIPTION} />
 
-      {status === 'success' ? <InlineAlert variant="success" title={UI_TENANT_BACKUP_SUCCESS} /> : null}
-      {status === 'error' ? <InlineAlert variant="danger" title={UI_TENANT_BACKUP_ERROR} /> : null}
+      {status === 'success' ? (
+        <InlineAlert variant={UI_ALERT_VARIANT_SUCCESS} title={UI_TENANT_BACKUP_SUCCESS} />
+      ) : null}
+      {status === 'error' ? <InlineAlert variant={UI_ALERT_VARIANT_DANGER} title={UI_TENANT_BACKUP_ERROR} /> : null}
 
       <div className="d-flex flex-wrap gap-2">
-        <Button variant="primary" disabled={mutation.isPending} onClick={handleCreateBackup}>
+        <Button variant={UI_BUTTON_VARIANT_PRIMARY} disabled={mutation.isPending} onClick={handleCreateBackup}>
           {mutation.isPending ? UI_TENANT_BACKUP_PENDING_LABEL : UI_TENANT_BACKUP_BUTTON_LABEL}
         </Button>
       </div>

@@ -8,6 +8,7 @@ import {
   UI_ARIA_SORT_ASCENDING,
   UI_ARIA_SORT_DESCENDING,
   UI_ARIA_SORT_NONE,
+  UI_CLASS_MARGIN_TOP_MEDIUM,
   UI_CLASS_TABLE,
   UI_CLASS_TABLE_DENSITY_MAP,
   UI_CLASS_TABLE_EMPTY_STATE,
@@ -229,7 +230,7 @@ export function DataTable<TData>({
           </tbody>
         </table>
       </div>
-      {footer ? <div className="mt-3">{footer}</div> : null}
+      {footer ? <div className={UI_CLASS_MARGIN_TOP_MEDIUM}>{footer}</div> : null}
     </VisibilityGate>
   )
 }

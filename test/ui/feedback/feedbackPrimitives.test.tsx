@@ -3,12 +3,14 @@ import { fireEvent, render } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
 import {
   UI_ARIA_LABEL_SECTION_STATUS,
+  UI_BUTTON_VARIANT_SECONDARY,
   UI_CLASS_INLINE_ALERT,
   UI_CLASS_SECTION_STATUS,
   UI_TEST_ID_INLINE_ALERT,
   UI_TEST_ID_SECTION_STATUS,
 } from '../../../src/ui/constants'
 import { InlineAlert } from '../../../src/ui/feedback/InlineAlert'
+import { RouteStatus } from '../../../src/ui/feedback/RouteStatus'
 import { SectionStatus } from '../../../src/ui/feedback/SectionStatus'
 
 describe('Feedback primitives', () => {
@@ -78,5 +80,37 @@ describe('Feedback primitives', () => {
     expect(getByText(helper)).toBeInTheDocument()
     expect(getByText(timestamp)).toBeInTheDocument()
     expect(getByText('Acknowledge')).toBeInTheDocument()
+  })
+
+  test('RouteStatus renders loading state with message', () => {
+    const title = faker.lorem.words(3)
+    const message = faker.lorem.words(5)
+    const { getByRole, getByText } = render(
+      <RouteStatus isLoading={true} loadingTitle={title} loadingMessage={message} />
+    )
+
+    expect(getByRole('status')).toHaveAttribute('aria-busy', 'true')
+    expect(getByText(title)).toBeInTheDocument()
+    expect(getByText(message)).toBeInTheDocument()
+  })
+
+  test('RouteStatus renders retry action for error state', () => {
+    const retryLabel = faker.lorem.words(2)
+    const errorTitle = faker.lorem.words(3)
+    const onRetry = vi.fn()
+    const { getByRole } = render(
+      <RouteStatus isError={true} errorTitle={errorTitle} retryLabel={retryLabel} onRetry={onRetry} />
+    )
+
+    const retryButton = getByRole('button', { name: retryLabel })
+    fireEvent.click(retryButton)
+
+    expect(retryButton).toHaveClass(`btn-${UI_BUTTON_VARIANT_SECONDARY}`, { exact: false })
+    expect(onRetry).toHaveBeenCalledTimes(1)
+  })
+
+  test('RouteStatus renders nothing without active state', () => {
+    const { container } = render(<RouteStatus />)
+    expect(container).toBeEmptyDOMElement()
   })
 })

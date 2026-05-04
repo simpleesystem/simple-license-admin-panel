@@ -7,6 +7,8 @@ import { useLogger } from '../../app/logging/loggerContext'
 
 import type { MutationAdapter } from '../actions/mutationActions'
 import {
+  UI_CLASS_MARGIN_BOTTOM_LARGE,
+  UI_CLASS_PADDING_TOP_SMALL,
   UI_FORM_SELECT_PLACEHOLDER_VALUE,
   UI_MODAL_SIZE_XL,
   UI_PRODUCT_FORM_PENDING_UPDATE,
@@ -222,7 +224,11 @@ export function ProductUpdateDialog({
       title={UI_PRODUCT_FORM_TITLE_UPDATE}
       size={UI_MODAL_SIZE_XL}
       body={
-        <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k || 'details')} className="mb-4">
+        <Tabs
+          activeKey={activeTab}
+          onSelect={(k) => setActiveTab(k || 'details')}
+          className={UI_CLASS_MARGIN_BOTTOM_LARGE}
+        >
           <Tab eventKey="details" title="Details">
             <DynamicForm
               blueprint={blueprint}
@@ -235,7 +241,7 @@ export function ProductUpdateDialog({
             />
           </Tab>
           <Tab eventKey="tiers" title="Tiers">
-            <div className="pt-2">
+            <div className={UI_CLASS_PADDING_TOP_SMALL}>
               <ProductTierManagementPanel
                 client={client}
                 productId={productId}
@@ -249,7 +255,7 @@ export function ProductUpdateDialog({
             </div>
           </Tab>
           <Tab eventKey="entitlements" title="Entitlements">
-            <div className="pt-2">
+            <div className={UI_CLASS_PADDING_TOP_SMALL}>
               <ProductEntitlementManagementPanel
                 client={client}
                 productId={productId}

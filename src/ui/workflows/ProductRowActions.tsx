@@ -8,6 +8,9 @@ import { useNotificationBus } from '../../notifications/useNotificationBus'
 import { adaptMutation } from '../actions/mutationAdapter'
 import {
   UI_BUTTON_VARIANT_GHOST,
+  UI_CLASS_FLEX_COLUMN_GAP_LARGE,
+  UI_CLASS_FLEX_COLUMN_GAP_MEDIUM,
+  UI_CLASS_FLEX_COLUMN_GAP_SMALL,
   UI_PRODUCT_ACTION_BUILD_TOKENS,
   UI_PRODUCT_ACTION_DELETE,
   UI_PRODUCT_ACTION_EDIT,
@@ -59,6 +62,7 @@ import {
   UI_PRODUCT_PROTECTION_KEY_LABEL_SIGNING_KEY_ID,
   UI_PRODUCT_PROTECTION_KEY_LOADING,
   UI_PRODUCT_PROTECTION_KEY_MODAL_TITLE,
+  UI_STACK_GAP_SMALL,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { Stack } from '../layout/Stack'
@@ -258,7 +262,7 @@ export function ProductRowActions({
       permissionKey={rest.permissionKey}
       permissionFallback={rest.permissionFallback}
     >
-      <Stack direction="row" gap="small" {...rest}>
+      <Stack direction="row" gap={UI_STACK_GAP_SMALL} {...rest}>
         {allowUpdate && ownsProduct ? (
           <Button
             variant={UI_BUTTON_VARIANT_GHOST}
@@ -338,7 +342,7 @@ export function ProductRowActions({
             ) : protectionKeyError ? (
               protectionKeyError
             ) : (
-              <div className="d-flex flex-column gap-2">
+              <div className={UI_CLASS_FLEX_COLUMN_GAP_MEDIUM}>
                 <div>
                   <div>{UI_PRODUCT_PROTECTION_KEY_LABEL_PRODUCT}</div>
                   <code>{protectionKeyMetadata?.productSlug ?? UI_VALUE_PLACEHOLDER}</code>
@@ -371,7 +375,7 @@ export function ProductRowActions({
             ) : buildTokensError ? (
               buildTokensError
             ) : (
-              <div className="d-flex flex-column gap-3">
+              <div className={UI_CLASS_FLEX_COLUMN_GAP_LARGE}>
                 <Button
                   variant={UI_BUTTON_VARIANT_GHOST}
                   onClick={() => {
@@ -382,12 +386,12 @@ export function ProductRowActions({
                   {isIssuingBuildToken ? UI_PRODUCT_BUILD_TOKENS_ISSUING : UI_PRODUCT_BUILD_TOKENS_ISSUE}
                 </Button>
                 {issuedBuildToken !== null ? (
-                  <div className="d-flex flex-column gap-1">
+                  <div className={UI_CLASS_FLEX_COLUMN_GAP_SMALL}>
                     <div>{UI_PRODUCT_BUILD_TOKENS_TOKEN_ONCE}</div>
                     <code>{issuedBuildToken}</code>
                   </div>
                 ) : null}
-                <div className="d-flex flex-column gap-1">
+                <div className={UI_CLASS_FLEX_COLUMN_GAP_SMALL}>
                   <div>{UI_PRODUCT_BUILD_TOKENS_USAGE_NOTE}</div>
                   <code>{UI_PRODUCT_BUILD_TOKENS_RELEASE_ENDPOINT}</code>
                 </div>

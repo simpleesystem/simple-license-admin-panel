@@ -18,6 +18,11 @@ import {
   UI_CHANGE_PASSWORD_LABEL_EMAIL,
   UI_CHANGE_PASSWORD_LABEL_NEW_PASSWORD,
   UI_CHANGE_PASSWORD_VALIDATION_CURRENT_PASSWORD,
+  UI_CLASS_ALERT_DANGER,
+  UI_CLASS_BUTTON_PRIMARY_FULL_WIDTH,
+  UI_CLASS_FORM_CONTROL_BASE,
+  UI_CLASS_FORM_LABEL_BASE,
+  UI_STACK_GAP_LARGE,
 } from '@/ui/constants'
 import { Stack } from '@/ui/layout/Stack'
 
@@ -105,21 +110,21 @@ export function ChangePasswordForm({ onSuccess }: ChangePasswordFormProps) {
 
   return (
     <form onSubmit={handleSubmit} noValidate={true}>
-      <Stack gap="large">
+      <Stack gap={UI_STACK_GAP_LARGE}>
         {error && (
-          <div className="alert alert-danger" role="alert">
+          <div className={UI_CLASS_ALERT_DANGER} role="alert">
             {error}
           </div>
         )}
 
         <div>
-          <label className="form-label" htmlFor="email">
+          <label className={UI_CLASS_FORM_LABEL_BASE} htmlFor="email">
             {UI_CHANGE_PASSWORD_LABEL_EMAIL}
           </label>
           <input
             id="email"
             type="email"
-            className="form-control"
+            className={UI_CLASS_FORM_CONTROL_BASE}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={isSubmitting}
@@ -127,13 +132,13 @@ export function ChangePasswordForm({ onSuccess }: ChangePasswordFormProps) {
         </div>
 
         <div>
-          <label className="form-label" htmlFor="currentPassword">
+          <label className={UI_CLASS_FORM_LABEL_BASE} htmlFor="currentPassword">
             {UI_CHANGE_PASSWORD_LABEL_CURRENT_PASSWORD}
           </label>
           <input
             id="currentPassword"
             type="password"
-            className="form-control"
+            className={UI_CLASS_FORM_CONTROL_BASE}
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
             disabled={isSubmitting}
@@ -142,13 +147,13 @@ export function ChangePasswordForm({ onSuccess }: ChangePasswordFormProps) {
         </div>
 
         <div>
-          <label className="form-label" htmlFor="newPassword">
+          <label className={UI_CLASS_FORM_LABEL_BASE} htmlFor="newPassword">
             {UI_CHANGE_PASSWORD_LABEL_NEW_PASSWORD}
           </label>
           <input
             id="newPassword"
             type="password"
-            className="form-control"
+            className={UI_CLASS_FORM_CONTROL_BASE}
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             disabled={isSubmitting}
@@ -156,13 +161,13 @@ export function ChangePasswordForm({ onSuccess }: ChangePasswordFormProps) {
         </div>
 
         <div>
-          <label className="form-label" htmlFor="confirmPassword">
+          <label className={UI_CLASS_FORM_LABEL_BASE} htmlFor="confirmPassword">
             {UI_CHANGE_PASSWORD_LABEL_CONFIRM_PASSWORD}
           </label>
           <input
             id="confirmPassword"
             type="password"
-            className="form-control"
+            className={UI_CLASS_FORM_CONTROL_BASE}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             disabled={isSubmitting}
@@ -170,7 +175,7 @@ export function ChangePasswordForm({ onSuccess }: ChangePasswordFormProps) {
           />
         </div>
 
-        <button type="submit" className="btn btn-primary w-100" disabled={isSubmitting}>
+        <button type="submit" className={UI_CLASS_BUTTON_PRIMARY_FULL_WIDTH} disabled={isSubmitting}>
           {isSubmitting ? UI_CHANGE_PASSWORD_BUTTON_UPDATING : UI_CHANGE_PASSWORD_BUTTON_UPDATE}
         </button>
       </Stack>

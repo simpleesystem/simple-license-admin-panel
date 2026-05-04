@@ -17,6 +17,9 @@ import {
   UI_ALERT_THRESHOLD_SUMMARY_ID_MEDIUM_ACTIVATIONS,
   UI_ALERT_THRESHOLD_SUMMARY_ID_MEDIUM_CONCURRENCY,
   UI_ALERT_THRESHOLD_SUMMARY_ID_MEDIUM_VALIDATIONS,
+  UI_ALERT_VARIANT_DANGER,
+  UI_ALERT_VARIANT_INFO,
+  UI_ALERT_VARIANT_WARNING,
   UI_ANALYTICS_ALERT_THRESHOLDS_DESCRIPTION,
   UI_ANALYTICS_ALERT_THRESHOLDS_EMPTY_STATE,
   UI_ANALYTICS_ALERT_THRESHOLDS_ERROR_BODY,
@@ -25,7 +28,9 @@ import {
   UI_ANALYTICS_ALERT_THRESHOLDS_LOADING_TITLE,
   UI_ANALYTICS_ALERT_THRESHOLDS_TITLE,
   UI_BUTTON_LABEL_EDIT_ALERT_THRESHOLDS,
+  UI_BUTTON_VARIANT_OUTLINE,
   UI_CLASS_PANEL_ACTION_BUTTON,
+  UI_STACK_GAP_SMALL,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { SummaryList } from '../data/SummaryList'
@@ -106,27 +111,31 @@ export function AlertThresholdsPanel({
   const hasError = thresholdsQuery.isError
 
   return (
-    <Stack direction="column" gap="small">
+    <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
       <PanelHeader
         title={title}
         description={UI_ANALYTICS_ALERT_THRESHOLDS_DESCRIPTION}
         actions={
-          <Button variant="outline-primary" className={UI_CLASS_PANEL_ACTION_BUTTON} onClick={() => setShowModal(true)}>
+          <Button
+            variant={UI_BUTTON_VARIANT_OUTLINE}
+            className={UI_CLASS_PANEL_ACTION_BUTTON}
+            onClick={() => setShowModal(true)}
+          >
             {UI_BUTTON_LABEL_EDIT_ALERT_THRESHOLDS}
           </Button>
         }
       />
 
       {isLoading ? (
-        <InlineAlert variant="info" title={UI_ANALYTICS_ALERT_THRESHOLDS_LOADING_TITLE}>
+        <InlineAlert variant={UI_ALERT_VARIANT_INFO} title={UI_ANALYTICS_ALERT_THRESHOLDS_LOADING_TITLE}>
           {UI_ANALYTICS_ALERT_THRESHOLDS_LOADING_BODY}
         </InlineAlert>
       ) : hasError ? (
-        <InlineAlert variant="danger" title={UI_ANALYTICS_ALERT_THRESHOLDS_ERROR_TITLE}>
+        <InlineAlert variant={UI_ALERT_VARIANT_DANGER} title={UI_ANALYTICS_ALERT_THRESHOLDS_ERROR_TITLE}>
           {UI_ANALYTICS_ALERT_THRESHOLDS_ERROR_BODY}
         </InlineAlert>
       ) : summaryItems.length === 0 ? (
-        <InlineAlert variant="warning" title={UI_ANALYTICS_ALERT_THRESHOLDS_TITLE}>
+        <InlineAlert variant={UI_ALERT_VARIANT_WARNING} title={UI_ANALYTICS_ALERT_THRESHOLDS_TITLE}>
           {UI_ANALYTICS_ALERT_THRESHOLDS_EMPTY_STATE}
         </InlineAlert>
       ) : (

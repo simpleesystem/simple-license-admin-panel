@@ -1,5 +1,4 @@
 import { useCallback, useMemo } from 'react'
-import Button from 'react-bootstrap/Button'
 
 import type { PluginRelease } from '@/simpleLicense'
 
@@ -24,13 +23,11 @@ import {
   UI_RELEASE_STATUS_ERROR_TITLE,
   UI_RELEASE_STATUS_LOADING_BODY,
   UI_RELEASE_STATUS_LOADING_TITLE,
-  UI_SECTION_STATUS_ERROR,
-  UI_SECTION_STATUS_LOADING,
   UI_SORT_DESC,
 } from '../../ui/constants'
 import { useDataTableState } from '../../ui/data/useDataTableState'
 import { useTableState } from '../../ui/data/useTableState'
-import { SectionStatus } from '../../ui/feedback/SectionStatus'
+import { RouteStatus } from '../../ui/feedback/RouteStatus'
 import { Page } from '../../ui/layout/Page'
 import { PageHeader } from '../../ui/layout/PageHeader'
 import type { UiSelectOption } from '../../ui/types'
@@ -141,26 +138,16 @@ export function ReleasesRouteComponent() {
     <Page variant={UI_PAGE_VARIANT_FULL_WIDTH}>
       <PageHeader title={UI_PAGE_TITLE_RELEASES} subtitle={UI_PAGE_SUBTITLE_RELEASES} />
 
-      {showLoading ? (
-        <SectionStatus
-          status={UI_SECTION_STATUS_LOADING}
-          title={UI_RELEASE_STATUS_LOADING_TITLE}
-          message={UI_RELEASE_STATUS_LOADING_BODY}
-        />
-      ) : null}
-
-      {showError ? (
-        <SectionStatus
-          status={UI_SECTION_STATUS_ERROR}
-          title={UI_RELEASE_STATUS_ERROR_TITLE}
-          message={UI_RELEASE_STATUS_ERROR_BODY}
-          actions={
-            <Button variant="secondary" size="sm" onClick={handleRefresh}>
-              {UI_RELEASE_STATUS_ACTION_RETRY}
-            </Button>
-          }
-        />
-      ) : null}
+      <RouteStatus
+        isLoading={showLoading}
+        isError={showError}
+        loadingTitle={UI_RELEASE_STATUS_LOADING_TITLE}
+        loadingMessage={UI_RELEASE_STATUS_LOADING_BODY}
+        errorTitle={UI_RELEASE_STATUS_ERROR_TITLE}
+        errorMessage={UI_RELEASE_STATUS_ERROR_BODY}
+        retryLabel={UI_RELEASE_STATUS_ACTION_RETRY}
+        onRetry={handleRefresh}
+      />
 
       {!showLoading && !showError ? (
         <ReleasesPanel

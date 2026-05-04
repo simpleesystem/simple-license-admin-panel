@@ -4,11 +4,15 @@ import Button from 'react-bootstrap/Button'
 import Nav from 'react-bootstrap/Nav'
 import { ChangePasswordForm } from '../../ui/auth/ChangePasswordForm'
 import {
+  UI_BUTTON_VARIANT_OUTLINE_SECONDARY,
+  UI_BUTTON_VARIANT_SECONDARY,
   UI_CLASS_HEADER_ACTIONS,
   UI_CLASS_HEADER_NAV_LINK,
   UI_HEADER_ACTION_CHANGE_PASSWORD,
   UI_HEADER_ACTION_SIGN_OUT,
   UI_HEADER_MODAL_TITLE_CHANGE_PASSWORD,
+  UI_MODAL_SIZE_LG,
+  UI_SIZE_SMALL,
   UI_TEST_ID_HEADER,
   UI_TEST_ID_HEADER_ACTIONS,
   UI_TEST_ID_HEADER_NAV,
@@ -79,7 +83,7 @@ export function PersistentHeader() {
         show={showPasswordModal}
         onClose={() => setShowPasswordModal(false)}
         title={UI_HEADER_MODAL_TITLE_CHANGE_PASSWORD}
-        size="lg"
+        size={UI_MODAL_SIZE_LG}
         body={
           <div className="p-3">
             <ChangePasswordForm onSuccess={handleChangePasswordSuccess} />
@@ -125,11 +129,11 @@ const renderUserActions = ({ userLabel, showChangePasswordAction, onChangePasswo
     <div className={UI_CLASS_HEADER_ACTIONS} data-testid={UI_TEST_ID_HEADER_ACTIONS}>
       <div className="text-muted me-2">{userLabel}</div>
       {showChangePasswordAction ? (
-        <Button variant="outline-secondary" size="sm" onClick={onChangePassword}>
+        <Button variant={UI_BUTTON_VARIANT_OUTLINE_SECONDARY} size={UI_SIZE_SMALL} onClick={onChangePassword}>
           {UI_HEADER_ACTION_CHANGE_PASSWORD}
         </Button>
       ) : null}
-      <Button variant="secondary" size="sm" onClick={onLogout}>
+      <Button variant={UI_BUTTON_VARIANT_SECONDARY} size={UI_SIZE_SMALL} onClick={onLogout}>
         {UI_HEADER_ACTION_SIGN_OUT}
       </Button>
     </div>

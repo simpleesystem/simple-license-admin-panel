@@ -14,6 +14,7 @@ import {
   UI_PRODUCT_ENTITLEMENT_CONFIRM_DELETE_CANCEL,
   UI_PRODUCT_ENTITLEMENT_CONFIRM_DELETE_CONFIRM,
   UI_PRODUCT_ENTITLEMENT_CONFIRM_DELETE_TITLE,
+  UI_STACK_GAP_SMALL,
 } from '../constants'
 import { Stack } from '../layout/Stack'
 import { ModalDialog } from '../overlay/ModalDialog'
@@ -81,7 +82,7 @@ export function ProductEntitlementRowActions({
       permissionKey={rest.permissionKey}
       permissionFallback={rest.permissionFallback}
     >
-      <Stack direction="row" gap="small" {...rest}>
+      <Stack direction="row" gap={UI_STACK_GAP_SMALL} {...rest}>
         {allowUpdate ? (
           <Button
             variant={UI_BUTTON_VARIANT_GHOST}

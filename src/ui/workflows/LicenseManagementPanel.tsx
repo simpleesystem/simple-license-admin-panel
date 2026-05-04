@@ -29,6 +29,7 @@ import {
   UI_LICENSE_STATUS_INACTIVE,
   UI_LICENSE_STATUS_REVOKED,
   UI_LICENSE_STATUS_SUSPENDED,
+  UI_STACK_GAP_MEDIUM,
   UI_TABLE_FILTER_LABEL_STATUS,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
   UI_TABLE_SEARCH_PLACEHOLDER,
@@ -207,7 +208,7 @@ export function LicenseManagementPanel({
   }, [editingLicense, licenses])
 
   return (
-    <Stack direction="column" gap="medium">
+    <Stack direction="column" gap={UI_STACK_GAP_MEDIUM}>
       <DataTable
         data={canView ? visibleLicenses : []}
         columns={columns}

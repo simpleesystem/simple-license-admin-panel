@@ -6,6 +6,8 @@ import { canCreateUser, canDeleteUser, canUpdateUser } from '../../app/auth/perm
 import { useNotificationBus } from '../../notifications/useNotificationBus'
 import {
   UI_BUTTON_VARIANT_PRIMARY,
+  UI_STACK_GAP_MEDIUM,
+  UI_STACK_GAP_SMALL,
   UI_TABLE_FILTER_LABEL_ROLE,
   UI_TABLE_FILTER_LABEL_STATUS,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_ROLES,
@@ -231,7 +233,7 @@ export function UserManagementPanel({
         id: UI_USER_COLUMN_ID_ACTIONS,
         header: UI_USER_COLUMN_HEADER_ACTIONS,
         cell: (row) => (
-          <Stack direction="row" gap="small">
+          <Stack direction="row" gap={UI_STACK_GAP_SMALL}>
             {(() => {
               const allowUpdate = canUpdateUser(currentUser as unknown as User, row) && currentUser?.id !== row.id
               const allowDelete =
@@ -271,7 +273,7 @@ export function UserManagementPanel({
   }
 
   return (
-    <Stack direction="column" gap="medium">
+    <Stack direction="column" gap={UI_STACK_GAP_MEDIUM}>
       <DataTable
         data={users}
         columns={columns}

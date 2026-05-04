@@ -33,6 +33,7 @@ import {
   UI_ENTITLEMENT_VALUE_LABEL_NUMBER,
   UI_ENTITLEMENT_VALUE_LABEL_STRING,
   UI_SORT_ASC,
+  UI_STACK_GAP_MEDIUM,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
@@ -239,7 +240,7 @@ export function ProductEntitlementManagementPanel({
   )
 
   return (
-    <Stack direction="column" gap="medium">
+    <Stack direction="column" gap={UI_STACK_GAP_MEDIUM}>
       <PanelHeader title={UI_ENTITLEMENT_PANEL_TITLE} description={UI_ENTITLEMENT_PANEL_DESCRIPTION} />
 
       <DataTable

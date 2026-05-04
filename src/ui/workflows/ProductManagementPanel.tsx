@@ -28,6 +28,7 @@ import {
   UI_PRODUCT_PANEL_TITLE,
   UI_PRODUCT_STATUS_ACTIVE,
   UI_PRODUCT_STATUS_SUSPENDED,
+  UI_STACK_GAP_MEDIUM,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
   UI_TABLE_SEARCH_PLACEHOLDER,
   UI_VALUE_PLACEHOLDER,
@@ -202,7 +203,7 @@ export function ProductManagementPanel({
   const productToEdit = editingProduct ? (products.find((p) => p.id === editingProduct.id) ?? null) : null
 
   return (
-    <Stack direction="column" gap="medium">
+    <Stack direction="column" gap={UI_STACK_GAP_MEDIUM}>
       <PanelHeader title={UI_PRODUCT_PANEL_TITLE} description={UI_PRODUCT_PANEL_DESCRIPTION} />
 
       <DataTable

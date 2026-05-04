@@ -5,6 +5,8 @@ import type { AuditLogEntry, AuditLogFilters, Client } from '@/simpleLicense'
 import { useAuditLogs } from '@/simpleLicense'
 
 import {
+  UI_ALERT_VARIANT_DANGER,
+  UI_ALERT_VARIANT_INFO,
   UI_AUDIT_LOGS_CELL_CLASS,
   UI_AUDIT_LOGS_COLUMN_ACTION,
   UI_AUDIT_LOGS_COLUMN_ADMIN,
@@ -46,6 +48,8 @@ import {
   UI_AUDIT_LOGS_USER_AGENT_PREVIEW_LIMIT,
   UI_BUTTON_VARIANT_PRIMARY,
   UI_BUTTON_VARIANT_SECONDARY,
+  UI_CLASS_AUDIT_FILTER_FIELD,
+  UI_CLASS_AUDIT_FILTER_LABEL,
   UI_COLUMN_ID_AUDIT_LOG_ACTION,
   UI_COLUMN_ID_AUDIT_LOG_ADMIN,
   UI_COLUMN_ID_AUDIT_LOG_DETAILS,
@@ -60,6 +64,7 @@ import {
   UI_FIELD_AUDIT_FILTER_ADMIN,
   UI_FIELD_AUDIT_FILTER_RESOURCE_ID,
   UI_FIELD_AUDIT_FILTER_RESOURCE_TYPE,
+  UI_SIZE_SMALL,
   UI_SORT_DESC,
   UI_STACK_GAP_MEDIUM,
   UI_TEXT_ALIGN_END,
@@ -145,51 +150,51 @@ type AuditLogsFilterBarProps = {
 function AuditLogsFilterBar({ formState, onChange, onSubmit, onReset }: AuditLogsFilterBarProps) {
   return (
     <Form className="row g-2 align-items-end w-100" onSubmit={onSubmit}>
-      <Form.Group className="col-12 col-md-3" controlId={UI_FIELD_AUDIT_FILTER_ADMIN}>
-        <Form.Label className="small text-muted mb-1">{UI_AUDIT_LOGS_FILTER_ADMIN_LABEL}</Form.Label>
+      <Form.Group className={UI_CLASS_AUDIT_FILTER_FIELD} controlId={UI_FIELD_AUDIT_FILTER_ADMIN}>
+        <Form.Label className={UI_CLASS_AUDIT_FILTER_LABEL}>{UI_AUDIT_LOGS_FILTER_ADMIN_LABEL}</Form.Label>
         <Form.Control
           name={UI_FIELD_AUDIT_FILTER_ADMIN}
-          size="sm"
+          size={UI_SIZE_SMALL}
           value={formState.adminId ?? ''}
           onChange={onChange}
         />
       </Form.Group>
 
-      <Form.Group className="col-12 col-md-3" controlId={UI_FIELD_AUDIT_FILTER_ACTION}>
-        <Form.Label className="small text-muted mb-1">{UI_AUDIT_LOGS_FILTER_ACTION_LABEL}</Form.Label>
+      <Form.Group className={UI_CLASS_AUDIT_FILTER_FIELD} controlId={UI_FIELD_AUDIT_FILTER_ACTION}>
+        <Form.Label className={UI_CLASS_AUDIT_FILTER_LABEL}>{UI_AUDIT_LOGS_FILTER_ACTION_LABEL}</Form.Label>
         <Form.Control
           name={UI_FIELD_AUDIT_FILTER_ACTION}
-          size="sm"
+          size={UI_SIZE_SMALL}
           value={formState.action ?? ''}
           onChange={onChange}
         />
       </Form.Group>
 
-      <Form.Group className="col-12 col-md-3" controlId={UI_FIELD_AUDIT_FILTER_RESOURCE_TYPE}>
-        <Form.Label className="small text-muted mb-1">{UI_AUDIT_LOGS_FILTER_RESOURCE_TYPE_LABEL}</Form.Label>
+      <Form.Group className={UI_CLASS_AUDIT_FILTER_FIELD} controlId={UI_FIELD_AUDIT_FILTER_RESOURCE_TYPE}>
+        <Form.Label className={UI_CLASS_AUDIT_FILTER_LABEL}>{UI_AUDIT_LOGS_FILTER_RESOURCE_TYPE_LABEL}</Form.Label>
         <Form.Control
           name={UI_FIELD_AUDIT_FILTER_RESOURCE_TYPE}
-          size="sm"
+          size={UI_SIZE_SMALL}
           value={formState.resourceType ?? ''}
           onChange={onChange}
         />
       </Form.Group>
 
-      <Form.Group className="col-12 col-md-3" controlId={UI_FIELD_AUDIT_FILTER_RESOURCE_ID}>
-        <Form.Label className="small text-muted mb-1">{UI_AUDIT_LOGS_FILTER_RESOURCE_ID_LABEL}</Form.Label>
+      <Form.Group className={UI_CLASS_AUDIT_FILTER_FIELD} controlId={UI_FIELD_AUDIT_FILTER_RESOURCE_ID}>
+        <Form.Label className={UI_CLASS_AUDIT_FILTER_LABEL}>{UI_AUDIT_LOGS_FILTER_RESOURCE_ID_LABEL}</Form.Label>
         <Form.Control
           name={UI_FIELD_AUDIT_FILTER_RESOURCE_ID}
-          size="sm"
+          size={UI_SIZE_SMALL}
           value={formState.resourceId ?? ''}
           onChange={onChange}
         />
       </Form.Group>
 
       <div className="col-12 d-flex flex-wrap gap-2">
-        <Button type="submit" variant={UI_BUTTON_VARIANT_PRIMARY} size="sm">
+        <Button type="submit" variant={UI_BUTTON_VARIANT_PRIMARY} size={UI_SIZE_SMALL}>
           {UI_AUDIT_LOGS_FILTER_APPLY_LABEL}
         </Button>
-        <Button type="button" variant={UI_BUTTON_VARIANT_SECONDARY} size="sm" onClick={onReset}>
+        <Button type="button" variant={UI_BUTTON_VARIANT_SECONDARY} size={UI_SIZE_SMALL} onClick={onReset}>
           {UI_AUDIT_LOGS_FILTER_RESET_LABEL}
         </Button>
       </div>
@@ -323,7 +328,7 @@ export function AuditLogsPanel({
     return (
       <Stack direction="column" gap={UI_STACK_GAP_MEDIUM} className={UI_AUDIT_LOGS_PANEL_CLASS}>
         <PanelHeader title={title} description={panelDescription} />
-        <InlineAlert variant="info" title={UI_AUDIT_LOGS_LOADING_TITLE}>
+        <InlineAlert variant={UI_ALERT_VARIANT_INFO} title={UI_AUDIT_LOGS_LOADING_TITLE}>
           {UI_AUDIT_LOGS_LOADING_BODY}
         </InlineAlert>
       </Stack>
@@ -334,7 +339,7 @@ export function AuditLogsPanel({
     return (
       <Stack direction="column" gap={UI_STACK_GAP_MEDIUM} className={UI_AUDIT_LOGS_PANEL_CLASS}>
         <PanelHeader title={title} description={panelDescription} />
-        <InlineAlert variant="danger" title={UI_AUDIT_LOGS_ERROR_TITLE}>
+        <InlineAlert variant={UI_ALERT_VARIANT_DANGER} title={UI_AUDIT_LOGS_ERROR_TITLE}>
           {UI_AUDIT_LOGS_ERROR_BODY}
         </InlineAlert>
       </Stack>

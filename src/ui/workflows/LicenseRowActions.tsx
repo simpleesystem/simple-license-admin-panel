@@ -28,6 +28,7 @@ import {
   UI_LICENSE_CONFIRM_SUSPEND_CONFIRM,
   UI_LICENSE_CONFIRM_SUSPEND_TITLE,
   UI_LICENSE_STATUS_SUSPENDED,
+  UI_STACK_GAP_SMALL,
 } from '../constants'
 import { Stack } from '../layout/Stack'
 import { ModalDialog } from '../overlay/ModalDialog'
@@ -124,7 +125,7 @@ export function LicenseRowActions({
       permissionKey={rest.permissionKey}
       permissionFallback={rest.permissionFallback}
     >
-      <Stack direction="row" gap="small" {...rest}>
+      <Stack direction="row" gap={UI_STACK_GAP_SMALL} {...rest}>
         {allowUpdate && onEdit && ownsLicense ? (
           <Button
             variant={UI_BUTTON_VARIANT_GHOST}

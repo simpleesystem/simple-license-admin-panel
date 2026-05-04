@@ -1,11 +1,13 @@
 import { useMemo } from 'react'
-import Button from 'react-bootstrap/Button'
 import type { Client } from '@/simpleLicense'
 import { useHealthMetrics } from '@/simpleLicense'
 import { useAdminSystemLiveFeed } from '../../app/live/useAdminSystemLiveFeed'
 import { useLiveStatusBadgeModel } from '../../app/live/useLiveStatusBadgeModel'
+import { RefreshActionButton } from '../actions/RefreshActionButton'
 import {
-  UI_CLASS_PANEL_ACTION_BUTTON,
+  UI_ALERT_VARIANT_DANGER,
+  UI_ALERT_VARIANT_INFO,
+  UI_ALERT_VARIANT_WARNING,
   UI_HEALTH_METRICS_DESCRIPTION,
   UI_HEALTH_METRICS_EMPTY_BODY,
   UI_HEALTH_METRICS_EMPTY_TITLE,
@@ -112,7 +114,7 @@ export function HealthMetricsPanel({ client, title = UI_HEALTH_METRICS_TITLE }: 
     if (summaryItems.length === 0) {
       if ((isLoading || isFetching) && !metricsSource) {
         return (
-          <InlineAlert variant="info" title={UI_HEALTH_METRICS_LOADING_TITLE}>
+          <InlineAlert variant={UI_ALERT_VARIANT_INFO} title={UI_HEALTH_METRICS_LOADING_TITLE}>
             {UI_HEALTH_METRICS_LOADING_BODY}
           </InlineAlert>
         )
@@ -120,14 +122,14 @@ export function HealthMetricsPanel({ client, title = UI_HEALTH_METRICS_TITLE }: 
 
       if (isError && !metricsSource) {
         return (
-          <InlineAlert variant="danger" title={UI_HEALTH_METRICS_ERROR_TITLE}>
+          <InlineAlert variant={UI_ALERT_VARIANT_DANGER} title={UI_HEALTH_METRICS_ERROR_TITLE}>
             {UI_HEALTH_METRICS_ERROR_BODY}
           </InlineAlert>
         )
       }
 
       return (
-        <InlineAlert variant="warning" title={UI_HEALTH_METRICS_EMPTY_TITLE}>
+        <InlineAlert variant={UI_ALERT_VARIANT_WARNING} title={UI_HEALTH_METRICS_EMPTY_TITLE}>
           {UI_HEALTH_METRICS_EMPTY_BODY}
         </InlineAlert>
       )
@@ -144,15 +146,12 @@ export function HealthMetricsPanel({ client, title = UI_HEALTH_METRICS_TITLE }: 
         actions={
           <>
             <BadgeText text={liveStatusBadge.text} variant={liveStatusBadge.variant} />
-            <Button
-              variant="outline-secondary"
-              className={UI_CLASS_PANEL_ACTION_BUTTON}
-              onClick={refresh}
-              disabled={isFetching || isLoading}
-              aria-busy={isFetching || isLoading}
-            >
-              {isFetching || isLoading ? UI_HEALTH_METRICS_REFRESH_PENDING : UI_HEALTH_METRICS_REFRESH_LABEL}
-            </Button>
+            <RefreshActionButton
+              onRefresh={refresh}
+              isPending={isFetching || isLoading}
+              idleLabel={UI_HEALTH_METRICS_REFRESH_LABEL}
+              pendingLabel={UI_HEALTH_METRICS_REFRESH_PENDING}
+            />
           </>
         }
       />

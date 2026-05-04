@@ -5,7 +5,12 @@ import Form from 'react-bootstrap/Form'
 import type { DefaultValues, FieldValues } from 'react-hook-form'
 import { FormProvider, useForm } from 'react-hook-form'
 import type { PermissionKey } from '../../app/auth/permissions'
-import { UI_FORM_ROW_COLUMNS_ONE } from '../constants'
+import {
+  UI_BUTTON_VARIANT_OUTLINE_SECONDARY,
+  UI_BUTTON_VARIANT_PRIMARY,
+  UI_CLASS_FORM_SECTION_BODY,
+  UI_FORM_ROW_COLUMNS_ONE,
+} from '../constants'
 import { CheckboxField } from '../forms/CheckboxField'
 import { DateField } from '../forms/DateField'
 import { FormActions } from '../forms/FormActions'
@@ -103,11 +108,16 @@ export function DynamicForm<TFieldValues extends FieldValues>({
         <FormActions className="mt-4" align="end">
           {secondaryActions}
           {cancelLabel && onCancel ? (
-            <Button variant="outline-secondary" type="button" onClick={onCancel} disabled={isSubmitting}>
+            <Button
+              variant={UI_BUTTON_VARIANT_OUTLINE_SECONDARY}
+              type="button"
+              onClick={onCancel}
+              disabled={isSubmitting}
+            >
               {cancelLabel}
             </Button>
           ) : null}
-          <Button variant="primary" type="submit" disabled={isSubmitting}>
+          <Button variant={UI_BUTTON_VARIANT_PRIMARY} type="submit" disabled={isSubmitting}>
             {isSubmitting ? pendingContent : submitLabel}
           </Button>
         </FormActions>
@@ -121,7 +131,7 @@ const renderSectionContent = (
   fields: readonly FormFieldBlueprint<FieldValues>[]
 ) => {
   if (!columns || columns <= UI_FORM_ROW_COLUMNS_ONE) {
-    return <div className="d-flex flex-column gap-3">{fields.map((field) => renderField(field))}</div>
+    return <div className={UI_CLASS_FORM_SECTION_BODY}>{fields.map((field) => renderField(field))}</div>
   }
   return <FormRow columns={columns}>{fields.map((field) => renderField(field))}</FormRow>
 }

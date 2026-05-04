@@ -9,6 +9,8 @@ import {
   UI_BUTTON_VARIANT_OUTLINE,
   UI_BUTTON_VARIANT_OUTLINE_DANGER,
   UI_BUTTON_VARIANT_SECONDARY,
+  UI_CLASS_MARGIN_BOTTOM_SMALL,
+  UI_CLASS_TEXT_MUTED_SMALL_RESET,
   UI_RELEASE_ACTION_DELETE,
   UI_RELEASE_ACTION_DELETING,
   UI_RELEASE_ACTION_PROMOTE,
@@ -20,6 +22,8 @@ import {
   UI_RELEASE_CONFIRM_PROMOTE_TITLE,
   UI_RELEASE_MODAL_CANCEL,
   UI_RELEASE_VERSION_PREFIX,
+  UI_SIZE_SMALL,
+  UI_STACK_GAP_SMALL,
 } from '../constants'
 import { Stack } from '../layout/Stack'
 import { ModalDialog } from '../overlay/ModalDialog'
@@ -78,11 +82,11 @@ export function ReleaseRowActions({
   }
 
   return (
-    <Stack direction="row" gap="small">
+    <Stack direction="row" gap={UI_STACK_GAP_SMALL}>
       {showPromoteButton ? (
         <Button
           variant={UI_BUTTON_VARIANT_OUTLINE}
-          size="sm"
+          size={UI_SIZE_SMALL}
           onClick={() => setShowPromoteConfirm(true)}
           disabled={promoteMutation.isPending}
           aria-label={`${UI_RELEASE_ACTION_PROMOTE} ${releaseVersion}`}
@@ -93,7 +97,7 @@ export function ReleaseRowActions({
       {showDeleteButton ? (
         <Button
           variant={UI_BUTTON_VARIANT_OUTLINE_DANGER}
-          size="sm"
+          size={UI_SIZE_SMALL}
           onClick={() => setShowDeleteConfirm(true)}
           disabled={deleteMutation.isPending}
           aria-label={`${UI_RELEASE_ACTION_DELETE} ${releaseVersion}`}
@@ -132,8 +136,8 @@ export function ReleaseRowActions({
         title={UI_RELEASE_CONFIRM_DELETE_TITLE}
         body={
           <>
-            <p className="mb-2">{UI_RELEASE_CONFIRM_DELETE_BODY}</p>
-            <p className="mb-0 text-muted small">
+            <p className={UI_CLASS_MARGIN_BOTTOM_SMALL}>{UI_RELEASE_CONFIRM_DELETE_BODY}</p>
+            <p className={UI_CLASS_TEXT_MUTED_SMALL_RESET}>
               {UI_RELEASE_VERSION_PREFIX}
               {releaseVersion} — {releaseFileName}
             </p>

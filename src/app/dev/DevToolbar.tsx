@@ -1,6 +1,7 @@
 import { Button, ButtonGroup } from 'react-bootstrap'
 import { useTranslation } from 'react-i18next'
 
+import { UI_BUTTON_VARIANT_OUTLINE, UI_BUTTON_VARIANT_OUTLINE_DANGER, UI_SIZE_SMALL } from '../../ui/constants'
 import { useFeatureFlag } from '../config'
 import {
   I18N_KEY_DEV_PERSONA_SUPERUSER,
@@ -34,13 +35,13 @@ export function DevToolbar() {
     >
       <div className="d-flex flex-column gap-2">
         <strong>{t(I18N_KEY_DEV_TOOLBAR_HEADING)}</strong>
-        <ButtonGroup size="sm">
+        <ButtonGroup size={UI_SIZE_SMALL}>
           {DEV_PERSONA_KEYS.map((persona) => (
-            <Button key={persona} variant="outline-primary" onClick={() => applyDevPersona(persona)}>
+            <Button key={persona} variant={UI_BUTTON_VARIANT_OUTLINE} onClick={() => applyDevPersona(persona)}>
               {personaLabelMap[persona]}
             </Button>
           ))}
-          <Button variant="outline-danger" onClick={clearDevPersona}>
+          <Button variant={UI_BUTTON_VARIANT_OUTLINE_DANGER} onClick={clearDevPersona}>
             {t(I18N_KEY_DEV_TOOLBAR_RESET)}
           </Button>
         </ButtonGroup>

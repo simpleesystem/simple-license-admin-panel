@@ -8,6 +8,10 @@ import { useLogger } from '../../app/logging/loggerContext'
 import type { MutationAdapter } from '../actions/mutationActions'
 import {
   UI_ANALYTICS_COLUMN_LICENSE_KEY,
+  UI_CLASS_MARGIN_BOTTOM_LARGE,
+  UI_CLASS_MARGIN_BOTTOM_MUTED,
+  UI_CLASS_PADDING_TOP_SMALL,
+  UI_CLASS_TEXT_CENTER_PADDED_MUTED,
   UI_LICENSE_ACTIVATIONS_COLUMN_DOMAIN,
   UI_LICENSE_FORM_PENDING_UPDATE,
   UI_LICENSE_FORM_SUBMIT_UPDATE,
@@ -137,12 +141,16 @@ export function LicenseUpdateDialog({
       title={UI_LICENSE_FORM_TITLE_UPDATE}
       size={UI_MODAL_SIZE_XL}
       body={
-        <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k || 'details')} className="mb-4">
+        <Tabs
+          activeKey={activeTab}
+          onSelect={(k) => setActiveTab(k || 'details')}
+          className={UI_CLASS_MARGIN_BOTTOM_LARGE}
+        >
           <Tab eventKey="details" title="Details">
-            <div className="mb-3 text-muted">
+            <div className={UI_CLASS_MARGIN_BOTTOM_MUTED}>
               <strong>{UI_ANALYTICS_COLUMN_LICENSE_KEY}:</strong> <code>{licenseKey || UI_VALUE_PLACEHOLDER}</code>
             </div>
-            <div className="mb-3 text-muted">
+            <div className={UI_CLASS_MARGIN_BOTTOM_MUTED}>
               <strong>{UI_LICENSE_ACTIVATIONS_COLUMN_DOMAIN}:</strong> <code>{domain || UI_VALUE_PLACEHOLDER}</code>
             </div>
             <DynamicForm
@@ -156,7 +164,7 @@ export function LicenseUpdateDialog({
             />
           </Tab>
           <Tab eventKey="activations" title="Activations">
-            <div className="pt-2">
+            <div className={UI_CLASS_PADDING_TOP_SMALL}>
               <LicenseActivationsPanel
                 client={client}
                 licenseKey={licenseKeyParam}
@@ -166,7 +174,7 @@ export function LicenseUpdateDialog({
             </div>
           </Tab>
           <Tab eventKey="usage" title="Usage">
-            <div className="pt-2">
+            <div className={UI_CLASS_PADDING_TOP_SMALL}>
               {licenseKey ? (
                 <LicenseUsageDetailsPanel
                   client={client}
@@ -175,7 +183,7 @@ export function LicenseUpdateDialog({
                   // Usage panel handles fetching internally
                 />
               ) : (
-                <div className="text-center p-4 text-muted">Loading license details...</div>
+                <div className={UI_CLASS_TEXT_CENTER_PADDED_MUTED}>Loading license details...</div>
               )}
             </div>
           </Tab>

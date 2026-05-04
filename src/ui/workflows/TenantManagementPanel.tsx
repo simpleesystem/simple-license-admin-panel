@@ -11,6 +11,7 @@ import {
 import { useNotificationBus } from '../../notifications/useNotificationBus'
 import {
   UI_BUTTON_VARIANT_PRIMARY,
+  UI_STACK_GAP_MEDIUM,
   UI_TABLE_FILTER_LABEL_STATUS,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
   UI_TABLE_SEARCH_PLACEHOLDER,
@@ -182,7 +183,7 @@ export function TenantManagementPanel({
   }
 
   return (
-    <Stack direction="column" gap="medium">
+    <Stack direction="column" gap={UI_STACK_GAP_MEDIUM}>
       <PanelHeader title={UI_TENANT_PANEL_TITLE} description={UI_TENANT_PANEL_DESCRIPTION} />
 
       <DataTable

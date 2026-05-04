@@ -1,19 +1,22 @@
 import { useMemo } from 'react'
-import Button from 'react-bootstrap/Button'
 import type { Client } from '@/simpleLicense'
 import { useUsageTrends } from '@/simpleLicense'
+import { RefreshActionButton } from '../actions/RefreshActionButton'
 import {
+  UI_ALERT_VARIANT_DANGER,
+  UI_ALERT_VARIANT_INFO,
+  UI_ALERT_VARIANT_WARNING,
   UI_ANALYTICS_COLUMN_ACTIVATIONS,
   UI_ANALYTICS_COLUMN_PERIOD,
   UI_ANALYTICS_COLUMN_USAGE_REPORTS,
   UI_ANALYTICS_COLUMN_VALIDATIONS,
-  UI_CLASS_PANEL_ACTION_BUTTON,
   UI_COLUMN_ID_ANALYTICS_ACTIVATIONS,
   UI_COLUMN_ID_ANALYTICS_PERIOD,
   UI_COLUMN_ID_ANALYTICS_USAGE_REPORTS,
   UI_COLUMN_ID_ANALYTICS_VALIDATIONS,
   UI_DATE_FORMAT_LOCALE,
   UI_DATE_FORMAT_OPTIONS,
+  UI_STACK_GAP_SMALL,
   UI_USAGE_TRENDS_EMPTY_BODY,
   UI_USAGE_TRENDS_EMPTY_STATE,
   UI_USAGE_TRENDS_EMPTY_TITLE,
@@ -134,33 +137,30 @@ export function UsageTrendsPanel({ client, title = UI_USAGE_TRENDS_TITLE }: Usag
   const isEmpty = rows.length === 0
 
   return (
-    <Stack direction="column" gap="small">
+    <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
       <PanelHeader
         title={title}
         description={periodDescription}
         actions={
-          <Button
-            variant="outline-secondary"
-            className={UI_CLASS_PANEL_ACTION_BUTTON}
-            onClick={() => void refetch()}
-            disabled={isFetching}
-            aria-busy={isFetching}
-          >
-            {isFetching || isLoading ? UI_USAGE_TRENDS_REFRESH_PENDING : UI_USAGE_TRENDS_REFRESH_LABEL}
-          </Button>
+          <RefreshActionButton
+            onRefresh={() => void refetch()}
+            isPending={isFetching || isLoading}
+            idleLabel={UI_USAGE_TRENDS_REFRESH_LABEL}
+            pendingLabel={UI_USAGE_TRENDS_REFRESH_PENDING}
+          />
         }
       />
 
       {trendsQuery.isLoading ? (
-        <InlineAlert variant="info" title={UI_USAGE_TRENDS_LOADING_TITLE}>
+        <InlineAlert variant={UI_ALERT_VARIANT_INFO} title={UI_USAGE_TRENDS_LOADING_TITLE}>
           {UI_USAGE_TRENDS_LOADING_BODY}
         </InlineAlert>
       ) : trendsQuery.isError ? (
-        <InlineAlert variant="danger" title={UI_USAGE_TRENDS_ERROR_TITLE}>
+        <InlineAlert variant={UI_ALERT_VARIANT_DANGER} title={UI_USAGE_TRENDS_ERROR_TITLE}>
           {UI_USAGE_TRENDS_ERROR_BODY}
         </InlineAlert>
       ) : isEmpty ? (
-        <InlineAlert variant="warning" title={UI_USAGE_TRENDS_EMPTY_TITLE}>
+        <InlineAlert variant={UI_ALERT_VARIANT_WARNING} title={UI_USAGE_TRENDS_EMPTY_TITLE}>
           {UI_USAGE_TRENDS_EMPTY_BODY}
         </InlineAlert>
       ) : (

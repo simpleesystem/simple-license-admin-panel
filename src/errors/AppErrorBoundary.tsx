@@ -12,6 +12,7 @@ import {
 import { useLogger } from '../app/logging/loggerContext'
 import { raiseErrorFromUnknown } from '../app/state/dispatchers'
 import { useAppStore } from '../app/state/store'
+import { UI_BUTTON_VARIANT_PRIMARY } from '../ui/constants'
 
 const ErrorFallback = ({ resetErrorBoundary }: FallbackProps) => {
   const { t } = useTranslation()
@@ -22,7 +23,7 @@ const ErrorFallback = ({ resetErrorBoundary }: FallbackProps) => {
         <h2 className="h4 mb-1">{t(I18N_KEY_APP_ERROR_TITLE)}</h2>
         <p className="mb-0 text-body-secondary">{t(I18N_KEY_APP_ERROR_MESSAGE)}</p>
       </div>
-      <Button variant="primary" onClick={resetErrorBoundary}>
+      <Button variant={UI_BUTTON_VARIANT_PRIMARY} onClick={resetErrorBoundary}>
         {t(I18N_KEY_APP_ERROR_RESET)}
       </Button>
     </Stack>

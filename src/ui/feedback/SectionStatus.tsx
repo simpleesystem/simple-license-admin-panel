@@ -19,6 +19,7 @@ import {
   UI_SECTION_STATUS_LOADING,
   UI_SECTION_STATUS_SUCCESS,
   UI_SECTION_STATUS_WARNING,
+  UI_SIZE_SMALL,
   UI_TEST_ID_SECTION_STATUS,
 } from '../constants'
 import type { SectionStatusProps, UiSectionStatusVariant } from '../types'
@@ -47,7 +48,7 @@ export function SectionStatus({
   const isLoading = status === UI_SECTION_STATUS_LOADING
   const renderIndicator = () => {
     if (isLoading) {
-      return <Spinner animation="border" size="sm" aria-hidden={UI_ARIA_HIDDEN} />
+      return <Spinner animation="border" size={UI_SIZE_SMALL} aria-hidden={UI_ARIA_HIDDEN} />
     }
     const badgeVariant = STATUS_VARIANT_MAP[status] ?? UI_BADGE_VARIANT_INFO
     return <Badge bg={badgeVariant}>{status}</Badge>

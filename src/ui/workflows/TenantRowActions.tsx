@@ -7,6 +7,7 @@ import { useNotificationBus } from '../../notifications/useNotificationBus'
 import { adaptMutation } from '../actions/mutationAdapter'
 import {
   UI_BUTTON_VARIANT_GHOST,
+  UI_STACK_GAP_SMALL,
   UI_TENANT_ACTION_EDIT,
   UI_TENANT_ACTION_RESUME,
   UI_TENANT_ACTION_SUSPEND,
@@ -83,7 +84,7 @@ export function TenantRowActions({ client, tenant, onEdit, onCompleted, currentU
       permissionKey={rest.permissionKey}
       permissionFallback={rest.permissionFallback}
     >
-      <Stack direction="row" gap="small" {...rest}>
+      <Stack direction="row" gap={UI_STACK_GAP_SMALL} {...rest}>
         <Button variant={UI_BUTTON_VARIANT_GHOST} onClick={() => onEdit(tenant)} aria-label={UI_TENANT_ACTION_EDIT}>
           {UI_TENANT_ACTION_EDIT}
         </Button>

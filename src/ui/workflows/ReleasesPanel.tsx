@@ -7,6 +7,8 @@ import {
   UI_BADGE_VARIANT_DANGER,
   UI_BADGE_VARIANT_SUCCESS,
   UI_BUTTON_VARIANT_PRIMARY,
+  UI_CLASS_ALIGN_TEXT_BOTTOM,
+  UI_CLASS_INLINE_FILENAME,
   UI_RELEASE_BUTTON_NEW,
   UI_RELEASE_CHANNEL_FILTER_LABEL,
   UI_RELEASE_COLUMN_ACTIONS,
@@ -37,6 +39,7 @@ import {
   UI_RELEASE_SEARCH_PLACEHOLDER,
   UI_RELEASE_SELECT_PRODUCT_BODY,
   UI_RELEASE_SELECT_PRODUCT_PLACEHOLDER,
+  UI_STACK_GAP_MEDIUM,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
@@ -159,14 +162,14 @@ export function ReleasesPanel({
         header: UI_RELEASE_COLUMN_FILE,
         cell: (row) => (
           <>
-            <span className="d-inline-block me-1">{row.fileName}</span>
+            <span className={UI_CLASS_INLINE_FILENAME}>{row.fileName}</span>
             {row.filePresent === true ? (
-              <Badge bg={UI_BADGE_VARIANT_SUCCESS} className="align-text-bottom">
+              <Badge bg={UI_BADGE_VARIANT_SUCCESS} className={UI_CLASS_ALIGN_TEXT_BOTTOM}>
                 {UI_RELEASE_FILE_PRESENT}
               </Badge>
             ) : null}
             {row.filePresent === false ? (
-              <Badge bg={UI_BADGE_VARIANT_DANGER} className="align-text-bottom">
+              <Badge bg={UI_BADGE_VARIANT_DANGER} className={UI_CLASS_ALIGN_TEXT_BOTTOM}>
                 {UI_RELEASE_FILE_MISSING}
               </Badge>
             ) : null}
@@ -224,7 +227,7 @@ export function ReleasesPanel({
   )
 
   return (
-    <Stack direction="column" gap="medium">
+    <Stack direction="column" gap={UI_STACK_GAP_MEDIUM}>
       <PanelHeader title={UI_RELEASE_PANEL_TITLE} description={UI_RELEASE_PANEL_DESCRIPTION} />
       <DataTable
         data={selectedProductId ? releases : []}

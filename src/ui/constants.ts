@@ -114,6 +114,7 @@ export const UI_SECTION_STATUS_WARNING = 'warning' as const
 export const UI_SECTION_STATUS_ERROR = 'error' as const
 export const UI_SECTION_STATUS_LOADING = 'loading' as const
 
+export const UI_SIZE_SMALL = 'sm' as const
 export const UI_MODAL_SIZE_SM = 'sm' as const
 export const UI_MODAL_SIZE_LG = 'lg' as const
 export const UI_MODAL_SIZE_XL = 'xl' as const
@@ -128,6 +129,7 @@ export const UI_SIDE_PANEL_PLACEMENT_END = 'end' as const
 export const UI_BUTTON_VARIANT_PRIMARY = 'primary' as const
 export const UI_BUTTON_VARIANT_SECONDARY = 'secondary' as const
 export const UI_BUTTON_VARIANT_OUTLINE = 'outline-primary' as const
+export const UI_BUTTON_VARIANT_OUTLINE_SECONDARY = 'outline-secondary' as const
 export const UI_BUTTON_VARIANT_GHOST = 'link' as const
 export const UI_BUTTON_VARIANT_DANGER = 'danger' as const
 export const UI_BUTTON_VARIANT_OUTLINE_DANGER = 'outline-danger' as const
@@ -226,6 +228,25 @@ export const UI_CLASS_TEXT_ALIGN_MAP: Record<string, string> = {
   [UI_TEXT_ALIGN_END]: 'text-end',
 }
 export const UI_CLASS_TEXT_EMPHASIS = 'text-primary'
+export const UI_CLASS_FLEX_COLUMN_GAP_SMALL = 'd-flex flex-column gap-1'
+export const UI_CLASS_FLEX_COLUMN_GAP_MEDIUM = 'd-flex flex-column gap-2'
+export const UI_CLASS_FLEX_COLUMN_GAP_LARGE = 'd-flex flex-column gap-3'
+export const UI_CLASS_INLINE_COLUMN_GAP_SMALL = 'd-inline-flex flex-column gap-1'
+export const UI_CLASS_FLEX_BETWEEN_START_MB2 = 'd-flex justify-content-between align-items-start mb-2'
+export const UI_CLASS_FLEX_BETWEEN_CENTER_MB4 = 'd-flex justify-content-between align-items-center mb-4'
+export const UI_CLASS_TOP_BORDER_SPACED = 'border-top mt-4 pt-3'
+export const UI_CLASS_TEXT_CENTER_PADDED_MUTED = 'text-center p-4 text-muted'
+export const UI_CLASS_INLINE_FILENAME = 'd-inline-block me-1'
+export const UI_CLASS_TEXT_MUTED_SMALL_RESET = 'mb-0 text-muted small'
+export const UI_CLASS_ALIGN_TEXT_BOTTOM = 'align-text-bottom'
+export const UI_CLASS_HEADING_H5_RESET = 'h5 mb-0'
+export const UI_CLASS_MARGIN_BOTTOM_SMALL = 'mb-2'
+export const UI_CLASS_MARGIN_BOTTOM_MEDIUM = 'mb-3'
+export const UI_CLASS_MARGIN_BOTTOM_LARGE = 'mb-4'
+export const UI_CLASS_MARGIN_BOTTOM_MUTED = 'mb-3 text-muted'
+export const UI_CLASS_TEXT_MUTED_MARGIN_BOTTOM_LARGE = 'text-muted mb-4'
+export const UI_CLASS_MARGIN_TOP_MEDIUM = 'mt-3'
+export const UI_CLASS_PADDING_TOP_SMALL = 'pt-2'
 
 export const UI_CLASS_SIDEBAR_LAYOUT = 'd-flex w-100'
 export const UI_CLASS_SIDEBAR_LAYOUT_SIDEBAR = 'flex-shrink-0 border-end bg-body'
@@ -243,9 +264,19 @@ export const UI_CLASS_BODY_TEXT = 'text-body'
 export const UI_CLASS_BODY_TEXT_LEAD = 'lead'
 export const UI_CLASS_MUTED_TEXT = 'text-muted small'
 export const UI_CLASS_TEXT_MUTED = 'text-muted'
+export const UI_CLASS_ALERT_DANGER = 'alert alert-danger'
+export const UI_CLASS_BUTTON_PRIMARY_FULL_WIDTH = 'btn btn-primary w-100'
+export const UI_CLASS_FORM_LABEL_BASE = 'form-label'
+export const UI_CLASS_FORM_CONTROL_BASE = 'form-control'
+export const UI_CLASS_FORM_ERROR_HELP = 'text-danger small mt-1'
+export const UI_CLASS_SMALL_MARGIN_TOP = 'small mt-1'
 
 export const UI_CLASS_BADGE_TEXT = 'd-inline-flex align-items-center gap-1'
 export const UI_CLASS_EMPTY_STATE_ACTIONS = 'd-flex justify-content-center gap-2 mt-3'
+export const UI_CLASS_TOP_NAV_MAIN = 'me-auto d-flex align-items-center gap-2'
+export const UI_CLASS_TOP_NAV_ACTIONS = 'd-flex align-items-center gap-2 mt-2 mt-lg-0'
+export const UI_CLASS_AUDIT_FILTER_FIELD = 'col-12 col-md-3'
+export const UI_CLASS_AUDIT_FILTER_LABEL = 'small text-muted mb-1'
 
 export const UI_CLASS_KEY_VALUE_LIST = 'list-unstyled mb-0'
 export const UI_CLASS_KEY_VALUE_ITEM = 'd-flex justify-content-between align-items-start gap-3 py-2 border-bottom'

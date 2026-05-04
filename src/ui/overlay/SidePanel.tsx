@@ -1,9 +1,12 @@
 import {
   UI_ARIA_LABEL_CLOSE_SIDE_PANEL,
   UI_ARIA_MODAL_DIALOG,
+  UI_CLASS_FLEX_BETWEEN_CENTER_MB4,
+  UI_CLASS_HEADING_H5_RESET,
   UI_CLASS_SIDE_PANEL,
   UI_CLASS_SIDE_PANEL_ACTIONS,
   UI_CLASS_SIDE_PANEL_BODY,
+  UI_CLASS_TOP_BORDER_SPACED,
   UI_SIDE_PANEL_PLACEMENT_END,
   UI_TEST_ID_SIDE_PANEL,
 } from '../constants'
@@ -47,9 +50,9 @@ export function SidePanel({
         aria-modal={UI_ARIA_MODAL_DIALOG}
         aria-labelledby={titleId}
       >
-        <div className="d-flex justify-content-between align-items-center mb-4">
+        <div className={UI_CLASS_FLEX_BETWEEN_CENTER_MB4}>
           {title ? (
-            <h2 className="h5 mb-0" id={titleId}>
+            <h2 className={UI_CLASS_HEADING_H5_RESET} id={titleId}>
               {title}
             </h2>
           ) : null}
@@ -57,7 +60,7 @@ export function SidePanel({
         </div>
         <div className={UI_CLASS_SIDE_PANEL_BODY}>{children}</div>
         {actions ? <div className={UI_CLASS_SIDE_PANEL_ACTIONS}>{actions}</div> : null}
-        {footer ? <div className="border-top mt-4 pt-3">{footer}</div> : null}
+        {footer ? <div className={UI_CLASS_TOP_BORDER_SPACED}>{footer}</div> : null}
       </aside>
     </VisibilityGate>
   )

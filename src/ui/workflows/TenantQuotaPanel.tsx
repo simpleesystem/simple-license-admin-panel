@@ -4,7 +4,10 @@ import type { Client } from '@/simpleLicense'
 import { useQuotaConfig, useQuotaUsage } from '@/simpleLicense'
 
 import {
+  UI_ALERT_VARIANT_DANGER,
+  UI_ALERT_VARIANT_INFO,
   UI_BUTTON_VARIANT_OUTLINE,
+  UI_STACK_GAP_SMALL,
   UI_TENANT_QUOTA_ACTIVATIONS_LABEL,
   UI_TENANT_QUOTA_EDIT_BUTTON,
   UI_TENANT_QUOTA_ERROR_BODY,
@@ -85,7 +88,7 @@ export function TenantQuotaPanel({
   const hasError = usageQuery.isError || configQuery.isError
 
   return (
-    <Stack direction="column" gap="small">
+    <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
       <PanelHeader
         title={title}
         description={UI_TENANT_QUOTA_PANEL_DESCRIPTION}
@@ -97,11 +100,11 @@ export function TenantQuotaPanel({
       />
 
       {isLoading ? (
-        <InlineAlert variant="info" title={UI_TENANT_QUOTA_LOADING_TITLE}>
+        <InlineAlert variant={UI_ALERT_VARIANT_INFO} title={UI_TENANT_QUOTA_LOADING_TITLE}>
           {UI_TENANT_QUOTA_LOADING_BODY}
         </InlineAlert>
       ) : hasError ? (
-        <InlineAlert variant="danger" title={UI_TENANT_QUOTA_ERROR_TITLE}>
+        <InlineAlert variant={UI_ALERT_VARIANT_DANGER} title={UI_TENANT_QUOTA_ERROR_TITLE}>
           {UI_TENANT_QUOTA_ERROR_BODY}
         </InlineAlert>
       ) : (

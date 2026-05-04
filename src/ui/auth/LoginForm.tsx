@@ -2,6 +2,14 @@ import { useState } from 'react'
 import { useAuth } from '@/app/auth/useAuth'
 import { ROUTE_PATH_DASHBOARD } from '@/app/constants'
 import { useAppStore } from '@/app/state/store'
+import {
+  UI_CLASS_ALERT_DANGER,
+  UI_CLASS_BUTTON_PRIMARY_FULL_WIDTH,
+  UI_CLASS_FORM_CONTROL_BASE,
+  UI_CLASS_FORM_ERROR_HELP,
+  UI_CLASS_FORM_LABEL_BASE,
+  UI_STACK_GAP_LARGE,
+} from '@/ui/constants'
 import { Stack } from '@/ui/layout/Stack'
 import { Heading } from '@/ui/typography/Heading'
 
@@ -61,46 +69,46 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <Stack gap="large">
+      <Stack gap={UI_STACK_GAP_LARGE}>
         <Heading level={2}>Login</Heading>
         {error && (
-          <div className="alert alert-danger" role="alert">
+          <div className={UI_CLASS_ALERT_DANGER} role="alert">
             {error}
           </div>
         )}
 
         <div>
-          <label className="form-label" htmlFor="username">
+          <label className={UI_CLASS_FORM_LABEL_BASE} htmlFor="username">
             Username
           </label>
           <input
             id="username"
-            className="form-control"
+            className={UI_CLASS_FORM_CONTROL_BASE}
             value={username}
             onChange={handleUsernameChange}
             disabled={isSubmitting}
             required={true}
           />
-          {validationErrors.username && <div className="text-danger small mt-1">{validationErrors.username}</div>}
+          {validationErrors.username && <div className={UI_CLASS_FORM_ERROR_HELP}>{validationErrors.username}</div>}
         </div>
 
         <div>
-          <label className="form-label" htmlFor="password">
+          <label className={UI_CLASS_FORM_LABEL_BASE} htmlFor="password">
             Password
           </label>
           <input
             id="password"
             type="password"
-            className="form-control"
+            className={UI_CLASS_FORM_CONTROL_BASE}
             value={password}
             onChange={handlePasswordChange}
             disabled={isSubmitting}
             required={true}
           />
-          {validationErrors.password && <div className="text-danger small mt-1">{validationErrors.password}</div>}
+          {validationErrors.password && <div className={UI_CLASS_FORM_ERROR_HELP}>{validationErrors.password}</div>}
         </div>
 
-        <button type="submit" className="btn btn-primary w-100" disabled={isSubmitting || !isFormValid}>
+        <button type="submit" className={UI_CLASS_BUTTON_PRIMARY_FULL_WIDTH} disabled={isSubmitting || !isFormValid}>
           {isSubmitting ? 'Logging in...' : 'Login'}
         </button>
       </Stack>

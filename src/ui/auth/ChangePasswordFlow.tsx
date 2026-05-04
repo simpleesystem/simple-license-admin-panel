@@ -1,6 +1,11 @@
 import { ROUTE_PATH_DASHBOARD } from '@/app/constants'
 import { useAppStore } from '@/app/state/store'
-import { UI_CHANGE_PASSWORD_DESCRIPTION, UI_CHANGE_PASSWORD_HEADING } from '@/ui/constants'
+import {
+  UI_CHANGE_PASSWORD_DESCRIPTION,
+  UI_CHANGE_PASSWORD_HEADING,
+  UI_CLASS_MARGIN_BOTTOM_SMALL,
+  UI_CLASS_TEXT_MUTED_MARGIN_BOTTOM_LARGE,
+} from '@/ui/constants'
 import { Heading } from '@/ui/typography/Heading'
 import { ChangePasswordForm } from './ChangePasswordForm'
 
@@ -21,10 +26,10 @@ export function ChangePasswordFlow() {
         <div className="col-12 col-md-8 col-lg-6 col-xl-5">
           <div className="card shadow-sm">
             <div className="card-body p-4">
-              <Heading level={2} className="mb-2">
+              <Heading level={2} className={UI_CLASS_MARGIN_BOTTOM_SMALL}>
                 {UI_CHANGE_PASSWORD_HEADING}
               </Heading>
-              <p className="text-muted mb-4">{UI_CHANGE_PASSWORD_DESCRIPTION}</p>
+              <p className={UI_CLASS_TEXT_MUTED_MARGIN_BOTTOM_LARGE}>{UI_CHANGE_PASSWORD_DESCRIPTION}</p>
               <ChangePasswordForm onSuccess={handlePasswordChangeSuccess} />
             </div>
           </div>
