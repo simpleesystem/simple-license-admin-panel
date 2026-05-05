@@ -25,6 +25,7 @@ export interface License {
   customerEmail: string
   tierCode: string
   status: LicenseStatus
+  softDeletedAt?: Date | string | null
   suspendedAt?: Date | string | null
   suspensionReason?: string | null
   domain?: string

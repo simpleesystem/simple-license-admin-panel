@@ -83,6 +83,7 @@ export function LicensesRouteComponent() {
 
   const visibleLicenses = useMemo<LicenseListItem[]>(() => {
     let list = Array.isArray(data) ? (data as LicenseListItem[]) : ((data?.data as LicenseListItem[]) ?? [])
+    list = list.filter((license) => license.softDeletedAt == null)
 
     if (isVendorScopedUser(currentUser)) {
       list = list.filter((license) => {

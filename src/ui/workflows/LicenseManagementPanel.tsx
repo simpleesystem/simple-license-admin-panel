@@ -53,6 +53,7 @@ export type LicenseListItem = {
   customerEmail: string
   domain?: string | null
   status: LicenseStatus
+  softDeletedAt?: Date | string | null
   vendorId?: string | null
 }
 

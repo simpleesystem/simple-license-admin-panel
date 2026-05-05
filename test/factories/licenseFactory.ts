@@ -5,7 +5,7 @@ export type TestLicense = License & { vendorId?: string | null }
 export type TestProductTier = ProductTier & { vendorId?: string | null }
 
 const randomStatus = (): LicenseStatus =>
-  faker.helpers.arrayElement<LicenseStatus>(['ACTIVE', 'EXPIRED', 'REVOKED', 'SUSPENDED', 'INACTIVE'])
+  faker.helpers.arrayElement<LicenseStatus>(['ACTIVE', 'EXPIRED', 'SUSPENDED', 'INACTIVE'])
 
 export const buildLicense = (overrides: Partial<TestLicense> = {}): TestLicense => ({
   id: faker.string.uuid(),

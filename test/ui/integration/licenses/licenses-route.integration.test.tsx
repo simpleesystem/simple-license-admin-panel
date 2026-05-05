@@ -186,6 +186,29 @@ describe('LicensesRouteComponent', () => {
     expect(activeEmails.length).toBeGreaterThan(0)
   })
 
+  test('hides soft-deleted revoked licenses but shows normal revoked licenses', async () => {
+    const superuser = buildUser({ role: UI_USER_ROLE_SUPERUSER, vendorId: null })
+    useAuthMock.mockReturnValue({ user: superuser, currentUser: superuser, isAuthenticated: true })
+    const licenses = [
+      buildLicense({ customerEmail: 'visible@example.com', status: 'ACTIVE' }),
+      buildLicense({
+        customerEmail: 'hidden@example.com',
+        status: 'REVOKED',
+        softDeletedAt: new Date().toISOString(),
+      }),
+      buildLicense({ customerEmail: 'revoked-visible@example.com', status: 'REVOKED' }),
+    ]
+    useAdminLicensesMock.mockReturnValue({ data: licenses, isLoading: false, isError: false, refetch: vi.fn() })
+
+    renderWithProviders(<LicensesRouteComponent />)
+
+    await waitFor(() => {
+      expect(screen.getByText('visible@example.com')).toBeInTheDocument()
+    })
+    expect(screen.getByText('revoked-visible@example.com')).toBeInTheDocument()
+    expect(screen.queryByText('hidden@example.com')).toBeNull()
+  })
+
   test('handles array data structure', async () => {
     const superuser = buildUser({ role: UI_USER_ROLE_SUPERUSER, vendorId: null })
     useAuthMock.mockReturnValue({ user: superuser, currentUser: superuser, isAuthenticated: true })
