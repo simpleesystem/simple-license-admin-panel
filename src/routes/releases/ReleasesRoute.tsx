@@ -18,16 +18,10 @@ import {
   UI_RELEASE_FILTER_VALUE_ALL,
   UI_RELEASE_FILTER_VALUE_PRERELEASE,
   UI_RELEASE_FILTER_VALUE_STABLE,
-  UI_RELEASE_STATUS_ACTION_RETRY,
-  UI_RELEASE_STATUS_ERROR_BODY,
-  UI_RELEASE_STATUS_ERROR_TITLE,
-  UI_RELEASE_STATUS_LOADING_BODY,
-  UI_RELEASE_STATUS_LOADING_TITLE,
   UI_SORT_DESC,
 } from '../../ui/constants'
 import { useDataTableState } from '../../ui/data/useDataTableState'
 import { useTableState } from '../../ui/data/useTableState'
-import { RouteStatus } from '../../ui/feedback/RouteStatus'
 import { Page } from '../../ui/layout/Page'
 import { PageHeader } from '../../ui/layout/PageHeader'
 import type { UiSelectOption } from '../../ui/types'
@@ -137,40 +131,28 @@ export function ReleasesRouteComponent() {
   return (
     <Page variant={UI_PAGE_VARIANT_FULL_WIDTH}>
       <PageHeader title={UI_PAGE_TITLE_RELEASES} subtitle={UI_PAGE_SUBTITLE_RELEASES} />
-
-      <RouteStatus
-        isLoading={showLoading}
-        isError={showError}
-        loadingTitle={UI_RELEASE_STATUS_LOADING_TITLE}
-        loadingMessage={UI_RELEASE_STATUS_LOADING_BODY}
-        errorTitle={UI_RELEASE_STATUS_ERROR_TITLE}
-        errorMessage={UI_RELEASE_STATUS_ERROR_BODY}
-        retryLabel={UI_RELEASE_STATUS_ACTION_RETRY}
-        onRetry={handleRefresh}
+      <ReleasesPanel
+        client={client}
+        releases={releasesTable.rows}
+        selectedProductId={selectedProductId}
+        productOptions={productOptions}
+        onProductChange={handleProductChange}
+        searchTerm={releasesTable.searchTerm}
+        onSearchChange={releasesTable.setSearchTerm}
+        channelFilter={channelFilter}
+        onChannelFilterChange={handleChannelChange}
+        page={releasesTable.page}
+        totalPages={releasesTable.totalPages}
+        onPageChange={releasesTable.goToPage}
+        sortState={releasesTable.sortState}
+        onSortChange={releasesTable.onSort}
+        allowCreate={allowCreate}
+        allowPromote={allowPromote}
+        allowDelete={allowDelete}
+        releasesLoading={showLoading}
+        releasesError={showError}
+        onRefresh={handleRefresh}
       />
-
-      {!showLoading && !showError ? (
-        <ReleasesPanel
-          client={client}
-          releases={releasesTable.rows}
-          selectedProductId={selectedProductId}
-          productOptions={productOptions}
-          onProductChange={handleProductChange}
-          searchTerm={releasesTable.searchTerm}
-          onSearchChange={releasesTable.setSearchTerm}
-          channelFilter={channelFilter}
-          onChannelFilterChange={handleChannelChange}
-          page={releasesTable.page}
-          totalPages={releasesTable.totalPages}
-          onPageChange={releasesTable.goToPage}
-          sortState={releasesTable.sortState}
-          onSortChange={releasesTable.onSort}
-          allowCreate={allowCreate}
-          allowPromote={allowPromote}
-          allowDelete={allowDelete}
-          onRefresh={handleRefresh}
-        />
-      ) : null}
     </Page>
   )
 }

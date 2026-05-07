@@ -725,6 +725,7 @@ export const UI_RELEASE_MODAL_CANCEL = 'Cancel' as const
 export const UI_RELEASE_PANEL_TITLE = 'Releases' as const
 export const UI_RELEASE_PANEL_DESCRIPTION =
   'Upload, promote, and remove plugin release files for the selected product.' as const
+export const UI_RELEASE_SEARCH_LABEL = 'Search' as const
 export const UI_RELEASE_SEARCH_PLACEHOLDER = 'Search by version or filename' as const
 export const UI_RELEASE_PRODUCT_FILTER_LABEL = 'Product' as const
 export const UI_RELEASE_CHANNEL_FILTER_LABEL = 'Channel' as const

@@ -36,9 +36,15 @@ import {
   UI_RELEASE_PANEL_DESCRIPTION,
   UI_RELEASE_PANEL_TITLE,
   UI_RELEASE_PRODUCT_FILTER_LABEL,
+  UI_RELEASE_SEARCH_LABEL,
   UI_RELEASE_SEARCH_PLACEHOLDER,
   UI_RELEASE_SELECT_PRODUCT_BODY,
   UI_RELEASE_SELECT_PRODUCT_PLACEHOLDER,
+  UI_RELEASE_STATUS_ACTION_RETRY,
+  UI_RELEASE_STATUS_ERROR_BODY,
+  UI_RELEASE_STATUS_ERROR_TITLE,
+  UI_RELEASE_STATUS_LOADING_BODY,
+  UI_RELEASE_STATUS_LOADING_TITLE,
   UI_STACK_GAP_MEDIUM,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
@@ -47,6 +53,7 @@ import { TableFilter } from '../data/TableFilter'
 import { TablePaginationFooter } from '../data/TablePaginationFooter'
 import { TableSearchInput } from '../data/TableSearchInput'
 import { TableToolbar } from '../data/TableToolbar'
+import { RouteStatus } from '../feedback/RouteStatus'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
@@ -75,6 +82,8 @@ type ReleasesPanelProps = {
   allowCreate: boolean
   allowPromote: boolean
   allowDelete: boolean
+  releasesLoading?: boolean
+  releasesError?: boolean
   onRefresh?: () => void
 }
 
@@ -96,6 +105,8 @@ export function ReleasesPanel({
   allowCreate,
   allowPromote,
   allowDelete,
+  releasesLoading,
+  releasesError,
   onRefresh,
 }: ReleasesPanelProps) {
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -122,6 +133,7 @@ export function ReleasesPanel({
             onChange={onProductChange}
           />
           <TableSearchInput
+            label={UI_RELEASE_SEARCH_LABEL}
             value={searchTerm}
             onChange={onSearchChange}
             placeholder={UI_RELEASE_SEARCH_PLACEHOLDER}
@@ -221,7 +233,21 @@ export function ReleasesPanel({
     [allowDelete, allowPromote, client, onRefresh, selectedProductId]
   )
 
-  const emptyState = selectedProductId ? (
+  const emptyState = releasesError ? (
+    <RouteStatus
+      isError={true}
+      errorTitle={UI_RELEASE_STATUS_ERROR_TITLE}
+      errorMessage={UI_RELEASE_STATUS_ERROR_BODY}
+      retryLabel={UI_RELEASE_STATUS_ACTION_RETRY}
+      onRetry={onRefresh}
+    />
+  ) : releasesLoading ? (
+    <RouteStatus
+      isLoading={true}
+      loadingTitle={UI_RELEASE_STATUS_LOADING_TITLE}
+      loadingMessage={UI_RELEASE_STATUS_LOADING_BODY}
+    />
+  ) : selectedProductId ? (
     <EmptyState title={UI_RELEASE_EMPTY_MESSAGE} />
   ) : (
     <EmptyState title={UI_RELEASE_SELECT_PRODUCT_PLACEHOLDER} body={UI_RELEASE_SELECT_PRODUCT_BODY} />
@@ -231,7 +257,7 @@ export function ReleasesPanel({
     <Stack direction="column" gap={UI_STACK_GAP_MEDIUM}>
       <PanelHeader title={UI_RELEASE_PANEL_TITLE} description={UI_RELEASE_PANEL_DESCRIPTION} />
       <DataTable
-        data={selectedProductId ? releases : []}
+        data={selectedProductId && !releasesError ? releases : []}
         columns={columns}
         rowKey={(row) => row.id}
         emptyState={emptyState}
