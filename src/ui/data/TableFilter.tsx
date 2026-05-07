@@ -22,12 +22,9 @@ export function TableFilter({ label, value, options, onChange, placeholder, clas
   }
 
   return (
-    <div className={`d-flex align-items-center gap-2 ${className ?? ''}`}>
+    <div className={`d-flex flex-column align-items-start gap-1 ${className ?? ''}`}>
       {label ? (
-        <label
-          htmlFor={selectId}
-          className={`form-label small text-muted text-uppercase fw-semibold ${UI_CLASS_MARGIN_RESET}`}
-        >
+        <label htmlFor={selectId} className={`form-label small text-muted fw-semibold ${UI_CLASS_MARGIN_RESET}`}>
           {label}
         </label>
       ) : null}
@@ -37,7 +34,7 @@ export function TableFilter({ label, value, options, onChange, placeholder, clas
         value={value}
         onChange={handleChange}
         disabled={disabled}
-        style={{ minWidth: '140px', maxWidth: '200px' }}
+        style={{ minWidth: '220px', maxWidth: '280px' }}
       >
         {placeholder ? <option value="">{placeholder}</option> : null}
         {options.map((option) => (

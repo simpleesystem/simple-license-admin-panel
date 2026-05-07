@@ -726,8 +726,8 @@ export const UI_RELEASE_PANEL_TITLE = 'Releases' as const
 export const UI_RELEASE_PANEL_DESCRIPTION =
   'Upload, promote, and remove plugin release files for the selected product.' as const
 export const UI_RELEASE_SEARCH_PLACEHOLDER = 'Search by version or filename' as const
-export const UI_RELEASE_PRODUCT_FILTER_LABEL = 'Filter by Product' as const
-export const UI_RELEASE_CHANNEL_FILTER_LABEL = 'Filter by Channel' as const
+export const UI_RELEASE_PRODUCT_FILTER_LABEL = 'Product' as const
+export const UI_RELEASE_CHANNEL_FILTER_LABEL = 'Channel' as const
 export const UI_RELEASE_FILTER_VALUE_ALL = '' as const
 export const UI_RELEASE_FILTER_VALUE_PRERELEASE = 'prerelease' as const
 export const UI_RELEASE_FILTER_VALUE_STABLE = 'stable' as const

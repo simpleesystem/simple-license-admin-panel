@@ -43,9 +43,10 @@ import {
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
-import { TableControls } from '../data/TableControls'
 import { TableFilter } from '../data/TableFilter'
 import { TablePaginationFooter } from '../data/TablePaginationFooter'
+import { TableSearchInput } from '../data/TableSearchInput'
+import { TableToolbar } from '../data/TableToolbar'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
@@ -111,20 +112,20 @@ export function ReleasesPanel({
   ]
 
   const toolbar = (
-    <TableControls
-      search={{
-        value: searchTerm,
-        onChange: onSearchChange,
-        placeholder: UI_RELEASE_SEARCH_PLACEHOLDER,
-        disabled: !selectedProductId,
-      }}
-      filters={
+    <TableToolbar
+      start={
         <>
           <TableFilter
             label={UI_RELEASE_PRODUCT_FILTER_LABEL}
             value={selectedProductId}
             options={productFilterOptions}
             onChange={onProductChange}
+          />
+          <TableSearchInput
+            value={searchTerm}
+            onChange={onSearchChange}
+            placeholder={UI_RELEASE_SEARCH_PLACEHOLDER}
+            disabled={!selectedProductId}
           />
           <TableFilter
             label={UI_RELEASE_CHANNEL_FILTER_LABEL}
@@ -135,7 +136,7 @@ export function ReleasesPanel({
           />
         </>
       }
-      actions={
+      end={
         allowCreate ? (
           <Button
             variant={UI_BUTTON_VARIANT_PRIMARY}
