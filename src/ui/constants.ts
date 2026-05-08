@@ -1139,6 +1139,7 @@ export const UI_LICENSE_COLUMN_ID_STATUS = 'license-status' as const
 export const UI_LICENSE_COLUMN_ID_ACTIONS = 'license-actions' as const
 export const UI_LICENSE_COLUMN_HEADER_CUSTOMER = 'Customer' as const
 export const UI_LICENSE_COLUMN_HEADER_PRODUCT = 'Product' as const
+export const UI_LICENSE_PRODUCT_FILTER_LABEL = 'Product' as const
 export const UI_LICENSE_COLUMN_HEADER_DOMAIN = 'Domain' as const
 export const UI_LICENSE_COLUMN_HEADER_TIER = 'Tier' as const
 export const UI_LICENSE_COLUMN_HEADER_STATUS = 'Status' as const

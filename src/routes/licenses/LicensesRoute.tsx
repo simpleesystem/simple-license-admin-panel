@@ -1,9 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { License } from '@/simpleLicense'
-import { useAdminLicenses, useAdminProducts } from '@/simpleLicense'
+import { useAdminLicenses, useAdminProducts, useAdminTenants } from '@/simpleLicense'
 
 import { useApiClient } from '../../api/apiContext'
-import { canViewLicenses, isLicenseOwnedByUser, isVendorScopedUser } from '../../app/auth/permissions'
+import {
+  canViewLicenses,
+  isLicenseOwnedByUser,
+  isProductOwnedByUser,
+  isVendorScopedUser,
+} from '../../app/auth/permissions'
 import { useAuth } from '../../app/auth/useAuth'
 import { useLogger } from '../../app/logging/loggerContext'
 import {
@@ -12,6 +17,7 @@ import {
   UI_LICENSE_COLUMN_ID_PRODUCT,
   UI_LICENSE_COLUMN_ID_STATUS,
   UI_LICENSE_COLUMN_ID_TIER,
+  UI_LICENSE_PRODUCT_FILTER_LABEL,
   UI_LICENSE_STATUS_ACTION_RETRY,
   UI_LICENSE_STATUS_ERROR_BODY,
   UI_LICENSE_STATUS_ERROR_TITLE,
@@ -21,14 +27,23 @@ import {
   UI_PAGE_TITLE_LICENSES,
   UI_PAGE_VARIANT_FULL_WIDTH,
   UI_SORT_ASC,
+  UI_TENANT_FILTER_ALL,
 } from '../../ui/constants'
 import { useDataTableState } from '../../ui/data/useDataTableState'
 import { useTableState } from '../../ui/data/useTableState'
 import { RouteStatus } from '../../ui/feedback/RouteStatus'
 import { Page } from '../../ui/layout/Page'
 import { PageHeader } from '../../ui/layout/PageHeader'
+import type { UiSelectOption } from '../../ui/types'
+import { buildTenantNameMap, buildTenantOptions, getProductTenantId } from '../../ui/utils/tenantFilters'
 import type { LicenseListItem } from '../../ui/workflows/LicenseManagementPanel'
 import { LicenseManagementPanel } from '../../ui/workflows/LicenseManagementPanel'
+
+type LicenseFilters = {
+  status: string
+  tenantId: string
+  productSlug: string
+}
 
 export function LicensesRouteComponent() {
   const client = useApiClient()
@@ -36,11 +51,17 @@ export function LicensesRouteComponent() {
   const { user: currentUser } = useAuth()
   const { data, isLoading, isError, refetch } = useAdminLicenses(client)
   const { data: productsData } = useAdminProducts(client)
-  const tableState = useTableState({
+  const { data: tenantsData } = useAdminTenants(client)
+  const isVendorScoped = isVendorScopedUser(currentUser)
+  const tableState = useTableState<LicenseFilters>({
     initialFilters: {
       status: '',
+      tenantId: '',
+      productSlug: '',
     },
   })
+  const selectedTenantId = tableState.filters.tenantId
+  const selectedProductSlug = tableState.filters.productSlug
   const [tierOptions, setTierOptions] = useState<{ value: string; label: string }[]>([])
 
   useEffect(() => {
@@ -81,11 +102,43 @@ export function LicensesRouteComponent() {
     void fetchTiers()
   }, [client, productsData, logger])
 
+  const visibleProducts = useMemo(() => {
+    const list = Array.isArray(productsData) ? productsData : (productsData?.data ?? [])
+    return currentUser && isVendorScoped ? list.filter((p) => isProductOwnedByUser(currentUser, p)) : list
+  }, [productsData, currentUser, isVendorScoped])
+
+  const tenantMap = useMemo(() => {
+    const tenants = Array.isArray(tenantsData) ? tenantsData : (tenantsData?.data ?? [])
+    return buildTenantNameMap(tenants)
+  }, [tenantsData])
+
+  const tenantOptions = useMemo<UiSelectOption[]>(() => {
+    const tenants = Array.isArray(tenantsData) ? tenantsData : (tenantsData?.data ?? [])
+    return buildTenantOptions({
+      tenants,
+      products: visibleProducts,
+      tenantMap,
+      isVendorScoped,
+      allOptionLabel: UI_TENANT_FILTER_ALL,
+    })
+  }, [tenantsData, visibleProducts, tenantMap, isVendorScoped])
+
+  const showTenantFilter = tenantOptions.filter((option) => option.value !== '').length > 1
+
+  const filteredProductOptions = useMemo<UiSelectOption[]>(() => {
+    const products = selectedTenantId
+      ? visibleProducts.filter((product) => getProductTenantId(product) === selectedTenantId)
+      : visibleProducts
+    const options = products.map((product) => ({ value: product.slug, label: product.name }))
+    options.sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }))
+    return [{ value: '', label: UI_LICENSE_PRODUCT_FILTER_LABEL }, ...options]
+  }, [selectedTenantId, visibleProducts])
+
   const visibleLicenses = useMemo<LicenseListItem[]>(() => {
     let list = Array.isArray(data) ? (data as LicenseListItem[]) : ((data?.data as LicenseListItem[]) ?? [])
     list = list.filter((license) => license.softDeletedAt == null)
 
-    if (isVendorScopedUser(currentUser)) {
+    if (isVendorScoped) {
       list = list.filter((license) => {
         // LicenseListItem is compatible with License for ownership checks
         return isLicenseOwnedByUser(currentUser, license as unknown as License)
@@ -93,7 +146,7 @@ export function LicensesRouteComponent() {
     }
 
     return list
-  }, [currentUser, data])
+  }, [currentUser, data, isVendorScoped])
 
   const searchLicenses = useCallback((license: LicenseListItem, term: string) => {
     const needle = term.toLowerCase()
@@ -124,14 +177,23 @@ export function LicensesRouteComponent() {
     data: visibleLicenses,
     initialSort: { columnId: UI_LICENSE_COLUMN_ID_CUSTOMER, direction: UI_SORT_ASC },
     search: searchLicenses,
-    filter: (license) => !tableState.filters.status || license.status === tableState.filters.status,
+    filter: (license) => {
+      const statusFilter = tableState.filters.status
+      if (statusFilter && license.status !== statusFilter) {
+        return false
+      }
+      const tenantFilter = tableState.filters.tenantId
+      if (tenantFilter && license.vendorId !== tenantFilter) {
+        return false
+      }
+      const productFilter = tableState.filters.productSlug
+      if (productFilter && license.productSlug !== productFilter) {
+        return false
+      }
+      return true
+    },
     sortComparators,
   })
-
-  const productOptions = useMemo(() => {
-    const list = Array.isArray(productsData) ? productsData : (productsData?.data ?? [])
-    return list.map((p) => ({ value: p.slug, label: p.name }))
-  }, [productsData])
 
   const canView = canViewLicenses(currentUser ?? null)
 
@@ -167,12 +229,25 @@ export function LicensesRouteComponent() {
             tableState.setFilter('status', value)
             licenseTable.goToPage(1)
           }}
+          selectedTenantId={selectedTenantId}
+          tenantOptions={tenantOptions}
+          showTenantFilter={showTenantFilter}
+          onTenantFilterChange={(value) => {
+            tableState.setFilter('tenantId', value)
+            tableState.setFilter('productSlug', '')
+            licenseTable.goToPage(1)
+          }}
+          selectedProductSlug={selectedProductSlug}
+          onProductFilterChange={(value) => {
+            tableState.setFilter('productSlug', value)
+            licenseTable.goToPage(1)
+          }}
           page={licenseTable.page}
           totalPages={licenseTable.totalPages}
           onPageChange={licenseTable.goToPage}
           sortState={licenseTable.sortState}
           onSortChange={licenseTable.onSort}
-          productOptions={productOptions}
+          productOptions={filteredProductOptions}
           tierOptions={tierOptions}
         />
       ) : null}

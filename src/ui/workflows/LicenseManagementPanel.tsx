@@ -25,6 +25,7 @@ import {
   UI_LICENSE_COLUMN_ID_TIER,
   UI_LICENSE_EMPTY_STATE_MESSAGE,
   UI_LICENSE_FORM_SUBMIT_CREATE,
+  UI_LICENSE_PRODUCT_FILTER_LABEL,
   UI_LICENSE_STATUS_ACTIVE,
   UI_LICENSE_STATUS_INACTIVE,
   UI_LICENSE_STATUS_REVOKED,
@@ -33,6 +34,7 @@ import {
   UI_TABLE_FILTER_LABEL_STATUS,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
   UI_TABLE_SEARCH_PLACEHOLDER,
+  UI_TENANT_FILTER_LABEL,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
@@ -63,6 +65,12 @@ type LicenseManagementPanelProps = {
   currentUser?: User | null
   tierOptions: readonly UiSelectOption[]
   productOptions: readonly UiSelectOption[]
+  selectedTenantId?: string
+  tenantOptions?: readonly UiSelectOption[]
+  showTenantFilter?: boolean
+  onTenantFilterChange?: (tenantId: string) => void
+  selectedProductSlug?: string
+  onProductFilterChange?: (productSlug: string) => void
   onRefresh?: () => void
   page: number
   totalPages: number
@@ -81,6 +89,12 @@ export function LicenseManagementPanel({
   currentUser,
   tierOptions,
   productOptions,
+  selectedTenantId = '',
+  tenantOptions = [],
+  showTenantFilter = false,
+  onTenantFilterChange,
+  selectedProductSlug = '',
+  onProductFilterChange,
   onRefresh,
   page,
   totalPages,
@@ -126,14 +140,33 @@ export function LicenseManagementPanel({
           : undefined
       }
       filters={
-        onStatusFilterChange ? (
-          <TableFilter
-            value={statusFilter ?? ''}
-            options={statusOptions}
-            onChange={onStatusFilterChange}
-            placeholder={UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES}
-          />
-        ) : null
+        <>
+          {showTenantFilter && onTenantFilterChange ? (
+            <TableFilter
+              label={UI_TENANT_FILTER_LABEL}
+              value={selectedTenantId}
+              options={tenantOptions}
+              onChange={onTenantFilterChange}
+            />
+          ) : null}
+          {onProductFilterChange ? (
+            <TableFilter
+              label={UI_LICENSE_PRODUCT_FILTER_LABEL}
+              value={selectedProductSlug}
+              options={productOptions}
+              onChange={onProductFilterChange}
+            />
+          ) : null}
+          {onStatusFilterChange ? (
+            <TableFilter
+              label={UI_TABLE_FILTER_LABEL_STATUS}
+              value={statusFilter ?? ''}
+              options={statusOptions}
+              onChange={onStatusFilterChange}
+              placeholder={UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES}
+            />
+          ) : null}
+        </>
       }
       actions={
         allowCreate ? (
