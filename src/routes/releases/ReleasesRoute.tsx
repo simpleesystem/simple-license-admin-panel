@@ -57,6 +57,13 @@ export function ReleasesRouteComponent() {
     return typeof legacyVendorId === 'string' ? legacyVendorId : ''
   }, [])
 
+  const getTenantFilterId = useCallback((tenant: { id: string; vendorId?: string | null }) => {
+    if (typeof tenant.vendorId === 'string' && tenant.vendorId.length > 0) {
+      return tenant.vendorId
+    }
+    return tenant.id
+  }, [])
+
   const visibleProducts = useMemo(() => {
     const list = Array.isArray(productsData) ? productsData : (productsData?.data ?? [])
     return currentUser && isVendorScoped ? list.filter((p) => isProductOwnedByUser(currentUser, p)) : list
@@ -77,18 +84,26 @@ export function ReleasesRouteComponent() {
   }, [tenantsData])
 
   const tenantOptions = useMemo<UiSelectOption[]>(() => {
+    const tenants = Array.isArray(tenantsData) ? tenantsData : (tenantsData?.data ?? [])
     const tenantIdsFromProducts = [
       ...new Set(visibleProducts.map((product) => getProductTenantId(product)).filter(Boolean)),
     ]
-    const tenantIds =
-      tenantIdsFromProducts.length > 0 || isVendorScoped ? tenantIdsFromProducts : [...tenantMap.keys()].filter(Boolean)
+    const tenantIds = isVendorScoped
+      ? tenantIdsFromProducts
+      : [
+          ...new Set(
+            tenants
+              .map((tenant) => getTenantFilterId(tenant))
+              .filter((tenantId): tenantId is string => typeof tenantId === 'string' && tenantId.length > 0)
+          ),
+        ]
     const options = tenantIds.map((tenantId) => ({
       value: tenantId,
       label: tenantMap.get(tenantId) ?? tenantId,
     }))
     options.sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }))
     return [{ value: '', label: UI_RELEASE_TENANT_FILTER_ALL }, ...options]
-  }, [tenantMap, visibleProducts, getProductTenantId, isVendorScoped])
+  }, [tenantMap, visibleProducts, tenantsData, getProductTenantId, getTenantFilterId, isVendorScoped])
 
   const showTenantFilter = tenantOptions.filter((option) => option.value !== '').length > 1
 
