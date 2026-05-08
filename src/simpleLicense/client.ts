@@ -151,6 +151,7 @@ import type {
   MetricsResponse,
   ProtectionBuildTokenMetadata,
   ProtectionSigningPublicKeyResponse,
+  ReleaseStorageDiagnosticsResponse,
   ReportUsageRequest,
   RevokeProtectionBuildTokenResponse,
   ServerStatusResponse,
@@ -627,6 +628,12 @@ export class Client {
     const response = await this.httpClient.get<ApiResponse<ListReleasesResponse>>(url)
     const rawData = this.handleApiResponse<unknown>(response.data, [])
     return this.normalizeListReleasesResponse(rawData)
+  }
+
+  async getReleaseStorageDiagnostics(productId: string): Promise<ReleaseStorageDiagnosticsResponse> {
+    const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}/releases/storage-diagnostics`
+    const response = await this.httpClient.get<ApiResponse<ReleaseStorageDiagnosticsResponse>>(url)
+    return this.handleApiResponse(response.data, [])
   }
 
   async promoteRelease(productId: string, releaseId: string): Promise<CreateReleaseResponse> {

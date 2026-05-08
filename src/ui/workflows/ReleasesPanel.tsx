@@ -3,12 +3,19 @@ import Badge from 'react-bootstrap/Badge'
 import Button from 'react-bootstrap/Button'
 
 import type { Client, PluginRelease } from '@/simpleLicense'
+import { useAdminReleaseStorageDiagnostics } from '@/simpleLicense/hooks'
+import type { ReleaseStorageDiagnostic } from '@/simpleLicense/types/api'
 import {
   UI_BADGE_VARIANT_DANGER,
   UI_BADGE_VARIANT_SUCCESS,
   UI_BUTTON_VARIANT_PRIMARY,
+  UI_BUTTON_VARIANT_SECONDARY,
   UI_CLASS_ALIGN_TEXT_BOTTOM,
   UI_CLASS_INLINE_FILENAME,
+  UI_CLASS_MARGIN_BOTTOM_SMALL,
+  UI_CLASS_TABLE,
+  UI_CLASS_TABLE_HEADER_CELL,
+  UI_CLASS_TABLE_WRAPPER,
   UI_RELEASE_BUTTON_NEW,
   UI_RELEASE_CHANNEL_FILTER_LABEL,
   UI_RELEASE_COLUMN_ACTIONS,
@@ -23,6 +30,16 @@ import {
   UI_RELEASE_COLUMN_SIZE,
   UI_RELEASE_COLUMN_STATUS,
   UI_RELEASE_COLUMN_VERSION,
+  UI_RELEASE_DIAGNOSTICS_BUTTON,
+  UI_RELEASE_DIAGNOSTICS_CLOSE,
+  UI_RELEASE_DIAGNOSTICS_COLUMN_FILE,
+  UI_RELEASE_DIAGNOSTICS_COLUMN_PRESENT,
+  UI_RELEASE_DIAGNOSTICS_COLUMN_RESOLVED_KEY,
+  UI_RELEASE_DIAGNOSTICS_COLUMN_VERSION,
+  UI_RELEASE_DIAGNOSTICS_EMPTY,
+  UI_RELEASE_DIAGNOSTICS_ERROR,
+  UI_RELEASE_DIAGNOSTICS_LOADING,
+  UI_RELEASE_DIAGNOSTICS_TITLE,
   UI_RELEASE_EMPTY_MESSAGE,
   UI_RELEASE_FILE_MISSING,
   UI_RELEASE_FILE_PRESENT,
@@ -57,6 +74,7 @@ import { TableToolbar } from '../data/TableToolbar'
 import { RouteStatus } from '../feedback/RouteStatus'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
+import { ModalDialog } from '../overlay/ModalDialog'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
 import { EmptyState } from '../typography/EmptyState'
 import { formatBytes, formatDateSafe } from '../utils/formatUtils'
@@ -119,6 +137,9 @@ export function ReleasesPanel({
   onRefresh,
 }: ReleasesPanelProps) {
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showDiagnosticsModal, setShowDiagnosticsModal] = useState(false)
+
+  const diagnosticsQuery = useAdminReleaseStorageDiagnostics(client, selectedProductId, showDiagnosticsModal)
 
   const productFilterOptions = useMemo<UiSelectOption[]>(
     () => [{ value: '', label: UI_RELEASE_SELECT_PRODUCT_PLACEHOLDER }, ...productOptions],
@@ -166,17 +187,59 @@ export function ReleasesPanel({
         </>
       }
       end={
-        allowCreate ? (
-          <Button
-            variant={UI_BUTTON_VARIANT_PRIMARY}
-            onClick={() => setShowCreateModal(true)}
-            disabled={!selectedProductId}
-          >
-            {UI_RELEASE_BUTTON_NEW}
-          </Button>
-        ) : null
+        <>
+          {allowDelete ? (
+            <Button
+              variant={UI_BUTTON_VARIANT_SECONDARY}
+              onClick={() => setShowDiagnosticsModal(true)}
+              disabled={!selectedProductId}
+            >
+              {UI_RELEASE_DIAGNOSTICS_BUTTON}
+            </Button>
+          ) : null}
+          {allowCreate ? (
+            <Button
+              variant={UI_BUTTON_VARIANT_PRIMARY}
+              onClick={() => setShowCreateModal(true)}
+              disabled={!selectedProductId}
+            >
+              {UI_RELEASE_BUTTON_NEW}
+            </Button>
+          ) : null}
+        </>
       }
     />
+  )
+
+  const diagnosticsBody = diagnosticsQuery.isLoading ? (
+    <p className={UI_CLASS_MARGIN_BOTTOM_SMALL}>{UI_RELEASE_DIAGNOSTICS_LOADING}</p>
+  ) : diagnosticsQuery.isError ? (
+    <p className={UI_CLASS_MARGIN_BOTTOM_SMALL}>{UI_RELEASE_DIAGNOSTICS_ERROR}</p>
+  ) : (diagnosticsQuery.data ?? []).length === 0 ? (
+    <p className={UI_CLASS_MARGIN_BOTTOM_SMALL}>{UI_RELEASE_DIAGNOSTICS_EMPTY}</p>
+  ) : (
+    <div className={UI_CLASS_TABLE_WRAPPER}>
+      <table className={UI_CLASS_TABLE}>
+        <thead>
+          <tr>
+            <th className={UI_CLASS_TABLE_HEADER_CELL}>{UI_RELEASE_DIAGNOSTICS_COLUMN_VERSION}</th>
+            <th className={UI_CLASS_TABLE_HEADER_CELL}>{UI_RELEASE_DIAGNOSTICS_COLUMN_FILE}</th>
+            <th className={UI_CLASS_TABLE_HEADER_CELL}>{UI_RELEASE_DIAGNOSTICS_COLUMN_PRESENT}</th>
+            <th className={UI_CLASS_TABLE_HEADER_CELL}>{UI_RELEASE_DIAGNOSTICS_COLUMN_RESOLVED_KEY}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {(diagnosticsQuery.data as ReleaseStorageDiagnostic[]).map((diagnostic) => (
+            <tr key={diagnostic.releaseId}>
+              <td>{diagnostic.version}</td>
+              <td>{diagnostic.fileName}</td>
+              <td>{diagnostic.filePresent ? UI_RELEASE_FILE_PRESENT : UI_RELEASE_FILE_MISSING}</td>
+              <td>{diagnostic.resolvedStorageKey ?? UI_VALUE_PLACEHOLDER}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   )
 
   const columns: UiDataTableColumn<ReleaseListItem>[] = useMemo(
@@ -291,6 +354,19 @@ export function ReleasesPanel({
           onSuccess={onRefresh}
         />
       ) : null}
+
+      <ModalDialog
+        show={showDiagnosticsModal}
+        onClose={() => setShowDiagnosticsModal(false)}
+        title={UI_RELEASE_DIAGNOSTICS_TITLE}
+        body={diagnosticsBody}
+        secondaryAction={{
+          id: 'release-diagnostics-close',
+          label: UI_RELEASE_DIAGNOSTICS_CLOSE,
+          onClick: () => setShowDiagnosticsModal(false),
+          variant: UI_BUTTON_VARIANT_SECONDARY,
+        }}
+      />
     </Stack>
   )
 }

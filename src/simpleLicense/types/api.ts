@@ -792,5 +792,18 @@ export interface PluginRelease {
 
 export type ListReleasesResponse = PluginRelease[]
 
+export interface ReleaseStorageDiagnostic {
+  releaseId: string
+  slug: string
+  version: string
+  fileName: string
+  filePresent: boolean
+  resolvedStorageKey: string | null
+  keyCandidates: string[]
+  storageMode: 'storage' | 'local'
+}
+
+export type ReleaseStorageDiagnosticsResponse = ReleaseStorageDiagnostic[]
+
 /** Response from createRelease; API returns { success, data: PluginRelease } */
 export type CreateReleaseResponse = PluginRelease
