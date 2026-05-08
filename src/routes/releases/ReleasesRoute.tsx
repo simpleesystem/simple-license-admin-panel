@@ -40,6 +40,7 @@ export function ReleasesRouteComponent() {
   const { user: currentUser } = useAuth()
   const { data: productsData } = useAdminProducts(client)
   const { data: tenantsData } = useAdminTenants(client)
+  const isVendorScoped = currentUser ? isVendorScopedUser(currentUser) : false
 
   const tableState = useTableState<ReleaseFilters>({
     initialFilters: { tenantId: '', productId: '', channel: UI_RELEASE_FILTER_VALUE_ALL },
@@ -48,36 +49,55 @@ export function ReleasesRouteComponent() {
   const selectedTenantId = tableState.filters.tenantId
   const selectedProductId = tableState.filters.productId
 
+  const getProductTenantId = useCallback((product: { vendorId?: string } & Record<string, unknown>) => {
+    if (typeof product.vendorId === 'string' && product.vendorId.length > 0) {
+      return product.vendorId
+    }
+    const legacyVendorId = product.vendor_id
+    return typeof legacyVendorId === 'string' ? legacyVendorId : ''
+  }, [])
+
   const visibleProducts = useMemo(() => {
     const list = Array.isArray(productsData) ? productsData : (productsData?.data ?? [])
-    return currentUser && isVendorScopedUser(currentUser)
-      ? list.filter((p) => isProductOwnedByUser(currentUser, p))
-      : list
-  }, [productsData, currentUser])
+    return currentUser && isVendorScoped ? list.filter((p) => isProductOwnedByUser(currentUser, p)) : list
+  }, [productsData, currentUser, isVendorScoped])
 
   const tenantMap = useMemo(() => {
     const tenants = Array.isArray(tenantsData) ? tenantsData : (tenantsData?.data ?? [])
-    return new Map(tenants.map((tenant) => [tenant.id, tenant.name]))
+    const map = new Map<string, string>()
+    for (const tenant of tenants) {
+      if (tenant.id) {
+        map.set(tenant.id, tenant.name)
+      }
+      if (tenant.vendorId) {
+        map.set(tenant.vendorId, tenant.name)
+      }
+    }
+    return map
   }, [tenantsData])
 
   const tenantOptions = useMemo<UiSelectOption[]>(() => {
-    const tenantIds = [...new Set(visibleProducts.map((product) => product.vendorId).filter(Boolean))]
+    const tenantIdsFromProducts = [
+      ...new Set(visibleProducts.map((product) => getProductTenantId(product)).filter(Boolean)),
+    ]
+    const tenantIds =
+      tenantIdsFromProducts.length > 0 || isVendorScoped ? tenantIdsFromProducts : [...tenantMap.keys()].filter(Boolean)
     const options = tenantIds.map((tenantId) => ({
       value: tenantId,
       label: tenantMap.get(tenantId) ?? tenantId,
     }))
     options.sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }))
     return [{ value: '', label: UI_RELEASE_TENANT_FILTER_ALL }, ...options]
-  }, [tenantMap, visibleProducts])
+  }, [tenantMap, visibleProducts, getProductTenantId, isVendorScoped])
 
-  const showTenantFilter = tenantOptions.length > 2
+  const showTenantFilter = tenantOptions.filter((option) => option.value !== '').length > 1
 
   const productOptions = useMemo<UiSelectOption[]>(() => {
     const filteredProducts = selectedTenantId
-      ? visibleProducts.filter((product) => product.vendorId === selectedTenantId)
+      ? visibleProducts.filter((product) => getProductTenantId(product) === selectedTenantId)
       : visibleProducts
     return filteredProducts.map((product) => ({ value: product.id, label: `${product.name} (${product.slug})` }))
-  }, [selectedTenantId, visibleProducts])
+  }, [selectedTenantId, visibleProducts, getProductTenantId])
 
   const {
     data: releasesData,
