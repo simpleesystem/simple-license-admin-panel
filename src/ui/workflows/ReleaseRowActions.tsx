@@ -15,6 +15,7 @@ import {
   UI_RELEASE_ACTION_DELETE,
   UI_RELEASE_ACTION_DELETING,
   UI_RELEASE_ACTION_DOWNLOAD,
+  UI_RELEASE_ACTION_DOWNLOADING,
   UI_RELEASE_ACTION_PROMOTE,
   UI_RELEASE_ACTION_PROMOTING,
   UI_RELEASE_CONFIRM_DELETE_BODY,
@@ -59,6 +60,7 @@ export function ReleaseRowActions({
   const deleteMutation = useDeleteRelease(client, productId)
   const [showPromoteConfirm, setShowPromoteConfirm] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDownloading, setIsDownloading] = useState(false)
 
   const showPromoteButton = allowPromote && !isPromoted
   const showDeleteButton = allowDelete
@@ -85,17 +87,50 @@ export function ReleaseRowActions({
     })
   }
 
+  const handleDownload = async () => {
+    if (!downloadUrl || isDownloading) {
+      return
+    }
+
+    setIsDownloading(true)
+    try {
+      const authToken = client.getToken()
+      const response = await fetch(downloadUrl, {
+        method: 'GET',
+        credentials: 'include',
+        headers: authToken ? { Authorization: `Bearer ${authToken}` } : undefined,
+      })
+      if (!response.ok) {
+        throw new Error(`Download failed with status ${response.status}`)
+      }
+
+      const blob = await response.blob()
+      const objectUrl = URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      anchor.href = objectUrl
+      anchor.download = releaseFileName
+      document.body.appendChild(anchor)
+      anchor.click()
+      document.body.removeChild(anchor)
+      URL.revokeObjectURL(objectUrl)
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
   return (
     <Stack direction="row" gap={UI_STACK_GAP_SMALL}>
       {downloadUrl ? (
         <Button
-          as="a"
           variant={UI_BUTTON_VARIANT_OUTLINE_SECONDARY}
           size={UI_SIZE_SMALL}
-          href={downloadUrl}
+          onClick={() => {
+            void handleDownload()
+          }}
+          disabled={isDownloading}
           aria-label={`${UI_RELEASE_ACTION_DOWNLOAD} ${releaseVersion}`}
         >
-          {UI_RELEASE_ACTION_DOWNLOAD}
+          {isDownloading ? UI_RELEASE_ACTION_DOWNLOADING : UI_RELEASE_ACTION_DOWNLOAD}
         </Button>
       ) : null}
       {showPromoteButton ? (
