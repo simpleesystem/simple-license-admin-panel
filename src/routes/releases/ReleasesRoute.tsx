@@ -18,14 +18,15 @@ import {
   UI_RELEASE_FILTER_VALUE_ALL,
   UI_RELEASE_FILTER_VALUE_PRERELEASE,
   UI_RELEASE_FILTER_VALUE_STABLE,
-  UI_RELEASE_TENANT_FILTER_ALL,
   UI_SORT_DESC,
+  UI_TENANT_FILTER_ALL,
 } from '../../ui/constants'
 import { useDataTableState } from '../../ui/data/useDataTableState'
 import { useTableState } from '../../ui/data/useTableState'
 import { Page } from '../../ui/layout/Page'
 import { PageHeader } from '../../ui/layout/PageHeader'
 import type { UiSelectOption } from '../../ui/types'
+import { buildTenantNameMap, buildTenantOptions, getProductTenantId } from '../../ui/utils/tenantFilters'
 import type { ReleaseListItem } from '../../ui/workflows/ReleasesPanel'
 import { ReleasesPanel } from '../../ui/workflows/ReleasesPanel'
 
@@ -49,21 +50,6 @@ export function ReleasesRouteComponent() {
   const selectedTenantId = tableState.filters.tenantId
   const selectedProductId = tableState.filters.productId
 
-  const getProductTenantId = useCallback((product: { vendorId?: string } & Record<string, unknown>) => {
-    if (typeof product.vendorId === 'string' && product.vendorId.length > 0) {
-      return product.vendorId
-    }
-    const legacyVendorId = product.vendor_id
-    return typeof legacyVendorId === 'string' ? legacyVendorId : ''
-  }, [])
-
-  const getTenantFilterId = useCallback((tenant: { id: string; vendorId?: string | null }) => {
-    if (typeof tenant.vendorId === 'string' && tenant.vendorId.length > 0) {
-      return tenant.vendorId
-    }
-    return tenant.id
-  }, [])
-
   const visibleProducts = useMemo(() => {
     const list = Array.isArray(productsData) ? productsData : (productsData?.data ?? [])
     return currentUser && isVendorScoped ? list.filter((p) => isProductOwnedByUser(currentUser, p)) : list
@@ -71,39 +57,19 @@ export function ReleasesRouteComponent() {
 
   const tenantMap = useMemo(() => {
     const tenants = Array.isArray(tenantsData) ? tenantsData : (tenantsData?.data ?? [])
-    const map = new Map<string, string>()
-    for (const tenant of tenants) {
-      if (tenant.id) {
-        map.set(tenant.id, tenant.name)
-      }
-      if (tenant.vendorId) {
-        map.set(tenant.vendorId, tenant.name)
-      }
-    }
-    return map
+    return buildTenantNameMap(tenants)
   }, [tenantsData])
 
   const tenantOptions = useMemo<UiSelectOption[]>(() => {
     const tenants = Array.isArray(tenantsData) ? tenantsData : (tenantsData?.data ?? [])
-    const tenantIdsFromProducts = [
-      ...new Set(visibleProducts.map((product) => getProductTenantId(product)).filter(Boolean)),
-    ]
-    const tenantIds = isVendorScoped
-      ? tenantIdsFromProducts
-      : [
-          ...new Set(
-            tenants
-              .map((tenant) => getTenantFilterId(tenant))
-              .filter((tenantId): tenantId is string => typeof tenantId === 'string' && tenantId.length > 0)
-          ),
-        ]
-    const options = tenantIds.map((tenantId) => ({
-      value: tenantId,
-      label: tenantMap.get(tenantId) ?? tenantId,
-    }))
-    options.sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }))
-    return [{ value: '', label: UI_RELEASE_TENANT_FILTER_ALL }, ...options]
-  }, [tenantMap, visibleProducts, tenantsData, getProductTenantId, getTenantFilterId, isVendorScoped])
+    return buildTenantOptions({
+      tenants,
+      products: visibleProducts,
+      tenantMap,
+      isVendorScoped,
+      allOptionLabel: UI_TENANT_FILTER_ALL,
+    })
+  }, [tenantMap, visibleProducts, tenantsData, isVendorScoped])
 
   const showTenantFilter = tenantOptions.filter((option) => option.value !== '').length > 1
 
@@ -112,7 +78,7 @@ export function ReleasesRouteComponent() {
       ? visibleProducts.filter((product) => getProductTenantId(product) === selectedTenantId)
       : visibleProducts
     return filteredProducts.map((product) => ({ value: product.id, label: `${product.name} (${product.slug})` }))
-  }, [selectedTenantId, visibleProducts, getProductTenantId])
+  }, [selectedTenantId, visibleProducts])
 
   const {
     data: releasesData,

@@ -31,6 +31,7 @@ import {
   UI_STACK_GAP_MEDIUM,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
   UI_TABLE_SEARCH_PLACEHOLDER,
+  UI_TENANT_FILTER_LABEL,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
@@ -60,6 +61,10 @@ type ProductManagementPanelProps = {
   products: readonly ProductListItem[]
   currentUser?: User | null
   vendorOptions?: readonly UiSelectOption[]
+  selectedTenantId?: string
+  tenantOptions?: readonly UiSelectOption[]
+  showTenantFilter?: boolean
+  onTenantFilterChange?: (tenantId: string) => void
   onRefresh?: () => void
   page: number
   totalPages: number
@@ -77,6 +82,10 @@ export function ProductManagementPanel({
   products,
   currentUser,
   vendorOptions,
+  selectedTenantId = '',
+  tenantOptions = [],
+  showTenantFilter = false,
+  onTenantFilterChange,
   onRefresh,
   page,
   totalPages,
@@ -120,15 +129,25 @@ export function ProductManagementPanel({
           : undefined
       }
       filters={
-        onStatusFilterChange ? (
-          <TableFilter
-            label={UI_PRODUCT_COLUMN_HEADER_STATUS}
-            value={statusFilter ?? ''}
-            options={statusOptions}
-            onChange={onStatusFilterChange}
-            placeholder={UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES}
-          />
-        ) : null
+        <>
+          {showTenantFilter && onTenantFilterChange ? (
+            <TableFilter
+              label={UI_TENANT_FILTER_LABEL}
+              value={selectedTenantId}
+              options={tenantOptions}
+              onChange={onTenantFilterChange}
+            />
+          ) : null}
+          {onStatusFilterChange ? (
+            <TableFilter
+              label={UI_PRODUCT_COLUMN_HEADER_STATUS}
+              value={statusFilter ?? ''}
+              options={statusOptions}
+              onChange={onStatusFilterChange}
+              placeholder={UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES}
+            />
+          ) : null}
+        </>
       }
       actions={
         allowCreate ? (

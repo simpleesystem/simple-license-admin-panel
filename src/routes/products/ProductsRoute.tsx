@@ -19,6 +19,7 @@ import {
   UI_PRODUCT_STATUS_LOADING_BODY,
   UI_PRODUCT_STATUS_LOADING_TITLE,
   UI_SORT_ASC,
+  UI_TENANT_FILTER_ALL,
 } from '../../ui/constants'
 import { useDataTableState } from '../../ui/data/useDataTableState'
 import { useTableState } from '../../ui/data/useTableState'
@@ -26,24 +27,33 @@ import { RouteStatus } from '../../ui/feedback/RouteStatus'
 import { Page } from '../../ui/layout/Page'
 import { PageHeader } from '../../ui/layout/PageHeader'
 import type { UiSelectOption } from '../../ui/types'
+import { buildTenantNameMap, buildTenantOptions, getProductTenantId } from '../../ui/utils/tenantFilters'
 import type { ProductListItem } from '../../ui/workflows/ProductManagementPanel'
 import { ProductManagementPanel } from '../../ui/workflows/ProductManagementPanel'
+
+type ProductFilters = {
+  status: string
+  tenantId: string
+}
 
 export function ProductsRouteComponent() {
   const client = useApiClient()
   const { user: currentUser } = useAuth()
   const { data, isLoading, isError, refetch } = useAdminProducts(client)
   const { data: tenantsData } = useAdminTenants(client)
-  const tableState = useTableState({
+  const tableState = useTableState<ProductFilters>({
     initialFilters: {
       status: 'true',
+      tenantId: '',
     },
   })
+
+  const selectedTenantId = tableState.filters.tenantId
 
   const visibleProducts = useMemo<ProductListItem[]>(() => {
     const list = Array.isArray(data) ? data : (data?.data ?? [])
     const tenants = Array.isArray(tenantsData) ? tenantsData : (tenantsData?.data ?? [])
-    const tenantMap = new Map(tenants.map((tenant) => [tenant.id, tenant.name]))
+    const tenantMap = buildTenantNameMap(tenants)
 
     let mapped = list.map<ProductListItem>((product) => ({
       id: product.id,
@@ -61,6 +71,32 @@ export function ProductsRouteComponent() {
 
     return mapped
   }, [currentUser, data, tenantsData])
+
+  const tenantMap = useMemo(() => {
+    const tenants = Array.isArray(tenantsData) ? tenantsData : (tenantsData?.data ?? [])
+    return buildTenantNameMap(tenants)
+  }, [tenantsData])
+
+  const tenantOptions = useMemo<UiSelectOption[]>(() => {
+    const tenants = Array.isArray(tenantsData) ? tenantsData : (tenantsData?.data ?? [])
+    return buildTenantOptions({
+      tenants,
+      products: visibleProducts,
+      tenantMap,
+      isVendorScoped: isVendorScopedUser(currentUser),
+      allOptionLabel: UI_TENANT_FILTER_ALL,
+    })
+  }, [currentUser, tenantMap, tenantsData, visibleProducts])
+
+  const showTenantFilter = tenantOptions.filter((option) => option.value !== '').length > 1
+
+  const filteredProducts = useMemo(
+    () =>
+      selectedTenantId
+        ? visibleProducts.filter((product) => getProductTenantId(product) === selectedTenantId)
+        : visibleProducts,
+    [selectedTenantId, visibleProducts]
+  )
 
   const vendorOptions = useMemo<UiSelectOption[]>(() => {
     const tenants = Array.isArray(tenantsData) ? tenantsData : (tenantsData?.data ?? [])
@@ -93,7 +129,7 @@ export function ProductsRouteComponent() {
   )
 
   const productTable = useDataTableState({
-    data: visibleProducts,
+    data: filteredProducts,
     initialSort: { columnId: UI_PRODUCT_COLUMN_ID_NAME, direction: UI_SORT_ASC },
     search: searchProducts,
     filter: (product) => {
@@ -133,6 +169,13 @@ export function ProductsRouteComponent() {
           products={productTable.rows}
           currentUser={currentUser ?? undefined}
           vendorOptions={vendorOptions}
+          selectedTenantId={selectedTenantId}
+          tenantOptions={tenantOptions}
+          showTenantFilter={showTenantFilter}
+          onTenantFilterChange={(value) => {
+            tableState.setFilter('tenantId', value)
+            productTable.goToPage(1)
+          }}
           onRefresh={handleRefresh}
           searchTerm={productTable.searchTerm}
           onSearchChange={productTable.setSearchTerm}
