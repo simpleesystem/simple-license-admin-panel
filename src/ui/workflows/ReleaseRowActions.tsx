@@ -8,11 +8,13 @@ import {
   UI_BUTTON_VARIANT_DANGER,
   UI_BUTTON_VARIANT_OUTLINE,
   UI_BUTTON_VARIANT_OUTLINE_DANGER,
+  UI_BUTTON_VARIANT_OUTLINE_SECONDARY,
   UI_BUTTON_VARIANT_SECONDARY,
   UI_CLASS_MARGIN_BOTTOM_SMALL,
   UI_CLASS_TEXT_MUTED_SMALL_RESET,
   UI_RELEASE_ACTION_DELETE,
   UI_RELEASE_ACTION_DELETING,
+  UI_RELEASE_ACTION_DOWNLOAD,
   UI_RELEASE_ACTION_PROMOTE,
   UI_RELEASE_ACTION_PROMOTING,
   UI_RELEASE_CONFIRM_DELETE_BODY,
@@ -34,6 +36,7 @@ type ReleaseRowActionsProps = {
   releaseId: string
   releaseVersion: string
   releaseFileName: string
+  downloadUrl: string
   isPromoted: boolean
   allowPromote: boolean
   allowDelete: boolean
@@ -46,6 +49,7 @@ export function ReleaseRowActions({
   releaseId,
   releaseVersion,
   releaseFileName,
+  downloadUrl,
   isPromoted,
   allowPromote,
   allowDelete,
@@ -59,7 +63,7 @@ export function ReleaseRowActions({
   const showPromoteButton = allowPromote && !isPromoted
   const showDeleteButton = allowDelete
 
-  if (!showPromoteButton && !showDeleteButton) {
+  if (!showPromoteButton && !showDeleteButton && !downloadUrl) {
     return null
   }
 
@@ -83,6 +87,17 @@ export function ReleaseRowActions({
 
   return (
     <Stack direction="row" gap={UI_STACK_GAP_SMALL}>
+      {downloadUrl ? (
+        <Button
+          as="a"
+          variant={UI_BUTTON_VARIANT_OUTLINE_SECONDARY}
+          size={UI_SIZE_SMALL}
+          href={downloadUrl}
+          aria-label={`${UI_RELEASE_ACTION_DOWNLOAD} ${releaseVersion}`}
+        >
+          {UI_RELEASE_ACTION_DOWNLOAD}
+        </Button>
+      ) : null}
       {showPromoteButton ? (
         <Button
           variant={UI_BUTTON_VARIANT_OUTLINE}

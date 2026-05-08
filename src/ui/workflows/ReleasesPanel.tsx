@@ -45,6 +45,7 @@ import {
   UI_RELEASE_STATUS_ERROR_TITLE,
   UI_RELEASE_STATUS_LOADING_BODY,
   UI_RELEASE_STATUS_LOADING_TITLE,
+  UI_RELEASE_TENANT_FILTER_LABEL,
   UI_STACK_GAP_MEDIUM,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
@@ -67,6 +68,10 @@ export type ReleaseListItem = PluginRelease
 type ReleasesPanelProps = {
   client: Client
   releases: readonly ReleaseListItem[]
+  selectedTenantId: string
+  tenantOptions: readonly UiSelectOption[]
+  showTenantFilter: boolean
+  onTenantChange: (tenantId: string) => void
   selectedProductId: string
   productOptions: readonly UiSelectOption[]
   onProductChange: (productId: string) => void
@@ -90,6 +95,10 @@ type ReleasesPanelProps = {
 export function ReleasesPanel({
   client,
   releases,
+  selectedTenantId,
+  tenantOptions,
+  showTenantFilter,
+  onTenantChange,
   selectedProductId,
   productOptions,
   onProductChange,
@@ -126,6 +135,14 @@ export function ReleasesPanel({
     <TableToolbar
       start={
         <>
+          {showTenantFilter ? (
+            <TableFilter
+              label={UI_RELEASE_TENANT_FILTER_LABEL}
+              value={selectedTenantId}
+              options={tenantOptions}
+              onChange={onTenantChange}
+            />
+          ) : null}
           <TableFilter
             label={UI_RELEASE_PRODUCT_FILTER_LABEL}
             value={selectedProductId}
@@ -212,22 +229,20 @@ export function ReleasesPanel({
       {
         id: UI_RELEASE_COLUMN_ID_ACTIONS,
         header: UI_RELEASE_COLUMN_ACTIONS,
-        cell: (row) =>
-          allowPromote || allowDelete ? (
-            <ReleaseRowActions
-              client={client}
-              productId={selectedProductId}
-              releaseId={row.id}
-              releaseVersion={row.version}
-              releaseFileName={row.fileName}
-              isPromoted={Boolean(row.isPromoted)}
-              allowPromote={allowPromote}
-              allowDelete={allowDelete}
-              onCompleted={onRefresh}
-            />
-          ) : (
-            UI_VALUE_PLACEHOLDER
-          ),
+        cell: (row) => (
+          <ReleaseRowActions
+            client={client}
+            productId={selectedProductId}
+            releaseId={row.id}
+            releaseVersion={row.version}
+            releaseFileName={row.fileName}
+            downloadUrl={client.getReleaseDownloadUrl(selectedProductId, row.id)}
+            isPromoted={Boolean(row.isPromoted)}
+            allowPromote={allowPromote}
+            allowDelete={allowDelete}
+            onCompleted={onRefresh}
+          />
+        ),
       },
     ],
     [allowDelete, allowPromote, client, onRefresh, selectedProductId]

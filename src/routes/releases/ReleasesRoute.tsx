@@ -5,7 +5,7 @@ import type { PluginRelease } from '@/simpleLicense'
 import { useApiClient } from '../../api/apiContext'
 import { canDeleteRelease, isProductOwnedByUser, isVendorScopedUser } from '../../app/auth/permissions'
 import { useAuth } from '../../app/auth/useAuth'
-import { useAdminProducts, useAdminReleases } from '../../simpleLicense/hooks'
+import { useAdminProducts, useAdminReleases, useAdminTenants } from '../../simpleLicense/hooks'
 import {
   UI_PAGE_SUBTITLE_RELEASES,
   UI_PAGE_TITLE_RELEASES,
@@ -18,6 +18,7 @@ import {
   UI_RELEASE_FILTER_VALUE_ALL,
   UI_RELEASE_FILTER_VALUE_PRERELEASE,
   UI_RELEASE_FILTER_VALUE_STABLE,
+  UI_RELEASE_TENANT_FILTER_ALL,
   UI_SORT_DESC,
 } from '../../ui/constants'
 import { useDataTableState } from '../../ui/data/useDataTableState'
@@ -29,6 +30,7 @@ import type { ReleaseListItem } from '../../ui/workflows/ReleasesPanel'
 import { ReleasesPanel } from '../../ui/workflows/ReleasesPanel'
 
 type ReleaseFilters = {
+  tenantId: string
   productId: string
   channel: string
 }
@@ -37,19 +39,45 @@ export function ReleasesRouteComponent() {
   const client = useApiClient()
   const { user: currentUser } = useAuth()
   const { data: productsData } = useAdminProducts(client)
+  const { data: tenantsData } = useAdminTenants(client)
 
   const tableState = useTableState<ReleaseFilters>({
-    initialFilters: { productId: '', channel: UI_RELEASE_FILTER_VALUE_ALL },
+    initialFilters: { tenantId: '', productId: '', channel: UI_RELEASE_FILTER_VALUE_ALL },
   })
 
+  const selectedTenantId = tableState.filters.tenantId
   const selectedProductId = tableState.filters.productId
 
-  const productOptions = useMemo<UiSelectOption[]>(() => {
+  const visibleProducts = useMemo(() => {
     const list = Array.isArray(productsData) ? productsData : (productsData?.data ?? [])
-    const filtered =
-      currentUser && isVendorScopedUser(currentUser) ? list.filter((p) => isProductOwnedByUser(currentUser, p)) : list
-    return filtered.map((p) => ({ value: p.id, label: `${p.name} (${p.slug})` }))
+    return currentUser && isVendorScopedUser(currentUser)
+      ? list.filter((p) => isProductOwnedByUser(currentUser, p))
+      : list
   }, [productsData, currentUser])
+
+  const tenantMap = useMemo(() => {
+    const tenants = Array.isArray(tenantsData) ? tenantsData : (tenantsData?.data ?? [])
+    return new Map(tenants.map((tenant) => [tenant.id, tenant.name]))
+  }, [tenantsData])
+
+  const tenantOptions = useMemo<UiSelectOption[]>(() => {
+    const tenantIds = [...new Set(visibleProducts.map((product) => product.vendorId).filter(Boolean))]
+    const options = tenantIds.map((tenantId) => ({
+      value: tenantId,
+      label: tenantMap.get(tenantId) ?? tenantId,
+    }))
+    options.sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }))
+    return [{ value: '', label: UI_RELEASE_TENANT_FILTER_ALL }, ...options]
+  }, [tenantMap, visibleProducts])
+
+  const showTenantFilter = tenantOptions.length > 2
+
+  const productOptions = useMemo<UiSelectOption[]>(() => {
+    const filteredProducts = selectedTenantId
+      ? visibleProducts.filter((product) => product.vendorId === selectedTenantId)
+      : visibleProducts
+    return filteredProducts.map((product) => ({ value: product.id, label: `${product.name} (${product.slug})` }))
+  }, [selectedTenantId, visibleProducts])
 
   const {
     data: releasesData,
@@ -120,6 +148,12 @@ export function ReleasesRouteComponent() {
     releasesTable.goToPage(1)
   }
 
+  const handleTenantChange = (tenantId: string) => {
+    tableState.setFilter('tenantId', tenantId)
+    tableState.setFilter('productId', '')
+    releasesTable.goToPage(1)
+  }
+
   const handleChannelChange = (value: string) => {
     tableState.setFilter('channel', value)
     releasesTable.goToPage(1)
@@ -134,6 +168,10 @@ export function ReleasesRouteComponent() {
       <ReleasesPanel
         client={client}
         releases={releasesTable.rows}
+        selectedTenantId={selectedTenantId}
+        tenantOptions={tenantOptions}
+        showTenantFilter={showTenantFilter}
+        onTenantChange={handleTenantChange}
         selectedProductId={selectedProductId}
         productOptions={productOptions}
         onProductChange={handleProductChange}

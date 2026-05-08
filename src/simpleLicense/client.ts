@@ -688,6 +688,10 @@ export class Client {
     return this.handleApiResponse(response.data, { success: true, data: { id: releaseId } })
   }
 
+  getReleaseDownloadUrl(productId: string, releaseId: string): string {
+    return `${this.baseUrl}${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}/releases/${encodeURIComponent(releaseId)}/download`
+  }
+
   // Admin API - Product Tiers
   async listProductTiers(productId: string): Promise<ListProductTiersResponse> {
     const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}/tiers`
