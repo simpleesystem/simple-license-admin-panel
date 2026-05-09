@@ -78,6 +78,7 @@ export const UI_TABLE_DENSITY_COMFORTABLE = 'comfortable' as const
 export const UI_TABLE_DENSITY_SPACIOUS = 'spacious' as const
 export const UI_TABLE_PAGE_INITIAL = 1 as const
 export const UI_TABLE_PAGE_SIZE_DEFAULT = 10 as const
+export const UI_TABLE_SEARCH_LABEL = 'Search' as const
 export const UI_TABLE_SEARCH_PLACEHOLDER = 'Search' as const
 export const UI_TABLE_SEARCH_MAX_WIDTH = '300px' as const
 export const UI_TABLE_PAGINATION_PREVIOUS = 'Previous' as const

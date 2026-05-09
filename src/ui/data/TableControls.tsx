@@ -5,6 +5,7 @@ import { TableSearchInput } from './TableSearchInput'
 import { TableToolbar } from './TableToolbar'
 
 export type TableControlsSearch = {
+  label?: string
   value: string
   onChange: (value: string) => void
   placeholder?: string

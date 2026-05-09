@@ -33,6 +33,7 @@ import {
   UI_STACK_GAP_MEDIUM,
   UI_TABLE_FILTER_LABEL_STATUS,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
+  UI_TABLE_SEARCH_LABEL,
   UI_TABLE_SEARCH_PLACEHOLDER,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
@@ -135,6 +136,7 @@ export function LicenseManagementPanel({
           ? {
               value: searchTerm,
               onChange: onSearchChange,
+              label: UI_TABLE_SEARCH_LABEL,
               placeholder: UI_TABLE_SEARCH_PLACEHOLDER,
             }
           : undefined
