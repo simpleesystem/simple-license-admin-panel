@@ -120,4 +120,36 @@ describe('ProductTierFormFlow', () => {
     expect(onCompleted).not.toHaveBeenCalled()
     expect(onClose).not.toHaveBeenCalled()
   })
+
+  test('normalizes tier code before create mutation submit', async () => {
+    const createMutation = mockMutation()
+    const updateMutation = mockMutation()
+    useCreateProductTierMock.mockReturnValue(createMutation)
+    useUpdateProductTierMock.mockReturnValue(updateMutation)
+
+    const { getByRole } = render(
+      <ProductTierFormFlow
+        client={{} as never}
+        mode="create"
+        productId={buildText()}
+        show={true}
+        onClose={() => {}}
+        submitLabel={UI_PRODUCT_TIER_FORM_SUBMIT_CREATE}
+        defaultValues={{
+          tier_name: 'Pro',
+          tier_code: '  Pro Plan+Tier  ',
+        }}
+      />
+    )
+
+    fireEvent.click(getByRole('button', { name: UI_PRODUCT_TIER_FORM_SUBMIT_CREATE }))
+
+    await waitFor(() =>
+      expect(createMutation.mutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tier_code: 'pro-plan-tier',
+        })
+      )
+    )
+  })
 })

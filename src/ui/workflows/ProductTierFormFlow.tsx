@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react'
 import type { Client, CreateProductTierRequest, UpdateProductTierRequest } from '@/simpleLicense'
-import { useCreateProductTier, useUpdateProductTier } from '@/simpleLicense'
+import { ApiException, useCreateProductTier, useUpdateProductTier } from '@/simpleLicense'
 
 import type { MutationAdapter } from '../actions/mutationActions'
 import {
+  UI_PRODUCT_TIER_ERROR_INVALID_METADATA,
   UI_PRODUCT_TIER_FORM_PENDING_CREATE,
   UI_PRODUCT_TIER_FORM_PENDING_UPDATE,
   UI_PRODUCT_TIER_FORM_SUBMIT_CREATE,
@@ -71,6 +72,41 @@ const sanitizeNumber = (value: number | string | null | undefined): number | nul
   return Number.isNaN(num) ? undefined : num
 }
 
+const normalizeTierCode = (tierCode: string | undefined): string => {
+  if (!tierCode) {
+    return ''
+  }
+
+  return tierCode
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9_-]/g, '-')
+    .replace(/-+/g, '-')
+}
+
+const parseMetadata = (
+  metadataValue: string | undefined
+): Record<string, string | number | boolean | null> | undefined => {
+  const metadataStr = metadataValue?.trim()
+  if (!metadataStr) {
+    return undefined
+  }
+
+  try {
+    const parsed = JSON.parse(metadataStr)
+    if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+      return parsed as Record<string, string | number | boolean | null>
+    }
+    throw new ApiException(UI_PRODUCT_TIER_ERROR_INVALID_METADATA)
+  } catch (error) {
+    if (error instanceof ApiException) {
+      throw error
+    }
+    throw new ApiException(UI_PRODUCT_TIER_ERROR_INVALID_METADATA)
+  }
+}
+
 export function ProductTierFormFlow(props: ProductTierFormFlowProps) {
   if (props.mode === 'create') {
     return <ProductTierCreateFlow {...props} />
@@ -93,10 +129,11 @@ function ProductTierCreateFlow(props: ProductTierCreateProps) {
 
   const adapter: MutationAdapter<ProductTierFormValues> = {
     mutateAsync: async (values) => {
-      const metadataStr = values.metadata?.trim()
-      const metadata = metadataStr ? JSON.parse(metadataStr) : undefined
+      const normalizedTierCode = normalizeTierCode(values.tier_code)
+      const metadata = parseMetadata(values.metadata)
       const data: CreateProductTierRequest = {
         ...values,
+        tier_code: normalizedTierCode,
         max_activations: sanitizeNumber(values.max_activations),
         license_term_days: values.does_not_expire ? null : sanitizeNumber(values.license_term_days),
         metadata,
@@ -141,10 +178,11 @@ function ProductTierUpdateFlow(props: ProductTierUpdateProps) {
 
   const adapter: MutationAdapter<ProductTierFormValues> = {
     mutateAsync: async (values) => {
-      const metadataStr = values.metadata?.trim()
-      const metadata = metadataStr ? JSON.parse(metadataStr) : undefined
+      const normalizedTierCode = normalizeTierCode(values.tier_code)
+      const metadata = parseMetadata(values.metadata)
       const data: UpdateProductTierRequest = {
         ...values,
+        tier_code: normalizedTierCode,
         max_activations: sanitizeNumber(values.max_activations),
         license_term_days: values.does_not_expire ? null : sanitizeNumber(values.license_term_days),
         metadata,

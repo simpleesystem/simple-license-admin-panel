@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Alert from 'react-bootstrap/Alert'
+import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 
 import {
@@ -13,6 +14,9 @@ import type { NotificationVariant } from './constants'
 import {
   DEFAULT_NOTIFICATION_DURATION,
   DEFAULT_NOTIFICATION_POSITION,
+  NOTIFICATION_ALERT_MAX_WIDTH,
+  NOTIFICATION_DISMISS_RETRY_WHEN_MODAL_OPEN_MS,
+  NOTIFICATION_PORTAL_Z_INDEX,
   type ToastNotificationPayload,
 } from './constants'
 import { useNotificationBus } from './useNotificationBus'
@@ -49,6 +53,46 @@ export function NotificationBannerProvider() {
   const bus = useNotificationBus()
   const { t } = useTranslation()
   const [toasts, setToasts] = useState<ToastItem[]>([])
+  const timeoutMapRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
+
+  const clearRemovalTimer = useCallback((key: string) => {
+    const timerId = timeoutMapRef.current.get(key)
+    if (!timerId) {
+      return
+    }
+    clearTimeout(timerId)
+    timeoutMapRef.current.delete(key)
+  }, [])
+
+  const hasOpenModal = useCallback(() => {
+    if (typeof document === 'undefined') {
+      return false
+    }
+    return document.body.classList.contains('modal-open')
+  }, [])
+
+  const removeToast = useCallback(
+    (key: string) => {
+      clearRemovalTimer(key)
+      setToasts((prev) => prev.filter((item) => item.key !== key))
+    },
+    [clearRemovalTimer]
+  )
+
+  const scheduleRemoval = useCallback(
+    (key: string, delayMs: number) => {
+      clearRemovalTimer(key)
+      const timerId = setTimeout(() => {
+        if (hasOpenModal()) {
+          scheduleRemoval(key, NOTIFICATION_DISMISS_RETRY_WHEN_MODAL_OPEN_MS)
+          return
+        }
+        removeToast(key)
+      }, delayMs)
+      timeoutMapRef.current.set(key, timerId)
+    },
+    [clearRemovalTimer, hasOpenModal, removeToast]
+  )
 
   useEffect(() => {
     const handler = (payload: ToastNotificationPayload) => {
@@ -68,21 +112,19 @@ export function NotificationBannerProvider() {
         return [...prev, { ...payload, key }]
       })
 
-      setTimeout(() => {
-        setToasts((prev) => prev.filter((item) => item.key !== key))
-      }, DEFAULT_NOTIFICATION_DURATION)
+      scheduleRemoval(key, DEFAULT_NOTIFICATION_DURATION)
     }
 
     bus.on(NOTIFICATION_EVENT_TOAST, handler)
 
     return () => {
       bus.off(NOTIFICATION_EVENT_TOAST, handler)
+      for (const timerId of timeoutMapRef.current.values()) {
+        clearTimeout(timerId)
+      }
+      timeoutMapRef.current.clear()
     }
-  }, [bus])
-
-  const removeToast = useCallback((key: string) => {
-    setToasts((prev) => prev.filter((item) => item.key !== key))
-  }, [])
+  }, [bus, scheduleRemoval])
 
   const alignmentByPosition: Record<string, string> = {
     'top-left': 'justify-content-start',
@@ -93,13 +135,30 @@ export function NotificationBannerProvider() {
     'bottom-right': 'justify-content-end',
   }
   const bannerAlignmentClass = alignmentByPosition[String(DEFAULT_NOTIFICATION_POSITION)] ?? 'justify-content-end'
+  const verticalPositionClass = String(DEFAULT_NOTIFICATION_POSITION).startsWith('bottom')
+    ? 'bottom-0 pb-3'
+    : 'top-0 pt-3'
+  const portalContainerClass = useMemo(
+    () => `position-fixed start-0 end-0 px-3 ${verticalPositionClass}`,
+    [verticalPositionClass]
+  )
 
   if (toasts.length === 0) {
     return null
   }
 
-  return (
-    <div data-testid={TEST_ID_NOTIFICATION_PORTAL} aria-live="polite" aria-atomic="true" className="px-3 pt-3">
+  if (typeof document === 'undefined') {
+    return null
+  }
+
+  return createPortal(
+    <div
+      data-testid={TEST_ID_NOTIFICATION_PORTAL}
+      aria-live="polite"
+      aria-atomic="true"
+      className={portalContainerClass}
+      style={{ zIndex: NOTIFICATION_PORTAL_Z_INDEX }}
+    >
       <div className={`d-flex flex-column gap-2 ${bannerAlignmentClass}`}>
         {toasts.map((toast) => {
           const title = formatToastContent(toast.message, () => t(toast.titleKey))
@@ -111,7 +170,7 @@ export function NotificationBannerProvider() {
               dismissible={true}
               onClose={() => removeToast(toast.key)}
               className="mb-0"
-              style={{ maxWidth: '56rem', width: '100%' }}
+              style={{ maxWidth: NOTIFICATION_ALERT_MAX_WIDTH, width: '100%' }}
             >
               <div className="fw-semibold">{title}</div>
               {description ? <div className="small mt-1">{description}</div> : null}
@@ -119,6 +178,7 @@ export function NotificationBannerProvider() {
           )
         })}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

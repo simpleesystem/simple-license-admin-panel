@@ -1052,6 +1052,7 @@ export const UI_PRODUCT_TIER_STATUS_ERROR_BODY = 'Please try again after refresh
 export const UI_PRODUCT_TIER_TOAST_CREATE_SUCCESS = 'Tier created successfully' as const
 export const UI_PRODUCT_TIER_TOAST_UPDATE_SUCCESS = 'Tier updated successfully' as const
 export const UI_PRODUCT_TIER_TOAST_DELETE_SUCCESS = 'Tier deactivated successfully' as const
+export const UI_PRODUCT_TIER_ERROR_INVALID_METADATA = 'Metadata must be valid JSON.' as const
 
 export const UI_PRODUCT_TIER_CONFIRM_DELETE_TITLE = 'Delete tier?' as const
 export const UI_PRODUCT_TIER_CONFIRM_DELETE_BODY =

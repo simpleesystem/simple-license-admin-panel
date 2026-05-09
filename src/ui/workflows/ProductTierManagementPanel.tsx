@@ -8,6 +8,7 @@ import {
   isProductTierOwnedByUser,
   isVendorScopedUser,
 } from '../../app/auth/permissions'
+import { DEFAULT_NOTIFICATION_EVENT, I18N_KEY_APP_ERROR_TITLE, NOTIFICATION_VARIANT_ERROR } from '../../app/constants'
 import { useNotificationBus } from '../../notifications/useNotificationBus'
 import {
   UI_BUTTON_VARIANT_PRIMARY,
@@ -213,8 +214,18 @@ export function ProductTierManagementPanel({
     notifyProductTierSuccess(notificationBus, action)
   }
 
-  const handleMutationError = () => {
-    notifyCrudError(notificationBus)
+  const handleMutationError = (error: unknown) => {
+    const errorMessage = error instanceof Error ? error.message.trim() : ''
+    if (errorMessage.length === 0) {
+      notifyCrudError(notificationBus)
+      return
+    }
+
+    notificationBus.emit(DEFAULT_NOTIFICATION_EVENT, {
+      titleKey: I18N_KEY_APP_ERROR_TITLE,
+      variant: NOTIFICATION_VARIANT_ERROR,
+      message: errorMessage,
+    })
   }
 
   return (
