@@ -3,12 +3,7 @@ import type { License } from '@/simpleLicense'
 import { useAdminLicenses, useAdminProducts, useAdminTenants } from '@/simpleLicense'
 
 import { useApiClient } from '../../api/apiContext'
-import {
-  canViewLicenses,
-  isLicenseOwnedByUser,
-  isProductOwnedByUser,
-  isVendorScopedUser,
-} from '../../app/auth/permissions'
+import { canViewLicenses, isLicenseOwnedByUser } from '../../app/auth/permissions'
 import { useAuth } from '../../app/auth/useAuth'
 import { useLogger } from '../../app/logging/loggerContext'
 import {
@@ -35,9 +30,9 @@ import { RouteStatus } from '../../ui/feedback/RouteStatus'
 import { Page } from '../../ui/layout/Page'
 import { PageHeader } from '../../ui/layout/PageHeader'
 import type { UiSelectOption } from '../../ui/types'
-import { buildTenantNameMap, buildTenantOptions, getProductTenantId } from '../../ui/utils/tenantFilters'
 import type { LicenseListItem } from '../../ui/workflows/LicenseManagementPanel'
 import { LicenseManagementPanel } from '../../ui/workflows/LicenseManagementPanel'
+import { useTenantScopedProducts } from '../shared/useTenantScopedProducts'
 
 type LicenseFilters = {
   status: string
@@ -52,7 +47,6 @@ export function LicensesRouteComponent() {
   const { data, isLoading, isError, refetch } = useAdminLicenses(client)
   const { data: productsData } = useAdminProducts(client)
   const { data: tenantsData } = useAdminTenants(client)
-  const isVendorScoped = isVendorScopedUser(currentUser)
   const tableState = useTableState<LicenseFilters>({
     initialFilters: {
       status: '',
@@ -63,6 +57,14 @@ export function LicensesRouteComponent() {
   const selectedTenantId = tableState.filters.tenantId
   const selectedProductSlug = tableState.filters.productSlug
   const [tierOptions, setTierOptions] = useState<{ value: string; label: string }[]>([])
+
+  const { filteredProducts, isVendorScoped, tenantOptions, showTenantFilter } = useTenantScopedProducts({
+    currentUser,
+    products: productsData,
+    tenants: tenantsData,
+    selectedTenantId,
+    allOptionLabel: UI_TENANT_FILTER_ALL,
+  })
 
   useEffect(() => {
     const fetchTiers = async () => {
@@ -102,37 +104,11 @@ export function LicensesRouteComponent() {
     void fetchTiers()
   }, [client, productsData, logger])
 
-  const visibleProducts = useMemo(() => {
-    const list = Array.isArray(productsData) ? productsData : (productsData?.data ?? [])
-    return currentUser && isVendorScoped ? list.filter((p) => isProductOwnedByUser(currentUser, p)) : list
-  }, [productsData, currentUser, isVendorScoped])
-
-  const tenantMap = useMemo(() => {
-    const tenants = Array.isArray(tenantsData) ? tenantsData : (tenantsData?.data ?? [])
-    return buildTenantNameMap(tenants)
-  }, [tenantsData])
-
-  const tenantOptions = useMemo<UiSelectOption[]>(() => {
-    const tenants = Array.isArray(tenantsData) ? tenantsData : (tenantsData?.data ?? [])
-    return buildTenantOptions({
-      tenants,
-      products: visibleProducts,
-      tenantMap,
-      isVendorScoped,
-      allOptionLabel: UI_TENANT_FILTER_ALL,
-    })
-  }, [tenantsData, visibleProducts, tenantMap, isVendorScoped])
-
-  const showTenantFilter = tenantOptions.filter((option) => option.value !== '').length > 1
-
   const filteredProductOptions = useMemo<UiSelectOption[]>(() => {
-    const products = selectedTenantId
-      ? visibleProducts.filter((product) => getProductTenantId(product) === selectedTenantId)
-      : visibleProducts
-    const options = products.map((product) => ({ value: product.slug, label: product.name }))
+    const options = filteredProducts.map((product) => ({ value: product.slug, label: product.name }))
     options.sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }))
     return [{ value: '', label: UI_LICENSE_PRODUCT_FILTER_LABEL }, ...options]
-  }, [selectedTenantId, visibleProducts])
+  }, [filteredProducts])
 
   const visibleLicenses = useMemo<LicenseListItem[]>(() => {
     let list = Array.isArray(data) ? (data as LicenseListItem[]) : ((data?.data as LicenseListItem[]) ?? [])

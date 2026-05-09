@@ -1,9 +1,8 @@
 import { useCallback, useMemo } from 'react'
-import type { Product } from '@/simpleLicense'
 import { useAdminProducts, useAdminTenants } from '@/simpleLicense'
 
 import { useApiClient } from '../../api/apiContext'
-import { canViewProducts, isProductOwnedByUser, isVendorScopedUser } from '../../app/auth/permissions'
+import { canViewProducts } from '../../app/auth/permissions'
 import { useAuth } from '../../app/auth/useAuth'
 import {
   UI_PAGE_SUBTITLE_PRODUCTS,
@@ -27,9 +26,10 @@ import { RouteStatus } from '../../ui/feedback/RouteStatus'
 import { Page } from '../../ui/layout/Page'
 import { PageHeader } from '../../ui/layout/PageHeader'
 import type { UiSelectOption } from '../../ui/types'
-import { buildTenantNameMap, buildTenantOptions, getProductTenantId } from '../../ui/utils/tenantFilters'
+import { buildTenantNameMap } from '../../ui/utils/tenantFilters'
 import type { ProductListItem } from '../../ui/workflows/ProductManagementPanel'
 import { ProductManagementPanel } from '../../ui/workflows/ProductManagementPanel'
+import { useTenantScopedProducts } from '../shared/useTenantScopedProducts'
 
 type ProductFilters = {
   status: string
@@ -50,12 +50,12 @@ export function ProductsRouteComponent() {
 
   const selectedTenantId = tableState.filters.tenantId
 
-  const visibleProducts = useMemo<ProductListItem[]>(() => {
+  const mappedProducts = useMemo<ProductListItem[]>(() => {
     const list = Array.isArray(data) ? data : (data?.data ?? [])
     const tenants = Array.isArray(tenantsData) ? tenantsData : (tenantsData?.data ?? [])
     const tenantMap = buildTenantNameMap(tenants)
 
-    let mapped = list.map<ProductListItem>((product) => ({
+    return list.map<ProductListItem>((product) => ({
       id: product.id,
       name: product.name,
       slug: product.slug,
@@ -64,39 +64,15 @@ export function ProductsRouteComponent() {
       vendorId: product.vendorId,
       vendorName: tenantMap.get(product.vendorId),
     }))
+  }, [data, tenantsData])
 
-    if (isVendorScopedUser(currentUser)) {
-      mapped = mapped.filter((product) => isProductOwnedByUser(currentUser, product as unknown as Product))
-    }
-
-    return mapped
-  }, [currentUser, data, tenantsData])
-
-  const tenantMap = useMemo(() => {
-    const tenants = Array.isArray(tenantsData) ? tenantsData : (tenantsData?.data ?? [])
-    return buildTenantNameMap(tenants)
-  }, [tenantsData])
-
-  const tenantOptions = useMemo<UiSelectOption[]>(() => {
-    const tenants = Array.isArray(tenantsData) ? tenantsData : (tenantsData?.data ?? [])
-    return buildTenantOptions({
-      tenants,
-      products: visibleProducts,
-      tenantMap,
-      isVendorScoped: isVendorScopedUser(currentUser),
-      allOptionLabel: UI_TENANT_FILTER_ALL,
-    })
-  }, [currentUser, tenantMap, tenantsData, visibleProducts])
-
-  const showTenantFilter = tenantOptions.filter((option) => option.value !== '').length > 1
-
-  const filteredProducts = useMemo(
-    () =>
-      selectedTenantId
-        ? visibleProducts.filter((product) => getProductTenantId(product) === selectedTenantId)
-        : visibleProducts,
-    [selectedTenantId, visibleProducts]
-  )
+  const { filteredProducts, tenantOptions, showTenantFilter } = useTenantScopedProducts({
+    currentUser,
+    products: mappedProducts,
+    tenants: tenantsData,
+    selectedTenantId,
+    allOptionLabel: UI_TENANT_FILTER_ALL,
+  })
 
   const vendorOptions = useMemo<UiSelectOption[]>(() => {
     const tenants = Array.isArray(tenantsData) ? tenantsData : (tenantsData?.data ?? [])

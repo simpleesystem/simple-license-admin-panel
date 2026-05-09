@@ -1,12 +1,12 @@
 import type { UiSelectOption } from '../types'
 
-type TenantRecord = {
+export type TenantRecord = {
   id: string
   name: string
   vendorId?: string | null
 }
 
-type ProductRecord = {
+export type ProductRecord = {
   vendorId?: string
   vendor_id?: unknown
 }
