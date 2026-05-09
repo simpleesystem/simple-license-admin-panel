@@ -39,6 +39,7 @@ import { TableControls } from '../data/TableControls'
 import { TableFilter } from '../data/TableFilter'
 import { TablePaginationFooter } from '../data/TablePaginationFooter'
 import { TenantFilterControl } from '../data/TenantFilterControl'
+import { createTableFilterField, createTableSearchField } from '../data/tableFieldFactory'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
@@ -124,12 +125,12 @@ export function ProductManagementPanel({
     <TableControls
       search={
         onSearchChange
-          ? {
+          ? createTableSearchField({
+              label: UI_TABLE_SEARCH_LABEL,
               value: searchTerm,
               onChange: onSearchChange,
-              label: UI_TABLE_SEARCH_LABEL,
               placeholder: UI_TABLE_SEARCH_PLACEHOLDER,
-            }
+            })
           : undefined
       }
       filters={
@@ -142,11 +143,13 @@ export function ProductManagementPanel({
           />
           {onStatusFilterChange ? (
             <TableFilter
-              label={UI_PRODUCT_COLUMN_HEADER_STATUS}
-              value={statusFilter ?? ''}
-              options={statusOptions}
-              onChange={onStatusFilterChange}
-              placeholder={UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES}
+              {...createTableFilterField({
+                label: UI_PRODUCT_COLUMN_HEADER_STATUS,
+                value: statusFilter ?? '',
+                options: statusOptions,
+                onChange: onStatusFilterChange,
+                placeholder: UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
+              })}
             />
           ) : null}
         </>

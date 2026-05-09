@@ -42,6 +42,7 @@ import { TableControls } from '../data/TableControls'
 import { TableFilter } from '../data/TableFilter'
 import { TablePaginationFooter } from '../data/TablePaginationFooter'
 import { TenantFilterControl } from '../data/TenantFilterControl'
+import { createTableFilterField, createTableSearchField } from '../data/tableFieldFactory'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
 import { LicenseFormFlow } from './LicenseFormFlow'
@@ -133,12 +134,12 @@ export function LicenseManagementPanel({
     <TableControls
       search={
         onSearchChange
-          ? {
+          ? createTableSearchField({
+              label: UI_TABLE_SEARCH_LABEL,
               value: searchTerm,
               onChange: onSearchChange,
-              label: UI_TABLE_SEARCH_LABEL,
               placeholder: UI_TABLE_SEARCH_PLACEHOLDER,
-            }
+            })
           : undefined
       }
       filters={
@@ -151,19 +152,23 @@ export function LicenseManagementPanel({
           />
           {onProductFilterChange ? (
             <TableFilter
-              label={UI_LICENSE_PRODUCT_FILTER_LABEL}
-              value={selectedProductSlug}
-              options={productOptions}
-              onChange={onProductFilterChange}
+              {...createTableFilterField({
+                label: UI_LICENSE_PRODUCT_FILTER_LABEL,
+                value: selectedProductSlug,
+                options: productOptions,
+                onChange: onProductFilterChange,
+              })}
             />
           ) : null}
           {onStatusFilterChange ? (
             <TableFilter
-              label={UI_TABLE_FILTER_LABEL_STATUS}
-              value={statusFilter ?? ''}
-              options={statusOptions}
-              onChange={onStatusFilterChange}
-              placeholder={UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES}
+              {...createTableFilterField({
+                label: UI_TABLE_FILTER_LABEL_STATUS,
+                value: statusFilter ?? '',
+                options: statusOptions,
+                onChange: onStatusFilterChange,
+                placeholder: UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
+              })}
             />
           ) : null}
         </>

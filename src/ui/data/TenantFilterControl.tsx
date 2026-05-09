@@ -1,6 +1,7 @@
 import { UI_TENANT_FILTER_LABEL } from '../constants'
 import type { UiSelectOption } from '../types'
 import { TableFilter } from './TableFilter'
+import { createTableFilterField } from './tableFieldFactory'
 
 type TenantFilterControlProps = {
   show: boolean
@@ -15,5 +16,14 @@ export function TenantFilterControl({ show, value, options, onChange, label }: T
     return null
   }
 
-  return <TableFilter label={label ?? UI_TENANT_FILTER_LABEL} value={value} options={options} onChange={onChange} />
+  return (
+    <TableFilter
+      {...createTableFilterField({
+        label: label ?? UI_TENANT_FILTER_LABEL,
+        value,
+        options,
+        onChange,
+      })}
+    />
+  )
 }

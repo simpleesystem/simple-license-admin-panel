@@ -13,6 +13,7 @@ import {
   UI_TABLE_FILTER_PLACEHOLDER_ALL_ROLES,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_VENDORS,
+  UI_TABLE_SEARCH_LABEL,
   UI_TABLE_SEARCH_PLACEHOLDER,
   UI_USER_BUTTON_CREATE,
   UI_USER_COLUMN_HEADER_ACTIONS,
@@ -59,6 +60,7 @@ import { DataTable } from '../data/DataTable'
 import { TableControls } from '../data/TableControls'
 import { TableFilter } from '../data/TableFilter'
 import { TablePaginationFooter } from '../data/TablePaginationFooter'
+import { createTableFilterField, createTableSearchField } from '../data/tableFieldFactory'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
 import { notifyCrudError, notifyUserSuccess } from './notifications'
@@ -154,35 +156,45 @@ export function UserManagementPanel({
 
   const toolbar = (
     <TableControls
-      search={{
+      search={createTableSearchField({
+        label: UI_TABLE_SEARCH_LABEL,
         value: searchTerm,
         onChange: onSearchChange,
         placeholder: UI_TABLE_SEARCH_PLACEHOLDER,
-      }}
+      })}
       filters={
         <>
           {onRoleFilterChange ? (
             <TableFilter
-              value={roleFilter}
-              options={roleOptions}
-              onChange={onRoleFilterChange}
-              placeholder={UI_TABLE_FILTER_PLACEHOLDER_ALL_ROLES}
+              {...createTableFilterField({
+                label: UI_TABLE_FILTER_LABEL_ROLE,
+                value: roleFilter,
+                options: roleOptions,
+                onChange: onRoleFilterChange,
+                placeholder: UI_TABLE_FILTER_PLACEHOLDER_ALL_ROLES,
+              })}
             />
           ) : null}
           {onStatusFilterChange ? (
             <TableFilter
-              value={statusFilter}
-              options={statusOptions}
-              onChange={onStatusFilterChange}
-              placeholder={UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES}
+              {...createTableFilterField({
+                label: UI_TABLE_FILTER_LABEL_STATUS,
+                value: statusFilter,
+                options: statusOptions,
+                onChange: onStatusFilterChange,
+                placeholder: UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
+              })}
             />
           ) : null}
           {onVendorFilterChange && currentUser?.role !== UI_USER_ROLE_VENDOR_MANAGER ? (
             <TableFilter
-              value={vendorFilter}
-              options={vendorOptions}
-              onChange={onVendorFilterChange}
-              placeholder={UI_TABLE_FILTER_PLACEHOLDER_ALL_VENDORS}
+              {...createTableFilterField({
+                label: UI_USER_COLUMN_HEADER_VENDOR,
+                value: vendorFilter,
+                options: vendorOptions,
+                onChange: onVendorFilterChange,
+                placeholder: UI_TABLE_FILTER_PLACEHOLDER_ALL_VENDORS,
+              })}
             />
           ) : null}
         </>

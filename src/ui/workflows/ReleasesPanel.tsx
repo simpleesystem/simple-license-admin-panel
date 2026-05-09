@@ -72,6 +72,7 @@ import { TablePaginationFooter } from '../data/TablePaginationFooter'
 import { TableSearchInput } from '../data/TableSearchInput'
 import { TableToolbar } from '../data/TableToolbar'
 import { TenantFilterControl } from '../data/TenantFilterControl'
+import { createTableFilterField, createTableSearchField } from '../data/tableFieldFactory'
 import { RouteStatus } from '../feedback/RouteStatus'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
@@ -167,24 +168,30 @@ export function ReleasesPanel({
             onChange={onTenantChange}
           />
           <TableFilter
-            label={UI_RELEASE_PRODUCT_FILTER_LABEL}
-            value={selectedProductId}
-            options={productFilterOptions}
-            onChange={onProductChange}
+            {...createTableFilterField({
+              label: UI_RELEASE_PRODUCT_FILTER_LABEL,
+              value: selectedProductId,
+              options: productFilterOptions,
+              onChange: onProductChange,
+            })}
           />
           <TableSearchInput
-            label={UI_RELEASE_SEARCH_LABEL}
-            value={searchTerm}
-            onChange={onSearchChange}
-            placeholder={UI_RELEASE_SEARCH_PLACEHOLDER}
-            disabled={!selectedProductId}
+            {...createTableSearchField({
+              label: UI_RELEASE_SEARCH_LABEL,
+              value: searchTerm,
+              onChange: onSearchChange,
+              placeholder: UI_RELEASE_SEARCH_PLACEHOLDER,
+              disabled: !selectedProductId,
+            })}
           />
           <TableFilter
-            label={UI_RELEASE_CHANNEL_FILTER_LABEL}
-            value={channelFilter}
-            options={channelOptions}
-            onChange={onChannelFilterChange}
-            disabled={!selectedProductId}
+            {...createTableFilterField({
+              label: UI_RELEASE_CHANNEL_FILTER_LABEL,
+              value: channelFilter,
+              options: channelOptions,
+              onChange: onChannelFilterChange,
+              disabled: !selectedProductId,
+            })}
           />
         </>
       }
