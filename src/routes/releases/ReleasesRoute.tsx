@@ -28,6 +28,7 @@ import { PageHeader } from '../../ui/layout/PageHeader'
 import type { UiSelectOption } from '../../ui/types'
 import type { ReleaseListItem } from '../../ui/workflows/ReleasesPanel'
 import { ReleasesPanel } from '../../ui/workflows/ReleasesPanel'
+import { usePagedFilters } from '../shared/usePagedFilters'
 import { useTenantScopedProducts } from '../shared/useTenantScopedProducts'
 
 type ReleaseFilters = {
@@ -120,25 +121,25 @@ export function ReleasesRouteComponent() {
   const allowCreate = Boolean(selectedProductId)
   const allowPromote = Boolean(selectedProductId)
   const allowDelete = currentUser ? canDeleteRelease(currentUser) : false
+  const { setFilterAndReset, setFiltersAndReset } = usePagedFilters<ReleaseFilters>(
+    tableState.setFilter,
+    releasesTable.goToPage
+  )
 
   const handleRefresh = () => {
     void refetchReleases()
   }
 
   const handleProductChange = (productId: string) => {
-    tableState.setFilter('productId', productId)
-    releasesTable.goToPage(1)
+    setFilterAndReset('productId', productId)
   }
 
   const handleTenantChange = (tenantId: string) => {
-    tableState.setFilter('tenantId', tenantId)
-    tableState.setFilter('productId', '')
-    releasesTable.goToPage(1)
+    setFiltersAndReset({ tenantId, productId: '' })
   }
 
   const handleChannelChange = (value: string) => {
-    tableState.setFilter('channel', value)
-    releasesTable.goToPage(1)
+    setFilterAndReset('channel', value)
   }
 
   const showLoading = Boolean(selectedProductId) && releasesLoading

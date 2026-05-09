@@ -32,6 +32,7 @@ import { PageHeader } from '../../ui/layout/PageHeader'
 import type { UiSelectOption } from '../../ui/types'
 import type { LicenseListItem } from '../../ui/workflows/LicenseManagementPanel'
 import { LicenseManagementPanel } from '../../ui/workflows/LicenseManagementPanel'
+import { usePagedFilters } from '../shared/usePagedFilters'
 import { useTenantScopedProducts } from '../shared/useTenantScopedProducts'
 
 type LicenseFilters = {
@@ -172,6 +173,10 @@ export function LicensesRouteComponent() {
   })
 
   const canView = canViewLicenses(currentUser ?? null)
+  const { setFilterAndReset, setFiltersAndReset } = usePagedFilters<LicenseFilters>(
+    tableState.setFilter,
+    licenseTable.goToPage
+  )
 
   const handleRefresh = () => {
     void refetch()
@@ -201,23 +206,13 @@ export function LicensesRouteComponent() {
           searchTerm={licenseTable.searchTerm}
           onSearchChange={licenseTable.setSearchTerm}
           statusFilter={tableState.filters.status}
-          onStatusFilterChange={(value) => {
-            tableState.setFilter('status', value)
-            licenseTable.goToPage(1)
-          }}
+          onStatusFilterChange={(value) => setFilterAndReset('status', value)}
           selectedTenantId={selectedTenantId}
           tenantOptions={tenantOptions}
           showTenantFilter={showTenantFilter}
-          onTenantFilterChange={(value) => {
-            tableState.setFilter('tenantId', value)
-            tableState.setFilter('productSlug', '')
-            licenseTable.goToPage(1)
-          }}
+          onTenantFilterChange={(value) => setFiltersAndReset({ tenantId: value, productSlug: '' })}
           selectedProductSlug={selectedProductSlug}
-          onProductFilterChange={(value) => {
-            tableState.setFilter('productSlug', value)
-            licenseTable.goToPage(1)
-          }}
+          onProductFilterChange={(value) => setFilterAndReset('productSlug', value)}
           page={licenseTable.page}
           totalPages={licenseTable.totalPages}
           onPageChange={licenseTable.goToPage}

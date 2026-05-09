@@ -29,6 +29,7 @@ import type { UiSelectOption } from '../../ui/types'
 import { buildTenantNameMap } from '../../ui/utils/tenantFilters'
 import type { ProductListItem } from '../../ui/workflows/ProductManagementPanel'
 import { ProductManagementPanel } from '../../ui/workflows/ProductManagementPanel'
+import { usePagedFilters } from '../shared/usePagedFilters'
 import { useTenantScopedProducts } from '../shared/useTenantScopedProducts'
 
 type ProductFilters = {
@@ -119,6 +120,7 @@ export function ProductsRouteComponent() {
   })
 
   const canView = canViewProducts(currentUser)
+  const { setFilterAndReset } = usePagedFilters<ProductFilters>(tableState.setFilter, productTable.goToPage)
 
   const handleRefresh = () => {
     void refetch()
@@ -148,18 +150,12 @@ export function ProductsRouteComponent() {
           selectedTenantId={selectedTenantId}
           tenantOptions={tenantOptions}
           showTenantFilter={showTenantFilter}
-          onTenantFilterChange={(value) => {
-            tableState.setFilter('tenantId', value)
-            productTable.goToPage(1)
-          }}
+          onTenantFilterChange={(value) => setFilterAndReset('tenantId', value)}
           onRefresh={handleRefresh}
           searchTerm={productTable.searchTerm}
           onSearchChange={productTable.setSearchTerm}
           statusFilter={tableState.filters.status}
-          onStatusFilterChange={(value) => {
-            tableState.setFilter('status', value)
-            productTable.goToPage(1)
-          }}
+          onStatusFilterChange={(value) => setFilterAndReset('status', value)}
           page={productTable.page}
           totalPages={productTable.totalPages}
           onPageChange={productTable.goToPage}
