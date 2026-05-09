@@ -221,8 +221,8 @@ describe('ProductTierManagementExample', () => {
     useCreateProductTierMock.mockReturnValue(createMutation)
     useUpdateProductTierMock.mockReturnValue(updateMutation)
     const ownVendorId = 'vendor-1'
-    const ownTier = buildProductTier({ vendorId: ownVendorId })
-    const otherTier = buildProductTier({ vendorId: 'vendor-2' })
+    const ownTier = buildProductTier({ vendorId: ownVendorId, tierName: 'Own Vendor Tier' })
+    const otherTier = buildProductTier({ vendorId: 'vendor-2', tierName: 'Other Vendor Tier' })
     const vendorUser = buildUser({ role: 'VIEWER', vendorId: ownVendorId })
 
     const { getByText, queryByText } = renderWithProviders(

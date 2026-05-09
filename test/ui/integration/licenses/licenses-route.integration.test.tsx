@@ -168,7 +168,7 @@ describe('LicensesRouteComponent', () => {
       expect(screen.getByText('suspended@example.com')).toBeInTheDocument()
     })
 
-    const statusFilter = screen.getByLabelText(/status/i)
+    const statusFilter = screen.getByRole('combobox', { name: /filter by status/i })
     fireEvent.change(statusFilter, { target: { value: 'ACTIVE' } })
 
     // Wait for filter to apply - active license should still be visible
