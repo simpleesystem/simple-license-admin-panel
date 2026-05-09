@@ -65,6 +65,7 @@ type ProductManagementPanelProps = {
   tenantOptions?: readonly UiSelectOption[]
   showTenantFilter?: boolean
   onTenantFilterChange?: (tenantId: string) => void
+  showPanelHeader?: boolean
   onRefresh?: () => void
   page: number
   totalPages: number
@@ -86,6 +87,7 @@ export function ProductManagementPanel({
   tenantOptions = [],
   showTenantFilter = false,
   onTenantFilterChange,
+  showPanelHeader = true,
   onRefresh,
   page,
   totalPages,
@@ -221,7 +223,9 @@ export function ProductManagementPanel({
 
   return (
     <Stack direction="column" gap={UI_STACK_GAP_MEDIUM}>
-      <PanelHeader title={UI_PRODUCT_PANEL_TITLE} description={UI_PRODUCT_PANEL_DESCRIPTION} />
+      {showPanelHeader ? (
+        <PanelHeader title={UI_PRODUCT_PANEL_TITLE} description={UI_PRODUCT_PANEL_DESCRIPTION} />
+      ) : null}
 
       <DataTable
         data={canView ? visibleProducts : []}

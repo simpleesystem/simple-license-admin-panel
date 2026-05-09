@@ -106,6 +106,7 @@ type ReleasesPanelProps = {
   allowCreate: boolean
   allowPromote: boolean
   allowDelete: boolean
+  showPanelHeader?: boolean
   releasesLoading?: boolean
   releasesError?: boolean
   onRefresh?: () => void
@@ -133,6 +134,7 @@ export function ReleasesPanel({
   allowCreate,
   allowPromote,
   allowDelete,
+  showPanelHeader = true,
   releasesLoading,
   releasesError,
   onRefresh,
@@ -333,7 +335,9 @@ export function ReleasesPanel({
 
   return (
     <Stack direction="column" gap={UI_STACK_GAP_MEDIUM}>
-      <PanelHeader title={UI_RELEASE_PANEL_TITLE} description={UI_RELEASE_PANEL_DESCRIPTION} />
+      {showPanelHeader ? (
+        <PanelHeader title={UI_RELEASE_PANEL_TITLE} description={UI_RELEASE_PANEL_DESCRIPTION} />
+      ) : null}
       <DataTable
         data={selectedProductId && !releasesError ? releases : []}
         columns={columns}

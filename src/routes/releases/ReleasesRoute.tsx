@@ -151,6 +151,7 @@ export function ReleasesRouteComponent() {
       <ReleasesPanel
         client={client}
         releases={releasesTable.rows}
+        showPanelHeader={false}
         selectedTenantId={selectedTenantId}
         tenantOptions={tenantOptions}
         showTenantFilter={showTenantFilter}

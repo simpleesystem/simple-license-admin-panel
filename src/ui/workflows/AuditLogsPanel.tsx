@@ -83,6 +83,7 @@ type AuditLogsPanelProps = {
   title?: string
   initialFilters?: AuditLogFilters
   pageSize?: number
+  showPanelHeader?: boolean
 }
 
 type AuditLogRow = AuditLogEntry
@@ -207,6 +208,7 @@ export function AuditLogsPanel({
   title = UI_AUDIT_LOGS_TITLE,
   initialFilters,
   pageSize = UI_AUDIT_LOGS_DEFAULT_LIMIT,
+  showPanelHeader = true,
 }: AuditLogsPanelProps) {
   const [filters, setFilters] = useState<AuditLogFilters>(initialFilters ?? {})
   const [formState, setFormState] = useState<AuditLogFilters>(initialFilters ?? {})
@@ -327,7 +329,7 @@ export function AuditLogsPanel({
   if (auditLogsQuery.isLoading) {
     return (
       <Stack direction="column" gap={UI_STACK_GAP_MEDIUM} className={UI_AUDIT_LOGS_PANEL_CLASS}>
-        <PanelHeader title={title} description={panelDescription} />
+        {showPanelHeader ? <PanelHeader title={title} description={panelDescription} /> : null}
         <InlineAlert variant={UI_ALERT_VARIANT_INFO} title={UI_AUDIT_LOGS_LOADING_TITLE}>
           {UI_AUDIT_LOGS_LOADING_BODY}
         </InlineAlert>
@@ -338,7 +340,7 @@ export function AuditLogsPanel({
   if (auditLogsQuery.isError) {
     return (
       <Stack direction="column" gap={UI_STACK_GAP_MEDIUM} className={UI_AUDIT_LOGS_PANEL_CLASS}>
-        <PanelHeader title={title} description={panelDescription} />
+        {showPanelHeader ? <PanelHeader title={title} description={panelDescription} /> : null}
         <InlineAlert variant={UI_ALERT_VARIANT_DANGER} title={UI_AUDIT_LOGS_ERROR_TITLE}>
           {UI_AUDIT_LOGS_ERROR_BODY}
         </InlineAlert>
@@ -385,7 +387,7 @@ export function AuditLogsPanel({
 
   return (
     <Stack direction="column" gap={UI_STACK_GAP_MEDIUM} className={UI_AUDIT_LOGS_PANEL_CLASS}>
-      <PanelHeader title={title} description={panelDescription} />
+      {showPanelHeader ? <PanelHeader title={title} description={panelDescription} /> : null}
 
       <DataTable
         data={rows}

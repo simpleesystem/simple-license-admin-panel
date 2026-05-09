@@ -103,6 +103,7 @@ export function TenantsRouteComponent() {
           client={client}
           tenants={tenantTable.rows}
           currentUser={currentUser ?? undefined}
+          showPanelHeader={false}
           onRefresh={handleRefresh}
           searchTerm={tenantTable.searchTerm}
           onSearchChange={tenantTable.setSearchTerm}

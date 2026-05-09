@@ -146,6 +146,7 @@ export function ProductsRouteComponent() {
           client={client}
           products={productTable.rows}
           currentUser={currentUser ?? undefined}
+          showPanelHeader={false}
           vendorOptions={vendorOptions}
           selectedTenantId={selectedTenantId}
           tenantOptions={tenantOptions}

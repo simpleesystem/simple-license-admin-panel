@@ -53,6 +53,7 @@ type TenantManagementPanelProps = {
   client: Client
   tenants: readonly TenantListItem[]
   currentUser?: User | null
+  showPanelHeader?: boolean
   onRefresh?: () => void
   page: number
   totalPages: number
@@ -69,6 +70,7 @@ export function TenantManagementPanel({
   client,
   tenants,
   currentUser,
+  showPanelHeader = true,
   onRefresh,
   page,
   totalPages,
@@ -184,7 +186,7 @@ export function TenantManagementPanel({
 
   return (
     <Stack direction="column" gap={UI_STACK_GAP_MEDIUM}>
-      <PanelHeader title={UI_TENANT_PANEL_TITLE} description={UI_TENANT_PANEL_DESCRIPTION} />
+      {showPanelHeader ? <PanelHeader title={UI_TENANT_PANEL_TITLE} description={UI_TENANT_PANEL_DESCRIPTION} /> : null}
 
       <DataTable
         data={canView ? visibleTenants : []}

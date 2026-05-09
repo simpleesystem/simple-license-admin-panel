@@ -10,16 +10,10 @@ type TenantFilterControlProps = {
   label?: string
 }
 
-export function TenantFilterControl({
-  show,
-  value,
-  options,
-  onChange,
-  label = UI_TENANT_FILTER_LABEL,
-}: TenantFilterControlProps) {
+export function TenantFilterControl({ show, value, options, onChange, label }: TenantFilterControlProps) {
   if (!show || !onChange) {
     return null
   }
 
-  return <TableFilter label={label} value={value} options={options} onChange={onChange} />
+  return <TableFilter label={label ?? UI_TENANT_FILTER_LABEL} value={value} options={options} onChange={onChange} />
 }

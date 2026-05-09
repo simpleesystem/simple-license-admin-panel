@@ -10,7 +10,7 @@ export function AuditRouteComponent() {
   return (
     <Page variant={UI_PAGE_VARIANT_FULL_WIDTH}>
       <PageHeader title={UI_PAGE_TITLE_AUDIT} subtitle={UI_PAGE_SUBTITLE_AUDIT} />
-      <AuditLogsPanel client={client} />
+      <AuditLogsPanel client={client} showPanelHeader={false} />
     </Page>
   )
 }
