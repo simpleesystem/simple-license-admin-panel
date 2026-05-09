@@ -62,8 +62,8 @@ import {
   UI_RELEASE_STATUS_ERROR_TITLE,
   UI_RELEASE_STATUS_LOADING_BODY,
   UI_RELEASE_STATUS_LOADING_TITLE,
-  UI_RELEASE_TENANT_FILTER_LABEL,
   UI_STACK_GAP_MEDIUM,
+  UI_TENANT_FILTER_LABEL,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
@@ -71,6 +71,7 @@ import { TableFilter } from '../data/TableFilter'
 import { TablePaginationFooter } from '../data/TablePaginationFooter'
 import { TableSearchInput } from '../data/TableSearchInput'
 import { TableToolbar } from '../data/TableToolbar'
+import { TenantFilterControl } from '../data/TenantFilterControl'
 import { RouteStatus } from '../feedback/RouteStatus'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
@@ -156,14 +157,13 @@ export function ReleasesPanel({
     <TableToolbar
       start={
         <>
-          {showTenantFilter ? (
-            <TableFilter
-              label={UI_RELEASE_TENANT_FILTER_LABEL}
-              value={selectedTenantId}
-              options={tenantOptions}
-              onChange={onTenantChange}
-            />
-          ) : null}
+          <TenantFilterControl
+            show={showTenantFilter}
+            label={UI_TENANT_FILTER_LABEL}
+            value={selectedTenantId}
+            options={tenantOptions}
+            onChange={onTenantChange}
+          />
           <TableFilter
             label={UI_RELEASE_PRODUCT_FILTER_LABEL}
             value={selectedProductId}

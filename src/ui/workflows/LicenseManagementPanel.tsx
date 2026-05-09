@@ -34,13 +34,13 @@ import {
   UI_TABLE_FILTER_LABEL_STATUS,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
   UI_TABLE_SEARCH_PLACEHOLDER,
-  UI_TENANT_FILTER_LABEL,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
 import { TableControls } from '../data/TableControls'
 import { TableFilter } from '../data/TableFilter'
 import { TablePaginationFooter } from '../data/TablePaginationFooter'
+import { TenantFilterControl } from '../data/TenantFilterControl'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
 import { LicenseFormFlow } from './LicenseFormFlow'
@@ -141,14 +141,12 @@ export function LicenseManagementPanel({
       }
       filters={
         <>
-          {showTenantFilter && onTenantFilterChange ? (
-            <TableFilter
-              label={UI_TENANT_FILTER_LABEL}
-              value={selectedTenantId}
-              options={tenantOptions}
-              onChange={onTenantFilterChange}
-            />
-          ) : null}
+          <TenantFilterControl
+            show={showTenantFilter}
+            value={selectedTenantId}
+            options={tenantOptions}
+            onChange={onTenantFilterChange}
+          />
           {onProductFilterChange ? (
             <TableFilter
               label={UI_LICENSE_PRODUCT_FILTER_LABEL}
@@ -241,6 +239,11 @@ export function LicenseManagementPanel({
     return licenses.find((license) => license.licenseKey === editingLicense)
   }, [editingLicense, licenses])
 
+  const createProductOptions = useMemo(
+    () => productOptions.filter((option) => option.value.length > 0),
+    [productOptions]
+  )
+
   return (
     <Stack direction="column" gap={UI_STACK_GAP_MEDIUM}>
       <DataTable
@@ -262,9 +265,9 @@ export function LicenseManagementPanel({
           onClose={() => setShowCreate(false)}
           submitLabel={UI_LICENSE_FORM_SUBMIT_CREATE}
           tierOptions={tierOptions}
-          productOptions={productOptions}
+          productOptions={createProductOptions}
           defaultValues={{
-            product_slug: productOptions[0]?.value ?? '',
+            product_slug: createProductOptions[0]?.value ?? '',
             tier_code: tierOptions[0]?.value ?? '',
           }}
           onCompleted={onRefresh}

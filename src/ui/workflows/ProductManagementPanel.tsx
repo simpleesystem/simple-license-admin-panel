@@ -31,13 +31,13 @@ import {
   UI_STACK_GAP_MEDIUM,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
   UI_TABLE_SEARCH_PLACEHOLDER,
-  UI_TENANT_FILTER_LABEL,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
 import { TableControls } from '../data/TableControls'
 import { TableFilter } from '../data/TableFilter'
 import { TablePaginationFooter } from '../data/TablePaginationFooter'
+import { TenantFilterControl } from '../data/TenantFilterControl'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
@@ -130,14 +130,12 @@ export function ProductManagementPanel({
       }
       filters={
         <>
-          {showTenantFilter && onTenantFilterChange ? (
-            <TableFilter
-              label={UI_TENANT_FILTER_LABEL}
-              value={selectedTenantId}
-              options={tenantOptions}
-              onChange={onTenantFilterChange}
-            />
-          ) : null}
+          <TenantFilterControl
+            show={showTenantFilter}
+            value={selectedTenantId}
+            options={tenantOptions}
+            onChange={onTenantFilterChange}
+          />
           {onStatusFilterChange ? (
             <TableFilter
               label={UI_PRODUCT_COLUMN_HEADER_STATUS}
