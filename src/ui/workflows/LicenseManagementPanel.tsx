@@ -33,8 +33,6 @@ import {
   UI_STACK_GAP_MEDIUM,
   UI_TABLE_FILTER_LABEL_STATUS,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
-  UI_TABLE_SEARCH_LABEL,
-  UI_TABLE_SEARCH_PLACEHOLDER,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
@@ -42,7 +40,11 @@ import { TableControls } from '../data/TableControls'
 import { TableFilter } from '../data/TableFilter'
 import { TablePaginationFooter } from '../data/TablePaginationFooter'
 import { TenantFilterControl } from '../data/TenantFilterControl'
-import { createTableFilterField, createTableSearchField } from '../data/tableFieldFactory'
+import {
+  createStandardStatusFilterField,
+  createStandardTableSearchField,
+  createTableFilterField,
+} from '../data/tableFieldFactory'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
 import { LicenseFormFlow } from './LicenseFormFlow'
@@ -134,11 +136,9 @@ export function LicenseManagementPanel({
     <TableControls
       search={
         onSearchChange
-          ? createTableSearchField({
-              label: UI_TABLE_SEARCH_LABEL,
+          ? createStandardTableSearchField({
               value: searchTerm,
               onChange: onSearchChange,
-              placeholder: UI_TABLE_SEARCH_PLACEHOLDER,
             })
           : undefined
       }
@@ -162,7 +162,7 @@ export function LicenseManagementPanel({
           ) : null}
           {onStatusFilterChange ? (
             <TableFilter
-              {...createTableFilterField({
+              {...createStandardStatusFilterField({
                 label: UI_TABLE_FILTER_LABEL_STATUS,
                 value: statusFilter ?? '',
                 options: statusOptions,

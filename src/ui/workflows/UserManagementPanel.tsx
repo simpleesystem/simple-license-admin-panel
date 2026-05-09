@@ -11,10 +11,7 @@ import {
   UI_TABLE_FILTER_LABEL_ROLE,
   UI_TABLE_FILTER_LABEL_STATUS,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_ROLES,
-  UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_VENDORS,
-  UI_TABLE_SEARCH_LABEL,
-  UI_TABLE_SEARCH_PLACEHOLDER,
   UI_USER_BUTTON_CREATE,
   UI_USER_COLUMN_HEADER_ACTIONS,
   UI_USER_COLUMN_HEADER_EMAIL,
@@ -60,7 +57,11 @@ import { DataTable } from '../data/DataTable'
 import { TableControls } from '../data/TableControls'
 import { TableFilter } from '../data/TableFilter'
 import { TablePaginationFooter } from '../data/TablePaginationFooter'
-import { createTableFilterField, createTableSearchField } from '../data/tableFieldFactory'
+import {
+  createStandardStatusFilterField,
+  createStandardTableSearchField,
+  createTableFilterField,
+} from '../data/tableFieldFactory'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
 import { notifyCrudError, notifyUserSuccess } from './notifications'
@@ -156,11 +157,9 @@ export function UserManagementPanel({
 
   const toolbar = (
     <TableControls
-      search={createTableSearchField({
-        label: UI_TABLE_SEARCH_LABEL,
+      search={createStandardTableSearchField({
         value: searchTerm,
         onChange: onSearchChange,
-        placeholder: UI_TABLE_SEARCH_PLACEHOLDER,
       })}
       filters={
         <>
@@ -177,12 +176,11 @@ export function UserManagementPanel({
           ) : null}
           {onStatusFilterChange ? (
             <TableFilter
-              {...createTableFilterField({
-                label: UI_TABLE_FILTER_LABEL_STATUS,
+              {...createStandardStatusFilterField({
                 value: statusFilter,
                 options: statusOptions,
                 onChange: onStatusFilterChange,
-                placeholder: UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
+                label: UI_TABLE_FILTER_LABEL_STATUS,
               })}
             />
           ) : null}

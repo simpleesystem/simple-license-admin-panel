@@ -13,9 +13,6 @@ import {
   UI_BUTTON_VARIANT_PRIMARY,
   UI_STACK_GAP_MEDIUM,
   UI_TABLE_FILTER_LABEL_STATUS,
-  UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
-  UI_TABLE_SEARCH_LABEL,
-  UI_TABLE_SEARCH_PLACEHOLDER,
   UI_TENANT_BUTTON_CREATE,
   UI_TENANT_COLUMN_HEADER_ACTIONS,
   UI_TENANT_COLUMN_HEADER_CREATED,
@@ -40,7 +37,7 @@ import { DataTable } from '../data/DataTable'
 import { TableControls } from '../data/TableControls'
 import { TableFilter } from '../data/TableFilter'
 import { TablePaginationFooter } from '../data/TablePaginationFooter'
-import { createTableFilterField, createTableSearchField } from '../data/tableFieldFactory'
+import { createStandardStatusFilterField, createStandardTableSearchField } from '../data/tableFieldFactory'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
@@ -108,23 +105,19 @@ export function TenantManagementPanel({
     <TableControls
       search={
         onSearchChange
-          ? createTableSearchField({
-              label: UI_TABLE_SEARCH_LABEL,
+          ? createStandardTableSearchField({
               value: searchTerm,
               onChange: onSearchChange,
-              placeholder: UI_TABLE_SEARCH_PLACEHOLDER,
             })
           : undefined
       }
       filters={
         onStatusFilterChange ? (
           <TableFilter
-            {...createTableFilterField({
-              label: UI_TABLE_FILTER_LABEL_STATUS,
+            {...createStandardStatusFilterField({
               value: statusFilter ?? '',
               options: statusOptions,
               onChange: onStatusFilterChange,
-              placeholder: UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
             })}
           />
         ) : null

@@ -29,9 +29,6 @@ import {
   UI_PRODUCT_STATUS_ACTIVE,
   UI_PRODUCT_STATUS_SUSPENDED,
   UI_STACK_GAP_MEDIUM,
-  UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
-  UI_TABLE_SEARCH_LABEL,
-  UI_TABLE_SEARCH_PLACEHOLDER,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
@@ -39,7 +36,7 @@ import { TableControls } from '../data/TableControls'
 import { TableFilter } from '../data/TableFilter'
 import { TablePaginationFooter } from '../data/TablePaginationFooter'
 import { TenantFilterControl } from '../data/TenantFilterControl'
-import { createTableFilterField, createTableSearchField } from '../data/tableFieldFactory'
+import { createStandardStatusFilterField, createStandardTableSearchField } from '../data/tableFieldFactory'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
@@ -125,11 +122,9 @@ export function ProductManagementPanel({
     <TableControls
       search={
         onSearchChange
-          ? createTableSearchField({
-              label: UI_TABLE_SEARCH_LABEL,
+          ? createStandardTableSearchField({
               value: searchTerm,
               onChange: onSearchChange,
-              placeholder: UI_TABLE_SEARCH_PLACEHOLDER,
             })
           : undefined
       }
@@ -143,12 +138,11 @@ export function ProductManagementPanel({
           />
           {onStatusFilterChange ? (
             <TableFilter
-              {...createTableFilterField({
-                label: UI_PRODUCT_COLUMN_HEADER_STATUS,
+              {...createStandardStatusFilterField({
                 value: statusFilter ?? '',
                 options: statusOptions,
                 onChange: onStatusFilterChange,
-                placeholder: UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
+                label: UI_PRODUCT_COLUMN_HEADER_STATUS,
               })}
             />
           ) : null}
