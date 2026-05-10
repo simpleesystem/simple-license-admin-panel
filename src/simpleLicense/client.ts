@@ -803,6 +803,9 @@ export class Client {
     }
     if (typeof filters?.offset === 'number') {
       queryParams.append('offset', String(filters.offset))
+    } else if (typeof filters?.page === 'number' && typeof filters?.limit === 'number') {
+      const pageOffset = Math.max(0, (filters.page - 1) * filters.limit)
+      queryParams.append('offset', String(pageOffset))
     }
 
     const url =

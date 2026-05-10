@@ -1053,6 +1053,13 @@ export const UI_PRODUCT_TIER_TOAST_CREATE_SUCCESS = 'Tier created successfully' 
 export const UI_PRODUCT_TIER_TOAST_UPDATE_SUCCESS = 'Tier updated successfully' as const
 export const UI_PRODUCT_TIER_TOAST_DELETE_SUCCESS = 'Tier deactivated successfully' as const
 export const UI_PRODUCT_TIER_ERROR_INVALID_METADATA = 'Metadata must be valid JSON.' as const
+export const UI_PRODUCT_TIER_FIELD_UNLIMITED_ACTIVATIONS_LABEL = 'Unlimited Activations' as const
+export const UI_PRODUCT_TIER_FIELD_UNLIMITED_ACTIVATIONS_DESCRIPTION =
+  'When enabled, this tier has no activation cap.' as const
+export const UI_PRODUCT_TIER_FIELD_MAX_ACTIVATIONS_DESCRIPTION =
+  'Set a cap for concurrent site activations. Leave unlimited on for no cap.' as const
+export const UI_PRODUCT_TIER_FIELD_LICENSE_TERM_DISABLED_DESCRIPTION =
+  'Term is disabled while Does Not Expire is enabled.' as const
 
 export const UI_PRODUCT_TIER_CONFIRM_DELETE_TITLE = 'Delete tier?' as const
 export const UI_PRODUCT_TIER_CONFIRM_DELETE_BODY =
@@ -1149,6 +1156,7 @@ export const UI_LICENSE_COLUMN_HEADER_ACTIONS = 'Actions' as const
 export const UI_LICENSE_EMPTY_STATE_MESSAGE = 'No licenses yet' as const
 export const UI_LICENSE_STATUS_ACTIVE = 'ACTIVE' as const
 export const UI_LICENSE_STATUS_INACTIVE = 'INACTIVE' as const
+export const UI_LICENSE_STATUS_EXPIRED = 'EXPIRED' as const
 export const UI_LICENSE_STATUS_SUSPENDED = 'SUSPENDED' as const
 export const UI_LICENSE_STATUS_REVOKED = 'REVOKED' as const
 export const UI_ENTITY_LICENSE = 'License' as const

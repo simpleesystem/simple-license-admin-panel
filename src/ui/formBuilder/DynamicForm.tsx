@@ -52,6 +52,7 @@ type DynamicFormProps<TFieldValues extends FieldValues> = {
   onCancel?: () => void
   secondaryActions?: ReactNode
   className?: string
+  renderFieldOverride?: (field: FormFieldBlueprint<TFieldValues>) => JSX.Element | null | undefined
 }
 
 export function DynamicForm<TFieldValues extends FieldValues>({
@@ -64,6 +65,7 @@ export function DynamicForm<TFieldValues extends FieldValues>({
   onCancel,
   secondaryActions,
   className,
+  renderFieldOverride,
 }: DynamicFormProps<TFieldValues>) {
   const formMethods = useForm<TFieldValues>({
     defaultValues: defaultValues as DefaultValues<TFieldValues>,
@@ -101,7 +103,7 @@ export function DynamicForm<TFieldValues extends FieldValues>({
               permissionFallback={section.permissionFallback}
               className="mb-0"
             >
-              {renderSectionContent(section.layout, section.fields)}
+              {renderSectionContent(section.layout, section.fields, renderFieldOverride)}
             </FormSection>
           ))}
         </div>
@@ -126,14 +128,27 @@ export function DynamicForm<TFieldValues extends FieldValues>({
   )
 }
 
-const renderSectionContent = (
+const renderSectionContent = <TFieldValues extends FieldValues>(
   columns: UiFormRowColumns | undefined,
-  fields: readonly FormFieldBlueprint<FieldValues>[]
+  fields: readonly FormFieldBlueprint<TFieldValues>[],
+  renderFieldOverride?: (field: FormFieldBlueprint<TFieldValues>) => JSX.Element | null | undefined
 ) => {
   if (!columns || columns <= UI_FORM_ROW_COLUMNS_ONE) {
-    return <div className={UI_CLASS_FORM_SECTION_BODY}>{fields.map((field) => renderField(field))}</div>
+    return (
+      <div className={UI_CLASS_FORM_SECTION_BODY}>
+        {fields.map((field) => (
+          <FieldSlot<TFieldValues> key={field.id} field={field} renderFieldOverride={renderFieldOverride} />
+        ))}
+      </div>
+    )
   }
-  return <FormRow columns={columns}>{fields.map((field) => renderField(field))}</FormRow>
+  return (
+    <FormRow columns={columns}>
+      {fields.map((field) => (
+        <FieldSlot<TFieldValues> key={field.id} field={field} renderFieldOverride={renderFieldOverride} />
+      ))}
+    </FormRow>
+  )
 }
 
 // Field Renderers Registry
@@ -186,7 +201,7 @@ const FIELD_RENDERERS: Record<string, FieldRenderer<FormFieldBlueprint<FieldValu
   date: renderDateField as unknown as FieldRenderer<FormFieldBlueprint<FieldValues>>,
 }
 
-const renderField = (field: FormFieldBlueprint<FieldValues>) => {
+const renderField = <TFieldValues extends FieldValues>(field: FormFieldBlueprint<TFieldValues>) => {
   const commonProps = {
     name: field.name,
     label: field.label,
@@ -201,8 +216,22 @@ const renderField = (field: FormFieldBlueprint<FieldValues>) => {
 
   const renderer = FIELD_RENDERERS[field.component]
   if (renderer) {
-    return renderer(field, commonProps)
+    return renderer(field as unknown as FormFieldBlueprint<FieldValues>, commonProps)
   }
 
   return null
+}
+
+const FieldSlot = <TFieldValues extends FieldValues>({
+  field,
+  renderFieldOverride,
+}: {
+  field: FormFieldBlueprint<TFieldValues>
+  renderFieldOverride?: (field: FormFieldBlueprint<TFieldValues>) => JSX.Element | null | undefined
+}) => {
+  const overriddenField = renderFieldOverride?.(field)
+  if (overriddenField) {
+    return overriddenField
+  }
+  return renderField(field)
 }

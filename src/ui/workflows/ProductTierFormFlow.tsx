@@ -1,17 +1,25 @@
-import type { ReactNode } from 'react'
+import { type ReactNode, useEffect } from 'react'
+import { useFormContext, useWatch } from 'react-hook-form'
 import type { Client, CreateProductTierRequest, UpdateProductTierRequest } from '@/simpleLicense'
 import { ApiException, useCreateProductTier, useUpdateProductTier } from '@/simpleLicense'
 
 import type { MutationAdapter } from '../actions/mutationActions'
 import {
   UI_PRODUCT_TIER_ERROR_INVALID_METADATA,
+  UI_PRODUCT_TIER_FIELD_LICENSE_TERM_DISABLED_DESCRIPTION,
+  UI_PRODUCT_TIER_FIELD_MAX_ACTIVATIONS_DESCRIPTION,
+  UI_PRODUCT_TIER_FIELD_UNLIMITED_ACTIVATIONS_DESCRIPTION,
+  UI_PRODUCT_TIER_FIELD_UNLIMITED_ACTIVATIONS_LABEL,
   UI_PRODUCT_TIER_FORM_PENDING_CREATE,
   UI_PRODUCT_TIER_FORM_PENDING_UPDATE,
   UI_PRODUCT_TIER_FORM_SUBMIT_CREATE,
   UI_PRODUCT_TIER_FORM_SUBMIT_UPDATE,
 } from '../constants'
+import type { FormFieldBlueprint, TextFieldBlueprint } from '../formBuilder/blueprint'
 import { createProductTierBlueprint } from '../formBuilder/factories'
 import { FormModalWithMutation } from '../formBuilder/mutationBridge'
+import { CheckboxField } from '../forms/CheckboxField'
+import { TextField } from '../forms/TextField'
 import { wrapMutationAdapter } from './mutationHelpers'
 
 type ProductTierBaseProps = {
@@ -40,8 +48,10 @@ type ProductTierUpdateProps = ProductTierBaseProps & {
 
 export type ProductTierFormFlowProps = ProductTierCreateProps | ProductTierUpdateProps
 
-// UI type for Form values (metadata is string)
-type ProductTierFormValues = Omit<CreateProductTierRequest, 'metadata'> & { metadata?: string }
+type ProductTierFormValues = Omit<CreateProductTierRequest, 'metadata'> & {
+  metadata?: string
+  unlimited_activations?: boolean
+}
 
 const baseCreateDefaults: ProductTierFormValues = {
   tier_name: '',
@@ -51,6 +61,7 @@ const baseCreateDefaults: ProductTierFormValues = {
   does_not_expire: false,
   license_term_days: undefined,
   metadata: '',
+  unlimited_activations: false,
 }
 
 const baseUpdateDefaults: Partial<ProductTierFormValues> = {
@@ -58,6 +69,7 @@ const baseUpdateDefaults: Partial<ProductTierFormValues> = {
   tier_code: undefined,
   description: undefined,
   metadata: '',
+  unlimited_activations: false,
 }
 
 // Helper to convert empty strings to null/undefined
@@ -115,6 +127,81 @@ export function ProductTierFormFlow(props: ProductTierFormFlowProps) {
   return <ProductTierUpdateFlow {...props} />
 }
 
+const toUnlimitedActivationsFlag = (value: number | null | undefined) => value === null || value === undefined
+
+const renderProductTierFieldOverride = (field: FormFieldBlueprint<ProductTierFormValues>) => {
+  if (field.name === 'max_activations' && field.component === 'text') {
+    return <MaxActivationsField field={field} />
+  }
+
+  if (field.name === 'license_term_days' && field.component === 'text') {
+    return <LicenseTermField field={field} />
+  }
+
+  return undefined
+}
+
+function MaxActivationsField({ field }: { field: TextFieldBlueprint<ProductTierFormValues> }) {
+  const { control, setValue } = useFormContext<ProductTierFormValues>()
+  const isUnlimited = useWatch({
+    control,
+    name: 'unlimited_activations',
+  })
+
+  useEffect(() => {
+    if (isUnlimited) {
+      setValue('max_activations', null, { shouldDirty: true })
+    }
+  }, [isUnlimited, setValue])
+
+  return (
+    <>
+      <TextField<ProductTierFormValues>
+        name={field.name}
+        label={field.label}
+        description={field.description ?? UI_PRODUCT_TIER_FIELD_MAX_ACTIVATIONS_DESCRIPTION}
+        disabled={Boolean(isUnlimited || field.disabled)}
+        required={field.required}
+        type={field.inputType}
+        placeholder={field.placeholder}
+        autoComplete={field.autoComplete}
+      />
+      <CheckboxField<ProductTierFormValues>
+        name="unlimited_activations"
+        label={UI_PRODUCT_TIER_FIELD_UNLIMITED_ACTIVATIONS_LABEL}
+        description={UI_PRODUCT_TIER_FIELD_UNLIMITED_ACTIVATIONS_DESCRIPTION}
+      />
+    </>
+  )
+}
+
+function LicenseTermField({ field }: { field: TextFieldBlueprint<ProductTierFormValues> }) {
+  const { control, setValue } = useFormContext<ProductTierFormValues>()
+  const doesNotExpire = useWatch({
+    control,
+    name: 'does_not_expire',
+  })
+
+  useEffect(() => {
+    if (doesNotExpire) {
+      setValue('license_term_days', null, { shouldDirty: true })
+    }
+  }, [doesNotExpire, setValue])
+
+  return (
+    <TextField<ProductTierFormValues>
+      name={field.name}
+      label={field.label}
+      description={doesNotExpire ? UI_PRODUCT_TIER_FIELD_LICENSE_TERM_DISABLED_DESCRIPTION : field.description}
+      disabled={Boolean(doesNotExpire || field.disabled)}
+      required={field.required}
+      type={field.inputType}
+      placeholder={field.placeholder}
+      autoComplete={field.autoComplete}
+    />
+  )
+}
+
 function ProductTierCreateFlow(props: ProductTierCreateProps) {
   const createMutation = useCreateProductTier(props.client, props.productId)
 
@@ -122,6 +209,7 @@ function ProductTierCreateFlow(props: ProductTierCreateProps) {
     ...baseCreateDefaults,
     ...props.defaultValues,
     metadata: props.defaultValues?.metadata ? JSON.stringify(props.defaultValues.metadata, null, 2) : '',
+    unlimited_activations: toUnlimitedActivationsFlag(props.defaultValues?.max_activations),
   }
 
   const submitLabel = props.submitLabel ?? UI_PRODUCT_TIER_FORM_SUBMIT_CREATE
@@ -129,12 +217,13 @@ function ProductTierCreateFlow(props: ProductTierCreateProps) {
 
   const adapter: MutationAdapter<ProductTierFormValues> = {
     mutateAsync: async (values) => {
+      const { metadata: _metadata, unlimited_activations, ...baseValues } = values
       const normalizedTierCode = normalizeTierCode(values.tier_code)
       const metadata = parseMetadata(values.metadata)
       const data: CreateProductTierRequest = {
-        ...values,
+        ...baseValues,
         tier_code: normalizedTierCode,
-        max_activations: sanitizeNumber(values.max_activations),
+        max_activations: unlimited_activations ? null : sanitizeNumber(values.max_activations),
         license_term_days: values.does_not_expire ? null : sanitizeNumber(values.license_term_days),
         metadata,
       }
@@ -151,6 +240,7 @@ function ProductTierCreateFlow(props: ProductTierCreateProps) {
       defaultValues={defaultValues}
       submitLabel={submitLabel}
       pendingLabel={pendingLabel}
+      renderFieldOverride={renderProductTierFieldOverride}
       secondaryActions={props.secondaryActions}
       mutation={wrapMutationAdapter(adapter, {
         onCompleted: props.onCompleted,
@@ -171,6 +261,7 @@ function ProductTierUpdateFlow(props: ProductTierUpdateProps) {
     description: props.defaultValues?.description ?? '',
     ...props.defaultValues,
     metadata: props.defaultValues?.metadata ? JSON.stringify(props.defaultValues.metadata, null, 2) : '',
+    unlimited_activations: toUnlimitedActivationsFlag(props.defaultValues?.max_activations),
   }
 
   const submitLabel = props.submitLabel ?? UI_PRODUCT_TIER_FORM_SUBMIT_UPDATE
@@ -178,12 +269,13 @@ function ProductTierUpdateFlow(props: ProductTierUpdateProps) {
 
   const adapter: MutationAdapter<ProductTierFormValues> = {
     mutateAsync: async (values) => {
+      const { metadata: _metadata, unlimited_activations, ...baseValues } = values
       const normalizedTierCode = normalizeTierCode(values.tier_code)
       const metadata = parseMetadata(values.metadata)
       const data: UpdateProductTierRequest = {
-        ...values,
+        ...baseValues,
         tier_code: normalizedTierCode,
-        max_activations: sanitizeNumber(values.max_activations),
+        max_activations: unlimited_activations ? null : sanitizeNumber(values.max_activations),
         license_term_days: values.does_not_expire ? null : sanitizeNumber(values.license_term_days),
         metadata,
       }
@@ -203,6 +295,7 @@ function ProductTierUpdateFlow(props: ProductTierUpdateProps) {
       defaultValues={defaultValues}
       submitLabel={submitLabel}
       pendingLabel={pendingLabel}
+      renderFieldOverride={renderProductTierFieldOverride}
       secondaryActions={props.secondaryActions}
       mutation={wrapMutationAdapter(adapter, {
         onCompleted: props.onCompleted,

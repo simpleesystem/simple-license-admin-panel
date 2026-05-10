@@ -33,9 +33,10 @@ export function UsersRouteComponent() {
   })
 
   const filters = useMemo(() => {
+    const offset = Math.max(0, (tableState.page - 1) * UI_TABLE_PAGE_SIZE_DEFAULT)
     const baseParams = {
-      page: tableState.page,
       limit: UI_TABLE_PAGE_SIZE_DEFAULT,
+      offset,
       search: tableState.searchTerm || undefined,
       role: tableState.filters.role || undefined,
       status: tableState.filters.status || undefined,

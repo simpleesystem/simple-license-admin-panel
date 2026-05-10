@@ -1,8 +1,8 @@
-import type { ReactNode } from 'react'
+import type { JSX, ReactNode } from 'react'
 import type { FieldValues } from 'react-hook-form'
 import { ModalDialog } from '../overlay/ModalDialog'
 import type { ModalDialogProps } from '../types'
-import type { FormBlueprint } from './blueprint'
+import type { FormBlueprint, FormFieldBlueprint } from './blueprint'
 import { DynamicForm } from './DynamicForm'
 
 export type FormModalProps<TFieldValues extends FieldValues> = Omit<
@@ -17,6 +17,7 @@ export type FormModalProps<TFieldValues extends FieldValues> = Omit<
   cancelLabel?: ReactNode
   closeOnSubmit?: boolean
   secondaryActions?: ReactNode
+  renderFieldOverride?: (field: FormFieldBlueprint<TFieldValues>) => JSX.Element | null | undefined
 }
 
 export function FormModal<TFieldValues extends FieldValues>({
@@ -28,6 +29,7 @@ export function FormModal<TFieldValues extends FieldValues>({
   cancelLabel,
   closeOnSubmit = true,
   secondaryActions,
+  renderFieldOverride,
   title,
   onClose,
   ...modalProps
@@ -58,6 +60,7 @@ export function FormModal<TFieldValues extends FieldValues>({
           cancelLabel={cancelLabel}
           onCancel={onClose}
           secondaryActions={secondaryActions}
+          renderFieldOverride={renderFieldOverride}
         />
       }
       footer={null}
