@@ -5,6 +5,7 @@ import Form from 'react-bootstrap/Form'
 import {
   UI_CLASS_MARGIN_RESET,
   UI_FORM_CONTROL_TYPE_SEARCH,
+  UI_TABLE_CONTROL_MIN_WIDTH,
   UI_TABLE_SEARCH_MAX_WIDTH,
   UI_TABLE_SEARCH_PLACEHOLDER,
 } from '../constants'
@@ -44,7 +45,7 @@ export function TableSearchInput({
         value={value}
         onChange={handleChange}
         disabled={disabled}
-        style={{ minWidth: '220px', maxWidth: UI_TABLE_SEARCH_MAX_WIDTH }}
+        style={{ minWidth: UI_TABLE_CONTROL_MIN_WIDTH, maxWidth: UI_TABLE_SEARCH_MAX_WIDTH }}
       />
     </div>
   )

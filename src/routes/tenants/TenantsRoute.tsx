@@ -9,6 +9,8 @@ import {
   UI_PAGE_SUBTITLE_TENANTS,
   UI_PAGE_TITLE_TENANTS,
   UI_PAGE_VARIANT_FULL_WIDTH,
+  UI_ROUTE_STATUS_ACCESS_DENIED_BODY,
+  UI_ROUTE_STATUS_ACCESS_DENIED_TITLE,
   UI_SORT_DESC,
   UI_TENANT_COLUMN_ID_CREATED,
   UI_TENANT_COLUMN_ID_NAME,
@@ -78,6 +80,7 @@ export function TenantsRouteComponent() {
   })
 
   const canView = canViewTenants(currentUser)
+  const showAccessDenied = !isLoading && !isError && !canView
 
   const handleRefresh = () => {
     void refetch()
@@ -89,13 +92,13 @@ export function TenantsRouteComponent() {
 
       <RouteStatus
         isLoading={isLoading}
-        isError={isError}
+        isError={isError || showAccessDenied}
         loadingTitle={UI_TENANT_STATUS_LOADING_TITLE}
         loadingMessage={UI_TENANT_STATUS_LOADING_BODY}
-        errorTitle={UI_TENANT_STATUS_ERROR_TITLE}
-        errorMessage={UI_TENANT_STATUS_ERROR_BODY}
+        errorTitle={showAccessDenied ? UI_ROUTE_STATUS_ACCESS_DENIED_TITLE : UI_TENANT_STATUS_ERROR_TITLE}
+        errorMessage={showAccessDenied ? UI_ROUTE_STATUS_ACCESS_DENIED_BODY : UI_TENANT_STATUS_ERROR_BODY}
         retryLabel={UI_TENANT_STATUS_ACTION_RETRY}
-        onRetry={handleRefresh}
+        onRetry={showAccessDenied ? undefined : handleRefresh}
       />
 
       {!isLoading && !isError && canView ? (

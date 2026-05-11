@@ -12,7 +12,6 @@ import {
   UI_LICENSE_COLUMN_ID_PRODUCT,
   UI_LICENSE_COLUMN_ID_STATUS,
   UI_LICENSE_COLUMN_ID_TIER,
-  UI_LICENSE_PRODUCT_FILTER_LABEL,
   UI_LICENSE_STATUS_ACTION_RETRY,
   UI_LICENSE_STATUS_ERROR_BODY,
   UI_LICENSE_STATUS_ERROR_TITLE,
@@ -21,6 +20,8 @@ import {
   UI_PAGE_SUBTITLE_LICENSES,
   UI_PAGE_TITLE_LICENSES,
   UI_PAGE_VARIANT_FULL_WIDTH,
+  UI_ROUTE_STATUS_ACCESS_DENIED_BODY,
+  UI_ROUTE_STATUS_ACCESS_DENIED_TITLE,
   UI_SORT_ASC,
   UI_TENANT_FILTER_ALL,
 } from '../../ui/constants'
@@ -68,9 +69,14 @@ export function LicensesRouteComponent() {
   })
 
   useEffect(() => {
+    let isActive = true
+
     const fetchTiers = async () => {
-      const list = Array.isArray(productsData) ? productsData : (productsData?.data ?? [])
+      const list = filteredProducts
       if (!list.length) {
+        if (isActive) {
+          setTierOptions([])
+        }
         return
       }
 
@@ -99,16 +105,21 @@ export function LicensesRouteComponent() {
 
       // Sort tiers by label for better UX
       allTiers.sort((a, b) => a.label.localeCompare(b.label))
-      setTierOptions(allTiers)
+      if (isActive) {
+        setTierOptions(allTiers)
+      }
     }
 
     void fetchTiers()
-  }, [client, productsData, logger])
+    return () => {
+      isActive = false
+    }
+  }, [client, filteredProducts, logger])
 
   const filteredProductOptions = useMemo<UiSelectOption[]>(() => {
     const options = filteredProducts.map((product) => ({ value: product.slug, label: product.name }))
     options.sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }))
-    return [{ value: '', label: UI_LICENSE_PRODUCT_FILTER_LABEL }, ...options]
+    return options
   }, [filteredProducts])
 
   const visibleLicenses = useMemo<LicenseListItem[]>(() => {
@@ -173,6 +184,7 @@ export function LicensesRouteComponent() {
   })
 
   const canView = canViewLicenses(currentUser ?? null)
+  const showAccessDenied = !isLoading && !isError && !canView
   const { setFilterAndReset, setFiltersAndReset } = usePagedFilters<LicenseFilters>(
     tableState.setFilter,
     licenseTable.goToPage
@@ -188,13 +200,13 @@ export function LicensesRouteComponent() {
 
       <RouteStatus
         isLoading={isLoading}
-        isError={isError}
+        isError={isError || showAccessDenied}
         loadingTitle={UI_LICENSE_STATUS_LOADING_TITLE}
         loadingMessage={UI_LICENSE_STATUS_LOADING_BODY}
-        errorTitle={UI_LICENSE_STATUS_ERROR_TITLE}
-        errorMessage={UI_LICENSE_STATUS_ERROR_BODY}
+        errorTitle={showAccessDenied ? UI_ROUTE_STATUS_ACCESS_DENIED_TITLE : UI_LICENSE_STATUS_ERROR_TITLE}
+        errorMessage={showAccessDenied ? UI_ROUTE_STATUS_ACCESS_DENIED_BODY : UI_LICENSE_STATUS_ERROR_BODY}
         retryLabel={UI_LICENSE_STATUS_ACTION_RETRY}
-        onRetry={handleRefresh}
+        onRetry={showAccessDenied ? undefined : handleRefresh}
       />
 
       {!isLoading && !isError && canView ? (

@@ -63,6 +63,7 @@ import {
   UI_RELEASE_STATUS_LOADING_BODY,
   UI_RELEASE_STATUS_LOADING_TITLE,
   UI_STACK_GAP_MEDIUM,
+  UI_TABLE_FILTER_PLACEHOLDER_ALL_PRODUCTS,
   UI_TENANT_FILTER_LABEL,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
@@ -145,10 +146,7 @@ export function ReleasesPanel({
 
   const diagnosticsQuery = useAdminReleaseStorageDiagnostics(client, selectedProductId, showDiagnosticsModal)
 
-  const productFilterOptions = useMemo<UiSelectOption[]>(
-    () => [{ value: '', label: UI_RELEASE_SELECT_PRODUCT_PLACEHOLDER }, ...productOptions],
-    [productOptions]
-  )
+  const productFilterOptions = useMemo<UiSelectOption[]>(() => [...productOptions], [productOptions])
 
   const channelOptions: UiSelectOption[] = [
     { value: UI_RELEASE_FILTER_VALUE_ALL, label: UI_RELEASE_FILTER_ALL },
@@ -173,6 +171,7 @@ export function ReleasesPanel({
               value: selectedProductId,
               options: productFilterOptions,
               onChange: onProductChange,
+              placeholder: UI_TABLE_FILTER_PLACEHOLDER_ALL_PRODUCTS,
             })}
           />
           <TableSearchInput

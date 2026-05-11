@@ -33,6 +33,7 @@ import {
   UI_LICENSE_STATUS_SUSPENDED,
   UI_STACK_GAP_MEDIUM,
   UI_TABLE_FILTER_LABEL_STATUS,
+  UI_TABLE_FILTER_PLACEHOLDER_ALL_PRODUCTS,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
@@ -126,12 +127,11 @@ export function LicenseManagementPanel({
   const canView = canViewLicenses(currentUser ?? null)
 
   const statusOptions: UiSelectOption[] = [
-    { value: '', label: UI_TABLE_FILTER_LABEL_STATUS },
-    { value: 'ACTIVE', label: UI_LICENSE_STATUS_ACTIVE },
-    { value: 'INACTIVE', label: UI_LICENSE_STATUS_INACTIVE },
-    { value: 'EXPIRED', label: UI_LICENSE_STATUS_EXPIRED },
-    { value: 'SUSPENDED', label: UI_LICENSE_STATUS_SUSPENDED },
-    { value: 'REVOKED', label: UI_LICENSE_STATUS_REVOKED },
+    { value: UI_LICENSE_STATUS_ACTIVE, label: UI_LICENSE_STATUS_ACTIVE },
+    { value: UI_LICENSE_STATUS_INACTIVE, label: UI_LICENSE_STATUS_INACTIVE },
+    { value: UI_LICENSE_STATUS_EXPIRED, label: UI_LICENSE_STATUS_EXPIRED },
+    { value: UI_LICENSE_STATUS_SUSPENDED, label: UI_LICENSE_STATUS_SUSPENDED },
+    { value: UI_LICENSE_STATUS_REVOKED, label: UI_LICENSE_STATUS_REVOKED },
   ]
 
   const toolbar = (
@@ -159,6 +159,7 @@ export function LicenseManagementPanel({
                 value: selectedProductSlug,
                 options: productOptions,
                 onChange: onProductFilterChange,
+                placeholder: UI_TABLE_FILTER_PLACEHOLDER_ALL_PRODUCTS,
               })}
             />
           ) : null}

@@ -11,6 +11,7 @@ import {
   UI_TABLE_FILTER_LABEL_ROLE,
   UI_TABLE_FILTER_LABEL_STATUS,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_ROLES,
+  UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_VENDORS,
   UI_USER_BUTTON_CREATE,
   UI_USER_COLUMN_HEADER_ACTIONS,
@@ -50,7 +51,6 @@ import {
   UI_USER_STATUS_LABEL_ACTIVE,
   UI_USER_STATUS_LABEL_DELETED,
   UI_USER_STATUS_LABEL_DISABLED,
-  UI_USER_VENDOR_PLACEHOLDER,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
@@ -127,17 +127,13 @@ export function UserManagementPanel({
 
   const vendorOptions = useMemo<UiSelectOption[]>(() => {
     const tenantList = Array.isArray(tenantsQuery.data) ? tenantsQuery.data : (tenantsQuery.data?.data ?? [])
-    return [
-      { value: '', label: UI_USER_VENDOR_PLACEHOLDER },
-      ...tenantList.map((tenant) => ({
-        value: String(tenant.id),
-        label: tenant.name,
-      })),
-    ]
+    return tenantList.map((tenant) => ({
+      value: String(tenant.id),
+      label: tenant.name,
+    }))
   }, [tenantsQuery.data])
 
   const roleOptions: UiSelectOption[] = [
-    { value: '', label: UI_TABLE_FILTER_LABEL_ROLE },
     { value: UI_USER_ROLE_SUPERUSER, label: UI_USER_ROLE_LABEL_SUPERUSER },
     { value: UI_USER_ROLE_ADMIN, label: UI_USER_ROLE_LABEL_ADMIN },
     { value: UI_USER_ROLE_VENDOR_MANAGER, label: UI_USER_ROLE_LABEL_VENDOR_MANAGER },
@@ -149,7 +145,6 @@ export function UserManagementPanel({
   ]
 
   const statusOptions: UiSelectOption[] = [
-    { value: '', label: UI_TABLE_FILTER_LABEL_STATUS },
     { value: UI_USER_STATUS_ACTIVE, label: UI_USER_STATUS_LABEL_ACTIVE },
     { value: UI_USER_STATUS_DISABLED, label: UI_USER_STATUS_LABEL_DISABLED },
     { value: UI_USER_STATUS_DELETED, label: UI_USER_STATUS_LABEL_DELETED },
@@ -181,6 +176,7 @@ export function UserManagementPanel({
                 options: statusOptions,
                 onChange: onStatusFilterChange,
                 label: UI_TABLE_FILTER_LABEL_STATUS,
+                placeholder: UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
               })}
             />
           ) : null}

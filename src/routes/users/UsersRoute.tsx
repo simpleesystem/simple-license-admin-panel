@@ -8,6 +8,8 @@ import {
   UI_PAGE_SUBTITLE_USERS,
   UI_PAGE_TITLE_USERS,
   UI_PAGE_VARIANT_FULL_WIDTH,
+  UI_ROUTE_STATUS_ACCESS_DENIED_BODY,
+  UI_ROUTE_STATUS_ACCESS_DENIED_TITLE,
   UI_TABLE_PAGE_SIZE_DEFAULT,
   UI_USER_STATUS_ACTION_RETRY,
   UI_USER_STATUS_ERROR_BODY,
@@ -62,6 +64,7 @@ export function UsersRouteComponent() {
   }, [data])
 
   const canView = canViewUsers(currentUser)
+  const showAccessDenied = !isLoading && !isError && !canView
 
   const handleRefresh = () => {
     void refetch()
@@ -73,13 +76,13 @@ export function UsersRouteComponent() {
 
       <RouteStatus
         isLoading={isLoading}
-        isError={isError}
+        isError={isError || showAccessDenied}
         loadingTitle={UI_USER_STATUS_LOADING_TITLE}
         loadingMessage={UI_USER_STATUS_LOADING_BODY}
-        errorTitle={UI_USER_STATUS_ERROR_TITLE}
-        errorMessage={UI_USER_STATUS_ERROR_BODY}
+        errorTitle={showAccessDenied ? UI_ROUTE_STATUS_ACCESS_DENIED_TITLE : UI_USER_STATUS_ERROR_TITLE}
+        errorMessage={showAccessDenied ? UI_ROUTE_STATUS_ACCESS_DENIED_BODY : UI_USER_STATUS_ERROR_BODY}
         retryLabel={UI_USER_STATUS_ACTION_RETRY}
-        onRetry={handleRefresh}
+        onRetry={showAccessDenied ? undefined : handleRefresh}
       />
 
       {!isLoading && !isError && canView ? (

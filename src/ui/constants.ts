@@ -80,6 +80,8 @@ export const UI_TABLE_PAGE_INITIAL = 1 as const
 export const UI_TABLE_PAGE_SIZE_DEFAULT = 10 as const
 export const UI_TABLE_SEARCH_LABEL = 'Search' as const
 export const UI_TABLE_SEARCH_PLACEHOLDER = 'Search' as const
+export const UI_TABLE_CONTROL_MIN_WIDTH = '220px' as const
+export const UI_TABLE_FILTER_MAX_WIDTH = '280px' as const
 export const UI_TABLE_SEARCH_MAX_WIDTH = '300px' as const
 export const UI_TABLE_PAGINATION_PREVIOUS = 'Previous' as const
 export const UI_TABLE_PAGINATION_NEXT = 'Next' as const
@@ -92,6 +94,9 @@ export const UI_TABLE_FILTER_LABEL_VENDOR = 'Filter by Vendor' as const
 export const UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES = 'All Statuses' as const
 export const UI_TABLE_FILTER_PLACEHOLDER_ALL_ROLES = 'All Roles' as const
 export const UI_TABLE_FILTER_PLACEHOLDER_ALL_VENDORS = 'All Vendors' as const
+export const UI_TABLE_FILTER_PLACEHOLDER_ALL_PRODUCTS = 'All products' as const
+export const UI_ROUTE_STATUS_ACCESS_DENIED_TITLE = 'Access denied' as const
+export const UI_ROUTE_STATUS_ACCESS_DENIED_BODY = 'Your account does not have permission to view this section.' as const
 
 export const UI_SORT_ASC = 'asc' as const
 export const UI_SORT_DESC = 'desc' as const
@@ -329,6 +334,8 @@ export const UI_ARIA_LABEL_TABLE_TOOLBAR = 'Table controls'
 
 export const UI_CLASS_TABLE_TOOLBAR = 'd-flex flex-wrap justify-content-between align-items-center gap-3 mb-3'
 export const UI_CLASS_TABLE_CONTROL_GROUP = 'd-flex flex-wrap gap-2 align-items-center'
+export const UI_CLASS_TABLE_TOOLBAR_GROUP_START = 'd-flex flex-wrap align-items-end gap-2'
+export const UI_CLASS_TABLE_TOOLBAR_GROUP_END = 'd-flex flex-wrap align-items-end justify-content-end gap-2'
 
 export const UI_CLASS_SUMMARY_LIST = 'row row-cols-1 row-cols-md-2 g-3 list-unstyled mb-0'
 export const UI_CLASS_SUMMARY_CARD = 'p-3 border rounded bg-body'
@@ -766,6 +773,7 @@ export const UI_PAGE_TITLE_HEALTH = 'Platform health' as const
 export const UI_PAGE_SUBTITLE_HEALTH = 'Monitor service heartbeats and reliability signals.' as const
 export const UI_PAGE_TITLE_AUDIT = 'Audit trail' as const
 export const UI_PAGE_SUBTITLE_AUDIT = 'Trace administrative changes and verify the audit chain.' as const
+export const UI_AUDIT_LOGS_STATUS_ACTION_RETRY = 'Retry' as const
 
 export const UI_USER_FORM_TITLE_CREATE = 'Create User' as const
 export const UI_USER_FORM_TITLE_UPDATE = 'Update User' as const

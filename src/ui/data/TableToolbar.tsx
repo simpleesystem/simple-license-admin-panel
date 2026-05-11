@@ -1,7 +1,8 @@
 import {
   UI_ARIA_LABEL_TABLE_TOOLBAR,
-  UI_CLASS_INLINE_GAP,
   UI_CLASS_TABLE_TOOLBAR,
+  UI_CLASS_TABLE_TOOLBAR_GROUP_END,
+  UI_CLASS_TABLE_TOOLBAR_GROUP_START,
   UI_TEST_ID_TABLE_TOOLBAR,
 } from '../constants'
 import type { TableToolbarProps } from '../types'
@@ -27,8 +28,8 @@ export function TableToolbar({
         role="toolbar"
         aria-label={ariaLabel}
       >
-        <div className={UI_CLASS_INLINE_GAP}>{start ?? children}</div>
-        <div className={UI_CLASS_INLINE_GAP}>{end}</div>
+        <div className={UI_CLASS_TABLE_TOOLBAR_GROUP_START}>{start ?? children}</div>
+        <div className={UI_CLASS_TABLE_TOOLBAR_GROUP_END}>{end}</div>
       </div>
     </VisibilityGate>
   )

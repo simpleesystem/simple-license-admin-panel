@@ -2,7 +2,12 @@ import type { ChangeEvent } from 'react'
 import { useId } from 'react'
 import Form from 'react-bootstrap/Form'
 
-import { UI_CLASS_MARGIN_RESET, UI_SIZE_SMALL } from '../constants'
+import {
+  UI_CLASS_MARGIN_RESET,
+  UI_SIZE_SMALL,
+  UI_TABLE_CONTROL_MIN_WIDTH,
+  UI_TABLE_FILTER_MAX_WIDTH,
+} from '../constants'
 import type { UiSelectOption } from '../types'
 
 export type TableFilterProps = {
@@ -34,7 +39,7 @@ export function TableFilter({ label, value, options, onChange, placeholder, clas
         value={value}
         onChange={handleChange}
         disabled={disabled}
-        style={{ minWidth: '220px', maxWidth: '280px' }}
+        style={{ minWidth: UI_TABLE_CONTROL_MIN_WIDTH, maxWidth: UI_TABLE_FILTER_MAX_WIDTH }}
       >
         {placeholder ? <option value="">{placeholder}</option> : null}
         {options.map((option) => (

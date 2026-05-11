@@ -5,8 +5,6 @@ import type { AuditLogEntry, AuditLogFilters, Client } from '@/simpleLicense'
 import { useAuditLogs } from '@/simpleLicense'
 
 import {
-  UI_ALERT_VARIANT_DANGER,
-  UI_ALERT_VARIANT_INFO,
   UI_AUDIT_LOGS_CELL_CLASS,
   UI_AUDIT_LOGS_COLUMN_ACTION,
   UI_AUDIT_LOGS_COLUMN_ADMIN,
@@ -42,6 +40,7 @@ import {
   UI_AUDIT_LOGS_SORT_IP,
   UI_AUDIT_LOGS_SORT_RESOURCE_ID,
   UI_AUDIT_LOGS_SORT_RESOURCE_TYPE,
+  UI_AUDIT_LOGS_STATUS_ACTION_RETRY,
   UI_AUDIT_LOGS_TABLE_CLASS,
   UI_AUDIT_LOGS_TITLE,
   UI_AUDIT_LOGS_TOTAL_LABEL,
@@ -73,7 +72,7 @@ import {
 import { DataTable } from '../data/DataTable'
 import { TableControls } from '../data/TableControls'
 import { TablePaginationFooter } from '../data/TablePaginationFooter'
-import { InlineAlert } from '../feedback/InlineAlert'
+import { RouteStatus } from '../feedback/RouteStatus'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState } from '../types'
@@ -330,9 +329,11 @@ export function AuditLogsPanel({
     return (
       <Stack direction="column" gap={UI_STACK_GAP_MEDIUM} className={UI_AUDIT_LOGS_PANEL_CLASS}>
         {showPanelHeader ? <PanelHeader title={title} description={panelDescription} /> : null}
-        <InlineAlert variant={UI_ALERT_VARIANT_INFO} title={UI_AUDIT_LOGS_LOADING_TITLE}>
-          {UI_AUDIT_LOGS_LOADING_BODY}
-        </InlineAlert>
+        <RouteStatus
+          isLoading={true}
+          loadingTitle={UI_AUDIT_LOGS_LOADING_TITLE}
+          loadingMessage={UI_AUDIT_LOGS_LOADING_BODY}
+        />
       </Stack>
     )
   }
@@ -341,9 +342,15 @@ export function AuditLogsPanel({
     return (
       <Stack direction="column" gap={UI_STACK_GAP_MEDIUM} className={UI_AUDIT_LOGS_PANEL_CLASS}>
         {showPanelHeader ? <PanelHeader title={title} description={panelDescription} /> : null}
-        <InlineAlert variant={UI_ALERT_VARIANT_DANGER} title={UI_AUDIT_LOGS_ERROR_TITLE}>
-          {UI_AUDIT_LOGS_ERROR_BODY}
-        </InlineAlert>
+        <RouteStatus
+          isError={true}
+          errorTitle={UI_AUDIT_LOGS_ERROR_TITLE}
+          errorMessage={UI_AUDIT_LOGS_ERROR_BODY}
+          retryLabel={UI_AUDIT_LOGS_STATUS_ACTION_RETRY}
+          onRetry={() => {
+            void auditLogsQuery.refetch()
+          }}
+        />
       </Stack>
     )
   }

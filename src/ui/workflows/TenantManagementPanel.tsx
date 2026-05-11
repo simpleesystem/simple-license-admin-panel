@@ -12,7 +12,7 @@ import { useNotificationBus } from '../../notifications/useNotificationBus'
 import {
   UI_BUTTON_VARIANT_PRIMARY,
   UI_STACK_GAP_MEDIUM,
-  UI_TABLE_FILTER_LABEL_STATUS,
+  UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
   UI_TENANT_BUTTON_CREATE,
   UI_TENANT_COLUMN_HEADER_ACTIONS,
   UI_TENANT_COLUMN_HEADER_CREATED,
@@ -96,7 +96,6 @@ export function TenantManagementPanel({
   const canView = canViewTenants(currentUser ?? null)
 
   const statusOptions: UiSelectOption[] = [
-    { value: '', label: UI_TABLE_FILTER_LABEL_STATUS },
     { value: UI_TENANT_STATUS_ACTIVE, label: UI_TENANT_STATUS_LABEL_ACTIVE },
     { value: UI_TENANT_STATUS_SUSPENDED, label: UI_TENANT_STATUS_LABEL_SUSPENDED },
   ]
@@ -118,6 +117,7 @@ export function TenantManagementPanel({
               value: statusFilter ?? '',
               options: statusOptions,
               onChange: onStatusFilterChange,
+              placeholder: UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
             })}
           />
         ) : null

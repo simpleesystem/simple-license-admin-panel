@@ -17,6 +17,8 @@ import {
   UI_PRODUCT_STATUS_ERROR_TITLE,
   UI_PRODUCT_STATUS_LOADING_BODY,
   UI_PRODUCT_STATUS_LOADING_TITLE,
+  UI_ROUTE_STATUS_ACCESS_DENIED_BODY,
+  UI_ROUTE_STATUS_ACCESS_DENIED_TITLE,
   UI_SORT_ASC,
   UI_TENANT_FILTER_ALL,
 } from '../../ui/constants'
@@ -121,6 +123,7 @@ export function ProductsRouteComponent() {
 
   const canView = canViewProducts(currentUser)
   const { setFilterAndReset } = usePagedFilters<ProductFilters>(tableState.setFilter, productTable.goToPage)
+  const showAccessDenied = !isLoading && !isError && !canView
 
   const handleRefresh = () => {
     void refetch()
@@ -132,13 +135,13 @@ export function ProductsRouteComponent() {
 
       <RouteStatus
         isLoading={isLoading}
-        isError={isError}
+        isError={isError || showAccessDenied}
         loadingTitle={UI_PRODUCT_STATUS_LOADING_TITLE}
         loadingMessage={UI_PRODUCT_STATUS_LOADING_BODY}
-        errorTitle={UI_PRODUCT_STATUS_ERROR_TITLE}
-        errorMessage={UI_PRODUCT_STATUS_ERROR_BODY}
+        errorTitle={showAccessDenied ? UI_ROUTE_STATUS_ACCESS_DENIED_TITLE : UI_PRODUCT_STATUS_ERROR_TITLE}
+        errorMessage={showAccessDenied ? UI_ROUTE_STATUS_ACCESS_DENIED_BODY : UI_PRODUCT_STATUS_ERROR_BODY}
         retryLabel={UI_PRODUCT_STATUS_ACTION_RETRY}
-        onRetry={handleRefresh}
+        onRetry={showAccessDenied ? undefined : handleRefresh}
       />
 
       {!isLoading && !isError && canView ? (
