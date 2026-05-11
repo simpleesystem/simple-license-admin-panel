@@ -9,8 +9,6 @@ import {
   UI_PAGE_SUBTITLE_TENANTS,
   UI_PAGE_TITLE_TENANTS,
   UI_PAGE_VARIANT_FULL_WIDTH,
-  UI_ROUTE_STATUS_ACCESS_DENIED_BODY,
-  UI_ROUTE_STATUS_ACCESS_DENIED_TITLE,
   UI_SORT_DESC,
   UI_TENANT_COLUMN_ID_CREATED,
   UI_TENANT_COLUMN_ID_NAME,
@@ -28,6 +26,7 @@ import { Page } from '../../ui/layout/Page'
 import { PageHeader } from '../../ui/layout/PageHeader'
 import type { TenantListItem } from '../../ui/workflows/TenantManagementPanel'
 import { TenantManagementPanel } from '../../ui/workflows/TenantManagementPanel'
+import { buildRouteStatusState } from '../shared/routeStatus'
 
 export function TenantsRouteComponent() {
   const client = useApiClient()
@@ -80,28 +79,30 @@ export function TenantsRouteComponent() {
   })
 
   const canView = canViewTenants(currentUser)
-  const showAccessDenied = !isLoading && !isError && !canView
 
   const handleRefresh = () => {
     void refetch()
   }
 
+  const routeStatus = buildRouteStatusState({
+    isLoading,
+    isError,
+    canView,
+    loadingTitle: UI_TENANT_STATUS_LOADING_TITLE,
+    loadingMessage: UI_TENANT_STATUS_LOADING_BODY,
+    errorTitle: UI_TENANT_STATUS_ERROR_TITLE,
+    errorMessage: UI_TENANT_STATUS_ERROR_BODY,
+    retryLabel: UI_TENANT_STATUS_ACTION_RETRY,
+    onRetry: handleRefresh,
+  })
+
   return (
     <Page variant={UI_PAGE_VARIANT_FULL_WIDTH}>
       <PageHeader title={UI_PAGE_TITLE_TENANTS} subtitle={UI_PAGE_SUBTITLE_TENANTS} />
 
-      <RouteStatus
-        isLoading={isLoading}
-        isError={isError || showAccessDenied}
-        loadingTitle={UI_TENANT_STATUS_LOADING_TITLE}
-        loadingMessage={UI_TENANT_STATUS_LOADING_BODY}
-        errorTitle={showAccessDenied ? UI_ROUTE_STATUS_ACCESS_DENIED_TITLE : UI_TENANT_STATUS_ERROR_TITLE}
-        errorMessage={showAccessDenied ? UI_ROUTE_STATUS_ACCESS_DENIED_BODY : UI_TENANT_STATUS_ERROR_BODY}
-        retryLabel={UI_TENANT_STATUS_ACTION_RETRY}
-        onRetry={showAccessDenied ? undefined : handleRefresh}
-      />
+      <RouteStatus {...routeStatus.routeStatusProps} />
 
-      {!isLoading && !isError && canView ? (
+      {routeStatus.canRenderContent ? (
         <TenantManagementPanel
           client={client}
           tenants={tenantTable.rows}

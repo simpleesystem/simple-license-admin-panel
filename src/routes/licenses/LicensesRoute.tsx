@@ -20,8 +20,6 @@ import {
   UI_PAGE_SUBTITLE_LICENSES,
   UI_PAGE_TITLE_LICENSES,
   UI_PAGE_VARIANT_FULL_WIDTH,
-  UI_ROUTE_STATUS_ACCESS_DENIED_BODY,
-  UI_ROUTE_STATUS_ACCESS_DENIED_TITLE,
   UI_SORT_ASC,
   UI_TENANT_FILTER_ALL,
 } from '../../ui/constants'
@@ -33,6 +31,7 @@ import { PageHeader } from '../../ui/layout/PageHeader'
 import type { UiSelectOption } from '../../ui/types'
 import type { LicenseListItem } from '../../ui/workflows/LicenseManagementPanel'
 import { LicenseManagementPanel } from '../../ui/workflows/LicenseManagementPanel'
+import { buildRouteStatusState } from '../shared/routeStatus'
 import { usePagedFilters } from '../shared/usePagedFilters'
 import { useTenantScopedProducts } from '../shared/useTenantScopedProducts'
 
@@ -184,7 +183,6 @@ export function LicensesRouteComponent() {
   })
 
   const canView = canViewLicenses(currentUser ?? null)
-  const showAccessDenied = !isLoading && !isError && !canView
   const { setFilterAndReset, setFiltersAndReset } = usePagedFilters<LicenseFilters>(
     tableState.setFilter,
     licenseTable.goToPage
@@ -194,22 +192,25 @@ export function LicensesRouteComponent() {
     void refetch()
   }
 
+  const routeStatus = buildRouteStatusState({
+    isLoading,
+    isError,
+    canView,
+    loadingTitle: UI_LICENSE_STATUS_LOADING_TITLE,
+    loadingMessage: UI_LICENSE_STATUS_LOADING_BODY,
+    errorTitle: UI_LICENSE_STATUS_ERROR_TITLE,
+    errorMessage: UI_LICENSE_STATUS_ERROR_BODY,
+    retryLabel: UI_LICENSE_STATUS_ACTION_RETRY,
+    onRetry: handleRefresh,
+  })
+
   return (
     <Page variant={UI_PAGE_VARIANT_FULL_WIDTH}>
       <PageHeader title={UI_PAGE_TITLE_LICENSES} subtitle={UI_PAGE_SUBTITLE_LICENSES} />
 
-      <RouteStatus
-        isLoading={isLoading}
-        isError={isError || showAccessDenied}
-        loadingTitle={UI_LICENSE_STATUS_LOADING_TITLE}
-        loadingMessage={UI_LICENSE_STATUS_LOADING_BODY}
-        errorTitle={showAccessDenied ? UI_ROUTE_STATUS_ACCESS_DENIED_TITLE : UI_LICENSE_STATUS_ERROR_TITLE}
-        errorMessage={showAccessDenied ? UI_ROUTE_STATUS_ACCESS_DENIED_BODY : UI_LICENSE_STATUS_ERROR_BODY}
-        retryLabel={UI_LICENSE_STATUS_ACTION_RETRY}
-        onRetry={showAccessDenied ? undefined : handleRefresh}
-      />
+      <RouteStatus {...routeStatus.routeStatusProps} />
 
-      {!isLoading && !isError && canView ? (
+      {routeStatus.canRenderContent ? (
         <LicenseManagementPanel
           client={client}
           licenses={licenseTable.rows}

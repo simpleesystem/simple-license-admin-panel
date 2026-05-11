@@ -8,8 +8,6 @@ import {
   UI_PAGE_SUBTITLE_USERS,
   UI_PAGE_TITLE_USERS,
   UI_PAGE_VARIANT_FULL_WIDTH,
-  UI_ROUTE_STATUS_ACCESS_DENIED_BODY,
-  UI_ROUTE_STATUS_ACCESS_DENIED_TITLE,
   UI_TABLE_PAGE_SIZE_DEFAULT,
   UI_USER_STATUS_ACTION_RETRY,
   UI_USER_STATUS_ERROR_BODY,
@@ -22,11 +20,18 @@ import { RouteStatus } from '../../ui/feedback/RouteStatus'
 import { Page } from '../../ui/layout/Page'
 import { PageHeader } from '../../ui/layout/PageHeader'
 import { UserManagementPanel } from '../../ui/workflows/UserManagementPanel'
+import { buildRouteStatusState } from '../shared/routeStatus'
+
+type UserFilters = {
+  role: string
+  status: string
+  vendorId: string
+}
 
 export function UsersRouteComponent() {
   const client = useApiClient()
   const { user: currentUser } = useAuth()
-  const tableState = useTableState({
+  const tableState = useTableState<UserFilters>({
     initialFilters: {
       role: '',
       status: '',
@@ -64,28 +69,30 @@ export function UsersRouteComponent() {
   }, [data])
 
   const canView = canViewUsers(currentUser)
-  const showAccessDenied = !isLoading && !isError && !canView
 
   const handleRefresh = () => {
     void refetch()
   }
 
+  const routeStatus = buildRouteStatusState({
+    isLoading,
+    isError,
+    canView,
+    loadingTitle: UI_USER_STATUS_LOADING_TITLE,
+    loadingMessage: UI_USER_STATUS_LOADING_BODY,
+    errorTitle: UI_USER_STATUS_ERROR_TITLE,
+    errorMessage: UI_USER_STATUS_ERROR_BODY,
+    retryLabel: UI_USER_STATUS_ACTION_RETRY,
+    onRetry: handleRefresh,
+  })
+
   return (
     <Page variant={UI_PAGE_VARIANT_FULL_WIDTH}>
       <PageHeader title={UI_PAGE_TITLE_USERS} subtitle={UI_PAGE_SUBTITLE_USERS} />
 
-      <RouteStatus
-        isLoading={isLoading}
-        isError={isError || showAccessDenied}
-        loadingTitle={UI_USER_STATUS_LOADING_TITLE}
-        loadingMessage={UI_USER_STATUS_LOADING_BODY}
-        errorTitle={showAccessDenied ? UI_ROUTE_STATUS_ACCESS_DENIED_TITLE : UI_USER_STATUS_ERROR_TITLE}
-        errorMessage={showAccessDenied ? UI_ROUTE_STATUS_ACCESS_DENIED_BODY : UI_USER_STATUS_ERROR_BODY}
-        retryLabel={UI_USER_STATUS_ACTION_RETRY}
-        onRetry={showAccessDenied ? undefined : handleRefresh}
-      />
+      <RouteStatus {...routeStatus.routeStatusProps} />
 
-      {!isLoading && !isError && canView ? (
+      {routeStatus.canRenderContent ? (
         <UserManagementPanel
           client={client}
           users={users}

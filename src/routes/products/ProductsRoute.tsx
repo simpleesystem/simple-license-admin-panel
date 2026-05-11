@@ -17,8 +17,6 @@ import {
   UI_PRODUCT_STATUS_ERROR_TITLE,
   UI_PRODUCT_STATUS_LOADING_BODY,
   UI_PRODUCT_STATUS_LOADING_TITLE,
-  UI_ROUTE_STATUS_ACCESS_DENIED_BODY,
-  UI_ROUTE_STATUS_ACCESS_DENIED_TITLE,
   UI_SORT_ASC,
   UI_TENANT_FILTER_ALL,
 } from '../../ui/constants'
@@ -31,6 +29,7 @@ import type { UiSelectOption } from '../../ui/types'
 import { buildTenantNameMap } from '../../ui/utils/tenantFilters'
 import type { ProductListItem } from '../../ui/workflows/ProductManagementPanel'
 import { ProductManagementPanel } from '../../ui/workflows/ProductManagementPanel'
+import { buildRouteStatusState } from '../shared/routeStatus'
 import { usePagedFilters } from '../shared/usePagedFilters'
 import { useTenantScopedProducts } from '../shared/useTenantScopedProducts'
 
@@ -123,28 +122,30 @@ export function ProductsRouteComponent() {
 
   const canView = canViewProducts(currentUser)
   const { setFilterAndReset } = usePagedFilters<ProductFilters>(tableState.setFilter, productTable.goToPage)
-  const showAccessDenied = !isLoading && !isError && !canView
 
   const handleRefresh = () => {
     void refetch()
   }
 
+  const routeStatus = buildRouteStatusState({
+    isLoading,
+    isError,
+    canView,
+    loadingTitle: UI_PRODUCT_STATUS_LOADING_TITLE,
+    loadingMessage: UI_PRODUCT_STATUS_LOADING_BODY,
+    errorTitle: UI_PRODUCT_STATUS_ERROR_TITLE,
+    errorMessage: UI_PRODUCT_STATUS_ERROR_BODY,
+    retryLabel: UI_PRODUCT_STATUS_ACTION_RETRY,
+    onRetry: handleRefresh,
+  })
+
   return (
     <Page variant={UI_PAGE_VARIANT_FULL_WIDTH}>
       <PageHeader title={UI_PAGE_TITLE_PRODUCTS} subtitle={UI_PAGE_SUBTITLE_PRODUCTS} />
 
-      <RouteStatus
-        isLoading={isLoading}
-        isError={isError || showAccessDenied}
-        loadingTitle={UI_PRODUCT_STATUS_LOADING_TITLE}
-        loadingMessage={UI_PRODUCT_STATUS_LOADING_BODY}
-        errorTitle={showAccessDenied ? UI_ROUTE_STATUS_ACCESS_DENIED_TITLE : UI_PRODUCT_STATUS_ERROR_TITLE}
-        errorMessage={showAccessDenied ? UI_ROUTE_STATUS_ACCESS_DENIED_BODY : UI_PRODUCT_STATUS_ERROR_BODY}
-        retryLabel={UI_PRODUCT_STATUS_ACTION_RETRY}
-        onRetry={showAccessDenied ? undefined : handleRefresh}
-      />
+      <RouteStatus {...routeStatus.routeStatusProps} />
 
-      {!isLoading && !isError && canView ? (
+      {routeStatus.canRenderContent ? (
         <ProductManagementPanel
           client={client}
           products={productTable.rows}

@@ -2,12 +2,11 @@ import { faker } from '@faker-js/faker'
 import { describe, expect, test } from 'vitest'
 
 import { composeClassNames } from '../../../src/ui/utils/classNames'
-import { buildText } from '../../ui/factories/uiFactories'
 
 describe('composeClassNames', () => {
   test('deduplicates tokens and trims whitespace', () => {
-    const tokenA = buildText()
-    const tokenB = buildText()
+    const tokenA = 'token-alpha'
+    const tokenB = 'token-beta'
 
     const result = composeClassNames(tokenA, ` ${tokenA} `, `${tokenA}   ${tokenB}`, null, false, undefined)
 
@@ -15,7 +14,7 @@ describe('composeClassNames', () => {
   })
 
   test('filters empty tokens after trimming', () => {
-    const token = buildText()
+    const token = 'token-gamma'
 
     const result = composeClassNames('   ', `  ${token}  `, '', '\n\t', false)
 
