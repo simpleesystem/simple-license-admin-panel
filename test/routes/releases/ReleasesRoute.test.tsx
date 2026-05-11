@@ -74,7 +74,8 @@ describe('ReleasesRouteComponent', () => {
       isSuccess: false,
       isError: false,
     })
-    useAuthMock.mockReturnValue({ user: null, currentUser: null, isAuthenticated: false })
+    const superUser = buildUser({ role: UI_USER_ROLE_SUPERUSER, vendorId: null })
+    useAuthMock.mockReturnValue({ user: superUser, currentUser: superUser, isAuthenticated: true })
   })
 
   it('renders page title and empty state when no product is selected', () => {

@@ -3,7 +3,7 @@ import { useCallback, useMemo } from 'react'
 import type { PluginRelease } from '@/simpleLicense'
 
 import { useApiClient } from '../../api/apiContext'
-import { canDeleteRelease } from '../../app/auth/permissions'
+import { canDeleteRelease, canUpdateProduct, canViewProducts } from '../../app/auth/permissions'
 import { useAuth } from '../../app/auth/useAuth'
 import { useAdminProducts, useAdminReleases, useAdminTenants } from '../../simpleLicense/hooks'
 import {
@@ -18,16 +18,20 @@ import {
   UI_RELEASE_FILTER_VALUE_ALL,
   UI_RELEASE_FILTER_VALUE_PRERELEASE,
   UI_RELEASE_FILTER_VALUE_STABLE,
+  UI_RELEASE_STATUS_ERROR_BODY,
+  UI_RELEASE_STATUS_ERROR_TITLE,
   UI_SORT_DESC,
   UI_TENANT_FILTER_ALL,
 } from '../../ui/constants'
 import { useDataTableState } from '../../ui/data/useDataTableState'
 import { useTableState } from '../../ui/data/useTableState'
+import { RouteStatus } from '../../ui/feedback/RouteStatus'
 import { Page } from '../../ui/layout/Page'
 import { PageHeader } from '../../ui/layout/PageHeader'
 import type { UiSelectOption } from '../../ui/types'
 import type { ReleaseListItem } from '../../ui/workflows/ReleasesPanel'
 import { ReleasesPanel } from '../../ui/workflows/ReleasesPanel'
+import { buildRouteStatusState } from '../shared/routeStatus'
 import { usePagedFilters } from '../shared/usePagedFilters'
 import { useTenantScopedProducts } from '../shared/useTenantScopedProducts'
 
@@ -118,9 +122,11 @@ export function ReleasesRouteComponent() {
     sortComparators,
   })
 
-  const allowCreate = Boolean(selectedProductId)
-  const allowPromote = Boolean(selectedProductId)
+  const canManageReleases = canUpdateProduct(currentUser ?? null)
+  const allowCreate = Boolean(selectedProductId) && canManageReleases
+  const allowPromote = Boolean(selectedProductId) && canManageReleases
   const allowDelete = currentUser ? canDeleteRelease(currentUser) : false
+  const canView = canViewProducts(currentUser ?? null)
   const { setFilterAndReset, setFiltersAndReset } = usePagedFilters<ReleaseFilters>(
     tableState.setFilter,
     releasesTable.goToPage
@@ -144,37 +150,47 @@ export function ReleasesRouteComponent() {
 
   const showLoading = Boolean(selectedProductId) && releasesLoading
   const showError = Boolean(selectedProductId) && releasesError
+  const routeStatus = buildRouteStatusState({
+    isLoading: false,
+    isError: false,
+    canView,
+    errorTitle: UI_RELEASE_STATUS_ERROR_TITLE,
+    errorMessage: UI_RELEASE_STATUS_ERROR_BODY,
+  })
 
   return (
     <Page variant={UI_PAGE_VARIANT_FULL_WIDTH}>
       <PageHeader title={UI_PAGE_TITLE_RELEASES} subtitle={UI_PAGE_SUBTITLE_RELEASES} />
-      <ReleasesPanel
-        client={client}
-        releases={releasesTable.rows}
-        showPanelHeader={false}
-        selectedTenantId={selectedTenantId}
-        tenantOptions={tenantOptions}
-        showTenantFilter={showTenantFilter}
-        onTenantChange={handleTenantChange}
-        selectedProductId={selectedProductId}
-        productOptions={productOptions}
-        onProductChange={handleProductChange}
-        searchTerm={releasesTable.searchTerm}
-        onSearchChange={releasesTable.setSearchTerm}
-        channelFilter={channelFilter}
-        onChannelFilterChange={handleChannelChange}
-        page={releasesTable.page}
-        totalPages={releasesTable.totalPages}
-        onPageChange={releasesTable.goToPage}
-        sortState={releasesTable.sortState}
-        onSortChange={releasesTable.onSort}
-        allowCreate={allowCreate}
-        allowPromote={allowPromote}
-        allowDelete={allowDelete}
-        releasesLoading={showLoading}
-        releasesError={showError}
-        onRefresh={handleRefresh}
-      />
+      <RouteStatus {...routeStatus.routeStatusProps} />
+      {routeStatus.canRenderContent ? (
+        <ReleasesPanel
+          client={client}
+          releases={releasesTable.rows}
+          showPanelHeader={false}
+          selectedTenantId={selectedTenantId}
+          tenantOptions={tenantOptions}
+          showTenantFilter={showTenantFilter}
+          onTenantChange={handleTenantChange}
+          selectedProductId={selectedProductId}
+          productOptions={productOptions}
+          onProductChange={handleProductChange}
+          searchTerm={releasesTable.searchTerm}
+          onSearchChange={releasesTable.setSearchTerm}
+          channelFilter={channelFilter}
+          onChannelFilterChange={handleChannelChange}
+          page={releasesTable.page}
+          totalPages={releasesTable.totalPages}
+          onPageChange={releasesTable.goToPage}
+          sortState={releasesTable.sortState}
+          onSortChange={releasesTable.onSort}
+          allowCreate={allowCreate}
+          allowPromote={allowPromote}
+          allowDelete={allowDelete}
+          releasesLoading={showLoading}
+          releasesError={showError}
+          onRefresh={handleRefresh}
+        />
+      ) : null}
     </Page>
   )
 }
