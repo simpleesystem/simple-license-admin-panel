@@ -27,12 +27,17 @@ import { PageHeader } from '../../ui/layout/PageHeader'
 import type { TenantListItem } from '../../ui/workflows/TenantManagementPanel'
 import { TenantManagementPanel } from '../../ui/workflows/TenantManagementPanel'
 import { buildRouteStatusState } from '../shared/routeStatus'
+import { usePagedFilters } from '../shared/usePagedFilters'
+
+type TenantFilters = {
+  status: string
+}
 
 export function TenantsRouteComponent() {
   const client = useApiClient()
   const { user: currentUser } = useAuth()
   const { data, isLoading, isError, refetch } = useAdminTenants(client)
-  const tableState = useTableState({
+  const tableState = useTableState<TenantFilters>({
     initialFilters: {
       status: '',
     },
@@ -79,6 +84,7 @@ export function TenantsRouteComponent() {
   })
 
   const canView = canViewTenants(currentUser)
+  const { setFilterAndReset } = usePagedFilters<TenantFilters>(tableState.setFilter, tenantTable.goToPage)
 
   const handleRefresh = () => {
     void refetch()
@@ -112,10 +118,7 @@ export function TenantsRouteComponent() {
           searchTerm={tenantTable.searchTerm}
           onSearchChange={tenantTable.setSearchTerm}
           statusFilter={tableState.filters.status}
-          onStatusFilterChange={(value) => {
-            tableState.setFilter('status', value)
-            tenantTable.goToPage(1)
-          }}
+          onStatusFilterChange={(value) => setFilterAndReset('status', value)}
           page={tenantTable.page}
           totalPages={tenantTable.totalPages}
           onPageChange={tenantTable.goToPage}

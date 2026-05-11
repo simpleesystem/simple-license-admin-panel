@@ -12,6 +12,7 @@ import {
   UI_PRODUCT_COLUMN_ID_SLUG,
   UI_PRODUCT_COLUMN_ID_STATUS,
   UI_PRODUCT_COLUMN_ID_VENDOR,
+  UI_PRODUCT_FILTER_VALUE_ACTIVE,
   UI_PRODUCT_STATUS_ACTION_RETRY,
   UI_PRODUCT_STATUS_ERROR_BODY,
   UI_PRODUCT_STATUS_ERROR_TITLE,
@@ -45,7 +46,7 @@ export function ProductsRouteComponent() {
   const { data: tenantsData } = useAdminTenants(client)
   const tableState = useTableState<ProductFilters>({
     initialFilters: {
-      status: 'true',
+      status: UI_PRODUCT_FILTER_VALUE_ACTIVE,
       tenantId: '',
     },
   })
@@ -115,7 +116,7 @@ export function ProductsRouteComponent() {
       if (!status) {
         return true
       }
-      return product.isActive === (status === 'true')
+      return product.isActive === (status === UI_PRODUCT_FILTER_VALUE_ACTIVE)
     },
     sortComparators,
   })

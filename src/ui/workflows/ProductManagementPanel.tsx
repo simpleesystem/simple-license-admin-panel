@@ -23,6 +23,8 @@ import {
   UI_PRODUCT_COLUMN_ID_STATUS,
   UI_PRODUCT_COLUMN_ID_VENDOR,
   UI_PRODUCT_EMPTY_STATE_MESSAGE,
+  UI_PRODUCT_FILTER_VALUE_ACTIVE,
+  UI_PRODUCT_FILTER_VALUE_INACTIVE,
   UI_PRODUCT_FORM_SUBMIT_CREATE,
   UI_PRODUCT_PANEL_DESCRIPTION,
   UI_PRODUCT_PANEL_TITLE,
@@ -114,8 +116,8 @@ export function ProductManagementPanel({
   const canView = canViewProducts(currentUser ?? null)
 
   const statusOptions: UiSelectOption[] = [
-    { value: 'true', label: UI_PRODUCT_STATUS_ACTIVE },
-    { value: 'false', label: UI_PRODUCT_STATUS_SUSPENDED },
+    { value: UI_PRODUCT_FILTER_VALUE_ACTIVE, label: UI_PRODUCT_STATUS_ACTIVE },
+    { value: UI_PRODUCT_FILTER_VALUE_INACTIVE, label: UI_PRODUCT_STATUS_SUSPENDED },
   ]
 
   const toolbar = (
