@@ -113,6 +113,7 @@ import {
   UI_USER_FORM_SECTION_TITLE_IDENTITY,
   UI_USER_FORM_TITLE_CREATE,
   UI_USER_FORM_TITLE_UPDATE,
+  UI_USER_ROLE_VENDOR_ADMIN,
   UI_USER_ROLE_VENDOR_MANAGER,
   UI_USER_VENDOR_PLACEHOLDER,
 } from '../constants'
@@ -408,7 +409,8 @@ const buildUpdateProductBlueprint = (options?: ProductBlueprintOptions<UpdatePro
         ]
       : vendorOptions.slice()
   const shouldShowVendorField = !(
-    options?.currentUser?.role === UI_USER_ROLE_VENDOR_MANAGER || options?.currentUser?.vendorId
+    options?.currentUser?.role === UI_USER_ROLE_VENDOR_MANAGER ||
+    options?.currentUser?.role === UI_USER_ROLE_VENDOR_ADMIN
   )
 
   const sections: BlueprintSectionConfig<UpdateProductRequest>[] = PRODUCT_SECTIONS_UPDATE.map((section) => {
@@ -455,7 +457,8 @@ const buildCreateProductBlueprint = (options?: ProductBlueprintOptions<CreatePro
         ]
       : vendorOptions.slice()
   const shouldShowVendorField = !(
-    options?.currentUser?.role === UI_USER_ROLE_VENDOR_MANAGER || options?.currentUser?.vendorId
+    options?.currentUser?.role === UI_USER_ROLE_VENDOR_MANAGER ||
+    options?.currentUser?.role === UI_USER_ROLE_VENDOR_ADMIN
   )
 
   const sections: BlueprintSectionConfig<CreateProductRequest>[] = PRODUCT_SECTION_BLUEPRINT.map((section) => {

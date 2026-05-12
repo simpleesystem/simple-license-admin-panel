@@ -43,7 +43,6 @@ export const QUERY_KEYS = {
   // Admin API - Releases (plugin release files per product)
   adminReleases: {
     all: (productId: string) => ['admin', 'products', productId, 'releases'] as const,
-    diagnostics: (productId: string) => ['admin', 'products', productId, 'releases', 'diagnostics'] as const,
   },
 
   // Admin API - Entitlements

@@ -9,7 +9,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import type { Client } from '../client'
-import type { CreateReleaseResponse, ListReleasesResponse, ReleaseStorageDiagnosticsResponse } from '../types/api'
+import type { CreateReleaseResponse, ListReleasesResponse } from '../types/api'
 import { QUERY_KEYS } from './queryKeys'
 
 export interface ListReleasesParams {
@@ -32,16 +32,6 @@ export function useAdminReleases(client: Client, productId: string, options?: Us
     },
     enabled: Boolean(productId),
     ...queryOptions,
-  })
-}
-
-export function useAdminReleaseStorageDiagnostics(client: Client, productId: string, enabled: boolean) {
-  return useQuery<ReleaseStorageDiagnosticsResponse, Error>({
-    queryKey: QUERY_KEYS.adminReleases.diagnostics(productId),
-    queryFn: async () => {
-      return await client.getReleaseStorageDiagnostics(productId)
-    },
-    enabled: Boolean(productId) && enabled,
   })
 }
 

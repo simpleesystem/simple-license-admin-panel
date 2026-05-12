@@ -5,6 +5,7 @@ import {
   UI_CLASS_SUMMARY_VALUE,
   UI_CLASS_TEXT_MUTED,
   UI_TEST_ID_SUMMARY_LIST,
+  UI_VALUE_SEPARATOR,
 } from '../constants'
 import type { SummaryListProps } from '../types'
 import { composeClassNames } from '../utils/classNames'
@@ -52,6 +53,14 @@ export function SummaryList({
                 >
                   <code className="text-dark">{item.value}</code>
                 </pre>
+              ) : typeof item.value === 'string' && item.value.includes(UI_VALUE_SEPARATOR) ? (
+                <div className="d-flex flex-column gap-1">
+                  {item.value.split(UI_VALUE_SEPARATOR).map((part, index) => (
+                    <strong key={`${item.id}-${index}`} className={UI_CLASS_SUMMARY_VALUE}>
+                      {part.trim()}
+                    </strong>
+                  ))}
+                </div>
               ) : (
                 <strong className={UI_CLASS_SUMMARY_VALUE}>{item.value}</strong>
               )}

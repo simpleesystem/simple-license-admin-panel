@@ -80,6 +80,7 @@ type MetricsSection = {
   id: string
   title: string
   items: UiKeyValueItem[]
+  errorMessage?: string
 }
 
 const formatTimestamp = (value: string | null | undefined, formatter: Intl.DateTimeFormat) => {
@@ -285,11 +286,13 @@ const buildMetricItems = (
     return []
   }
 
-  return Object.entries(values).map(([key, value]) => ({
-    id: `${prefix}${key}`,
-    label: `${labelPrefix}${formatMetricLabel(key)}`,
-    value: formatMetricValue(key, value, numberFormatter),
-  }))
+  return Object.entries(values)
+    .filter(([key]) => key !== 'error')
+    .map(([key, value]) => ({
+      id: `${prefix}${key}`,
+      label: `${labelPrefix}${formatMetricLabel(key)}`,
+      value: formatMetricValue(key, value, numberFormatter),
+    }))
 }
 
 export function SystemMetricsPanel({ client, title = UI_SYSTEM_METRICS_TITLE }: SystemMetricsPanelProps) {
@@ -380,6 +383,10 @@ export function SystemMetricsPanel({ client, title = UI_SYSTEM_METRICS_TITLE }: 
 
   const sections = useMemo<MetricsSection[]>(() => {
     const metrics = metricsSource
+    const databaseErrorMessage = typeof metrics?.database?.error === 'string' ? metrics.database.error : undefined
+    const cacheErrorMessage = typeof metrics?.cache?.error === 'string' ? metrics.cache.error : undefined
+    const securityErrorMessage = typeof metrics?.security?.error === 'string' ? metrics.security.error : undefined
+    const tenantErrorMessage = typeof metrics?.tenants?.error === 'string' ? metrics.tenants.error : undefined
 
     const applicationItems = buildApplicationItems(metrics)
     const runtimeItems = buildRuntimeItems(metrics)
@@ -418,25 +425,29 @@ export function SystemMetricsPanel({ client, title = UI_SYSTEM_METRICS_TITLE }: 
         id: UI_SECTION_ID_SYSTEM_METRICS_DATABASE,
         title: UI_SYSTEM_METRICS_SECTION_DATABASE,
         items: databaseItems,
+        errorMessage: databaseErrorMessage,
       },
       {
         id: UI_SECTION_ID_SYSTEM_METRICS_CACHE,
         title: UI_SYSTEM_METRICS_SECTION_CACHE,
         items: cacheItems,
+        errorMessage: cacheErrorMessage,
       },
       {
         id: UI_SECTION_ID_SYSTEM_METRICS_SECURITY,
         title: UI_SYSTEM_METRICS_SECTION_SECURITY,
         items: securityItems,
+        errorMessage: securityErrorMessage,
       },
       {
         id: UI_SECTION_ID_SYSTEM_METRICS_TENANTS,
         title: UI_SYSTEM_METRICS_SECTION_TENANTS,
         items: tenantItems,
+        errorMessage: tenantErrorMessage,
       },
     ]
 
-    return definedSections.filter((section) => section.items.length > 0)
+    return definedSections.filter((section) => section.items.length > 0 || Boolean(section.errorMessage))
   }, [buildApplicationItems, buildRuntimeItems, metricsSource, numberFormatter])
 
   const renderContent = () => {
@@ -469,7 +480,12 @@ export function SystemMetricsPanel({ client, title = UI_SYSTEM_METRICS_TITLE }: 
         {sections.map((section) => (
           <div key={section.id} className={UI_CLASS_FLEX_COLUMN_GAP_MEDIUM}>
             <h3 className="h6 mb-0">{section.title}</h3>
-            <SummaryList items={section.items} />
+            {section.errorMessage ? (
+              <InlineAlert variant={UI_ALERT_VARIANT_WARNING} title={UI_SYSTEM_METRICS_ERROR_TITLE}>
+                {section.errorMessage}
+              </InlineAlert>
+            ) : null}
+            {section.items.length > 0 ? <SummaryList items={section.items} /> : null}
           </div>
         ))}
       </div>

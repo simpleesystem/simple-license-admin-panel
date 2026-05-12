@@ -246,6 +246,9 @@ export function ProductManagementPanel({
           show={showCreate}
           onClose={() => setShowCreate(false)}
           submitLabel={UI_PRODUCT_FORM_SUBMIT_CREATE}
+          defaultValues={{
+            vendor_id: selectedTenantId,
+          }}
           vendorOptions={vendorOptions}
           currentUser={currentUser ?? undefined}
           onCompleted={onRefresh}

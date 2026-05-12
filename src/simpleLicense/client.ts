@@ -151,7 +151,6 @@ import type {
   MetricsResponse,
   ProtectionBuildTokenMetadata,
   ProtectionSigningPublicKeyResponse,
-  ReleaseStorageDiagnosticsResponse,
   ReportUsageRequest,
   RevokeProtectionBuildTokenResponse,
   ServerStatusResponse,
@@ -628,12 +627,6 @@ export class Client {
     const response = await this.httpClient.get<ApiResponse<ListReleasesResponse>>(url)
     const rawData = this.handleApiResponse<unknown>(response.data, [])
     return this.normalizeListReleasesResponse(rawData)
-  }
-
-  async getReleaseStorageDiagnostics(productId: string): Promise<ReleaseStorageDiagnosticsResponse> {
-    const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}/releases/storage-diagnostics`
-    const response = await this.httpClient.get<ApiResponse<ReleaseStorageDiagnosticsResponse>>(url)
-    return this.handleApiResponse(response.data, [])
   }
 
   async promoteRelease(productId: string, releaseId: string): Promise<CreateReleaseResponse> {
@@ -1251,6 +1244,11 @@ export class Client {
   }
 
   private normalizePluginRelease(source: Record<string, unknown>): ListReleasesResponse[number] {
+    const normalizedCreatedAt =
+      this.getStringProperty(source, 'created_at', 'createdAt') || this.getStringProperty(source, 'created', 'created')
+    const normalizedUpdatedAt =
+      this.getStringProperty(source, 'updated_at', 'updatedAt') || this.getStringProperty(source, 'updated', 'updated')
+
     return {
       id: this.getStringProperty(source, 'id', 'id'),
       slug: this.getStringProperty(source, 'slug', 'slug'),
@@ -1267,8 +1265,8 @@ export class Client {
         source.file_present === undefined && source.filePresent === undefined
           ? undefined
           : this.toSafeBoolean(source.file_present ?? source.filePresent),
-      createdAt: this.getStringProperty(source, 'created_at', 'createdAt'),
-      updatedAt: this.getStringProperty(source, 'updated_at', 'updatedAt'),
+      createdAt: normalizedCreatedAt,
+      updatedAt: normalizedUpdatedAt,
     }
   }
 
