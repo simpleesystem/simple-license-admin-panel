@@ -21,6 +21,7 @@ export type TablePaginationFooterProps = {
   onPageSizeChange?: (size: number) => void
   pageSizeLabel?: string
   summary?: ReactNode
+  showNavigationWhenSinglePage?: boolean
 }
 
 export function TablePaginationFooter({
@@ -32,12 +33,19 @@ export function TablePaginationFooter({
   onPageSizeChange,
   pageSizeLabel,
   summary,
+  showNavigationWhenSinglePage = false,
 }: TablePaginationFooterProps) {
   const safeTotalPages = Math.max(1, totalPages)
   const safePage = Math.min(Math.max(1, page), safeTotalPages)
   const pageSizeId = useId()
 
   const showPageSize = Boolean(pageSize !== undefined && pageSizeOptions?.length && onPageSizeChange)
+  const showNavigation = safeTotalPages > 1 || showNavigationWhenSinglePage
+  const hasVisibleContent = showPageSize || Boolean(summary) || showNavigation
+
+  if (!hasVisibleContent) {
+    return null
+  }
 
   const handlePageSizeChange = (event: ChangeEvent<HTMLSelectElement>) => {
     onPageSizeChange?.(Number(event.currentTarget.value))
@@ -76,27 +84,29 @@ export function TablePaginationFooter({
         </div>
       ) : null}
 
-      <div className="d-flex flex-wrap align-items-center gap-2 ms-lg-auto">
-        <Button
-          variant={UI_BUTTON_VARIANT_SECONDARY}
-          onClick={() => onPageChange(safePage - 1)}
-          disabled={safePage <= 1}
-        >
-          {UI_TABLE_PAGINATION_PREVIOUS}
-        </Button>
-        <div className="d-flex align-items-center px-2">
-          <span>
-            {safePage} {UI_TABLE_PAGE_STATUS_SEPARATOR} {safeTotalPages}
-          </span>
+      {showNavigation ? (
+        <div className="d-flex flex-wrap align-items-center gap-2 ms-lg-auto">
+          <Button
+            variant={UI_BUTTON_VARIANT_SECONDARY}
+            onClick={() => onPageChange(safePage - 1)}
+            disabled={safePage <= 1}
+          >
+            {UI_TABLE_PAGINATION_PREVIOUS}
+          </Button>
+          <div className="d-flex align-items-center px-2">
+            <span>
+              {safePage} {UI_TABLE_PAGE_STATUS_SEPARATOR} {safeTotalPages}
+            </span>
+          </div>
+          <Button
+            variant={UI_BUTTON_VARIANT_SECONDARY}
+            onClick={() => onPageChange(safePage + 1)}
+            disabled={safePage >= safeTotalPages}
+          >
+            {UI_TABLE_PAGINATION_NEXT}
+          </Button>
         </div>
-        <Button
-          variant={UI_BUTTON_VARIANT_SECONDARY}
-          onClick={() => onPageChange(safePage + 1)}
-          disabled={safePage >= safeTotalPages}
-        >
-          {UI_TABLE_PAGINATION_NEXT}
-        </Button>
-      </div>
+      ) : null}
     </nav>
   )
 }

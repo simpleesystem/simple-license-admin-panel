@@ -180,7 +180,7 @@ export function UserManagementPanel({
               })}
             />
           ) : null}
-          {onVendorFilterChange && currentUser?.role !== UI_USER_ROLE_VENDOR_MANAGER ? (
+          {onVendorFilterChange && !currentUser?.vendorId ? (
             <TableFilter
               {...createTableFilterField({
                 label: UI_USER_COLUMN_HEADER_VENDOR,
@@ -288,7 +288,11 @@ export function UserManagementPanel({
         sortState={sortState}
         onSort={onSortChange}
         toolbar={toolbar}
-        footer={<TablePaginationFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />}
+        footer={
+          totalPages > 1 ? (
+            <TablePaginationFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />
+          ) : undefined
+        }
       />
 
       <UserFormFlow

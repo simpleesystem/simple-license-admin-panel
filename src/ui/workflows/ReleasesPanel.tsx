@@ -275,6 +275,10 @@ export function ReleasesPanel({
   ) : (
     <EmptyState title={UI_RELEASE_SELECT_PRODUCT_PLACEHOLDER} body={UI_RELEASE_SELECT_PRODUCT_BODY} />
   )
+  const footer =
+    selectedProductId && totalPages > 1 ? (
+      <TablePaginationFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />
+    ) : undefined
 
   return (
     <Stack direction="column" gap={UI_STACK_GAP_MEDIUM}>
@@ -289,7 +293,7 @@ export function ReleasesPanel({
         sortState={sortState}
         onSort={onSortChange}
         toolbar={toolbar}
-        footer={<TablePaginationFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />}
+        footer={footer}
       />
 
       {allowCreate && selectedProductId ? (

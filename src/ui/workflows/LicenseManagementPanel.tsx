@@ -264,7 +264,11 @@ export function LicenseManagementPanel({
         sortState={sortState}
         onSort={onSortChange}
         toolbar={toolbar}
-        footer={<TablePaginationFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />}
+        footer={
+          totalPages > 1 ? (
+            <TablePaginationFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />
+          ) : undefined
+        }
       />
 
       {allowCreate ? (

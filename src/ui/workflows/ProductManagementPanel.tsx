@@ -160,8 +160,8 @@ export function ProductManagementPanel({
     />
   )
 
-  const columns: UiDataTableColumn<ProductListItem>[] = useMemo(
-    () => [
+  const columns: UiDataTableColumn<ProductListItem>[] = useMemo(() => {
+    const baseColumns: UiDataTableColumn<ProductListItem>[] = [
       {
         id: UI_PRODUCT_COLUMN_ID_NAME,
         header: UI_PRODUCT_COLUMN_HEADER_NAME,
@@ -180,36 +180,41 @@ export function ProductManagementPanel({
         cell: (row) => (row.isActive ? UI_PRODUCT_STATUS_ACTIVE : UI_PRODUCT_STATUS_SUSPENDED),
         sortable: true,
       },
-      {
+    ]
+
+    if (!isVendorScoped) {
+      baseColumns.push({
         id: UI_PRODUCT_COLUMN_ID_VENDOR,
         header: UI_PRODUCT_COLUMN_HEADER_VENDOR,
         cell: (row) => row.vendorName ?? row.vendorId,
         sortable: true,
+      })
+    }
+
+    baseColumns.push({
+      id: UI_PRODUCT_COLUMN_ID_ACTIONS,
+      header: UI_PRODUCT_COLUMN_HEADER_ACTIONS,
+      cell: (row) => {
+        if (!canUpdateProduct(currentUser ?? null)) {
+          return UI_VALUE_PLACEHOLDER
+        }
+        return (
+          <ProductRowActions
+            client={client}
+            productId={row.id}
+            productSlug={row.slug}
+            isActive={row.isActive}
+            vendorId={row.vendorId}
+            onEdit={setEditingProduct}
+            onCompleted={onRefresh}
+            currentUser={currentUser ?? null}
+          />
+        )
       },
-      {
-        id: UI_PRODUCT_COLUMN_ID_ACTIONS,
-        header: UI_PRODUCT_COLUMN_HEADER_ACTIONS,
-        cell: (row) => {
-          if (!canUpdateProduct(currentUser ?? null)) {
-            return UI_VALUE_PLACEHOLDER
-          }
-          return (
-            <ProductRowActions
-              client={client}
-              productId={row.id}
-              productSlug={row.slug}
-              isActive={row.isActive}
-              vendorId={row.vendorId}
-              onEdit={setEditingProduct}
-              onCompleted={onRefresh}
-              currentUser={currentUser ?? null}
-            />
-          )
-        },
-      },
-    ],
-    [client, currentUser, onRefresh]
-  )
+    })
+
+    return baseColumns
+  }, [client, currentUser, isVendorScoped, onRefresh])
 
   const refreshWith = (action: 'create' | 'update' | 'delete' | 'suspend' | 'resume') => {
     onRefresh?.()
@@ -236,7 +241,11 @@ export function ProductManagementPanel({
         sortState={sortState}
         onSort={onSortChange}
         toolbar={toolbar}
-        footer={<TablePaginationFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />}
+        footer={
+          totalPages > 1 ? (
+            <TablePaginationFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />
+          ) : undefined
+        }
       />
 
       {allowCreate ? (

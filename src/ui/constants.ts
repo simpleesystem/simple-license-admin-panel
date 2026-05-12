@@ -575,6 +575,9 @@ export const UI_SYSTEM_METRICS_LOADING_TITLE = 'Loading system metrics' as const
 export const UI_SYSTEM_METRICS_LOADING_BODY = 'Gathering telemetry across application services…' as const
 export const UI_SYSTEM_METRICS_ERROR_TITLE = 'Unable to load system metrics' as const
 export const UI_SYSTEM_METRICS_ERROR_BODY = 'Confirm monitoring availability and try again.' as const
+export const UI_SYSTEM_METRICS_SECTION_ERROR_TITLE = 'Section unavailable' as const
+export const UI_SYSTEM_METRICS_SECTION_ERROR_BODY =
+  'Some data for this section could not be loaded. You can still use the rest of the dashboard.' as const
 export const UI_SYSTEM_METRICS_EMPTY_TITLE = 'No system metrics returned' as const
 export const UI_SYSTEM_METRICS_EMPTY_BODY = 'The system metrics endpoint responded without any data.' as const
 export const UI_SYSTEM_METRICS_SECTION_APPLICATION = 'Application' as const

@@ -58,6 +58,8 @@ import {
   UI_SYSTEM_METRICS_SECTION_APPLICATION,
   UI_SYSTEM_METRICS_SECTION_CACHE,
   UI_SYSTEM_METRICS_SECTION_DATABASE,
+  UI_SYSTEM_METRICS_SECTION_ERROR_BODY,
+  UI_SYSTEM_METRICS_SECTION_ERROR_TITLE,
   UI_SYSTEM_METRICS_SECTION_SECURITY,
   UI_SYSTEM_METRICS_SECTION_SYSTEM,
   UI_SYSTEM_METRICS_SECTION_TENANTS,
@@ -87,7 +89,11 @@ const formatTimestamp = (value: string | null | undefined, formatter: Intl.DateT
   if (!value) {
     return UI_VALUE_PLACEHOLDER
   }
-  return formatter.format(new Date(value))
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) {
+    return UI_VALUE_PLACEHOLDER
+  }
+  return formatter.format(parsed)
 }
 
 const toNumber = (value: unknown): number | undefined => {
@@ -270,9 +276,15 @@ const formatMetricLabel = (key: string): string => {
     return UI_VALUE_PLACEHOLDER
   }
   return key
+    .replace(/\./g, '_')
+    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
+    .replace(/-/g, '_')
     .split('_')
     .filter((segment) => segment.length > 0)
-    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .map((segment) => {
+      const lower = segment.toLowerCase()
+      return lower.charAt(0).toUpperCase() + lower.slice(1)
+    })
     .join(' ')
 }
 
@@ -481,8 +493,8 @@ export function SystemMetricsPanel({ client, title = UI_SYSTEM_METRICS_TITLE }: 
           <div key={section.id} className={UI_CLASS_FLEX_COLUMN_GAP_MEDIUM}>
             <h3 className="h6 mb-0">{section.title}</h3>
             {section.errorMessage ? (
-              <InlineAlert variant={UI_ALERT_VARIANT_WARNING} title={UI_SYSTEM_METRICS_ERROR_TITLE}>
-                {section.errorMessage}
+              <InlineAlert variant={UI_ALERT_VARIANT_WARNING} title={UI_SYSTEM_METRICS_SECTION_ERROR_TITLE}>
+                {UI_SYSTEM_METRICS_SECTION_ERROR_BODY}
               </InlineAlert>
             ) : null}
             {section.items.length > 0 ? <SummaryList items={section.items} /> : null}
