@@ -49,6 +49,7 @@ export const API_ENDPOINT_ADMIN_LICENSES_SUSPEND = '/api/v1/admin/licenses'
 export const API_ENDPOINT_ADMIN_LICENSES_RESUME = '/api/v1/admin/licenses'
 export const API_ENDPOINT_ADMIN_LICENSES_FREEZE = '/api/v1/admin/licenses'
 export const API_ENDPOINT_ADMIN_LICENSES_REVOKE = '/api/v1/admin/licenses'
+export const API_ENDPOINT_ADMIN_LICENSES_MARK_REVOKED = '/api/v1/admin/licenses'
 export const API_ENDPOINT_ADMIN_LICENSES_ACTIVATIONS = '/api/v1/admin/licenses'
 
 // Admin Product Endpoints

@@ -251,7 +251,9 @@ describe('Client', () => {
 
       const result = await client.createRelease(faker.string.uuid(), formData)
 
-      expect(result).toEqual(createdRelease)
+      expect(result.id).toBe(createdRelease.id)
+      expect(result.slug).toBe(createdRelease.slug)
+      expect(result.version).toBe(createdRelease.version)
       expect(mockHttpClient.postFormData).toHaveBeenCalledTimes(2)
       expect(axiosMock.default.post).toHaveBeenCalled()
       axiosPostSpy.mockRestore()
@@ -293,6 +295,93 @@ describe('Client', () => {
         expect.any(FormData),
         expect.objectContaining({ timeout: RELEASE_UPLOAD_REQUEST_TIMEOUT_MS })
       )
+    })
+
+    it('normalizes snake_case release payloads from createRelease', async () => {
+      const createdAt = faker.date.recent().toISOString()
+      const updatedAt = faker.date.recent().toISOString()
+      mockHttpClient.postFormData.mockResolvedValue({
+        data: {
+          success: true,
+          data: {
+            id: faker.string.uuid(),
+            slug: faker.helpers.slugify(faker.commerce.productName()).toLowerCase(),
+            version: faker.system.semver(),
+            file_name: faker.system.fileName(),
+            size_bytes: 2048,
+            is_prerelease: false,
+            is_promoted: false,
+            created_at: createdAt,
+            updated_at: updatedAt,
+          },
+        },
+        status: 201,
+      })
+
+      const formData = new FormData()
+      formData.append(RELEASE_UPLOAD_FIELD_NAME, new Blob([faker.lorem.word()]), faker.system.fileName())
+
+      const result = await client.createRelease(faker.string.uuid(), formData)
+
+      expect(result.createdAt).toBe(createdAt)
+      expect(result.updatedAt).toBe(updatedAt)
+      expect(result.fileName).not.toBe('')
+      expect(result.sizeBytes).toBe(2048)
+      expect(result.isPrerelease).toBe(false)
+      expect(result.isPromoted).toBe(false)
+    })
+  })
+
+  describe('promoteRelease', () => {
+    it('normalizes snake_case release payloads from promoteRelease', async () => {
+      const createdAt = faker.date.recent().toISOString()
+      mockHttpClient.patch.mockResolvedValue({
+        data: {
+          success: true,
+          data: {
+            id: faker.string.uuid(),
+            slug: faker.helpers.slugify(faker.commerce.productName()).toLowerCase(),
+            version: faker.system.semver(),
+            file_name: faker.system.fileName(),
+            size_bytes: 4096,
+            is_prerelease: false,
+            is_promoted: true,
+            created_at: createdAt,
+          },
+        },
+        status: 200,
+      })
+
+      const result = await client.promoteRelease(faker.string.uuid(), faker.string.uuid())
+
+      expect(result.createdAt).toBe(createdAt)
+      expect(result.isPromoted).toBe(true)
+      expect(result.sizeBytes).toBe(4096)
+      expect(result.fileName).not.toBe('')
+    })
+
+    it('normalizes numeric created_at values from promoteRelease', async () => {
+      const createdAtEpochSeconds = 1713984000
+      mockHttpClient.patch.mockResolvedValue({
+        data: {
+          success: true,
+          data: {
+            id: faker.string.uuid(),
+            slug: faker.helpers.slugify(faker.commerce.productName()).toLowerCase(),
+            version: faker.system.semver(),
+            file_name: faker.system.fileName(),
+            size_bytes: 512,
+            is_prerelease: false,
+            is_promoted: true,
+            created_at: createdAtEpochSeconds,
+          },
+        },
+        status: 200,
+      })
+
+      const result = await client.promoteRelease(faker.string.uuid(), faker.string.uuid())
+
+      expect(result.createdAt).toBe(new Date(createdAtEpochSeconds * 1000).toISOString())
     })
   })
 
@@ -1835,12 +1924,32 @@ describe('Client', () => {
         status: 200,
       }
 
-      mockHttpClient.delete.mockResolvedValue(mockResponse)
+      mockHttpClient.post.mockResolvedValue(mockResponse)
 
       const result = await client.revokeLicense(licenseId)
 
       expect(result).toBeDefined()
-      expect(mockHttpClient.delete).toHaveBeenCalled()
+      expect(mockHttpClient.post).toHaveBeenCalledWith(`/api/v1/admin/licenses/${encodeURIComponent(licenseId)}/revoke`)
+    })
+  })
+
+  describe('softDeleteLicense', () => {
+    it('soft deletes license successfully', async () => {
+      const licenseId = faker.string.uuid()
+      const mockResponse = {
+        data: {
+          success: true,
+          data: { success: true },
+        },
+        status: 200,
+      }
+
+      mockHttpClient.delete.mockResolvedValue(mockResponse)
+
+      const result = await client.softDeleteLicense(licenseId)
+
+      expect(result).toBeDefined()
+      expect(mockHttpClient.delete).toHaveBeenCalledWith(`/api/v1/admin/licenses/${encodeURIComponent(licenseId)}`)
     })
   })
 

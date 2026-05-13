@@ -705,6 +705,11 @@ export const UI_RELEASE_STATUS_LOADING_BODY = 'Fetching release list for this pr
 export const UI_RELEASE_STATUS_ERROR_TITLE = 'Unable to load releases' as const
 export const UI_RELEASE_STATUS_ERROR_BODY = 'Please try again after refreshing the page.' as const
 export const UI_RELEASE_STATUS_ACTION_RETRY = 'Retry' as const
+export const UI_RELEASE_ROUTE_STATUS_LOADING_TITLE = 'Loading release workspace' as const
+export const UI_RELEASE_ROUTE_STATUS_LOADING_BODY =
+  'Fetching products and tenant filters for release management.' as const
+export const UI_RELEASE_ROUTE_STATUS_ERROR_TITLE = 'Unable to load release workspace' as const
+export const UI_RELEASE_ROUTE_STATUS_ERROR_BODY = 'Please retry to load products and tenant filters.' as const
 export const UI_RELEASE_COLUMN_VERSION = 'Version' as const
 export const UI_RELEASE_COLUMN_FILE = 'File' as const
 export const UI_RELEASE_FILE_PRESENT = 'Present' as const
@@ -1132,7 +1137,8 @@ export const UI_LICENSE_FORM_PLACEHOLDER_DOMAIN = 'example.com, *.example.com, a
 export const UI_LICENSE_BUTTON_CREATE = 'Create License' as const
 export const UI_LICENSE_BUTTON_EDIT = 'Edit license' as const
 export const UI_LICENSE_BUTTON_SAVE = 'Save license' as const
-export const UI_LICENSE_BUTTON_DELETE = 'Revoke License' as const
+export const UI_LICENSE_BUTTON_DELETE = 'Soft Delete License' as const
+export const UI_LICENSE_BUTTON_REVOKE = 'Revoke License' as const
 export const UI_LICENSE_BUTTON_SUSPEND = 'Suspend License' as const
 export const UI_LICENSE_BUTTON_RESUME = 'Resume License' as const
 export const UI_LICENSE_FORM_SUBMIT_CREATE = 'Create license' as const
@@ -1140,7 +1146,8 @@ export const UI_LICENSE_FORM_SUBMIT_UPDATE = 'Save license' as const
 export const UI_LICENSE_FORM_PENDING_CREATE = 'Creating license…' as const
 export const UI_LICENSE_FORM_PENDING_UPDATE = 'Saving license…' as const
 export const UI_LICENSE_ACTION_EDIT = 'Edit License' as const
-export const UI_LICENSE_ACTION_DELETE = 'Revoke License' as const
+export const UI_LICENSE_ACTION_DELETE = 'Soft Delete License' as const
+export const UI_LICENSE_ACTION_REVOKE = 'Revoke License' as const
 export const UI_LICENSE_ACTION_SUSPEND = 'Suspend License' as const
 export const UI_LICENSE_ACTION_RESUME = 'Resume License' as const
 export const UI_LICENSE_COLUMN_ID_CUSTOMER = 'license-customer-email' as const
@@ -1170,15 +1177,21 @@ export const UI_LICENSE_STATUS_ERROR_TITLE = 'Unable to load licenses' as const
 export const UI_LICENSE_STATUS_ERROR_BODY = 'Please try again after refreshing the page.' as const
 export const UI_LICENSE_TOAST_CREATE_SUCCESS = 'License created successfully' as const
 export const UI_LICENSE_TOAST_UPDATE_SUCCESS = 'License updated successfully' as const
-export const UI_LICENSE_TOAST_DELETE_SUCCESS = 'License revoked successfully' as const
+export const UI_LICENSE_TOAST_DELETE_SUCCESS = 'License soft deleted successfully' as const
+export const UI_LICENSE_TOAST_REVOKE_SUCCESS = 'License revoked successfully' as const
 export const UI_LICENSE_TOAST_SUSPEND_SUCCESS = 'License suspended successfully' as const
 export const UI_LICENSE_TOAST_RESUME_SUCCESS = 'License resumed successfully' as const
 
-export const UI_LICENSE_CONFIRM_DELETE_TITLE = 'Revoke license?' as const
+export const UI_LICENSE_CONFIRM_DELETE_TITLE = 'Soft delete license?' as const
 export const UI_LICENSE_CONFIRM_DELETE_BODY =
-  'Revoking a license will permanently disable it. This action cannot be undone.' as const
-export const UI_LICENSE_CONFIRM_DELETE_CONFIRM = 'Revoke license' as const
+  'Soft deleting a license revokes it and removes it from the license list. This action cannot be undone.' as const
+export const UI_LICENSE_CONFIRM_DELETE_CONFIRM = 'Soft delete license' as const
 export const UI_LICENSE_CONFIRM_DELETE_CANCEL = 'Cancel' as const
+export const UI_LICENSE_CONFIRM_REVOKE_TITLE = 'Revoke license?' as const
+export const UI_LICENSE_CONFIRM_REVOKE_BODY =
+  'Revoking a license will permanently disable it but keep it visible in the license list.' as const
+export const UI_LICENSE_CONFIRM_REVOKE_CONFIRM = 'Revoke license' as const
+export const UI_LICENSE_CONFIRM_REVOKE_CANCEL = 'Cancel' as const
 export const UI_LICENSE_CONFIRM_SUSPEND_TITLE = 'Suspend license?' as const
 export const UI_LICENSE_CONFIRM_SUSPEND_BODY =
   'Suspending a license will temporarily block validations. You can resume it later.' as const

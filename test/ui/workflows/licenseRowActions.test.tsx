@@ -6,6 +6,7 @@ import {
   UI_LICENSE_ACTION_DELETE,
   UI_LICENSE_ACTION_RESUME,
   UI_LICENSE_ACTION_SUSPEND,
+  UI_LICENSE_CONFIRM_DELETE_CONFIRM,
   UI_USER_ROLE_SUPERUSER,
   UI_USER_ROLE_VENDOR_MANAGER,
 } from '../../../src/ui/constants'
@@ -77,7 +78,7 @@ describe('LicenseRowActions', () => {
     fireEvent.click(screen.getByText(UI_LICENSE_ACTION_DELETE))
 
     const dialog = await screen.findByRole('dialog')
-    fireEvent.click(within(dialog).getByRole('button', { name: /Revoke license/i }))
+    fireEvent.click(within(dialog).getByRole('button', { name: UI_LICENSE_CONFIRM_DELETE_CONFIRM }))
 
     await waitFor(() => expect(deleteMutation.mutateAsync).toHaveBeenCalledWith(license.id))
   })

@@ -18,8 +18,11 @@ import {
   UI_RELEASE_FILTER_VALUE_ALL,
   UI_RELEASE_FILTER_VALUE_PRERELEASE,
   UI_RELEASE_FILTER_VALUE_STABLE,
-  UI_RELEASE_STATUS_ERROR_BODY,
-  UI_RELEASE_STATUS_ERROR_TITLE,
+  UI_RELEASE_ROUTE_STATUS_ERROR_BODY,
+  UI_RELEASE_ROUTE_STATUS_ERROR_TITLE,
+  UI_RELEASE_ROUTE_STATUS_LOADING_BODY,
+  UI_RELEASE_ROUTE_STATUS_LOADING_TITLE,
+  UI_RELEASE_STATUS_ACTION_RETRY,
   UI_SORT_DESC,
   UI_TENANT_FILTER_ALL,
 } from '../../ui/constants'
@@ -44,8 +47,18 @@ type ReleaseFilters = {
 export function ReleasesRouteComponent() {
   const client = useApiClient()
   const { user: currentUser } = useAuth()
-  const { data: productsData } = useAdminProducts(client)
-  const { data: tenantsData } = useAdminTenants(client)
+  const {
+    data: productsData,
+    isLoading: productsLoading,
+    isError: productsError,
+    refetch: refetchProducts,
+  } = useAdminProducts(client)
+  const {
+    data: tenantsData,
+    isLoading: tenantsLoading,
+    isError: tenantsError,
+    refetch: refetchTenants,
+  } = useAdminTenants(client)
 
   const tableState = useTableState<ReleaseFilters>({
     initialFilters: { tenantId: '', productId: '', channel: UI_RELEASE_FILTER_VALUE_ALL },
@@ -150,12 +163,23 @@ export function ReleasesRouteComponent() {
 
   const showLoading = Boolean(selectedProductId) && releasesLoading
   const showError = Boolean(selectedProductId) && releasesError
+  const isRouteLoading = productsLoading || tenantsLoading
+  const isRouteError = productsError || tenantsError
+
+  const handleRouteRetry = () => {
+    void Promise.all([refetchProducts(), refetchTenants(), selectedProductId ? refetchReleases() : Promise.resolve()])
+  }
+
   const routeStatus = buildRouteStatusState({
-    isLoading: false,
-    isError: false,
+    isLoading: isRouteLoading,
+    isError: isRouteError,
     canView,
-    errorTitle: UI_RELEASE_STATUS_ERROR_TITLE,
-    errorMessage: UI_RELEASE_STATUS_ERROR_BODY,
+    loadingTitle: UI_RELEASE_ROUTE_STATUS_LOADING_TITLE,
+    loadingMessage: UI_RELEASE_ROUTE_STATUS_LOADING_BODY,
+    errorTitle: UI_RELEASE_ROUTE_STATUS_ERROR_TITLE,
+    errorMessage: UI_RELEASE_ROUTE_STATUS_ERROR_BODY,
+    retryLabel: UI_RELEASE_STATUS_ACTION_RETRY,
+    onRetry: handleRouteRetry,
   })
 
   return (

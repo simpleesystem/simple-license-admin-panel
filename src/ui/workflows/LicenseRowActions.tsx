@@ -11,9 +11,11 @@ import {
   UI_LICENSE_ACTION_DELETE,
   UI_LICENSE_ACTION_EDIT,
   UI_LICENSE_ACTION_RESUME,
+  UI_LICENSE_ACTION_REVOKE,
   UI_LICENSE_ACTION_SUSPEND,
   UI_LICENSE_BUTTON_DELETE,
   UI_LICENSE_BUTTON_RESUME,
+  UI_LICENSE_BUTTON_REVOKE,
   UI_LICENSE_BUTTON_SUSPEND,
   UI_LICENSE_CONFIRM_DELETE_BODY,
   UI_LICENSE_CONFIRM_DELETE_CANCEL,
@@ -23,6 +25,10 @@ import {
   UI_LICENSE_CONFIRM_RESUME_CANCEL,
   UI_LICENSE_CONFIRM_RESUME_CONFIRM,
   UI_LICENSE_CONFIRM_RESUME_TITLE,
+  UI_LICENSE_CONFIRM_REVOKE_BODY,
+  UI_LICENSE_CONFIRM_REVOKE_CANCEL,
+  UI_LICENSE_CONFIRM_REVOKE_CONFIRM,
+  UI_LICENSE_CONFIRM_REVOKE_TITLE,
   UI_LICENSE_CONFIRM_SUSPEND_BODY,
   UI_LICENSE_CONFIRM_SUSPEND_CANCEL,
   UI_LICENSE_CONFIRM_SUSPEND_CONFIRM,
@@ -61,9 +67,11 @@ export function LicenseRowActions({
   const resumeMutation = adaptMutation(useResumeLicense(client))
   const notificationBus = useNotificationBus()
 
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showRevokeConfirm, setShowRevokeConfirm] = useState(false)
   const [showSuspendConfirm, setShowSuspendConfirm] = useState(false)
   const [showResumeConfirm, setShowResumeConfirm] = useState(false)
+  const [isRevokePending, setIsRevokePending] = useState(false)
 
   const allowDelete = canDeleteLicense(currentUser ?? null)
   const allowUpdate = canUpdateLicense(currentUser ?? null)
@@ -76,7 +84,7 @@ export function LicenseRowActions({
   // Only show buttons if user has permissions and owns the license (or is system admin)
   const canShowButtons = (allowDelete || allowUpdate) && (ownsLicense || isSystemAdmin)
 
-  const handleRevoke = async () => {
+  const handleSoftDelete = async () => {
     try {
       await revokeMutation.mutateAsync(licenseKey)
       notifyLicenseSuccess(notificationBus, 'delete')
@@ -85,6 +93,21 @@ export function LicenseRowActions({
       notifyCrudError(notificationBus)
       throw error
     } finally {
+      setShowDeleteConfirm(false)
+    }
+  }
+
+  const handleRevoke = async () => {
+    setIsRevokePending(true)
+    try {
+      await client.revokeLicense(licenseKey)
+      notifyLicenseSuccess(notificationBus, 'revoke')
+      onCompleted?.()
+    } catch (error) {
+      notifyCrudError(notificationBus)
+      throw error
+    } finally {
+      setIsRevokePending(false)
       setShowRevokeConfirm(false)
     }
   }
@@ -158,10 +181,21 @@ export function LicenseRowActions({
           )
         ) : null}
 
-        {allowDelete && ownsLicense ? (
+        {allowUpdate && ownsLicense ? (
           <Button
             variant={UI_BUTTON_VARIANT_GHOST}
             onClick={() => setShowRevokeConfirm(true)}
+            disabled={isRevokePending}
+            aria-label={UI_LICENSE_ACTION_REVOKE}
+          >
+            {UI_LICENSE_BUTTON_REVOKE}
+          </Button>
+        ) : null}
+
+        {allowDelete && ownsLicense ? (
+          <Button
+            variant={UI_BUTTON_VARIANT_GHOST}
+            onClick={() => setShowDeleteConfirm(true)}
             disabled={revokeMutation.isPending}
             aria-label={UI_LICENSE_ACTION_DELETE}
           >
@@ -206,19 +240,37 @@ export function LicenseRowActions({
         />
 
         <ModalDialog
-          show={showRevokeConfirm}
-          onClose={() => setShowRevokeConfirm(false)}
+          show={showDeleteConfirm}
+          onClose={() => setShowDeleteConfirm(false)}
           title={UI_LICENSE_CONFIRM_DELETE_TITLE}
           body={UI_LICENSE_CONFIRM_DELETE_BODY}
           primaryAction={{
-            id: 'revoke-confirm',
+            id: 'soft-delete-confirm',
             label: UI_LICENSE_CONFIRM_DELETE_CONFIRM,
-            onClick: handleRevoke,
+            onClick: handleSoftDelete,
             disabled: revokeMutation.isPending,
           }}
           secondaryAction={{
-            id: 'revoke-cancel',
+            id: 'soft-delete-cancel',
             label: UI_LICENSE_CONFIRM_DELETE_CANCEL,
+            onClick: () => setShowDeleteConfirm(false),
+          }}
+        />
+
+        <ModalDialog
+          show={showRevokeConfirm}
+          onClose={() => setShowRevokeConfirm(false)}
+          title={UI_LICENSE_CONFIRM_REVOKE_TITLE}
+          body={UI_LICENSE_CONFIRM_REVOKE_BODY}
+          primaryAction={{
+            id: 'revoke-confirm',
+            label: UI_LICENSE_CONFIRM_REVOKE_CONFIRM,
+            onClick: handleRevoke,
+            disabled: isRevokePending,
+          }}
+          secondaryAction={{
+            id: 'revoke-cancel',
+            label: UI_LICENSE_CONFIRM_REVOKE_CANCEL,
             onClick: () => setShowRevokeConfirm(false),
           }}
         />

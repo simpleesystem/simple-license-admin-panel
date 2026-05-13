@@ -23,6 +23,7 @@ import {
   API_ENDPOINT_ADMIN_LICENSES_FREEZE,
   API_ENDPOINT_ADMIN_LICENSES_GET,
   API_ENDPOINT_ADMIN_LICENSES_LIST,
+  API_ENDPOINT_ADMIN_LICENSES_MARK_REVOKED,
   API_ENDPOINT_ADMIN_LICENSES_RESUME,
   API_ENDPOINT_ADMIN_LICENSES_REVOKE,
   API_ENDPOINT_ADMIN_LICENSES_SUSPEND,
@@ -519,6 +520,13 @@ export class Client {
   }
 
   async revokeLicense(idOrKey: string): Promise<ActionSuccessResponse> {
+    const url = `${API_ENDPOINT_ADMIN_LICENSES_MARK_REVOKED}/${encodeURIComponent(idOrKey)}/revoke`
+    const response = await this.httpClient.post<ApiResponse<{ success: boolean }>>(url)
+
+    return this.handleApiResponse<ActionSuccessResponse>(response.data, { success: true })
+  }
+
+  async softDeleteLicense(idOrKey: string): Promise<ActionSuccessResponse> {
     const url = `${API_ENDPOINT_ADMIN_LICENSES_REVOKE}/${encodeURIComponent(idOrKey)}`
     const response = await this.httpClient.delete<ApiResponse<{ success: boolean }>>(url)
 
@@ -632,8 +640,11 @@ export class Client {
   async promoteRelease(productId: string, releaseId: string): Promise<CreateReleaseResponse> {
     const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}/releases/${encodeURIComponent(releaseId)}/promote`
     const response = await this.httpClient.patch<ApiResponse<CreateReleaseResponse>>(url)
-
-    return this.handleApiResponse(response.data, {} as CreateReleaseResponse)
+    const rawData = this.handleApiResponse<unknown>(response.data, {})
+    if (typeof rawData === 'object' && rawData !== null) {
+      return this.normalizePluginRelease(rawData as Record<string, unknown>)
+    }
+    return {} as CreateReleaseResponse
   }
 
   async createRelease(productId: string, formData: FormData): Promise<CreateReleaseResponse> {
@@ -645,7 +656,11 @@ export class Client {
         uploadFormData,
         this.getReleaseUploadRequestConfig()
       )
-      return this.handleApiResponse(response.data, {} as CreateReleaseResponse)
+      const rawData = this.handleApiResponse<unknown>(response.data, {})
+      if (typeof rawData === 'object' && rawData !== null) {
+        return this.normalizePluginRelease(rawData as Record<string, unknown>)
+      }
+      return {} as CreateReleaseResponse
     } catch (error) {
       if (!this.shouldRetryCreateReleaseAfterUnauthorized(error)) {
         throw error
@@ -661,7 +676,11 @@ export class Client {
         retryFormData,
         this.getReleaseUploadRequestConfig()
       )
-      return this.handleApiResponse(retryResponse.data, {} as CreateReleaseResponse)
+      const rawRetryData = this.handleApiResponse<unknown>(retryResponse.data, {})
+      if (typeof rawRetryData === 'object' && rawRetryData !== null) {
+        return this.normalizePluginRelease(rawRetryData as Record<string, unknown>)
+      }
+      return {} as CreateReleaseResponse
     }
   }
 
@@ -1245,9 +1264,9 @@ export class Client {
 
   private normalizePluginRelease(source: Record<string, unknown>): ListReleasesResponse[number] {
     const normalizedCreatedAt =
-      this.getStringProperty(source, 'created_at', 'createdAt') || this.getStringProperty(source, 'created', 'created')
+      this.getDateProperty(source, 'created_at', 'createdAt') || this.getDateProperty(source, 'created', 'created')
     const normalizedUpdatedAt =
-      this.getStringProperty(source, 'updated_at', 'updatedAt') || this.getStringProperty(source, 'updated', 'updated')
+      this.getDateProperty(source, 'updated_at', 'updatedAt') || this.getDateProperty(source, 'updated', 'updated')
 
     return {
       id: this.getStringProperty(source, 'id', 'id'),
@@ -1268,6 +1287,29 @@ export class Client {
       createdAt: normalizedCreatedAt,
       updatedAt: normalizedUpdatedAt,
     }
+  }
+
+  private getDateProperty(source: Record<string, unknown>, snakeCaseKey: string, camelCaseKey: string): string {
+    const snakeCaseValue = this.toDateString(source[snakeCaseKey])
+    if (snakeCaseValue !== '') {
+      return snakeCaseValue
+    }
+    return this.toDateString(source[camelCaseKey])
+  }
+
+  private toDateString(value: unknown): string {
+    if (typeof value === 'string') {
+      return value
+    }
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+      return ''
+    }
+    const epochMilliseconds = value < 1_000_000_000_000 ? value * 1_000 : value
+    const parsedDate = new Date(epochMilliseconds)
+    if (Number.isNaN(parsedDate.getTime())) {
+      return ''
+    }
+    return parsedDate.toISOString()
   }
 
   private toSafeNumber(value: unknown): number {

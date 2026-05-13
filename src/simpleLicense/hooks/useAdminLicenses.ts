@@ -129,7 +129,7 @@ export function useRevokeLicense(client: Client) {
 
   return useMutation<{ success: boolean }, Error, string>({
     mutationFn: async (id) => {
-      return await client.revokeLicense(id)
+      return await client.softDeleteLicense(id)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminLicenses.all() })
