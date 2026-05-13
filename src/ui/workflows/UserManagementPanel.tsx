@@ -13,6 +13,8 @@ import {
   UI_TABLE_FILTER_PLACEHOLDER_ALL_ROLES,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_VENDORS,
+  UI_TABLE_PAGE_SIZE_LABEL,
+  UI_TABLE_PAGE_SIZE_OPTIONS,
   UI_USER_BUTTON_CREATE,
   UI_USER_COLUMN_HEADER_ACTIONS,
   UI_USER_COLUMN_HEADER_EMAIL,
@@ -80,6 +82,8 @@ type UserManagementPanelProps = {
   page: number
   totalPages: number
   onPageChange: (page: number) => void
+  pageSize?: number
+  onPageSizeChange?: (size: number) => void
   searchTerm: string
   onSearchChange: (term: string) => void
   sortState?: UiDataTableSortState
@@ -101,6 +105,8 @@ export function UserManagementPanel({
   page,
   totalPages,
   onPageChange,
+  pageSize,
+  onPageSizeChange,
   searchTerm,
   onSearchChange,
   sortState,
@@ -289,8 +295,16 @@ export function UserManagementPanel({
         onSort={onSortChange}
         toolbar={toolbar}
         footer={
-          totalPages > 1 ? (
-            <TablePaginationFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />
+          totalPages > 1 || onPageSizeChange ? (
+            <TablePaginationFooter
+              page={page}
+              totalPages={totalPages}
+              onPageChange={onPageChange}
+              pageSize={pageSize}
+              pageSizeOptions={UI_TABLE_PAGE_SIZE_OPTIONS}
+              onPageSizeChange={onPageSizeChange}
+              pageSizeLabel={UI_TABLE_PAGE_SIZE_LABEL}
+            />
           ) : undefined
         }
       />

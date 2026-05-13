@@ -22,6 +22,7 @@ import {
   UI_PAGE_TITLE_LICENSES,
   UI_PAGE_VARIANT_FULL_WIDTH,
   UI_SORT_ASC,
+  UI_TABLE_PAGE_SIZE_OPTIONS,
   UI_TENANT_FILTER_ALL,
 } from '../../ui/constants'
 import { useDataTableState } from '../../ui/data/useDataTableState'
@@ -162,6 +163,7 @@ export function LicensesRouteComponent() {
 
   const licenseTable = useDataTableState({
     data: visibleLicenses,
+    pageSize: UI_TABLE_PAGE_SIZE_OPTIONS[0],
     initialSort: { columnId: UI_LICENSE_COLUMN_ID_CUSTOMER, direction: UI_SORT_ASC },
     search: searchLicenses,
     filter: (license) => {
@@ -241,6 +243,8 @@ export function LicensesRouteComponent() {
           page={licenseTable.page}
           totalPages={licenseTable.totalPages}
           onPageChange={licenseTable.goToPage}
+          pageSize={licenseTable.pageSize}
+          onPageSizeChange={licenseTable.setPageSize}
           sortState={licenseTable.sortState}
           onSortChange={licenseTable.onSort}
           productOptions={filteredProductOptions}

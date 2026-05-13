@@ -13,6 +13,8 @@ import {
   UI_BUTTON_VARIANT_PRIMARY,
   UI_STACK_GAP_MEDIUM,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
+  UI_TABLE_PAGE_SIZE_LABEL,
+  UI_TABLE_PAGE_SIZE_OPTIONS,
   UI_TENANT_BUTTON_CREATE,
   UI_TENANT_COLUMN_HEADER_ACTIONS,
   UI_TENANT_COLUMN_HEADER_CREATED,
@@ -57,6 +59,8 @@ type TenantManagementPanelProps = {
   page: number
   totalPages: number
   onPageChange: (page: number) => void
+  pageSize?: number
+  onPageSizeChange?: (size: number) => void
   searchTerm?: string
   onSearchChange?: (term: string) => void
   statusFilter?: readonly string[]
@@ -74,6 +78,8 @@ export function TenantManagementPanel({
   page,
   totalPages,
   onPageChange,
+  pageSize,
+  onPageSizeChange,
   searchTerm = '',
   onSearchChange,
   statusFilter,
@@ -198,7 +204,15 @@ export function TenantManagementPanel({
         toolbar={toolbar}
         footer={
           totalPages > 1 ? (
-            <TablePaginationFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />
+            <TablePaginationFooter
+              page={page}
+              totalPages={totalPages}
+              onPageChange={onPageChange}
+              pageSize={pageSize}
+              pageSizeOptions={UI_TABLE_PAGE_SIZE_OPTIONS}
+              onPageSizeChange={onPageSizeChange}
+              pageSizeLabel={UI_TABLE_PAGE_SIZE_LABEL}
+            />
           ) : undefined
         }
       />

@@ -24,6 +24,7 @@ import {
   UI_RELEASE_ROUTE_STATUS_LOADING_TITLE,
   UI_RELEASE_STATUS_ACTION_RETRY,
   UI_SORT_DESC,
+  UI_TABLE_PAGE_SIZE_OPTIONS,
   UI_TENANT_FILTER_ALL,
 } from '../../ui/constants'
 import { useDataTableState } from '../../ui/data/useDataTableState'
@@ -121,6 +122,7 @@ export function ReleasesRouteComponent() {
 
   const releasesTable = useDataTableState<ReleaseListItem>({
     data: releases,
+    pageSize: UI_TABLE_PAGE_SIZE_OPTIONS[0],
     initialSort: { columnId: UI_RELEASE_COLUMN_ID_CREATED, direction: UI_SORT_DESC },
     search: searchReleases,
     filter: (release) => {
@@ -205,6 +207,8 @@ export function ReleasesRouteComponent() {
           page={releasesTable.page}
           totalPages={releasesTable.totalPages}
           onPageChange={releasesTable.goToPage}
+          pageSize={releasesTable.pageSize}
+          onPageSizeChange={releasesTable.setPageSize}
           sortState={releasesTable.sortState}
           onSortChange={releasesTable.onSort}
           allowCreate={allowCreate}

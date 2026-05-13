@@ -3,6 +3,7 @@ import { describe, expect, test, vi } from 'vitest'
 
 import { UsersRouteComponent } from '../../../../src/routes/users/UsersRoute'
 import {
+  UI_TABLE_PAGE_SIZE_LABEL,
   UI_USER_BUTTON_CREATE,
   UI_USER_STATUS_ERROR_TITLE,
   UI_USER_STATUS_LOADING_TITLE,
@@ -657,6 +658,49 @@ describe('UsersRouteComponent', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Admin users')).toBeInTheDocument()
+    })
+  })
+
+  test('updates users query limit when page size changes', async () => {
+    const superUser = buildUser({ role: 'SUPERUSER', vendorId: null })
+    useAuthMock.mockReturnValue({
+      user: superUser,
+      currentUser: superUser,
+      isAuthenticated: true,
+      status: 'authenticated',
+      token: 'token',
+      login: vi.fn(),
+      logout: vi.fn(),
+      refreshCurrentUser: vi.fn(),
+    })
+
+    const users = [buildUser({ username: 'page-size-user' })]
+    useAdminUsersMock.mockReturnValue({
+      data: {
+        data: users,
+        pagination: { page: 1, limit: 10, total: 50, totalPages: 5 },
+      },
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    })
+
+    renderWithProviders(<UsersRouteComponent />)
+
+    await waitFor(() => {
+      expect(screen.getByText('page-size-user')).toBeInTheDocument()
+    })
+
+    fireEvent.change(screen.getByLabelText(UI_TABLE_PAGE_SIZE_LABEL), { target: { value: '25' } })
+
+    await waitFor(() => {
+      expect(useAdminUsersMock).toHaveBeenLastCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          limit: 25,
+          offset: 0,
+        })
+      )
     })
   })
 })

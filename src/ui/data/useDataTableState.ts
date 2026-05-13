@@ -22,6 +22,7 @@ type UseDataTableStateResult<TData> = {
   setSearchTerm: (term: string) => void
   page: number
   pageSize: number
+  setPageSize: (size: number) => void
   totalPages: number
   goToPage: (nextPage: number) => void
 }
@@ -42,6 +43,7 @@ export function useDataTableState<TData>({
   const [sortState, setSortState] = useState<UiDataTableSortState | undefined>(initialSort)
   const [searchTerm, setSearchTerm] = useState('')
   const [page, setPage] = useState(1)
+  const [currentPageSize, setCurrentPageSize] = useState(pageSize)
 
   const filtered = useMemo(() => {
     const trimmedTerm = searchTerm.trim()
@@ -68,10 +70,10 @@ export function useDataTableState<TData>({
     return [...filtered].sort((left, right) => comparator(left, right) * directionMultiplier)
   }, [filtered, sortComparators, sortState])
 
-  const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize))
+  const totalPages = Math.max(1, Math.ceil(sorted.length / currentPageSize))
   const currentPage = Math.min(page, totalPages)
-  const start = (currentPage - 1) * pageSize
-  const rows = sorted.slice(start, start + pageSize)
+  const start = (currentPage - 1) * currentPageSize
+  const rows = sorted.slice(start, start + currentPageSize)
 
   const onSort = useCallback((columnId: string, direction: UiSortDirection) => {
     setSortState({ columnId, direction })
@@ -91,6 +93,14 @@ export function useDataTableState<TData>({
     setPage(1)
   }, [])
 
+  const setPageSize = useCallback((size: number) => {
+    if (size <= 0) {
+      return
+    }
+    setCurrentPageSize(size)
+    setPage(1)
+  }, [])
+
   return {
     rows,
     sortState,
@@ -98,7 +108,8 @@ export function useDataTableState<TData>({
     searchTerm,
     setSearchTerm: setSearchTermClamped,
     page: currentPage,
-    pageSize,
+    pageSize: currentPageSize,
+    setPageSize,
     totalPages,
     goToPage,
   }

@@ -31,6 +31,8 @@ import {
   UI_PRODUCT_STATUS_ACTIVE,
   UI_PRODUCT_STATUS_SUSPENDED,
   UI_STACK_GAP_MEDIUM,
+  UI_TABLE_PAGE_SIZE_LABEL,
+  UI_TABLE_PAGE_SIZE_OPTIONS,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
@@ -71,6 +73,8 @@ type ProductManagementPanelProps = {
   page: number
   totalPages: number
   onPageChange: (page: number) => void
+  pageSize?: number
+  onPageSizeChange?: (size: number) => void
   searchTerm?: string
   onSearchChange?: (term: string) => void
   statusFilter?: readonly string[]
@@ -93,6 +97,8 @@ export function ProductManagementPanel({
   page,
   totalPages,
   onPageChange,
+  pageSize,
+  onPageSizeChange,
   searchTerm = '',
   onSearchChange,
   statusFilter,
@@ -244,7 +250,15 @@ export function ProductManagementPanel({
         toolbar={toolbar}
         footer={
           totalPages > 1 ? (
-            <TablePaginationFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />
+            <TablePaginationFooter
+              page={page}
+              totalPages={totalPages}
+              onPageChange={onPageChange}
+              pageSize={pageSize}
+              pageSizeOptions={UI_TABLE_PAGE_SIZE_OPTIONS}
+              onPageSizeChange={onPageSizeChange}
+              pageSizeLabel={UI_TABLE_PAGE_SIZE_LABEL}
+            />
           ) : undefined
         }
       />

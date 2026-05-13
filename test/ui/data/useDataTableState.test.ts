@@ -179,4 +179,22 @@ describe('useDataTableState', () => {
 
     expect(result.current.rows).toHaveLength(5)
   })
+
+  it('updates page size and resets to first page', () => {
+    const { result } = renderHook(() => useDataTableState({ data: testData, pageSize: 2 }))
+
+    act(() => {
+      result.current.goToPage(2)
+    })
+    expect(result.current.page).toBe(2)
+
+    act(() => {
+      result.current.setPageSize(3)
+    })
+
+    expect(result.current.page).toBe(1)
+    expect(result.current.pageSize).toBe(3)
+    expect(result.current.totalPages).toBe(2)
+    expect(result.current.rows).toHaveLength(3)
+  })
 })

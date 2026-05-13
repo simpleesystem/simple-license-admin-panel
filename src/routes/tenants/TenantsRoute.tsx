@@ -10,6 +10,7 @@ import {
   UI_PAGE_TITLE_TENANTS,
   UI_PAGE_VARIANT_FULL_WIDTH,
   UI_SORT_DESC,
+  UI_TABLE_PAGE_SIZE_OPTIONS,
   UI_TENANT_COLUMN_ID_CREATED,
   UI_TENANT_COLUMN_ID_NAME,
   UI_TENANT_COLUMN_ID_STATUS,
@@ -77,6 +78,7 @@ export function TenantsRouteComponent() {
 
   const tenantTable = useDataTableState({
     data: visibleTenants,
+    pageSize: UI_TABLE_PAGE_SIZE_OPTIONS[0],
     initialSort: { columnId: UI_TENANT_COLUMN_ID_CREATED, direction: UI_SORT_DESC },
     search: searchTenants,
     filter: (tenant) => tableState.filters.status.length === 0 || tableState.filters.status.includes(tenant.status),
@@ -122,6 +124,8 @@ export function TenantsRouteComponent() {
           page={tenantTable.page}
           totalPages={tenantTable.totalPages}
           onPageChange={tenantTable.goToPage}
+          pageSize={tenantTable.pageSize}
+          onPageSizeChange={tenantTable.setPageSize}
           sortState={tenantTable.sortState}
           onSortChange={tenantTable.onSort}
         />

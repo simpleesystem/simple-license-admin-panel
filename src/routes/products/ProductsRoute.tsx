@@ -20,6 +20,7 @@ import {
   UI_PRODUCT_STATUS_LOADING_BODY,
   UI_PRODUCT_STATUS_LOADING_TITLE,
   UI_SORT_ASC,
+  UI_TABLE_PAGE_SIZE_OPTIONS,
   UI_TENANT_FILTER_ALL,
 } from '../../ui/constants'
 import { useDataTableState } from '../../ui/data/useDataTableState'
@@ -110,6 +111,7 @@ export function ProductsRouteComponent() {
 
   const productTable = useDataTableState({
     data: filteredProducts,
+    pageSize: UI_TABLE_PAGE_SIZE_OPTIONS[0],
     initialSort: { columnId: UI_PRODUCT_COLUMN_ID_NAME, direction: UI_SORT_ASC },
     search: searchProducts,
     filter: (product) => {
@@ -166,6 +168,8 @@ export function ProductsRouteComponent() {
           page={productTable.page}
           totalPages={productTable.totalPages}
           onPageChange={productTable.goToPage}
+          pageSize={productTable.pageSize}
+          onPageSizeChange={productTable.setPageSize}
           sortState={productTable.sortState}
           onSortChange={productTable.onSort}
         />

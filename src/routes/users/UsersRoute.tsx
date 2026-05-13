@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useAdminUsers } from '@/simpleLicense'
 
 import { useApiClient } from '../../api/apiContext'
@@ -8,7 +8,7 @@ import {
   UI_PAGE_SUBTITLE_USERS,
   UI_PAGE_TITLE_USERS,
   UI_PAGE_VARIANT_FULL_WIDTH,
-  UI_TABLE_PAGE_SIZE_DEFAULT,
+  UI_TABLE_PAGE_SIZE_OPTIONS,
   UI_USER_STATUS_ACTION_RETRY,
   UI_USER_STATUS_ERROR_BODY,
   UI_USER_STATUS_ERROR_TITLE,
@@ -38,11 +38,12 @@ export function UsersRouteComponent() {
       vendorId: '',
     },
   })
+  const [pageSize, setPageSize] = useState<number>(UI_TABLE_PAGE_SIZE_OPTIONS[0])
 
   const filters = useMemo(() => {
-    const offset = Math.max(0, (tableState.page - 1) * UI_TABLE_PAGE_SIZE_DEFAULT)
+    const offset = Math.max(0, (tableState.page - 1) * pageSize)
     const baseParams = {
-      limit: UI_TABLE_PAGE_SIZE_DEFAULT,
+      limit: pageSize,
       offset,
       search: tableState.searchTerm || undefined,
       role: tableState.filters.role || undefined,
@@ -52,7 +53,7 @@ export function UsersRouteComponent() {
       return { ...baseParams, vendor_id: currentUser.vendorId }
     }
     return { ...baseParams, vendor_id: tableState.filters.vendorId || undefined }
-  }, [currentUser, tableState.filters, tableState.page, tableState.searchTerm])
+  }, [currentUser, pageSize, tableState.filters, tableState.page, tableState.searchTerm])
 
   const { data, isLoading, isError, refetch } = useAdminUsers(client, filters)
 
@@ -101,6 +102,11 @@ export function UsersRouteComponent() {
           page={tableState.page}
           totalPages={totalPages}
           onPageChange={tableState.setPage}
+          pageSize={pageSize}
+          onPageSizeChange={(size) => {
+            setPageSize(size)
+            tableState.setPage(1)
+          }}
           searchTerm={tableState.searchTerm}
           onSearchChange={tableState.setSearchTerm}
           sortState={tableState.sortState}

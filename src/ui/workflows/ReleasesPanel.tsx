@@ -47,6 +47,8 @@ import {
   UI_RELEASE_STATUS_LOADING_TITLE,
   UI_STACK_GAP_MEDIUM,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_PRODUCTS,
+  UI_TABLE_PAGE_SIZE_LABEL,
+  UI_TABLE_PAGE_SIZE_OPTIONS,
   UI_TENANT_FILTER_LABEL,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
@@ -85,6 +87,8 @@ type ReleasesPanelProps = {
   page: number
   totalPages: number
   onPageChange: (page: number) => void
+  pageSize?: number
+  onPageSizeChange?: (size: number) => void
   sortState?: UiDataTableSortState
   onSortChange?: (columnId: string, direction: UiSortDirection) => void
   allowCreate: boolean
@@ -113,6 +117,8 @@ export function ReleasesPanel({
   page,
   totalPages,
   onPageChange,
+  pageSize,
+  onPageSizeChange,
   sortState,
   onSortChange,
   allowCreate,
@@ -277,7 +283,15 @@ export function ReleasesPanel({
   )
   const footer =
     selectedProductId && totalPages > 1 ? (
-      <TablePaginationFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />
+      <TablePaginationFooter
+        page={page}
+        totalPages={totalPages}
+        onPageChange={onPageChange}
+        pageSize={pageSize}
+        pageSizeOptions={UI_TABLE_PAGE_SIZE_OPTIONS}
+        onPageSizeChange={onPageSizeChange}
+        pageSizeLabel={UI_TABLE_PAGE_SIZE_LABEL}
+      />
     ) : undefined
 
   return (

@@ -36,6 +36,8 @@ import {
   UI_TABLE_FILTER_LABEL_STATUS,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_PRODUCTS,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
+  UI_TABLE_PAGE_SIZE_LABEL,
+  UI_TABLE_PAGE_SIZE_OPTIONS,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
@@ -82,6 +84,8 @@ type LicenseManagementPanelProps = {
   page: number
   totalPages: number
   onPageChange: (page: number) => void
+  pageSize?: number
+  onPageSizeChange?: (size: number) => void
   searchTerm?: string
   onSearchChange?: (term: string) => void
   statusFilter?: readonly string[]
@@ -106,6 +110,8 @@ export function LicenseManagementPanel({
   page,
   totalPages,
   onPageChange,
+  pageSize,
+  onPageSizeChange,
   searchTerm = '',
   onSearchChange,
   statusFilter,
@@ -269,7 +275,15 @@ export function LicenseManagementPanel({
         toolbar={toolbar}
         footer={
           totalPages > 1 ? (
-            <TablePaginationFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />
+            <TablePaginationFooter
+              page={page}
+              totalPages={totalPages}
+              onPageChange={onPageChange}
+              pageSize={pageSize}
+              pageSizeOptions={UI_TABLE_PAGE_SIZE_OPTIONS}
+              onPageSizeChange={onPageSizeChange}
+              pageSizeLabel={UI_TABLE_PAGE_SIZE_LABEL}
+            />
           ) : undefined
         }
       />
