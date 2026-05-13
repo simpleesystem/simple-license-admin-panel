@@ -59,8 +59,8 @@ type TenantManagementPanelProps = {
   onPageChange: (page: number) => void
   searchTerm?: string
   onSearchChange?: (term: string) => void
-  statusFilter?: string
-  onStatusFilterChange?: (status: string) => void
+  statusFilter?: readonly string[]
+  onStatusFilterChange?: (status: string[]) => void
   sortState?: UiDataTableSortState
   onSortChange?: (columnId: string, direction: UiSortDirection) => void
 }
@@ -114,10 +114,11 @@ export function TenantManagementPanel({
         onStatusFilterChange ? (
           <TableFilter
             {...createStandardStatusFilterField({
-              value: statusFilter ?? '',
+              value: statusFilter ?? [],
               options: statusOptions,
               onChange: onStatusFilterChange,
               placeholder: UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
+              multiple: true,
             })}
           />
         ) : null

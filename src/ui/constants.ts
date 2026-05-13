@@ -1169,6 +1169,7 @@ export const UI_LICENSE_STATUS_INACTIVE = 'INACTIVE' as const
 export const UI_LICENSE_STATUS_EXPIRED = 'EXPIRED' as const
 export const UI_LICENSE_STATUS_SUSPENDED = 'SUSPENDED' as const
 export const UI_LICENSE_STATUS_REVOKED = 'REVOKED' as const
+export const UI_LICENSE_STATUS_DELETED = 'DELETED' as const
 export const UI_ENTITY_LICENSE = 'License' as const
 export const UI_LICENSE_STATUS_ACTION_RETRY = 'Retry' as const
 export const UI_LICENSE_STATUS_LOADING_TITLE = 'Loading licenses' as const

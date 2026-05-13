@@ -13,6 +13,7 @@ import {
   UI_PRODUCT_COLUMN_ID_STATUS,
   UI_PRODUCT_COLUMN_ID_VENDOR,
   UI_PRODUCT_FILTER_VALUE_ACTIVE,
+  UI_PRODUCT_FILTER_VALUE_INACTIVE,
   UI_PRODUCT_STATUS_ACTION_RETRY,
   UI_PRODUCT_STATUS_ERROR_BODY,
   UI_PRODUCT_STATUS_ERROR_TITLE,
@@ -35,7 +36,7 @@ import { usePagedFilters } from '../shared/usePagedFilters'
 import { useTenantScopedProducts } from '../shared/useTenantScopedProducts'
 
 type ProductFilters = {
-  status: string
+  status: string[]
   tenantId: string
 }
 
@@ -46,7 +47,7 @@ export function ProductsRouteComponent() {
   const { data: tenantsData } = useAdminTenants(client)
   const tableState = useTableState<ProductFilters>({
     initialFilters: {
-      status: UI_PRODUCT_FILTER_VALUE_ACTIVE,
+      status: [],
       tenantId: '',
     },
   })
@@ -113,10 +114,10 @@ export function ProductsRouteComponent() {
     search: searchProducts,
     filter: (product) => {
       const status = tableState.filters.status
-      if (!status) {
+      if (status.length === 0) {
         return true
       }
-      return product.isActive === (status === UI_PRODUCT_FILTER_VALUE_ACTIVE)
+      return status.includes(product.isActive ? UI_PRODUCT_FILTER_VALUE_ACTIVE : UI_PRODUCT_FILTER_VALUE_INACTIVE)
     },
     sortComparators,
   })

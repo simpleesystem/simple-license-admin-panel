@@ -177,7 +177,7 @@ describe('TenantsRouteComponent', () => {
       expect(screen.getByText('Active Tenant')).toBeInTheDocument()
     })
 
-    const statusFilter = screen.getByRole('combobox', { name: /filter by status/i })
+    const statusFilter = screen.getByRole('listbox', { name: /filter by status/i })
     fireEvent.change(statusFilter, { target: { value: 'ACTIVE' } })
 
     await waitFor(() => {
@@ -695,7 +695,7 @@ describe('TenantsRouteComponent', () => {
       expect(screen.getByText('Active Tenant')).toBeInTheDocument()
     })
 
-    const statusFilter = screen.getByRole('combobox', { name: /filter by status/i })
+    const statusFilter = screen.getByRole('listbox', { name: /filter by status/i })
     fireEvent.change(statusFilter, { target: { value: 'ACTIVE' } })
 
     await waitFor(() => {

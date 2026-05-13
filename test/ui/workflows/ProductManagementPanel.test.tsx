@@ -154,10 +154,10 @@ describe('ProductManagementPanel', () => {
     )
 
     // TableFilter renders a select inside a div
-    const filterSelect = screen.getByRole('combobox')
+    const filterSelect = screen.getByRole('listbox')
     fireEvent.change(filterSelect, { target: { value: 'true' } })
 
-    expect(mockOnStatusFilterChange).toHaveBeenCalledWith('true')
+    expect(mockOnStatusFilterChange).toHaveBeenCalledWith(['true'])
   })
 
   it('renders create button and opens form flow', () => {

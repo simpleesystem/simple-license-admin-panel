@@ -1,8 +1,9 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
 
 import { LicensesRouteComponent } from '../../../../src/routes/licenses/LicensesRoute'
 import {
+  UI_LICENSE_STATUS_DELETED,
   UI_LICENSE_STATUS_ERROR_TITLE,
   UI_USER_ROLE_SUPERUSER,
   UI_USER_ROLE_VENDOR_MANAGER,
@@ -168,7 +169,7 @@ describe('LicensesRouteComponent', () => {
       expect(screen.getByText('suspended@example.com')).toBeInTheDocument()
     })
 
-    const statusFilter = screen.getByRole('combobox', { name: /filter by status/i })
+    const statusFilter = screen.getByRole('listbox', { name: /filter by status/i })
     fireEvent.change(statusFilter, { target: { value: 'ACTIVE' } })
 
     // Wait for filter to apply - active license should still be visible
@@ -207,6 +208,39 @@ describe('LicensesRouteComponent', () => {
     })
     expect(screen.getByText('revoked-visible@example.com')).toBeInTheDocument()
     expect(screen.queryByText('hidden@example.com')).toBeNull()
+  })
+
+  test('shows soft-deleted licenses when deleted status is selected', async () => {
+    const superuser = buildUser({ role: UI_USER_ROLE_SUPERUSER, vendorId: null })
+    useAuthMock.mockReturnValue({ user: superuser, currentUser: superuser, isAuthenticated: true })
+    const licenses = [
+      buildLicense({ customerEmail: 'visible@example.com', status: 'ACTIVE' }),
+      buildLicense({
+        customerEmail: 'hidden@example.com',
+        status: 'REVOKED',
+        softDeletedAt: new Date().toISOString(),
+      }),
+    ]
+    useAdminLicensesMock.mockReturnValue({ data: licenses, isLoading: false, isError: false, refetch: vi.fn() })
+
+    renderWithProviders(<LicensesRouteComponent />)
+
+    await waitFor(() => {
+      expect(screen.getByText('visible@example.com')).toBeInTheDocument()
+    })
+    expect(screen.queryByText('hidden@example.com')).toBeNull()
+
+    const statusFilter = screen.getByRole('listbox', { name: /filter by status/i })
+    fireEvent.change(statusFilter, { target: { value: UI_LICENSE_STATUS_DELETED } })
+
+    await waitFor(() => {
+      expect(screen.getByText('hidden@example.com')).toBeInTheDocument()
+      expect(screen.queryByText('visible@example.com')).toBeNull()
+    })
+
+    const hiddenLicenseRow = screen.getByText('hidden@example.com').closest('tr')
+    expect(hiddenLicenseRow).not.toBeNull()
+    expect(within(hiddenLicenseRow as HTMLTableRowElement).getByText(UI_LICENSE_STATUS_DELETED)).toBeInTheDocument()
   })
 
   test('handles array data structure', async () => {

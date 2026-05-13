@@ -27,6 +27,7 @@ import {
   UI_LICENSE_FORM_SUBMIT_CREATE,
   UI_LICENSE_PRODUCT_FILTER_LABEL,
   UI_LICENSE_STATUS_ACTIVE,
+  UI_LICENSE_STATUS_DELETED,
   UI_LICENSE_STATUS_EXPIRED,
   UI_LICENSE_STATUS_INACTIVE,
   UI_LICENSE_STATUS_REVOKED,
@@ -83,8 +84,8 @@ type LicenseManagementPanelProps = {
   onPageChange: (page: number) => void
   searchTerm?: string
   onSearchChange?: (term: string) => void
-  statusFilter?: string
-  onStatusFilterChange?: (status: string) => void
+  statusFilter?: readonly string[]
+  onStatusFilterChange?: (status: string[]) => void
   sortState?: UiDataTableSortState
   onSortChange?: (columnId: string, direction: UiSortDirection) => void
 }
@@ -132,6 +133,7 @@ export function LicenseManagementPanel({
     { value: UI_LICENSE_STATUS_EXPIRED, label: UI_LICENSE_STATUS_EXPIRED },
     { value: UI_LICENSE_STATUS_SUSPENDED, label: UI_LICENSE_STATUS_SUSPENDED },
     { value: UI_LICENSE_STATUS_REVOKED, label: UI_LICENSE_STATUS_REVOKED },
+    { value: UI_LICENSE_STATUS_DELETED, label: UI_LICENSE_STATUS_DELETED },
   ]
 
   const toolbar = (
@@ -167,10 +169,11 @@ export function LicenseManagementPanel({
             <TableFilter
               {...createStandardStatusFilterField({
                 label: UI_TABLE_FILTER_LABEL_STATUS,
-                value: statusFilter ?? '',
+                value: statusFilter ?? [],
                 options: statusOptions,
                 onChange: onStatusFilterChange,
                 placeholder: UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
+                multiple: true,
               })}
             />
           ) : null}
@@ -215,7 +218,7 @@ export function LicenseManagementPanel({
       {
         id: UI_LICENSE_COLUMN_ID_STATUS,
         header: UI_LICENSE_COLUMN_HEADER_STATUS,
-        cell: (row) => row.status ?? UI_VALUE_PLACEHOLDER,
+        cell: (row) => (row.softDeletedAt != null ? UI_LICENSE_STATUS_DELETED : (row.status ?? UI_VALUE_PLACEHOLDER)),
         sortable: true,
       },
       {

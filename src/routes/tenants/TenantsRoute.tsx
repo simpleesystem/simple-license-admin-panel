@@ -30,7 +30,7 @@ import { buildRouteStatusState } from '../shared/routeStatus'
 import { usePagedFilters } from '../shared/usePagedFilters'
 
 type TenantFilters = {
-  status: string
+  status: string[]
 }
 
 export function TenantsRouteComponent() {
@@ -39,7 +39,7 @@ export function TenantsRouteComponent() {
   const { data, isLoading, isError, refetch } = useAdminTenants(client)
   const tableState = useTableState<TenantFilters>({
     initialFilters: {
-      status: '',
+      status: [],
     },
   })
 
@@ -79,7 +79,7 @@ export function TenantsRouteComponent() {
     data: visibleTenants,
     initialSort: { columnId: UI_TENANT_COLUMN_ID_CREATED, direction: UI_SORT_DESC },
     search: searchTenants,
-    filter: (tenant) => !tableState.filters.status || tenant.status === tableState.filters.status,
+    filter: (tenant) => tableState.filters.status.length === 0 || tableState.filters.status.includes(tenant.status),
     sortComparators,
   })
 

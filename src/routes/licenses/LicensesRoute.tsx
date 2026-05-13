@@ -13,6 +13,7 @@ import {
   UI_LICENSE_COLUMN_ID_STATUS,
   UI_LICENSE_COLUMN_ID_TIER,
   UI_LICENSE_STATUS_ACTION_RETRY,
+  UI_LICENSE_STATUS_DELETED,
   UI_LICENSE_STATUS_ERROR_BODY,
   UI_LICENSE_STATUS_ERROR_TITLE,
   UI_LICENSE_STATUS_LOADING_BODY,
@@ -36,7 +37,7 @@ import { usePagedFilters } from '../shared/usePagedFilters'
 import { useTenantScopedProducts } from '../shared/useTenantScopedProducts'
 
 type LicenseFilters = {
-  status: string
+  status: string[]
   tenantId: string
   productSlug: string
 }
@@ -50,7 +51,7 @@ export function LicensesRouteComponent() {
   const { data: tenantsData } = useAdminTenants(client)
   const tableState = useTableState<LicenseFilters>({
     initialFilters: {
-      status: '',
+      status: [],
       tenantId: '',
       productSlug: '',
     },
@@ -123,7 +124,6 @@ export function LicensesRouteComponent() {
 
   const visibleLicenses = useMemo<LicenseListItem[]>(() => {
     let list = Array.isArray(data) ? (data as LicenseListItem[]) : ((data?.data as LicenseListItem[]) ?? [])
-    list = list.filter((license) => license.softDeletedAt == null)
 
     if (isVendorScoped) {
       list = list.filter((license) => {
@@ -166,8 +166,20 @@ export function LicensesRouteComponent() {
     search: searchLicenses,
     filter: (license) => {
       const statusFilter = tableState.filters.status
-      if (statusFilter && license.status !== statusFilter) {
-        return false
+      const isSoftDeleted = license.softDeletedAt != null
+      if (statusFilter.length === 0) {
+        if (isSoftDeleted) {
+          return false
+        }
+      } else {
+        const includeDeleted = statusFilter.includes(UI_LICENSE_STATUS_DELETED)
+        if (isSoftDeleted) {
+          if (!includeDeleted) {
+            return false
+          }
+        } else if (!statusFilter.includes(license.status)) {
+          return false
+        }
       }
       const tenantFilter = tableState.filters.tenantId
       if (tenantFilter && license.vendorId !== tenantFilter) {

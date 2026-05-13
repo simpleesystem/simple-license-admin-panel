@@ -3,7 +3,8 @@ import { useState } from 'react'
 import { UI_TABLE_PAGE_INITIAL } from '../constants'
 import type { UiDataTableSortState, UiSortDirection } from '../types'
 
-export type TableFilterState = Record<string, string>
+export type TableFilterValue = string | string[]
+export type TableFilterState = Record<string, TableFilterValue>
 
 export type UseTableStateOptions<TFilters extends TableFilterState> = {
   initialPage?: number

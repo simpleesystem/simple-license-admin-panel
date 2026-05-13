@@ -170,10 +170,10 @@ describe('LicenseManagementPanel', () => {
       </NotificationBusProvider>
     )
 
-    const filterSelect = screen.getByRole('combobox')
+    const filterSelect = screen.getByRole('listbox')
     fireEvent.change(filterSelect, { target: { value: 'ACTIVE' } })
 
-    expect(mockOnStatusFilterChange).toHaveBeenCalledWith('ACTIVE')
+    expect(mockOnStatusFilterChange).toHaveBeenCalledWith(['ACTIVE'])
   })
 
   it('renders create button and opens form flow', () => {
