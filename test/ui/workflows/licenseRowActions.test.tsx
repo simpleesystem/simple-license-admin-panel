@@ -5,8 +5,10 @@ import { beforeEach, describe, expect, test, vi } from 'vitest'
 import {
   UI_LICENSE_ACTION_DELETE,
   UI_LICENSE_ACTION_RESUME,
+  UI_LICENSE_ACTION_REVOKE,
   UI_LICENSE_ACTION_SUSPEND,
   UI_LICENSE_CONFIRM_DELETE_CONFIRM,
+  UI_LICENSE_CONFIRM_REVOKE_CONFIRM,
   UI_USER_ROLE_SUPERUSER,
   UI_USER_ROLE_VENDOR_MANAGER,
 } from '../../../src/ui/constants'
@@ -14,6 +16,7 @@ import { LicenseRowActions } from '../../../src/ui/workflows/LicenseRowActions'
 import { buildLicense } from '../../factories/licenseFactory'
 
 const useRevokeLicenseMock = vi.hoisted(() => vi.fn())
+const useSoftDeleteLicenseMock = vi.hoisted(() => vi.fn())
 const useSuspendLicenseMock = vi.hoisted(() => vi.fn())
 const useResumeLicenseMock = vi.hoisted(() => vi.fn())
 
@@ -22,6 +25,7 @@ vi.mock('@/simpleLicense', async () => {
   return {
     ...actual,
     useRevokeLicense: useRevokeLicenseMock,
+    useSoftDeleteLicense: useSoftDeleteLicenseMock,
     useSuspendLicense: useSuspendLicenseMock,
     useResumeLicense: useResumeLicenseMock,
   }
@@ -52,16 +56,19 @@ describe('LicenseRowActions', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     useRevokeLicenseMock.mockReturnValue(mockMutation())
+    useSoftDeleteLicenseMock.mockReturnValue(mockMutation())
     useSuspendLicenseMock.mockReturnValue(mockMutation())
     useResumeLicenseMock.mockReturnValue(mockMutation())
   })
 
-  test('renders action buttons and executes revoke mutation', async () => {
+  test('renders action buttons and executes soft delete mutation from delete action', async () => {
     const license = buildLicense({ status: 'ACTIVE' })
-    const deleteMutation = mockMutation()
+    const revokeMutation = mockMutation()
+    const softDeleteMutation = mockMutation()
     const suspendMutation = mockMutation()
     const resumeMutation = mockMutation()
-    useRevokeLicenseMock.mockReturnValue(deleteMutation)
+    useRevokeLicenseMock.mockReturnValue(revokeMutation)
+    useSoftDeleteLicenseMock.mockReturnValue(softDeleteMutation)
     useSuspendLicenseMock.mockReturnValue(suspendMutation)
     useResumeLicenseMock.mockReturnValue(resumeMutation)
 
@@ -80,7 +87,38 @@ describe('LicenseRowActions', () => {
     const dialog = await screen.findByRole('dialog')
     fireEvent.click(within(dialog).getByRole('button', { name: UI_LICENSE_CONFIRM_DELETE_CONFIRM }))
 
-    await waitFor(() => expect(deleteMutation.mutateAsync).toHaveBeenCalledWith(license.id))
+    await waitFor(() => expect(softDeleteMutation.mutateAsync).toHaveBeenCalledWith(license.id))
+    expect(revokeMutation.mutateAsync).not.toHaveBeenCalled()
+  })
+
+  test('executes revoke mutation from revoke action without soft deleting', async () => {
+    const license = buildLicense({ status: 'ACTIVE' })
+    const revokeMutation = mockMutation()
+    const softDeleteMutation = mockMutation()
+    const suspendMutation = mockMutation()
+    const resumeMutation = mockMutation()
+    useRevokeLicenseMock.mockReturnValue(revokeMutation)
+    useSoftDeleteLicenseMock.mockReturnValue(softDeleteMutation)
+    useSuspendLicenseMock.mockReturnValue(suspendMutation)
+    useResumeLicenseMock.mockReturnValue(resumeMutation)
+
+    render(
+      <LicenseRowActions
+        client={{} as never}
+        licenseKey={license.id}
+        licenseVendorId={license.vendorId ?? null}
+        licenseStatus={license.status}
+        currentUser={{ role: UI_USER_ROLE_SUPERUSER, vendorId: license.vendorId ?? null }}
+      />
+    )
+
+    fireEvent.click(screen.getByText(UI_LICENSE_ACTION_REVOKE))
+
+    const dialog = await screen.findByRole('dialog')
+    fireEvent.click(within(dialog).getByRole('button', { name: UI_LICENSE_CONFIRM_REVOKE_CONFIRM }))
+
+    await waitFor(() => expect(revokeMutation.mutateAsync).toHaveBeenCalledWith(license.id))
+    expect(softDeleteMutation.mutateAsync).not.toHaveBeenCalled()
   })
 
   test('disables resume action when license is not suspended', async () => {
@@ -88,7 +126,7 @@ describe('LicenseRowActions', () => {
     const deleteMutation = mockMutation()
     const suspendMutation = mockMutation()
     const resumeMutation = mockMutation()
-    useRevokeLicenseMock.mockReturnValue(deleteMutation)
+    useSoftDeleteLicenseMock.mockReturnValue(deleteMutation)
     useSuspendLicenseMock.mockReturnValue(suspendMutation)
     useResumeLicenseMock.mockReturnValue(resumeMutation)
 
@@ -115,7 +153,7 @@ describe('LicenseRowActions', () => {
     const deleteMutation = mockMutation()
     const suspendMutation = mockMutation()
     const resumeMutation = mockMutation()
-    useRevokeLicenseMock.mockReturnValue(deleteMutation)
+    useSoftDeleteLicenseMock.mockReturnValue(deleteMutation)
     useSuspendLicenseMock.mockReturnValue(suspendMutation)
     useResumeLicenseMock.mockReturnValue(resumeMutation)
 
@@ -143,7 +181,7 @@ describe('LicenseRowActions', () => {
     const deleteMutation = mockMutation()
     const suspendMutation = mockMutation()
     const resumeMutation = mockMutation()
-    useRevokeLicenseMock.mockReturnValue(deleteMutation)
+    useSoftDeleteLicenseMock.mockReturnValue(deleteMutation)
     useSuspendLicenseMock.mockReturnValue(suspendMutation)
     useResumeLicenseMock.mockReturnValue(resumeMutation)
 

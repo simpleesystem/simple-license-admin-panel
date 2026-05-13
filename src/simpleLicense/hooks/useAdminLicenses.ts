@@ -123,16 +123,32 @@ export function useFreezeLicense(client: Client) {
   })
 }
 
-// Revoke license
+// Revoke license without deleting it
 export function useRevokeLicense(client: Client) {
+  const queryClient = useQueryClient()
+
+  return useMutation<{ success: boolean }, Error, string>({
+    mutationFn: async (id) => {
+      return await client.revokeLicense(id)
+    },
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminLicenses.all() })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminLicenses.detail(id) })
+    },
+  })
+}
+
+// Delete license; the server-side delete path also revokes it
+export function useSoftDeleteLicense(client: Client) {
   const queryClient = useQueryClient()
 
   return useMutation<{ success: boolean }, Error, string>({
     mutationFn: async (id) => {
       return await client.softDeleteLicense(id)
     },
-    onSuccess: () => {
+    onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminLicenses.all() })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminLicenses.detail(id) })
     },
   })
 }

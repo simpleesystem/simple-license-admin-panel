@@ -1139,7 +1139,7 @@ export const UI_LICENSE_FORM_PLACEHOLDER_DOMAIN = 'example.com, *.example.com, a
 export const UI_LICENSE_BUTTON_CREATE = 'Create License' as const
 export const UI_LICENSE_BUTTON_EDIT = 'Edit license' as const
 export const UI_LICENSE_BUTTON_SAVE = 'Save license' as const
-export const UI_LICENSE_BUTTON_DELETE = 'Soft Delete License' as const
+export const UI_LICENSE_BUTTON_DELETE = 'Delete License' as const
 export const UI_LICENSE_BUTTON_REVOKE = 'Revoke License' as const
 export const UI_LICENSE_BUTTON_SUSPEND = 'Suspend License' as const
 export const UI_LICENSE_BUTTON_RESUME = 'Resume License' as const
@@ -1148,7 +1148,7 @@ export const UI_LICENSE_FORM_SUBMIT_UPDATE = 'Save license' as const
 export const UI_LICENSE_FORM_PENDING_CREATE = 'Creating license…' as const
 export const UI_LICENSE_FORM_PENDING_UPDATE = 'Saving license…' as const
 export const UI_LICENSE_ACTION_EDIT = 'Edit License' as const
-export const UI_LICENSE_ACTION_DELETE = 'Soft Delete License' as const
+export const UI_LICENSE_ACTION_DELETE = 'Delete License' as const
 export const UI_LICENSE_ACTION_REVOKE = 'Revoke License' as const
 export const UI_LICENSE_ACTION_SUSPEND = 'Suspend License' as const
 export const UI_LICENSE_ACTION_RESUME = 'Resume License' as const
@@ -1180,15 +1180,15 @@ export const UI_LICENSE_STATUS_ERROR_TITLE = 'Unable to load licenses' as const
 export const UI_LICENSE_STATUS_ERROR_BODY = 'Please try again after refreshing the page.' as const
 export const UI_LICENSE_TOAST_CREATE_SUCCESS = 'License created successfully' as const
 export const UI_LICENSE_TOAST_UPDATE_SUCCESS = 'License updated successfully' as const
-export const UI_LICENSE_TOAST_DELETE_SUCCESS = 'License soft deleted successfully' as const
+export const UI_LICENSE_TOAST_DELETE_SUCCESS = 'License deleted successfully' as const
 export const UI_LICENSE_TOAST_REVOKE_SUCCESS = 'License revoked successfully' as const
 export const UI_LICENSE_TOAST_SUSPEND_SUCCESS = 'License suspended successfully' as const
 export const UI_LICENSE_TOAST_RESUME_SUCCESS = 'License resumed successfully' as const
 
-export const UI_LICENSE_CONFIRM_DELETE_TITLE = 'Soft delete license?' as const
+export const UI_LICENSE_CONFIRM_DELETE_TITLE = 'Delete license?' as const
 export const UI_LICENSE_CONFIRM_DELETE_BODY =
-  'Soft deleting a license revokes it and removes it from the license list. This action cannot be undone.' as const
-export const UI_LICENSE_CONFIRM_DELETE_CONFIRM = 'Soft delete license' as const
+  'Deleting a license revokes it and removes it from the license list. This action cannot be undone.' as const
+export const UI_LICENSE_CONFIRM_DELETE_CONFIRM = 'Delete license' as const
 export const UI_LICENSE_CONFIRM_DELETE_CANCEL = 'Cancel' as const
 export const UI_LICENSE_CONFIRM_REVOKE_TITLE = 'Revoke license?' as const
 export const UI_LICENSE_CONFIRM_REVOKE_BODY =

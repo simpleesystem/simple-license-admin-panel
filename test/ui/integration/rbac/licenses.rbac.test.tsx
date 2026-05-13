@@ -17,6 +17,7 @@ import { buildUser } from '../../../factories/userFactory'
 import { renderWithProviders } from '../../utils'
 
 const useRevokeLicenseMock = vi.hoisted(() => vi.fn())
+const useSoftDeleteLicenseMock = vi.hoisted(() => vi.fn())
 const useSuspendLicenseMock = vi.hoisted(() => vi.fn())
 const useResumeLicenseMock = vi.hoisted(() => vi.fn())
 const useUpdateLicenseMock = vi.hoisted(() => vi.fn())
@@ -27,6 +28,7 @@ vi.mock('@/simpleLicense', async () => {
   return {
     ...actual,
     useRevokeLicense: useRevokeLicenseMock,
+    useSoftDeleteLicense: useSoftDeleteLicenseMock,
     useSuspendLicense: useSuspendLicenseMock,
     useResumeLicense: useResumeLicenseMock,
     useUpdateLicense: useUpdateLicenseMock,
@@ -42,7 +44,10 @@ const mockMutation = () => ({
 describe('License RBAC & vendor scoping', () => {
   test('SUPERUSER can edit and delete any vendor license', async () => {
     const license = buildLicense({ status: 'ACTIVE' })
-    useRevokeLicenseMock.mockReturnValue(mockMutation())
+    const revokeMutation = mockMutation()
+    const softDeleteMutation = mockMutation()
+    useRevokeLicenseMock.mockReturnValue(revokeMutation)
+    useSoftDeleteLicenseMock.mockReturnValue(softDeleteMutation)
     useSuspendLicenseMock.mockReturnValue(mockMutation())
     useResumeLicenseMock.mockReturnValue(mockMutation())
     useUpdateLicenseMock.mockReturnValue(mockMutation())
@@ -77,14 +82,16 @@ describe('License RBAC & vendor scoping', () => {
     fireEvent.click(screen.getByText(UI_LICENSE_CONFIRM_DELETE_CONFIRM))
 
     await waitFor(() => {
-      expect(useRevokeLicenseMock().mutateAsync).toHaveBeenCalledWith(license.licenseKey ?? license.id)
+      expect(softDeleteMutation.mutateAsync).toHaveBeenCalledWith(license.licenseKey ?? license.id)
     })
+    expect(revokeMutation.mutateAsync).not.toHaveBeenCalled()
   })
 
   test('VENDOR_MANAGER can update own vendor license but cannot delete', async () => {
     const vendorId = faker.string.uuid()
     const license = buildLicense({ status: 'ACTIVE', vendorId })
     useRevokeLicenseMock.mockReturnValue(mockMutation())
+    useSoftDeleteLicenseMock.mockReturnValue(mockMutation())
     useSuspendLicenseMock.mockReturnValue(mockMutation())
     useResumeLicenseMock.mockReturnValue(mockMutation())
     useUpdateLicenseMock.mockReturnValue(mockMutation())
@@ -125,6 +132,7 @@ describe('License RBAC & vendor scoping', () => {
   test('VENDOR_MANAGER cannot act on other vendor license', () => {
     const license = buildLicense({ status: 'ACTIVE' })
     useRevokeLicenseMock.mockReturnValue(mockMutation())
+    useSoftDeleteLicenseMock.mockReturnValue(mockMutation())
     useSuspendLicenseMock.mockReturnValue(mockMutation())
     useResumeLicenseMock.mockReturnValue(mockMutation())
     useUpdateLicenseMock.mockReturnValue(mockMutation())
@@ -149,6 +157,7 @@ describe('License RBAC & vendor scoping', () => {
   test('VIEWER sees nothing actionable', () => {
     const license = buildLicense({ status: 'ACTIVE' })
     useRevokeLicenseMock.mockReturnValue(mockMutation())
+    useSoftDeleteLicenseMock.mockReturnValue(mockMutation())
     useSuspendLicenseMock.mockReturnValue(mockMutation())
     useResumeLicenseMock.mockReturnValue(mockMutation())
     useUpdateLicenseMock.mockReturnValue(mockMutation())
@@ -171,9 +180,11 @@ describe('License RBAC & vendor scoping', () => {
   test('Resume action available only when suspended', async () => {
     const license = buildLicense({ status: 'SUSPENDED' })
     const revoke = mockMutation()
+    const softDelete = mockMutation()
     const suspend = mockMutation()
     const resume = mockMutation()
     useRevokeLicenseMock.mockReturnValue(revoke)
+    useSoftDeleteLicenseMock.mockReturnValue(softDelete)
     useSuspendLicenseMock.mockReturnValue(suspend)
     useResumeLicenseMock.mockReturnValue(resume)
     useUpdateLicenseMock.mockReturnValue(mockMutation())

@@ -32,6 +32,7 @@ const useDeleteProductTierMock = vi.hoisted(() => vi.fn())
 const useCreateLicenseMock = vi.hoisted(() => vi.fn())
 const useUpdateLicenseMock = vi.hoisted(() => vi.fn())
 const useRevokeLicenseMock = vi.hoisted(() => vi.fn())
+const useSoftDeleteLicenseMock = vi.hoisted(() => vi.fn())
 const useSuspendLicenseMock = vi.hoisted(() => vi.fn())
 const useResumeLicenseMock = vi.hoisted(() => vi.fn())
 
@@ -50,6 +51,7 @@ vi.mock('@/simpleLicense', async () => {
     useCreateLicense: useCreateLicenseMock,
     useUpdateLicense: useUpdateLicenseMock,
     useRevokeLicense: useRevokeLicenseMock,
+    useSoftDeleteLicense: useSoftDeleteLicenseMock,
     useSuspendLicense: useSuspendLicenseMock,
     useResumeLicense: useResumeLicenseMock,
   }
@@ -128,6 +130,7 @@ describe('Mutation to navigation refetch smoke', () => {
     useCreateLicenseMock.mockReturnValue(mockMutation())
     useUpdateLicenseMock.mockReturnValue(mockMutation())
     useRevokeLicenseMock.mockReturnValue(mockMutation())
+    useSoftDeleteLicenseMock.mockReturnValue(mockMutation())
     useSuspendLicenseMock.mockReturnValue(mockMutation())
     useResumeLicenseMock.mockReturnValue(mockMutation())
   })

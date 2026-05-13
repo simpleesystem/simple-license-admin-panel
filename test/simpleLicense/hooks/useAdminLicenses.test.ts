@@ -12,6 +12,7 @@ import {
   useLicenseActivations,
   useResumeLicense,
   useRevokeLicense,
+  useSoftDeleteLicense,
   useSuspendLicense,
   useUpdateLicense,
 } from '@/simpleLicense/hooks/useAdminLicenses'
@@ -350,7 +351,7 @@ describe('useAdminLicenses hooks', () => {
   describe('useRevokeLicense', () => {
     it('revokes license successfully and invalidates queries', async () => {
       const mockResponse = { success: true }
-      ;(mockClient.softDeleteLicense as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse)
+      ;(mockClient.revokeLicense as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse)
 
       const queryClient = new (await import('@tanstack/react-query')).QueryClient({
         defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -368,15 +369,58 @@ describe('useAdminLicenses hooks', () => {
       })
 
       expect(result.current.data).toEqual(mockResponse)
-      expect(mockClient.softDeleteLicense).toHaveBeenCalledWith(mockLicenseId)
+      expect(mockClient.revokeLicense).toHaveBeenCalledWith(mockLicenseId)
+      expect(mockClient.softDeleteLicense).not.toHaveBeenCalled()
       expect(invalidateQueriesSpy).toHaveBeenCalled()
     })
 
     it('handles revoke error', async () => {
       const mockError = new Error('Failed to revoke license')
-      ;(mockClient.softDeleteLicense as ReturnType<typeof vi.fn>).mockRejectedValue(mockError)
+      ;(mockClient.revokeLicense as ReturnType<typeof vi.fn>).mockRejectedValue(mockError)
 
       const { result } = renderHookWithQueryClient(() => useRevokeLicense(mockClient))
+
+      result.current.mutate(mockLicenseId)
+
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true)
+      })
+
+      expect(result.current.error).toEqual(mockError)
+    })
+  })
+
+  describe('useSoftDeleteLicense', () => {
+    it('soft deletes license successfully and invalidates queries', async () => {
+      const mockResponse = { success: true }
+      ;(mockClient.softDeleteLicense as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse)
+
+      const queryClient = new (await import('@tanstack/react-query')).QueryClient({
+        defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      })
+      const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries')
+
+      const { result } = renderHookWithQueryClient(() => useSoftDeleteLicense(mockClient), {
+        queryClient,
+      })
+
+      result.current.mutate(mockLicenseId)
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true)
+      })
+
+      expect(result.current.data).toEqual(mockResponse)
+      expect(mockClient.softDeleteLicense).toHaveBeenCalledWith(mockLicenseId)
+      expect(mockClient.revokeLicense).not.toHaveBeenCalled()
+      expect(invalidateQueriesSpy).toHaveBeenCalled()
+    })
+
+    it('handles soft delete error', async () => {
+      const mockError = new Error('Failed to delete license')
+      ;(mockClient.softDeleteLicense as ReturnType<typeof vi.fn>).mockRejectedValue(mockError)
+
+      const { result } = renderHookWithQueryClient(() => useSoftDeleteLicense(mockClient))
 
       result.current.mutate(mockLicenseId)
 

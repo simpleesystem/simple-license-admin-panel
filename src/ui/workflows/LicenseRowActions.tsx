@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import type { Client, LicenseStatus, User } from '@/simpleLicense'
-import { useResumeLicense, useRevokeLicense, useSuspendLicense } from '@/simpleLicense'
+import { useResumeLicense, useRevokeLicense, useSoftDeleteLicense, useSuspendLicense } from '@/simpleLicense'
 import { canDeleteLicense, canUpdateLicense } from '../../app/auth/permissions'
 import { isSystemAdminUser } from '../../app/auth/userUtils'
 import { useNotificationBus } from '../../notifications/useNotificationBus'
@@ -63,6 +63,7 @@ export function LicenseRowActions({
   ...rest
 }: LicenseRowActionsProps) {
   const revokeMutation = adaptMutation(useRevokeLicense(client))
+  const softDeleteMutation = adaptMutation(useSoftDeleteLicense(client))
   const suspendMutation = adaptMutation(useSuspendLicense(client))
   const resumeMutation = adaptMutation(useResumeLicense(client))
   const notificationBus = useNotificationBus()
@@ -71,7 +72,6 @@ export function LicenseRowActions({
   const [showRevokeConfirm, setShowRevokeConfirm] = useState(false)
   const [showSuspendConfirm, setShowSuspendConfirm] = useState(false)
   const [showResumeConfirm, setShowResumeConfirm] = useState(false)
-  const [isRevokePending, setIsRevokePending] = useState(false)
 
   const allowDelete = canDeleteLicense(currentUser ?? null)
   const allowUpdate = canUpdateLicense(currentUser ?? null)
@@ -86,7 +86,7 @@ export function LicenseRowActions({
 
   const handleSoftDelete = async () => {
     try {
-      await revokeMutation.mutateAsync(licenseKey)
+      await softDeleteMutation.mutateAsync(licenseKey)
       notifyLicenseSuccess(notificationBus, 'delete')
       onCompleted?.()
     } catch (error) {
@@ -98,16 +98,14 @@ export function LicenseRowActions({
   }
 
   const handleRevoke = async () => {
-    setIsRevokePending(true)
     try {
-      await client.revokeLicense(licenseKey)
+      await revokeMutation.mutateAsync(licenseKey)
       notifyLicenseSuccess(notificationBus, 'revoke')
       onCompleted?.()
     } catch (error) {
       notifyCrudError(notificationBus)
       throw error
     } finally {
-      setIsRevokePending(false)
       setShowRevokeConfirm(false)
     }
   }
@@ -185,7 +183,7 @@ export function LicenseRowActions({
           <Button
             variant={UI_BUTTON_VARIANT_GHOST}
             onClick={() => setShowRevokeConfirm(true)}
-            disabled={isRevokePending}
+            disabled={revokeMutation.isPending}
             aria-label={UI_LICENSE_ACTION_REVOKE}
           >
             {UI_LICENSE_BUTTON_REVOKE}
@@ -196,7 +194,7 @@ export function LicenseRowActions({
           <Button
             variant={UI_BUTTON_VARIANT_GHOST}
             onClick={() => setShowDeleteConfirm(true)}
-            disabled={revokeMutation.isPending}
+            disabled={softDeleteMutation.isPending}
             aria-label={UI_LICENSE_ACTION_DELETE}
           >
             {UI_LICENSE_BUTTON_DELETE}
@@ -248,7 +246,7 @@ export function LicenseRowActions({
             id: 'soft-delete-confirm',
             label: UI_LICENSE_CONFIRM_DELETE_CONFIRM,
             onClick: handleSoftDelete,
-            disabled: revokeMutation.isPending,
+            disabled: softDeleteMutation.isPending,
           }}
           secondaryAction={{
             id: 'soft-delete-cancel',
@@ -266,7 +264,7 @@ export function LicenseRowActions({
             id: 'revoke-confirm',
             label: UI_LICENSE_CONFIRM_REVOKE_CONFIRM,
             onClick: handleRevoke,
-            disabled: isRevokePending,
+            disabled: revokeMutation.isPending,
           }}
           secondaryAction={{
             id: 'revoke-cancel',

@@ -47,6 +47,7 @@ const useDeleteEntitlementMock = vi.hoisted(() => vi.fn())
 const useCreateLicenseMock = vi.hoisted(() => vi.fn())
 const useUpdateLicenseMock = vi.hoisted(() => vi.fn())
 const useRevokeLicenseMock = vi.hoisted(() => vi.fn())
+const useSoftDeleteLicenseMock = vi.hoisted(() => vi.fn())
 const useSuspendLicenseMock = vi.hoisted(() => vi.fn())
 const useResumeLicenseMock = vi.hoisted(() => vi.fn())
 
@@ -68,6 +69,7 @@ vi.mock('@/simpleLicense', async () => {
     useCreateLicense: useCreateLicenseMock,
     useUpdateLicense: useUpdateLicenseMock,
     useRevokeLicense: useRevokeLicenseMock,
+    useSoftDeleteLicense: useSoftDeleteLicenseMock,
     useSuspendLicense: useSuspendLicenseMock,
     useResumeLicense: useResumeLicenseMock,
   }
@@ -109,12 +111,14 @@ describe('Product → Tier → Entitlement → License chain', () => {
     useDeleteEntitlementMock.mockReturnValue(deleteEntitlementMutation)
 
     const revokeMutation = mockMutation()
+    const softDeleteLicenseMutation = mockMutation()
     const suspendMutation = mockMutation()
     const resumeMutation = mockMutation()
     const updateLicenseMutation = mockMutation()
     const createLicenseMutation = mockMutation()
 
     useRevokeLicenseMock.mockReturnValue(revokeMutation)
+    useSoftDeleteLicenseMock.mockReturnValue(softDeleteLicenseMutation)
     useSuspendLicenseMock.mockReturnValue(suspendMutation)
     useResumeLicenseMock.mockReturnValue(resumeMutation)
     useUpdateLicenseMock.mockReturnValue(updateLicenseMutation)
@@ -343,8 +347,9 @@ describe('Product → Tier → Entitlement → License chain', () => {
     })
     fireEvent.click(screen.getByRole('button', { name: UI_LICENSE_CONFIRM_DELETE_CONFIRM }))
     await waitFor(() => {
-      expect(revokeMutation.mutateAsync).toHaveBeenCalledWith(chain.license.licenseKey ?? chain.license.id)
+      expect(softDeleteLicenseMutation.mutateAsync).toHaveBeenCalledWith(chain.license.licenseKey ?? chain.license.id)
     })
+    expect(revokeMutation.mutateAsync).not.toHaveBeenCalled()
 
     expect(onRefresh).toHaveBeenCalled()
   })
@@ -366,12 +371,14 @@ describe('Product → Tier → Entitlement → License chain', () => {
     useDeleteEntitlementMock.mockReturnValue(mockMutation())
 
     const revokeMutation = mockMutation()
+    const softDeleteLicenseMutation = mockMutation()
     const suspendMutation = mockMutation()
     const resumeMutation = mockMutation()
     const updateLicenseMutation = mockMutation()
     const createLicenseMutation = mockMutation()
 
     useRevokeLicenseMock.mockReturnValue(revokeMutation)
+    useSoftDeleteLicenseMock.mockReturnValue(softDeleteLicenseMutation)
     useSuspendLicenseMock.mockReturnValue(suspendMutation)
     useResumeLicenseMock.mockReturnValue(resumeMutation)
     useUpdateLicenseMock.mockReturnValue(updateLicenseMutation)

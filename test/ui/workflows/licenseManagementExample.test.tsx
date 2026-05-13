@@ -16,6 +16,7 @@ import { renderWithProviders } from '../utils'
 const useCreateLicenseMock = vi.hoisted(() => vi.fn())
 const useUpdateLicenseMock = vi.hoisted(() => vi.fn())
 const useRevokeLicenseMock = vi.hoisted(() => vi.fn())
+const useSoftDeleteLicenseMock = vi.hoisted(() => vi.fn())
 const useSuspendLicenseMock = vi.hoisted(() => vi.fn())
 const useResumeLicenseMock = vi.hoisted(() => vi.fn())
 
@@ -26,6 +27,7 @@ vi.mock('@/simpleLicense', async () => {
     useCreateLicense: useCreateLicenseMock,
     useUpdateLicense: useUpdateLicenseMock,
     useRevokeLicense: useRevokeLicenseMock,
+    useSoftDeleteLicense: useSoftDeleteLicenseMock,
     useSuspendLicense: useSuspendLicenseMock,
     useResumeLicense: useResumeLicenseMock,
   }
@@ -66,6 +68,7 @@ describe('LicenseManagementExample', () => {
     const updateMutation = mockMutation()
     useUpdateLicenseMock.mockReturnValue(updateMutation)
     useRevokeLicenseMock.mockReturnValue(mockMutation())
+    useSoftDeleteLicenseMock.mockReturnValue(mockMutation())
     useSuspendLicenseMock.mockReturnValue(mockMutation())
     useResumeLicenseMock.mockReturnValue(mockMutation())
 
@@ -113,12 +116,13 @@ describe('LicenseManagementExample', () => {
     })
   })
 
-  test('wires row actions to revoke mutation', async () => {
+  test('wires row delete action to soft delete mutation', async () => {
     const license = buildLicense({ status: 'ACTIVE' })
     useCreateLicenseMock.mockReturnValue(mockMutation())
     useUpdateLicenseMock.mockReturnValue(mockMutation())
     const deleteMutation = mockMutation()
-    useRevokeLicenseMock.mockReturnValue(deleteMutation)
+    useRevokeLicenseMock.mockReturnValue(mockMutation())
+    useSoftDeleteLicenseMock.mockReturnValue(deleteMutation)
     useSuspendLicenseMock.mockReturnValue(mockMutation())
     useResumeLicenseMock.mockReturnValue(mockMutation())
 
@@ -164,6 +168,7 @@ describe('LicenseManagementExample', () => {
     useCreateLicenseMock.mockReturnValue(mockMutation())
     useUpdateLicenseMock.mockReturnValue(mockMutation())
     useRevokeLicenseMock.mockReturnValue(mockMutation())
+    useSoftDeleteLicenseMock.mockReturnValue(mockMutation())
     useSuspendLicenseMock.mockReturnValue(mockMutation())
     useResumeLicenseMock.mockReturnValue(mockMutation())
 
