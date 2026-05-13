@@ -249,7 +249,7 @@ export function ProductManagementPanel({
         onSort={onSortChange}
         toolbar={toolbar}
         footer={
-          totalPages > 1 ? (
+          totalPages > 1 || onPageSizeChange ? (
             <TablePaginationFooter
               page={page}
               totalPages={totalPages}

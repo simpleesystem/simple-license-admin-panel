@@ -282,7 +282,7 @@ export function ReleasesPanel({
     <EmptyState title={UI_RELEASE_SELECT_PRODUCT_PLACEHOLDER} body={UI_RELEASE_SELECT_PRODUCT_BODY} />
   )
   const footer =
-    selectedProductId && totalPages > 1 ? (
+    selectedProductId && (totalPages > 1 || onPageSizeChange) ? (
       <TablePaginationFooter
         page={page}
         totalPages={totalPages}

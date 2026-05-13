@@ -38,7 +38,6 @@ import {
 } from '../constants'
 import { DataTable } from '../data/DataTable'
 import { TableControls } from '../data/TableControls'
-import { TablePaginationFooter } from '../data/TablePaginationFooter'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
@@ -54,9 +53,6 @@ type ProductEntitlementManagementPanelProps = {
   entitlements: readonly ProductEntitlementListItem[]
   currentUser?: User | null
   onRefresh?: () => void
-  page: number
-  totalPages: number
-  onPageChange: (page: number) => void
   sortState?: UiDataTableSortState
   onSortChange?: (columnId: string, direction: UiSortDirection) => void
   tierOptions?: readonly UiSelectOption[]
@@ -68,9 +64,6 @@ export function ProductEntitlementManagementPanel({
   entitlements,
   currentUser,
   onRefresh,
-  page,
-  totalPages,
-  onPageChange,
   sortState,
   onSortChange,
   tierOptions,
@@ -251,11 +244,6 @@ export function ProductEntitlementManagementPanel({
         sortState={currentSortState}
         onSort={handleSortChange}
         toolbar={toolbar}
-        footer={
-          totalPages > 1 ? (
-            <TablePaginationFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />
-          ) : undefined
-        }
       />
 
       {allowCreate ? (

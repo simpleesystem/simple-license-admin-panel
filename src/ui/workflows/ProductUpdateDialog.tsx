@@ -246,9 +246,6 @@ export function ProductUpdateDialog({
                 client={client}
                 productId={productId}
                 tiers={tiers}
-                page={1} // Simplified for now, assuming small list or handled internally
-                totalPages={1}
-                onPageChange={() => {}}
                 onRefresh={fetchTiers}
                 currentUser={currentUser}
               />
@@ -260,9 +257,6 @@ export function ProductUpdateDialog({
                 client={client}
                 productId={productId}
                 entitlements={entitlements}
-                page={1}
-                totalPages={1}
-                onPageChange={() => {}}
                 onRefresh={fetchEntitlements}
                 currentUser={currentUser}
                 tierOptions={tierOptions}

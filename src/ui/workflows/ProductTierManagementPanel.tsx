@@ -38,7 +38,6 @@ import {
 import { DataTable } from '../data/DataTable'
 import { TableControls } from '../data/TableControls'
 import { TableFilter } from '../data/TableFilter'
-import { TablePaginationFooter } from '../data/TablePaginationFooter'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
@@ -56,9 +55,6 @@ type ProductTierManagementPanelProps = {
   tiers: readonly ProductTierListItem[]
   currentUser?: User | null
   onRefresh?: () => void
-  page: number
-  totalPages: number
-  onPageChange: (page: number) => void
   sortState?: UiDataTableSortState
   onSortChange?: (columnId: string, direction: UiSortDirection) => void
 }
@@ -69,9 +65,6 @@ export function ProductTierManagementPanel({
   tiers,
   currentUser,
   onRefresh,
-  page,
-  totalPages,
-  onPageChange,
   sortState,
   onSortChange,
 }: ProductTierManagementPanelProps) {
@@ -240,11 +233,6 @@ export function ProductTierManagementPanel({
         sortState={currentSortState}
         onSort={handleSortChange}
         toolbar={toolbar}
-        footer={
-          totalPages > 1 ? (
-            <TablePaginationFooter page={page} totalPages={totalPages} onPageChange={onPageChange} />
-          ) : undefined
-        }
       />
 
       {allowCreate ? (
