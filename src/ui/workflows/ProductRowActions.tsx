@@ -8,9 +8,6 @@ import { useNotificationBus } from '../../notifications/useNotificationBus'
 import { adaptMutation } from '../actions/mutationAdapter'
 import {
   UI_BUTTON_VARIANT_GHOST,
-  UI_CLASS_FLEX_COLUMN_GAP_LARGE,
-  UI_CLASS_FLEX_COLUMN_GAP_MEDIUM,
-  UI_CLASS_FLEX_COLUMN_GAP_SMALL,
   UI_PRODUCT_ACTION_BUILD_TOKENS,
   UI_PRODUCT_ACTION_DELETE,
   UI_PRODUCT_ACTION_EDIT,
@@ -68,6 +65,7 @@ import {
 import { Stack } from '../layout/Stack'
 import { ModalDialog } from '../overlay/ModalDialog'
 import type { UiCommonProps } from '../types'
+import { KeyValueList } from '../typography/KeyValueList'
 import { VisibilityGate } from '../utils/PermissionGate'
 import { notifyCrudError, notifyProductSuccess } from './notifications'
 
@@ -342,20 +340,25 @@ export function ProductRowActions({
             ) : protectionKeyError ? (
               protectionKeyError
             ) : (
-              <div className={UI_CLASS_FLEX_COLUMN_GAP_MEDIUM}>
-                <div>
-                  <div>{UI_PRODUCT_PROTECTION_KEY_LABEL_PRODUCT}</div>
-                  <code>{protectionKeyMetadata?.productSlug ?? UI_VALUE_PLACEHOLDER}</code>
-                </div>
-                <div>
-                  <div>{UI_PRODUCT_PROTECTION_KEY_LABEL_SIGNING_KEY_ID}</div>
-                  <code>{protectionKeyMetadata?.signingKeyId ?? UI_VALUE_PLACEHOLDER}</code>
-                </div>
-                <div>
-                  <div>{UI_PRODUCT_PROTECTION_KEY_LABEL_PUBLIC_KEY}</div>
-                  <code>{protectionKeyMetadata?.publicKey ?? UI_VALUE_PLACEHOLDER}</code>
-                </div>
-              </div>
+              <KeyValueList
+                items={[
+                  {
+                    id: 'protection-product',
+                    label: UI_PRODUCT_PROTECTION_KEY_LABEL_PRODUCT,
+                    value: <code>{protectionKeyMetadata?.productSlug ?? UI_VALUE_PLACEHOLDER}</code>,
+                  },
+                  {
+                    id: 'protection-signing-key-id',
+                    label: UI_PRODUCT_PROTECTION_KEY_LABEL_SIGNING_KEY_ID,
+                    value: <code>{protectionKeyMetadata?.signingKeyId ?? UI_VALUE_PLACEHOLDER}</code>,
+                  },
+                  {
+                    id: 'protection-public-key',
+                    label: UI_PRODUCT_PROTECTION_KEY_LABEL_PUBLIC_KEY,
+                    value: <code>{protectionKeyMetadata?.publicKey ?? UI_VALUE_PLACEHOLDER}</code>,
+                  },
+                ]}
+              />
             )
           }
           secondaryAction={{
@@ -375,7 +378,7 @@ export function ProductRowActions({
             ) : buildTokensError ? (
               buildTokensError
             ) : (
-              <div className={UI_CLASS_FLEX_COLUMN_GAP_LARGE}>
+              <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
                 <Button
                   variant={UI_BUTTON_VARIANT_GHOST}
                   onClick={() => {
@@ -386,39 +389,54 @@ export function ProductRowActions({
                   {isIssuingBuildToken ? UI_PRODUCT_BUILD_TOKENS_ISSUING : UI_PRODUCT_BUILD_TOKENS_ISSUE}
                 </Button>
                 {issuedBuildToken !== null ? (
-                  <div className={UI_CLASS_FLEX_COLUMN_GAP_SMALL}>
+                  <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
                     <div>{UI_PRODUCT_BUILD_TOKENS_TOKEN_ONCE}</div>
                     <code>{issuedBuildToken}</code>
-                  </div>
+                  </Stack>
                 ) : null}
-                <div className={UI_CLASS_FLEX_COLUMN_GAP_SMALL}>
+                <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
                   <div>{UI_PRODUCT_BUILD_TOKENS_USAGE_NOTE}</div>
                   <code>{UI_PRODUCT_BUILD_TOKENS_RELEASE_ENDPOINT}</code>
-                </div>
+                </Stack>
                 <div>{UI_PRODUCT_BUILD_TOKENS_CURRENT}</div>
                 {buildTokens.length === 0 ? (
                   <div>{UI_PRODUCT_BUILD_TOKENS_EMPTY}</div>
                 ) : (
-                  <div className="d-flex flex-column gap-2">
+                  <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
                     {buildTokens.map((token) => {
                       const tokenStatusLabel = getBuildTokenStatusLabel(token)
                       const isTokenRevokable = tokenStatusLabel === UI_PRODUCT_BUILD_TOKENS_STATUS_ACTIVE
                       return (
-                        <div key={token.id} className="border rounded p-2 d-flex flex-column gap-1">
-                          <div>
-                            <strong>{UI_PRODUCT_BUILD_TOKENS_LABEL_PREFIX}</strong>: <code>{token.token_prefix}</code>
-                          </div>
-                          <div>
-                            <strong>{UI_PRODUCT_BUILD_TOKENS_LABEL_STATUS}</strong>: {tokenStatusLabel}
-                          </div>
-                          <div>
-                            <strong>{UI_PRODUCT_BUILD_TOKENS_LABEL_EXPIRES}</strong>:{' '}
-                            {getOptionalTimestamp(token.expires_at)}
-                          </div>
-                          <div>
-                            <strong>{UI_PRODUCT_BUILD_TOKENS_LABEL_LAST_USED}</strong>:{' '}
-                            {getOptionalTimestamp(token.last_used_at)}
-                          </div>
+                        <Stack
+                          key={token.id}
+                          direction="column"
+                          gap={UI_STACK_GAP_SMALL}
+                          className="border rounded p-2"
+                        >
+                          <KeyValueList
+                            items={[
+                              {
+                                id: `${token.id}-prefix`,
+                                label: UI_PRODUCT_BUILD_TOKENS_LABEL_PREFIX,
+                                value: <code>{token.token_prefix}</code>,
+                              },
+                              {
+                                id: `${token.id}-status`,
+                                label: UI_PRODUCT_BUILD_TOKENS_LABEL_STATUS,
+                                value: tokenStatusLabel,
+                              },
+                              {
+                                id: `${token.id}-expires`,
+                                label: UI_PRODUCT_BUILD_TOKENS_LABEL_EXPIRES,
+                                value: getOptionalTimestamp(token.expires_at),
+                              },
+                              {
+                                id: `${token.id}-last-used`,
+                                label: UI_PRODUCT_BUILD_TOKENS_LABEL_LAST_USED,
+                                value: getOptionalTimestamp(token.last_used_at),
+                              },
+                            ]}
+                          />
                           <Button
                             variant={UI_BUTTON_VARIANT_GHOST}
                             onClick={() => {
@@ -430,12 +448,12 @@ export function ProductRowActions({
                               ? UI_PRODUCT_BUILD_TOKENS_REVOKING
                               : UI_PRODUCT_BUILD_TOKENS_REVOKE}
                           </Button>
-                        </div>
+                        </Stack>
                       )
                     })}
-                  </div>
+                  </Stack>
                 )}
-              </div>
+              </Stack>
             )
           }
           secondaryAction={{

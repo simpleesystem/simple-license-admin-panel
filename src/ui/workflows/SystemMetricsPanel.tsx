@@ -68,6 +68,7 @@ import {
 } from '../constants'
 import { SummaryList } from '../data/SummaryList'
 import { InlineAlert } from '../feedback/InlineAlert'
+import { InlineStatusGate } from '../feedback/InlineStatusGate'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiKeyValueItem } from '../types'
@@ -462,47 +463,9 @@ export function SystemMetricsPanel({ client, title = UI_SYSTEM_METRICS_TITLE }: 
     return definedSections.filter((section) => section.items.length > 0 || Boolean(section.errorMessage))
   }, [buildApplicationItems, buildRuntimeItems, metricsSource, numberFormatter])
 
-  const renderContent = () => {
-    if (!metricsSource || sections.length === 0) {
-      if ((isLoading || isFetching) && !metricsSource) {
-        return (
-          <InlineAlert variant={UI_ALERT_VARIANT_INFO} title={UI_SYSTEM_METRICS_LOADING_TITLE}>
-            {UI_SYSTEM_METRICS_LOADING_BODY}
-          </InlineAlert>
-        )
-      }
-
-      if (isError && !metricsSource) {
-        return (
-          <InlineAlert variant={UI_ALERT_VARIANT_DANGER} title={UI_SYSTEM_METRICS_ERROR_TITLE}>
-            {UI_SYSTEM_METRICS_ERROR_BODY}
-          </InlineAlert>
-        )
-      }
-
-      return (
-        <InlineAlert variant={UI_ALERT_VARIANT_WARNING} title={UI_SYSTEM_METRICS_EMPTY_TITLE}>
-          {UI_SYSTEM_METRICS_EMPTY_BODY}
-        </InlineAlert>
-      )
-    }
-
-    return (
-      <div className={UI_CLASS_FLEX_COLUMN_GAP_LARGE}>
-        {sections.map((section) => (
-          <div key={section.id} className={UI_CLASS_FLEX_COLUMN_GAP_MEDIUM}>
-            <h3 className="h6 mb-0">{section.title}</h3>
-            {section.errorMessage ? (
-              <InlineAlert variant={UI_ALERT_VARIANT_WARNING} title={UI_SYSTEM_METRICS_SECTION_ERROR_TITLE}>
-                {UI_SYSTEM_METRICS_SECTION_ERROR_BODY}
-              </InlineAlert>
-            ) : null}
-            {section.items.length > 0 ? <SummaryList items={section.items} /> : null}
-          </div>
-        ))}
-      </div>
-    )
-  }
+  const shouldShowLoading = (isLoading || isFetching) && !metricsSource
+  const shouldShowError = isError && !metricsSource
+  const shouldShowEmpty = !shouldShowLoading && !shouldShowError && sections.length === 0
 
   return (
     <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
@@ -522,7 +485,36 @@ export function SystemMetricsPanel({ client, title = UI_SYSTEM_METRICS_TITLE }: 
         }
       />
 
-      {renderContent()}
+      <InlineStatusGate
+        isLoading={shouldShowLoading}
+        isError={shouldShowError}
+        loadingTitle={UI_SYSTEM_METRICS_LOADING_TITLE}
+        loadingMessage={UI_SYSTEM_METRICS_LOADING_BODY}
+        errorTitle={UI_SYSTEM_METRICS_ERROR_TITLE}
+        errorMessage={UI_SYSTEM_METRICS_ERROR_BODY}
+        loadingVariant={UI_ALERT_VARIANT_INFO}
+        errorVariant={UI_ALERT_VARIANT_DANGER}
+      >
+        {shouldShowEmpty ? (
+          <InlineAlert variant={UI_ALERT_VARIANT_WARNING} title={UI_SYSTEM_METRICS_EMPTY_TITLE}>
+            {UI_SYSTEM_METRICS_EMPTY_BODY}
+          </InlineAlert>
+        ) : (
+          <div className={UI_CLASS_FLEX_COLUMN_GAP_LARGE}>
+            {sections.map((section) => (
+              <div key={section.id} className={UI_CLASS_FLEX_COLUMN_GAP_MEDIUM}>
+                <h3 className="h6 mb-0">{section.title}</h3>
+                {section.errorMessage ? (
+                  <InlineAlert variant={UI_ALERT_VARIANT_WARNING} title={UI_SYSTEM_METRICS_SECTION_ERROR_TITLE}>
+                    {UI_SYSTEM_METRICS_SECTION_ERROR_BODY}
+                  </InlineAlert>
+                ) : null}
+                {section.items.length > 0 ? <SummaryList items={section.items} /> : null}
+              </div>
+            ))}
+          </div>
+        )}
+      </InlineStatusGate>
     </Stack>
   )
 }

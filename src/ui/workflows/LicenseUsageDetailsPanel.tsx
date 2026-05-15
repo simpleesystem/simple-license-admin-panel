@@ -37,6 +37,7 @@ import {
 } from '../constants'
 import { DataTable } from '../data/DataTable'
 import { InlineAlert } from '../feedback/InlineAlert'
+import { InlineStatusGate } from '../feedback/InlineStatusGate'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn } from '../types'
@@ -157,32 +158,27 @@ export function LicenseUsageDetailsPanel({
     )
   }
 
-  if (detailsQuery.isLoading) {
-    return (
-      <InlineAlert variant={UI_ALERT_VARIANT_INFO} title={UI_ANALYTICS_LICENSE_DETAILS_LOADING_TITLE}>
-        {UI_ANALYTICS_LICENSE_DETAILS_LOADING_BODY}
-      </InlineAlert>
-    )
-  }
-
-  if (detailsQuery.isError) {
-    return (
-      <InlineAlert variant={UI_ALERT_VARIANT_DANGER} title={UI_ANALYTICS_LICENSE_DETAILS_ERROR_TITLE}>
-        {UI_ANALYTICS_LICENSE_DETAILS_ERROR_BODY}
-      </InlineAlert>
-    )
-  }
-
   return (
     <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
       <PanelHeader title={title} description={UI_ANALYTICS_LICENSE_DETAILS_DESCRIPTION} />
 
-      <DataTable
-        data={rows}
-        columns={columns}
-        rowKey={(row) => row.id.toString()}
-        emptyState={UI_ANALYTICS_LICENSE_DETAILS_EMPTY_STATE}
-      />
+      <InlineStatusGate
+        isLoading={detailsQuery.isLoading}
+        isError={detailsQuery.isError}
+        loadingTitle={UI_ANALYTICS_LICENSE_DETAILS_LOADING_TITLE}
+        loadingMessage={UI_ANALYTICS_LICENSE_DETAILS_LOADING_BODY}
+        errorTitle={UI_ANALYTICS_LICENSE_DETAILS_ERROR_TITLE}
+        errorMessage={UI_ANALYTICS_LICENSE_DETAILS_ERROR_BODY}
+        loadingVariant={UI_ALERT_VARIANT_INFO}
+        errorVariant={UI_ALERT_VARIANT_DANGER}
+      >
+        <DataTable
+          data={rows}
+          columns={columns}
+          rowKey={(row) => row.id.toString()}
+          emptyState={UI_ANALYTICS_LICENSE_DETAILS_EMPTY_STATE}
+        />
+      </InlineStatusGate>
     </Stack>
   )
 }

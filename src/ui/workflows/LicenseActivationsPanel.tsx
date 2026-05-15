@@ -42,6 +42,7 @@ import {
 } from '../constants'
 import { DataTable } from '../data/DataTable'
 import { InlineAlert } from '../feedback/InlineAlert'
+import { InlineStatusGate } from '../feedback/InlineStatusGate'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn } from '../types'
@@ -167,22 +168,6 @@ export function LicenseActivationsPanel({
     )
   }
 
-  if (activationsQuery.isLoading) {
-    return (
-      <InlineAlert variant={UI_ALERT_VARIANT_INFO} title={UI_LICENSE_ACTIVATIONS_LOADING_TITLE}>
-        {UI_LICENSE_ACTIVATIONS_LOADING_BODY}
-      </InlineAlert>
-    )
-  }
-
-  if (activationsQuery.isError) {
-    return (
-      <InlineAlert variant={UI_ALERT_VARIANT_DANGER} title={UI_LICENSE_ACTIVATIONS_ERROR_TITLE}>
-        {UI_LICENSE_ACTIVATIONS_ERROR_BODY}
-      </InlineAlert>
-    )
-  }
-
   return (
     <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
       <PanelHeader
@@ -198,12 +183,23 @@ export function LicenseActivationsPanel({
         }
       />
 
-      <DataTable
-        data={rows}
-        columns={columns}
-        rowKey={(row) => row.id ?? `${row.licenseKey}-${row.domain}-${row.activatedAt}`}
-        emptyState={UI_LICENSE_ACTIVATIONS_EMPTY_STATE}
-      />
+      <InlineStatusGate
+        isLoading={activationsQuery.isLoading}
+        isError={activationsQuery.isError}
+        loadingTitle={UI_LICENSE_ACTIVATIONS_LOADING_TITLE}
+        loadingMessage={UI_LICENSE_ACTIVATIONS_LOADING_BODY}
+        errorTitle={UI_LICENSE_ACTIVATIONS_ERROR_TITLE}
+        errorMessage={UI_LICENSE_ACTIVATIONS_ERROR_BODY}
+        loadingVariant={UI_ALERT_VARIANT_INFO}
+        errorVariant={UI_ALERT_VARIANT_DANGER}
+      >
+        <DataTable
+          data={rows}
+          columns={columns}
+          rowKey={(row) => row.id ?? `${row.licenseKey}-${row.domain}-${row.activatedAt}`}
+          emptyState={UI_LICENSE_ACTIVATIONS_EMPTY_STATE}
+        />
+      </InlineStatusGate>
     </Stack>
   )
 }

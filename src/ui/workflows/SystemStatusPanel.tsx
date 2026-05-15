@@ -44,6 +44,7 @@ import {
 } from '../constants'
 import { SummaryList } from '../data/SummaryList'
 import { InlineAlert } from '../feedback/InlineAlert'
+import { InlineStatusGate } from '../feedback/InlineStatusGate'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiKeyValueItem } from '../types'
@@ -346,35 +347,9 @@ export function SystemStatusPanel({ client, title = UI_SYSTEM_STATUS_TITLE }: Sy
     return items
   }, [dateFormatter, statusData])
 
-  /* c8 ignore start */
-  const renderContent = () => {
-    if (summaryItems.length === 0) {
-      if ((isLoading || isFetching) && !statusData) {
-        return (
-          <InlineAlert variant={UI_ALERT_VARIANT_INFO} title={UI_SYSTEM_STATUS_LOADING_TITLE}>
-            {UI_SYSTEM_STATUS_LOADING_BODY}
-          </InlineAlert>
-        )
-      }
-
-      if (isError && !statusData) {
-        return (
-          <InlineAlert variant={UI_ALERT_VARIANT_DANGER} title={UI_SYSTEM_STATUS_ERROR_TITLE}>
-            {UI_SYSTEM_STATUS_ERROR_BODY}
-          </InlineAlert>
-        )
-      }
-
-      return (
-        <InlineAlert variant={UI_ALERT_VARIANT_WARNING} title={UI_SYSTEM_STATUS_EMPTY_TITLE}>
-          {UI_SYSTEM_STATUS_EMPTY_BODY}
-        </InlineAlert>
-      )
-    }
-
-    return <SummaryList items={summaryItems} />
-  }
-  /* c8 ignore stop */
+  const shouldShowLoading = (isLoading || isFetching) && !statusData
+  const shouldShowError = isError && !statusData
+  const shouldShowEmpty = !shouldShowLoading && !shouldShowError && summaryItems.length === 0
 
   return (
     <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
@@ -394,7 +369,24 @@ export function SystemStatusPanel({ client, title = UI_SYSTEM_STATUS_TITLE }: Sy
         }
       />
 
-      {renderContent()}
+      <InlineStatusGate
+        isLoading={shouldShowLoading}
+        isError={shouldShowError}
+        loadingTitle={UI_SYSTEM_STATUS_LOADING_TITLE}
+        loadingMessage={UI_SYSTEM_STATUS_LOADING_BODY}
+        errorTitle={UI_SYSTEM_STATUS_ERROR_TITLE}
+        errorMessage={UI_SYSTEM_STATUS_ERROR_BODY}
+        loadingVariant={UI_ALERT_VARIANT_INFO}
+        errorVariant={UI_ALERT_VARIANT_DANGER}
+      >
+        {shouldShowEmpty ? (
+          <InlineAlert variant={UI_ALERT_VARIANT_WARNING} title={UI_SYSTEM_STATUS_EMPTY_TITLE}>
+            {UI_SYSTEM_STATUS_EMPTY_BODY}
+          </InlineAlert>
+        ) : (
+          <SummaryList items={summaryItems} />
+        )}
+      </InlineStatusGate>
     </Stack>
   )
 }

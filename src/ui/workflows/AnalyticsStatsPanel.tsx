@@ -31,6 +31,7 @@ import {
 } from '../constants'
 import { SummaryList } from '../data/SummaryList'
 import { InlineAlert } from '../feedback/InlineAlert'
+import { InlineStatusGate } from '../feedback/InlineStatusGate'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiSummaryCardItem } from '../types'
@@ -92,34 +93,6 @@ export function AnalyticsStatsPanel({ client, title = UI_ANALYTICS_STATS_TITLE }
   const shouldShowError = isError && !statsSource
   const shouldShowEmpty = !shouldShowLoading && !shouldShowError && statItems.length === 0
 
-  const renderContent = () => {
-    if (shouldShowLoading) {
-      return (
-        <InlineAlert variant={UI_ALERT_VARIANT_INFO} title={UI_ANALYTICS_STATS_LOADING_TITLE}>
-          {UI_ANALYTICS_STATS_LOADING_BODY}
-        </InlineAlert>
-      )
-    }
-
-    if (shouldShowError) {
-      return (
-        <InlineAlert variant={UI_ALERT_VARIANT_DANGER} title={UI_ANALYTICS_STATS_ERROR_TITLE}>
-          {UI_ANALYTICS_STATS_ERROR_BODY}
-        </InlineAlert>
-      )
-    }
-
-    if (shouldShowEmpty) {
-      return (
-        <InlineAlert variant={UI_ALERT_VARIANT_WARNING} title={UI_ANALYTICS_STATS_EMPTY_TITLE}>
-          {UI_ANALYTICS_STATS_EMPTY_BODY}
-        </InlineAlert>
-      )
-    }
-
-    return <SummaryList items={statItems} />
-  }
-
   return (
     <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
       <PanelHeader
@@ -138,7 +111,24 @@ export function AnalyticsStatsPanel({ client, title = UI_ANALYTICS_STATS_TITLE }
         }
       />
 
-      {renderContent()}
+      <InlineStatusGate
+        isLoading={shouldShowLoading}
+        isError={shouldShowError}
+        loadingTitle={UI_ANALYTICS_STATS_LOADING_TITLE}
+        loadingMessage={UI_ANALYTICS_STATS_LOADING_BODY}
+        errorTitle={UI_ANALYTICS_STATS_ERROR_TITLE}
+        errorMessage={UI_ANALYTICS_STATS_ERROR_BODY}
+        loadingVariant={UI_ALERT_VARIANT_INFO}
+        errorVariant={UI_ALERT_VARIANT_DANGER}
+      >
+        {shouldShowEmpty ? (
+          <InlineAlert variant={UI_ALERT_VARIANT_WARNING} title={UI_ANALYTICS_STATS_EMPTY_TITLE}>
+            {UI_ANALYTICS_STATS_EMPTY_BODY}
+          </InlineAlert>
+        ) : (
+          <SummaryList items={statItems} />
+        )}
+      </InlineStatusGate>
     </Stack>
   )
 }

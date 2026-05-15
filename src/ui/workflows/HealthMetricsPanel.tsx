@@ -37,6 +37,7 @@ import {
 } from '../constants'
 import { SummaryList } from '../data/SummaryList'
 import { InlineAlert } from '../feedback/InlineAlert'
+import { InlineStatusGate } from '../feedback/InlineStatusGate'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiKeyValueItem } from '../types'
@@ -110,33 +111,9 @@ export function HealthMetricsPanel({ client, title = UI_HEALTH_METRICS_TITLE }: 
     ]
   }, [metricsSource, numberFormatter])
 
-  const renderContent = () => {
-    if (summaryItems.length === 0) {
-      if ((isLoading || isFetching) && !metricsSource) {
-        return (
-          <InlineAlert variant={UI_ALERT_VARIANT_INFO} title={UI_HEALTH_METRICS_LOADING_TITLE}>
-            {UI_HEALTH_METRICS_LOADING_BODY}
-          </InlineAlert>
-        )
-      }
-
-      if (isError && !metricsSource) {
-        return (
-          <InlineAlert variant={UI_ALERT_VARIANT_DANGER} title={UI_HEALTH_METRICS_ERROR_TITLE}>
-            {UI_HEALTH_METRICS_ERROR_BODY}
-          </InlineAlert>
-        )
-      }
-
-      return (
-        <InlineAlert variant={UI_ALERT_VARIANT_WARNING} title={UI_HEALTH_METRICS_EMPTY_TITLE}>
-          {UI_HEALTH_METRICS_EMPTY_BODY}
-        </InlineAlert>
-      )
-    }
-
-    return <SummaryList items={summaryItems} />
-  }
+  const shouldShowLoading = (isLoading || isFetching) && !metricsSource
+  const shouldShowError = isError && !metricsSource
+  const shouldShowEmpty = !shouldShowLoading && !shouldShowError && summaryItems.length === 0
 
   return (
     <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
@@ -156,7 +133,24 @@ export function HealthMetricsPanel({ client, title = UI_HEALTH_METRICS_TITLE }: 
         }
       />
 
-      {renderContent()}
+      <InlineStatusGate
+        isLoading={shouldShowLoading}
+        isError={shouldShowError}
+        loadingTitle={UI_HEALTH_METRICS_LOADING_TITLE}
+        loadingMessage={UI_HEALTH_METRICS_LOADING_BODY}
+        errorTitle={UI_HEALTH_METRICS_ERROR_TITLE}
+        errorMessage={UI_HEALTH_METRICS_ERROR_BODY}
+        loadingVariant={UI_ALERT_VARIANT_INFO}
+        errorVariant={UI_ALERT_VARIANT_DANGER}
+      >
+        {shouldShowEmpty ? (
+          <InlineAlert variant={UI_ALERT_VARIANT_WARNING} title={UI_HEALTH_METRICS_EMPTY_TITLE}>
+            {UI_HEALTH_METRICS_EMPTY_BODY}
+          </InlineAlert>
+        ) : (
+          <SummaryList items={summaryItems} />
+        )}
+      </InlineStatusGate>
     </Stack>
   )
 }
