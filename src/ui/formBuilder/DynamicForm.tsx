@@ -8,7 +8,12 @@ import type { PermissionKey } from '../../app/auth/permissions'
 import {
   UI_BUTTON_VARIANT_OUTLINE_SECONDARY,
   UI_BUTTON_VARIANT_PRIMARY,
+  UI_CLASS_FLEX_COLUMN_GAP_XLARGE,
   UI_CLASS_FORM_SECTION_BODY,
+  UI_CLASS_HEADING_H4_MARGIN_BOTTOM,
+  UI_CLASS_MARGIN_RESET,
+  UI_CLASS_MARGIN_TOP_LARGE,
+  UI_CLASS_TEXT_MUTED,
   UI_FORM_ROW_COLUMNS_ONE,
 } from '../constants'
 import { CheckboxField } from '../forms/CheckboxField'
@@ -89,9 +94,9 @@ export function DynamicForm<TFieldValues extends FieldValues>({
   return (
     <FormProvider {...formMethods}>
       <Form className={className} onSubmit={submitHandler} noValidate={true}>
-        {blueprint.title ? <h2 className="h4 mb-3">{blueprint.title}</h2> : null}
-        {blueprint.description ? <p className="text-muted">{blueprint.description}</p> : null}
-        <div className="d-flex flex-column gap-4">
+        {blueprint.title ? <h2 className={UI_CLASS_HEADING_H4_MARGIN_BOTTOM}>{blueprint.title}</h2> : null}
+        {blueprint.description ? <p className={UI_CLASS_TEXT_MUTED}>{blueprint.description}</p> : null}
+        <div className={UI_CLASS_FLEX_COLUMN_GAP_XLARGE}>
           {blueprint.sections.map((section) => (
             <FormSection
               key={section.id}
@@ -101,13 +106,13 @@ export function DynamicForm<TFieldValues extends FieldValues>({
               ability={section.ability}
               permissionKey={section.permissionKey}
               permissionFallback={section.permissionFallback}
-              className="mb-0"
+              className={UI_CLASS_MARGIN_RESET}
             >
               {renderSectionContent(section.layout, section.fields, renderFieldOverride)}
             </FormSection>
           ))}
         </div>
-        <FormActions className="mt-4" align="end">
+        <FormActions className={UI_CLASS_MARGIN_TOP_LARGE} align="end">
           {secondaryActions}
           {cancelLabel && onCancel ? (
             <Button

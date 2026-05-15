@@ -3,7 +3,12 @@ import { useAppStore } from '@/app/state/store'
 import {
   UI_CHANGE_PASSWORD_DESCRIPTION,
   UI_CHANGE_PASSWORD_HEADING,
+  UI_CLASS_AUTH_FLOW_CARD,
+  UI_CLASS_AUTH_FLOW_CARD_BODY,
+  UI_CLASS_AUTH_FLOW_CONTAINER,
+  UI_CLASS_AUTH_FLOW_ROW,
   UI_CLASS_MARGIN_BOTTOM_SMALL,
+  UI_CLASS_SECTION_COLUMN_AUTH,
   UI_CLASS_TEXT_MUTED_MARGIN_BOTTOM_LARGE,
 } from '@/ui/constants'
 import { Heading } from '@/ui/typography/Heading'
@@ -21,11 +26,11 @@ export function ChangePasswordFlow() {
   }
 
   return (
-    <div className="container py-5">
-      <div className="row justify-content-center">
-        <div className="col-12 col-md-8 col-lg-6 col-xl-5">
-          <div className="card shadow-sm">
-            <div className="card-body p-4">
+    <div className={UI_CLASS_AUTH_FLOW_CONTAINER}>
+      <div className={UI_CLASS_AUTH_FLOW_ROW}>
+        <div className={UI_CLASS_SECTION_COLUMN_AUTH}>
+          <div className={UI_CLASS_AUTH_FLOW_CARD}>
+            <div className={UI_CLASS_AUTH_FLOW_CARD_BODY}>
               <Heading level={2} className={UI_CLASS_MARGIN_BOTTOM_SMALL}>
                 {UI_CHANGE_PASSWORD_HEADING}
               </Heading>
