@@ -29,6 +29,7 @@ import { DynamicForm } from '../formBuilder/DynamicForm'
 import { createLicenseBlueprint } from '../formBuilder/factories'
 import { ModalDialog } from '../overlay/ModalDialog'
 import type { UiSelectOption } from '../types'
+import { KeyValueList } from '../typography/KeyValueList'
 import { LicenseActivationsPanel } from './LicenseActivationsPanel'
 import { LicenseUsageDetailsPanel } from './LicenseUsageDetailsPanel'
 import { useDialogFormMutation } from './useDialogFormMutation'
@@ -168,10 +169,20 @@ export function LicenseUpdateDialog({
               }}
             >
               <div className={UI_CLASS_MARGIN_BOTTOM_MUTED}>
-                <strong>{UI_ANALYTICS_COLUMN_LICENSE_KEY}:</strong> <code>{licenseKey || UI_VALUE_PLACEHOLDER}</code>
-              </div>
-              <div className={UI_CLASS_MARGIN_BOTTOM_MUTED}>
-                <strong>{UI_LICENSE_ACTIVATIONS_COLUMN_DOMAIN}:</strong> <code>{domain || UI_VALUE_PLACEHOLDER}</code>
+                <KeyValueList
+                  items={[
+                    {
+                      id: UI_ANALYTICS_COLUMN_LICENSE_KEY,
+                      label: UI_ANALYTICS_COLUMN_LICENSE_KEY,
+                      value: <code>{licenseKey || UI_VALUE_PLACEHOLDER}</code>,
+                    },
+                    {
+                      id: UI_LICENSE_ACTIVATIONS_COLUMN_DOMAIN,
+                      label: UI_LICENSE_ACTIVATIONS_COLUMN_DOMAIN,
+                      value: <code>{domain || UI_VALUE_PLACEHOLDER}</code>,
+                    },
+                  ]}
+                />
               </div>
               <DynamicForm
                 blueprint={blueprint}

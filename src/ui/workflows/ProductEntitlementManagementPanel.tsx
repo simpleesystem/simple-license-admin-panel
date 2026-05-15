@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import Badge from 'react-bootstrap/Badge'
 import Button from 'react-bootstrap/Button'
 import type { Client, User } from '@/simpleLicense'
 import {
@@ -38,6 +37,7 @@ import {
 } from '../constants'
 import { DataTable } from '../data/DataTable'
 import { TableControls } from '../data/TableControls'
+import { TagList } from '../data/TagList'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
@@ -198,13 +198,12 @@ export function ProductEntitlementManagementPanel({
             return UI_VALUE_PLACEHOLDER
           }
           return (
-            <div className="d-flex flex-wrap gap-1">
-              {row.productTiers.map((t) => (
-                <Badge key={t.id} bg="light" text="dark" className="border">
-                  {t.tierCode}
-                </Badge>
-              ))}
-            </div>
+            <TagList
+              tags={row.productTiers.map((tier) => ({
+                id: tier.id,
+                label: tier.tierCode,
+              }))}
+            />
           )
         },
         sortable: false,

@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import Badge from 'react-bootstrap/Badge'
 import Button from 'react-bootstrap/Button'
 
 import type { Client, PluginRelease } from '@/simpleLicense'
@@ -63,6 +62,7 @@ import { RouteStatus } from '../feedback/RouteStatus'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
+import { BadgeText } from '../typography/BadgeText'
 import { EmptyState } from '../typography/EmptyState'
 import { formatBytes, formatDateSafe } from '../utils/formatUtils'
 import { ReleaseFormFlow } from './ReleaseFormFlow'
@@ -208,14 +208,18 @@ export function ReleasesPanel({
           <>
             <span className={UI_CLASS_INLINE_FILENAME}>{row.fileName}</span>
             {row.filePresent === true ? (
-              <Badge bg={UI_BADGE_VARIANT_SUCCESS} className={UI_CLASS_ALIGN_TEXT_BOTTOM}>
-                {UI_RELEASE_FILE_PRESENT}
-              </Badge>
+              <BadgeText
+                text={UI_RELEASE_FILE_PRESENT}
+                variant={UI_BADGE_VARIANT_SUCCESS}
+                className={UI_CLASS_ALIGN_TEXT_BOTTOM}
+              />
             ) : null}
             {row.filePresent === false ? (
-              <Badge bg={UI_BADGE_VARIANT_DANGER} className={UI_CLASS_ALIGN_TEXT_BOTTOM}>
-                {UI_RELEASE_FILE_MISSING}
-              </Badge>
+              <BadgeText
+                text={UI_RELEASE_FILE_MISSING}
+                variant={UI_BADGE_VARIANT_DANGER}
+                className={UI_CLASS_ALIGN_TEXT_BOTTOM}
+              />
             ) : null}
           </>
         ),
@@ -237,7 +241,11 @@ export function ReleasesPanel({
         id: UI_RELEASE_COLUMN_ID_STATUS,
         header: UI_RELEASE_COLUMN_STATUS,
         cell: (row) =>
-          row.isPromoted ? <Badge bg={UI_BADGE_VARIANT_SUCCESS}>{UI_RELEASE_LIVE_BADGE}</Badge> : UI_VALUE_PLACEHOLDER,
+          row.isPromoted ? (
+            <BadgeText text={UI_RELEASE_LIVE_BADGE} variant={UI_BADGE_VARIANT_SUCCESS} />
+          ) : (
+            UI_VALUE_PLACEHOLDER
+          ),
         sortable: true,
       },
       {
