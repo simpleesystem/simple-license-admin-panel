@@ -13,6 +13,7 @@ import {
   UI_ALERT_VARIANT_WARNING,
   UI_CLASS_FLEX_COLUMN_GAP_LARGE,
   UI_CLASS_FLEX_COLUMN_GAP_MEDIUM,
+  UI_CLASS_HEADING_H6_RESET,
   UI_DATE_FORMAT_LOCALE,
   UI_DATE_TIME_FORMAT_OPTIONS,
   UI_SECTION_ID_SYSTEM_METRICS_APPLICATION,
@@ -503,7 +504,7 @@ export function SystemMetricsPanel({ client, title = UI_SYSTEM_METRICS_TITLE }: 
           <div className={UI_CLASS_FLEX_COLUMN_GAP_LARGE}>
             {sections.map((section) => (
               <div key={section.id} className={UI_CLASS_FLEX_COLUMN_GAP_MEDIUM}>
-                <h3 className="h6 mb-0">{section.title}</h3>
+                <h3 className={UI_CLASS_HEADING_H6_RESET}>{section.title}</h3>
                 {section.errorMessage ? (
                   <InlineAlert variant={UI_ALERT_VARIANT_WARNING} title={UI_SYSTEM_METRICS_SECTION_ERROR_TITLE}>
                     {UI_SYSTEM_METRICS_SECTION_ERROR_BODY}

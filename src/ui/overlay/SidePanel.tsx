@@ -1,11 +1,14 @@
 import {
   UI_ARIA_LABEL_CLOSE_SIDE_PANEL,
   UI_ARIA_MODAL_DIALOG,
+  UI_CLASS_BUTTON_CLOSE,
   UI_CLASS_FLEX_BETWEEN_CENTER_MB4,
   UI_CLASS_HEADING_H5_RESET,
   UI_CLASS_SIDE_PANEL,
   UI_CLASS_SIDE_PANEL_ACTIONS,
   UI_CLASS_SIDE_PANEL_BODY,
+  UI_CLASS_SIDE_PANEL_PLACEMENT_END,
+  UI_CLASS_SIDE_PANEL_PLACEMENT_START,
   UI_CLASS_TOP_BORDER_SPACED,
   UI_SIDE_PANEL_PLACEMENT_END,
   UI_TEST_ID_SIDE_PANEL,
@@ -41,7 +44,7 @@ export function SidePanel({
       <aside
         className={composeClassNames(
           UI_CLASS_SIDE_PANEL,
-          placement === 'start' ? 'start-0' : 'end-0',
+          placement === 'start' ? UI_CLASS_SIDE_PANEL_PLACEMENT_START : UI_CLASS_SIDE_PANEL_PLACEMENT_END,
           sizeClass,
           className
         )}
@@ -56,7 +59,12 @@ export function SidePanel({
               {title}
             </h2>
           ) : null}
-          <button type="button" className="btn-close" aria-label={UI_ARIA_LABEL_CLOSE_SIDE_PANEL} onClick={onClose} />
+          <button
+            type="button"
+            className={UI_CLASS_BUTTON_CLOSE}
+            aria-label={UI_ARIA_LABEL_CLOSE_SIDE_PANEL}
+            onClick={onClose}
+          />
         </div>
         <div className={UI_CLASS_SIDE_PANEL_BODY}>{children}</div>
         {actions ? <div className={UI_CLASS_SIDE_PANEL_ACTIONS}>{actions}</div> : null}

@@ -8,6 +8,7 @@ import { useNotificationBus } from '../../notifications/useNotificationBus'
 import { adaptMutation } from '../actions/mutationAdapter'
 import {
   UI_BUTTON_VARIANT_GHOST,
+  UI_CLASS_BORDER_ROUNDED_PADDED,
   UI_PRODUCT_ACTION_BUILD_TOKENS,
   UI_PRODUCT_ACTION_DELETE,
   UI_PRODUCT_ACTION_EDIT,
@@ -411,7 +412,7 @@ export function ProductRowActions({
                           key={token.id}
                           direction="column"
                           gap={UI_STACK_GAP_SMALL}
-                          className="border rounded p-2"
+                          className={UI_CLASS_BORDER_ROUNDED_PADDED}
                         >
                           <KeyValueList
                             items={[

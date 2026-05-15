@@ -6,6 +6,7 @@ import {
   UI_ACTION_MENU_TOGGLE_ICON,
   UI_ACTION_MENU_TOGGLE_LABEL,
   UI_CLASS_ACTION_MENU,
+  UI_CLASS_MARGIN_END_SMALL,
   UI_TEST_ID_ACTION_MENU,
 } from '../constants'
 import type { ActionMenuProps } from '../types'
@@ -72,7 +73,7 @@ export function ActionMenu({
                 onClick={() => item.onSelect()}
                 data-testid={item.testId}
               >
-                {item.icon ? <span className="me-2">{item.icon}</span> : null}
+                {item.icon ? <span className={UI_CLASS_MARGIN_END_SMALL}>{item.icon}</span> : null}
                 <span>{item.label}</span>
               </Dropdown.Item>
             </VisibilityGate>

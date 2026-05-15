@@ -47,7 +47,9 @@ import {
   UI_AUDIT_LOGS_USER_AGENT_PREVIEW_LIMIT,
   UI_BUTTON_VARIANT_PRIMARY,
   UI_BUTTON_VARIANT_SECONDARY,
+  UI_CLASS_AUDIT_FILTER_ACTIONS,
   UI_CLASS_AUDIT_FILTER_FIELD,
+  UI_CLASS_AUDIT_FILTER_FORM,
   UI_CLASS_AUDIT_FILTER_LABEL,
   UI_COLUMN_ID_AUDIT_LOG_ACTION,
   UI_COLUMN_ID_AUDIT_LOG_ADMIN,
@@ -149,7 +151,7 @@ type AuditLogsFilterBarProps = {
 
 function AuditLogsFilterBar({ formState, onChange, onSubmit, onReset }: AuditLogsFilterBarProps) {
   return (
-    <Form className="row g-2 align-items-end w-100" onSubmit={onSubmit}>
+    <Form className={UI_CLASS_AUDIT_FILTER_FORM} onSubmit={onSubmit}>
       <Form.Group className={UI_CLASS_AUDIT_FILTER_FIELD} controlId={UI_FIELD_AUDIT_FILTER_ADMIN}>
         <Form.Label className={UI_CLASS_AUDIT_FILTER_LABEL}>{UI_AUDIT_LOGS_FILTER_ADMIN_LABEL}</Form.Label>
         <Form.Control
@@ -190,7 +192,7 @@ function AuditLogsFilterBar({ formState, onChange, onSubmit, onReset }: AuditLog
         />
       </Form.Group>
 
-      <div className="col-12 d-flex flex-wrap gap-2">
+      <div className={UI_CLASS_AUDIT_FILTER_ACTIONS}>
         <Button type="submit" variant={UI_BUTTON_VARIANT_PRIMARY} size={UI_SIZE_SMALL}>
           {UI_AUDIT_LOGS_FILTER_APPLY_LABEL}
         </Button>

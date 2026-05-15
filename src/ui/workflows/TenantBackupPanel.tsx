@@ -7,6 +7,7 @@ import {
   UI_ALERT_VARIANT_DANGER,
   UI_ALERT_VARIANT_SUCCESS,
   UI_BUTTON_VARIANT_PRIMARY,
+  UI_CLASS_FLEX_WRAP_GAP_SMALL,
   UI_STACK_GAP_SMALL,
   UI_SUMMARY_ID_TENANT_BACKUP_LAST_RUN,
   UI_SUMMARY_ID_TENANT_BACKUP_NAME,
@@ -86,7 +87,7 @@ export function TenantBackupPanel({
       ) : null}
       {status === 'error' ? <InlineAlert variant={UI_ALERT_VARIANT_DANGER} title={UI_TENANT_BACKUP_ERROR} /> : null}
 
-      <div className="d-flex flex-wrap gap-2">
+      <div className={UI_CLASS_FLEX_WRAP_GAP_SMALL}>
         <Button variant={UI_BUTTON_VARIANT_PRIMARY} disabled={mutation.isPending} onClick={handleCreateBackup}>
           {mutation.isPending ? UI_TENANT_BACKUP_PENDING_LABEL : UI_TENANT_BACKUP_BUTTON_LABEL}
         </Button>
