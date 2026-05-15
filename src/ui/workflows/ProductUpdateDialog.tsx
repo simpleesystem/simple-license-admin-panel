@@ -9,22 +9,37 @@ import type { MutationAdapter } from '../actions/mutationActions'
 import {
   UI_CLASS_MARGIN_BOTTOM_LARGE,
   UI_CLASS_PADDING_TOP_SMALL,
+  UI_ENTITLEMENT_STATUS_ACTION_RETRY,
+  UI_ENTITLEMENT_STATUS_ERROR_BODY,
+  UI_ENTITLEMENT_STATUS_ERROR_TITLE,
+  UI_ENTITLEMENT_STATUS_LOADING_BODY,
+  UI_ENTITLEMENT_STATUS_LOADING_TITLE,
   UI_FORM_SELECT_PLACEHOLDER_VALUE,
   UI_MODAL_SIZE_XL,
   UI_PRODUCT_FORM_PENDING_UPDATE,
   UI_PRODUCT_FORM_SUBMIT_UPDATE,
   UI_PRODUCT_FORM_TITLE_UPDATE,
+  UI_PRODUCT_STATUS_ACTION_RETRY,
+  UI_PRODUCT_STATUS_ERROR_BODY,
+  UI_PRODUCT_STATUS_ERROR_TITLE,
+  UI_PRODUCT_STATUS_LOADING_BODY,
+  UI_PRODUCT_STATUS_LOADING_TITLE,
+  UI_PRODUCT_TIER_STATUS_ACTION_RETRY,
+  UI_PRODUCT_TIER_STATUS_ERROR_BODY,
+  UI_PRODUCT_TIER_STATUS_ERROR_TITLE,
+  UI_PRODUCT_TIER_STATUS_LOADING_BODY,
+  UI_PRODUCT_TIER_STATUS_LOADING_TITLE,
 } from '../constants'
+import { AsyncStatusGate } from '../feedback/AsyncStatusGate'
 import type { FormBlueprint } from '../formBuilder/blueprint'
 import { DynamicForm } from '../formBuilder/DynamicForm'
 import { createProductBlueprint } from '../formBuilder/factories'
-import { useFormMutation } from '../formBuilder/useFormMutation'
 import { ModalDialog } from '../overlay/ModalDialog'
 import type { UiSelectOption } from '../types'
-import { wrapMutationAdapter } from './mutationHelpers'
 import { ProductEntitlementManagementPanel } from './ProductEntitlementManagementPanel'
 import type { ProductEntitlementListItem } from './ProductEntitlementRowActions'
 import { type ProductTierListItem, ProductTierManagementPanel } from './ProductTierManagementPanel'
+import { useDialogFormMutation } from './useDialogFormMutation'
 
 type ProductUpdateDialogProps = {
   client: Client
@@ -66,14 +81,27 @@ export function ProductUpdateDialog({
   const [entitlements, setEntitlements] = useState<ProductEntitlementListItem[]>([])
   const [metadataString, setMetadataString] = useState<string>('')
   const [product, setProduct] = useState<Product | null>(null)
+  const [isProductLoading, setIsProductLoading] = useState(false)
+  const [isProductError, setIsProductError] = useState(false)
+  const [isTiersLoading, setIsTiersLoading] = useState(false)
+  const [isTiersError, setIsTiersError] = useState(false)
+  const [isEntitlementsLoading, setIsEntitlementsLoading] = useState(false)
+  const [isEntitlementsError, setIsEntitlementsError] = useState(false)
 
   // Data Fetching
   const fetchTiers = useCallback(async () => {
+    if (!show) {
+      return
+    }
     try {
       if (!product) {
         setTiers([])
+        setIsTiersError(false)
+        setIsTiersLoading(false)
         return
       }
+      setIsTiersLoading(true)
+      setIsTiersError(false)
       const response = await client.listProductTiers(productId)
 
       // Runtime fix: client.listProductTiers returns the array directly (unwrapped),
@@ -93,17 +121,26 @@ export function ProductUpdateDialog({
       setTiers(formatted)
     } catch (e) {
       logger.error(e instanceof Error ? e : new Error(String(e)), { message: 'Failed to fetch tiers' })
-      // Set empty array on error to prevent stale data
       setTiers([])
+      setIsTiersError(true)
+    } finally {
+      setIsTiersLoading(false)
     }
-  }, [client, productId, product, logger])
+  }, [client, productId, product, logger, show])
 
   const fetchEntitlements = useCallback(async () => {
+    if (!show) {
+      return
+    }
     try {
       if (!product) {
         setEntitlements([])
+        setIsEntitlementsError(false)
+        setIsEntitlementsLoading(false)
         return
       }
+      setIsEntitlementsLoading(true)
+      setIsEntitlementsError(false)
       const response = await client.listEntitlements(productId)
       // Runtime fix: client.listEntitlements returns the array directly (unwrapped)
       const rawData = response as unknown
@@ -124,21 +161,36 @@ export function ProductUpdateDialog({
       setEntitlements(formatted)
     } catch (e) {
       logger.error(e instanceof Error ? e : new Error(String(e)), { message: 'Failed to fetch entitlements' })
+      setEntitlements([])
+      setIsEntitlementsError(true)
+    } finally {
+      setIsEntitlementsLoading(false)
     }
-  }, [client, productId, product, logger])
+  }, [client, productId, product, logger, show])
 
   const fetchProductDetails = useCallback(async () => {
+    if (!show) {
+      return
+    }
+    setIsProductLoading(true)
+    setIsProductError(false)
     try {
       const response = await client.getProduct(productId)
       const productData = response.product as Product & { metadata?: unknown }
       setProduct(productData)
       if (productData?.metadata) {
         setMetadataString(JSON.stringify(productData.metadata, null, 2))
+      } else {
+        setMetadataString('')
       }
     } catch (e) {
       logger.error(e instanceof Error ? e : new Error(String(e)), { message: 'Failed to fetch product details' })
+      setProduct(null)
+      setIsProductError(true)
+    } finally {
+      setIsProductLoading(false)
     }
-  }, [client, productId, logger])
+  }, [client, productId, logger, show])
 
   // Fetch product when dialog opens; defer to avoid setState synchronously in effect (react-hooks/set-state-in-effect)
   useEffect(() => {
@@ -184,21 +236,12 @@ export function ProductUpdateDialog({
     isPending: updateMutation.isPending,
   }
 
-  const wrappedMutation = wrapMutationAdapter(adapter, {
-    onClose, // Don't close on success immediately if we want to stay? usually form submit closes modal.
+  const { handleSubmit } = useDialogFormMutation({
+    mutation: adapter,
     onCompleted,
     onSuccess,
     onError,
-  })
-
-  // We wrap the submit handler to close the modal after success
-  const { handleSubmit } = useFormMutation({
-    mutation: wrappedMutation,
-    onSuccess: () => {
-      onSuccess?.()
-      onClose()
-    },
-    onError,
+    onClose,
   })
 
   const blueprint = createProductBlueprint('update', {
@@ -230,37 +273,76 @@ export function ProductUpdateDialog({
           className={UI_CLASS_MARGIN_BOTTOM_LARGE}
         >
           <Tab eventKey="details" title="Details">
-            <DynamicForm
-              blueprint={blueprint}
-              defaultValues={defaultValues}
-              onSubmit={handleSubmit}
-              submitLabel={UI_PRODUCT_FORM_SUBMIT_UPDATE}
-              pendingLabel={UI_PRODUCT_FORM_PENDING_UPDATE}
-              cancelLabel="Cancel"
-              onCancel={onClose}
-            />
+            <AsyncStatusGate
+              isLoading={isProductLoading}
+              isError={isProductError}
+              loadingTitle={UI_PRODUCT_STATUS_LOADING_TITLE}
+              loadingMessage={UI_PRODUCT_STATUS_LOADING_BODY}
+              errorTitle={UI_PRODUCT_STATUS_ERROR_TITLE}
+              errorMessage={UI_PRODUCT_STATUS_ERROR_BODY}
+              retryLabel={UI_PRODUCT_STATUS_ACTION_RETRY}
+              onRetry={() => {
+                void fetchProductDetails()
+              }}
+            >
+              <DynamicForm
+                blueprint={blueprint}
+                defaultValues={defaultValues}
+                onSubmit={handleSubmit}
+                submitLabel={UI_PRODUCT_FORM_SUBMIT_UPDATE}
+                pendingLabel={UI_PRODUCT_FORM_PENDING_UPDATE}
+                cancelLabel="Cancel"
+                onCancel={onClose}
+              />
+            </AsyncStatusGate>
           </Tab>
           <Tab eventKey="tiers" title="Tiers">
             <div className={UI_CLASS_PADDING_TOP_SMALL}>
-              <ProductTierManagementPanel
-                client={client}
-                productId={productId}
-                tiers={tiers}
-                onRefresh={fetchTiers}
-                currentUser={currentUser}
-              />
+              <AsyncStatusGate
+                isLoading={isTiersLoading}
+                isError={isTiersError}
+                loadingTitle={UI_PRODUCT_TIER_STATUS_LOADING_TITLE}
+                loadingMessage={UI_PRODUCT_TIER_STATUS_LOADING_BODY}
+                errorTitle={UI_PRODUCT_TIER_STATUS_ERROR_TITLE}
+                errorMessage={UI_PRODUCT_TIER_STATUS_ERROR_BODY}
+                retryLabel={UI_PRODUCT_TIER_STATUS_ACTION_RETRY}
+                onRetry={() => {
+                  void fetchTiers()
+                }}
+              >
+                <ProductTierManagementPanel
+                  client={client}
+                  productId={productId}
+                  tiers={tiers}
+                  onRefresh={fetchTiers}
+                  currentUser={currentUser}
+                />
+              </AsyncStatusGate>
             </div>
           </Tab>
           <Tab eventKey="entitlements" title="Entitlements">
             <div className={UI_CLASS_PADDING_TOP_SMALL}>
-              <ProductEntitlementManagementPanel
-                client={client}
-                productId={productId}
-                entitlements={entitlements}
-                onRefresh={fetchEntitlements}
-                currentUser={currentUser}
-                tierOptions={tierOptions}
-              />
+              <AsyncStatusGate
+                isLoading={isEntitlementsLoading}
+                isError={isEntitlementsError}
+                loadingTitle={UI_ENTITLEMENT_STATUS_LOADING_TITLE}
+                loadingMessage={UI_ENTITLEMENT_STATUS_LOADING_BODY}
+                errorTitle={UI_ENTITLEMENT_STATUS_ERROR_TITLE}
+                errorMessage={UI_ENTITLEMENT_STATUS_ERROR_BODY}
+                retryLabel={UI_ENTITLEMENT_STATUS_ACTION_RETRY}
+                onRetry={() => {
+                  void fetchEntitlements()
+                }}
+              >
+                <ProductEntitlementManagementPanel
+                  client={client}
+                  productId={productId}
+                  entitlements={entitlements}
+                  onRefresh={fetchEntitlements}
+                  currentUser={currentUser}
+                  tierOptions={tierOptions}
+                />
+              </AsyncStatusGate>
             </div>
           </Tab>
         </Tabs>

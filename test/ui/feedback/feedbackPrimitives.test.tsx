@@ -9,7 +9,9 @@ import {
   UI_TEST_ID_INLINE_ALERT,
   UI_TEST_ID_SECTION_STATUS,
 } from '../../../src/ui/constants'
+import { AsyncStatusGate } from '../../../src/ui/feedback/AsyncStatusGate'
 import { InlineAlert } from '../../../src/ui/feedback/InlineAlert'
+import { InlineStatusGate } from '../../../src/ui/feedback/InlineStatusGate'
 import { RouteStatus } from '../../../src/ui/feedback/RouteStatus'
 import { SectionStatus } from '../../../src/ui/feedback/SectionStatus'
 
@@ -112,5 +114,54 @@ describe('Feedback primitives', () => {
   test('RouteStatus renders nothing without active state', () => {
     const { container } = render(<RouteStatus />)
     expect(container).toBeEmptyDOMElement()
+  })
+
+  test('AsyncStatusGate hides content while loading', () => {
+    const title = faker.lorem.words(2)
+    const childLabel = faker.lorem.words(2)
+    const { queryByText } = render(
+      <AsyncStatusGate isLoading={true} loadingTitle={title}>
+        <div>{childLabel}</div>
+      </AsyncStatusGate>
+    )
+
+    expect(queryByText(childLabel)).not.toBeInTheDocument()
+  })
+
+  test('AsyncStatusGate renders content when not loading or error', () => {
+    const childLabel = faker.lorem.words(2)
+    const { getByText } = render(
+      <AsyncStatusGate>
+        <div>{childLabel}</div>
+      </AsyncStatusGate>
+    )
+
+    expect(getByText(childLabel)).toBeInTheDocument()
+  })
+
+  test('InlineStatusGate renders loading alert and hides content', () => {
+    const title = faker.lorem.words(2)
+    const message = faker.lorem.words(4)
+    const childLabel = faker.lorem.words(2)
+    const { getByText, queryByText } = render(
+      <InlineStatusGate isLoading={true} loadingTitle={title} loadingMessage={message}>
+        <div>{childLabel}</div>
+      </InlineStatusGate>
+    )
+
+    expect(getByText(title)).toBeInTheDocument()
+    expect(getByText(message)).toBeInTheDocument()
+    expect(queryByText(childLabel)).not.toBeInTheDocument()
+  })
+
+  test('InlineStatusGate renders child content when ready', () => {
+    const childLabel = faker.lorem.words(2)
+    const { getByText } = render(
+      <InlineStatusGate>
+        <div>{childLabel}</div>
+      </InlineStatusGate>
+    )
+
+    expect(getByText(childLabel)).toBeInTheDocument()
   })
 })

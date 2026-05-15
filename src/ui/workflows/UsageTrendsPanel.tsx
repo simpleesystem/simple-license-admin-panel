@@ -30,6 +30,7 @@ import {
 } from '../constants'
 import { DataTable } from '../data/DataTable'
 import { InlineAlert } from '../feedback/InlineAlert'
+import { InlineStatusGate } from '../feedback/InlineStatusGate'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn } from '../types'
@@ -151,21 +152,24 @@ export function UsageTrendsPanel({ client, title = UI_USAGE_TRENDS_TITLE }: Usag
         }
       />
 
-      {trendsQuery.isLoading ? (
-        <InlineAlert variant={UI_ALERT_VARIANT_INFO} title={UI_USAGE_TRENDS_LOADING_TITLE}>
-          {UI_USAGE_TRENDS_LOADING_BODY}
-        </InlineAlert>
-      ) : trendsQuery.isError ? (
-        <InlineAlert variant={UI_ALERT_VARIANT_DANGER} title={UI_USAGE_TRENDS_ERROR_TITLE}>
-          {UI_USAGE_TRENDS_ERROR_BODY}
-        </InlineAlert>
-      ) : isEmpty ? (
-        <InlineAlert variant={UI_ALERT_VARIANT_WARNING} title={UI_USAGE_TRENDS_EMPTY_TITLE}>
-          {UI_USAGE_TRENDS_EMPTY_BODY}
-        </InlineAlert>
-      ) : (
-        <DataTable data={rows} columns={columns} rowKey={(row) => row.id} emptyState={UI_USAGE_TRENDS_EMPTY_STATE} />
-      )}
+      <InlineStatusGate
+        isLoading={trendsQuery.isLoading}
+        isError={trendsQuery.isError}
+        loadingTitle={UI_USAGE_TRENDS_LOADING_TITLE}
+        loadingMessage={UI_USAGE_TRENDS_LOADING_BODY}
+        errorTitle={UI_USAGE_TRENDS_ERROR_TITLE}
+        errorMessage={UI_USAGE_TRENDS_ERROR_BODY}
+        loadingVariant={UI_ALERT_VARIANT_INFO}
+        errorVariant={UI_ALERT_VARIANT_DANGER}
+      >
+        {isEmpty ? (
+          <InlineAlert variant={UI_ALERT_VARIANT_WARNING} title={UI_USAGE_TRENDS_EMPTY_TITLE}>
+            {UI_USAGE_TRENDS_EMPTY_BODY}
+          </InlineAlert>
+        ) : (
+          <DataTable data={rows} columns={columns} rowKey={(row) => row.id} emptyState={UI_USAGE_TRENDS_EMPTY_STATE} />
+        )}
+      </InlineStatusGate>
     </Stack>
   )
 }

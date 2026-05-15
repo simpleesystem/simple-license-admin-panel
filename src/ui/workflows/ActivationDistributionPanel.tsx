@@ -25,7 +25,7 @@ import {
   UI_TEXT_ALIGN_END,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
-import { InlineAlert } from '../feedback/InlineAlert'
+import { InlineStatusGate } from '../feedback/InlineStatusGate'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn } from '../types'
@@ -85,22 +85,23 @@ export function ActivationDistributionPanel({
         }
       />
 
-      {distributionQuery.isLoading ? (
-        <InlineAlert variant={UI_ALERT_VARIANT_INFO} title={UI_ANALYTICS_DISTRIBUTION_LOADING_TITLE}>
-          {UI_ANALYTICS_DISTRIBUTION_LOADING_BODY}
-        </InlineAlert>
-      ) : distributionQuery.isError ? (
-        <InlineAlert variant={UI_ALERT_VARIANT_DANGER} title={UI_ANALYTICS_DISTRIBUTION_ERROR_TITLE}>
-          {UI_ANALYTICS_DISTRIBUTION_ERROR_BODY}
-        </InlineAlert>
-      ) : (
+      <InlineStatusGate
+        isLoading={distributionQuery.isLoading}
+        isError={distributionQuery.isError}
+        loadingTitle={UI_ANALYTICS_DISTRIBUTION_LOADING_TITLE}
+        loadingMessage={UI_ANALYTICS_DISTRIBUTION_LOADING_BODY}
+        errorTitle={UI_ANALYTICS_DISTRIBUTION_ERROR_TITLE}
+        errorMessage={UI_ANALYTICS_DISTRIBUTION_ERROR_BODY}
+        loadingVariant={UI_ALERT_VARIANT_INFO}
+        errorVariant={UI_ALERT_VARIANT_DANGER}
+      >
         <DataTable
           data={rows}
           columns={columns}
           rowKey={(row) => row.licenseKey}
           emptyState={UI_ANALYTICS_DISTRIBUTION_EMPTY_STATE}
         />
-      )}
+      </InlineStatusGate>
     </Stack>
   )
 }

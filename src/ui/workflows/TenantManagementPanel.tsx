@@ -182,7 +182,6 @@ export function TenantManagementPanel({
   )
 
   const refreshWith = (action: 'create' | 'update' | 'delete') => {
-    onRefresh?.()
     notifyTenantSuccess(notificationBus, action)
   }
 

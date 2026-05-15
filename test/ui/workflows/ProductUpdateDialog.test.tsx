@@ -13,9 +13,7 @@ const createMockClient = (): Client =>
     getProduct: vi.fn(),
     listProductTiers: vi.fn(),
     listEntitlements: vi.fn(),
-    products: {
-      update: vi.fn(),
-    },
+    updateProduct: vi.fn(),
   }) as unknown as Client
 
 // Mock child components
@@ -70,6 +68,9 @@ describe('ProductUpdateDialog', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(mockClient.updateProduct).mockResolvedValue({
+      id: 'product-1',
+    } as never)
     vi.mocked(mockClient.getProduct).mockResolvedValue({
       product: { id: 'product-1', metadata: { key: 'val' } } as unknown as Product,
     })
@@ -138,5 +139,24 @@ describe('ProductUpdateDialog', () => {
     })
 
     expect(mockOnClose).toHaveBeenCalled()
+  })
+
+  it('invokes success callback once for details submit', async () => {
+    await act(async () => {
+      renderWithQueryClient(<ProductUpdateDialog {...defaultProps} />)
+    })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('dynamic-form')).toBeInTheDocument()
+    })
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
+    })
+
+    await waitFor(() => {
+      expect(mockOnSuccess).toHaveBeenCalledTimes(1)
+      expect(mockOnClose).toHaveBeenCalledTimes(1)
+    })
   })
 })

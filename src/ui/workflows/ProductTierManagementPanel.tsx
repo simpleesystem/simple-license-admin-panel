@@ -203,7 +203,6 @@ export function ProductTierManagementPanel({
   )
 
   const refreshWith = (action: 'create' | 'update' | 'delete') => {
-    onRefresh?.()
     notifyProductTierSuccess(notificationBus, action)
   }
 

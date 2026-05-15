@@ -224,7 +224,6 @@ export function ProductManagementPanel({
   }, [client, currentUser, isVendorScoped, onRefresh])
 
   const refreshWith = (action: 'create' | 'update' | 'delete' | 'suspend' | 'resume') => {
-    onRefresh?.()
     notifyProductSuccess(notificationBus, action)
   }
 

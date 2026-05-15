@@ -34,7 +34,7 @@ import {
   UI_TEXT_ALIGN_END,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
-import { InlineAlert } from '../feedback/InlineAlert'
+import { InlineStatusGate } from '../feedback/InlineStatusGate'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn } from '../types'
@@ -110,22 +110,23 @@ export function TopLicensesPanel({ client, title = UI_ANALYTICS_TOP_LICENSES_TIT
         }
       />
 
-      {topLicensesQuery.isLoading ? (
-        <InlineAlert variant={UI_ALERT_VARIANT_INFO} title={UI_ANALYTICS_TOP_LICENSES_LOADING_TITLE}>
-          {UI_ANALYTICS_TOP_LICENSES_LOADING_BODY}
-        </InlineAlert>
-      ) : topLicensesQuery.isError ? (
-        <InlineAlert variant={UI_ALERT_VARIANT_DANGER} title={UI_ANALYTICS_TOP_LICENSES_ERROR_TITLE}>
-          {UI_ANALYTICS_TOP_LICENSES_ERROR_BODY}
-        </InlineAlert>
-      ) : (
+      <InlineStatusGate
+        isLoading={topLicensesQuery.isLoading}
+        isError={topLicensesQuery.isError}
+        loadingTitle={UI_ANALYTICS_TOP_LICENSES_LOADING_TITLE}
+        loadingMessage={UI_ANALYTICS_TOP_LICENSES_LOADING_BODY}
+        errorTitle={UI_ANALYTICS_TOP_LICENSES_ERROR_TITLE}
+        errorMessage={UI_ANALYTICS_TOP_LICENSES_ERROR_BODY}
+        loadingVariant={UI_ALERT_VARIANT_INFO}
+        errorVariant={UI_ALERT_VARIANT_DANGER}
+      >
         <DataTable
           data={rows}
           columns={columns}
           rowKey={(row) => row.licenseKey}
           emptyState={UI_ANALYTICS_TOP_LICENSES_EMPTY_STATE}
         />
-      )}
+      </InlineStatusGate>
     </Stack>
   )
 }

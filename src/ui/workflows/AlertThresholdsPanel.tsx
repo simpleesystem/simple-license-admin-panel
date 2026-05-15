@@ -35,6 +35,7 @@ import {
 } from '../constants'
 import { SummaryList } from '../data/SummaryList'
 import { InlineAlert } from '../feedback/InlineAlert'
+import { InlineStatusGate } from '../feedback/InlineStatusGate'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiSummaryCardItem } from '../types'
@@ -126,21 +127,24 @@ export function AlertThresholdsPanel({
         }
       />
 
-      {isLoading ? (
-        <InlineAlert variant={UI_ALERT_VARIANT_INFO} title={UI_ANALYTICS_ALERT_THRESHOLDS_LOADING_TITLE}>
-          {UI_ANALYTICS_ALERT_THRESHOLDS_LOADING_BODY}
-        </InlineAlert>
-      ) : hasError ? (
-        <InlineAlert variant={UI_ALERT_VARIANT_DANGER} title={UI_ANALYTICS_ALERT_THRESHOLDS_ERROR_TITLE}>
-          {UI_ANALYTICS_ALERT_THRESHOLDS_ERROR_BODY}
-        </InlineAlert>
-      ) : summaryItems.length === 0 ? (
-        <InlineAlert variant={UI_ALERT_VARIANT_WARNING} title={UI_ANALYTICS_ALERT_THRESHOLDS_TITLE}>
-          {UI_ANALYTICS_ALERT_THRESHOLDS_EMPTY_STATE}
-        </InlineAlert>
-      ) : (
-        <SummaryList items={summaryItems} />
-      )}
+      <InlineStatusGate
+        isLoading={isLoading}
+        isError={hasError}
+        loadingTitle={UI_ANALYTICS_ALERT_THRESHOLDS_LOADING_TITLE}
+        loadingMessage={UI_ANALYTICS_ALERT_THRESHOLDS_LOADING_BODY}
+        errorTitle={UI_ANALYTICS_ALERT_THRESHOLDS_ERROR_TITLE}
+        errorMessage={UI_ANALYTICS_ALERT_THRESHOLDS_ERROR_BODY}
+        loadingVariant={UI_ALERT_VARIANT_INFO}
+        errorVariant={UI_ALERT_VARIANT_DANGER}
+      >
+        {summaryItems.length === 0 ? (
+          <InlineAlert variant={UI_ALERT_VARIANT_WARNING} title={UI_ANALYTICS_ALERT_THRESHOLDS_TITLE}>
+            {UI_ANALYTICS_ALERT_THRESHOLDS_EMPTY_STATE}
+          </InlineAlert>
+        ) : (
+          <SummaryList items={summaryItems} />
+        )}
+      </InlineStatusGate>
 
       <AlertThresholdsFormFlow
         client={client}

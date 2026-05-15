@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Tab from 'react-bootstrap/Tab'
 import Tabs from 'react-bootstrap/Tabs'
 import type { Client, UpdateLicenseRequest, User } from '@/simpleLicense'
@@ -11,23 +11,27 @@ import {
   UI_CLASS_MARGIN_BOTTOM_LARGE,
   UI_CLASS_MARGIN_BOTTOM_MUTED,
   UI_CLASS_PADDING_TOP_SMALL,
-  UI_CLASS_TEXT_CENTER_PADDED_MUTED,
   UI_LICENSE_ACTIVATIONS_COLUMN_DOMAIN,
   UI_LICENSE_FORM_PENDING_UPDATE,
   UI_LICENSE_FORM_SUBMIT_UPDATE,
   UI_LICENSE_FORM_TITLE_UPDATE,
+  UI_LICENSE_STATUS_ACTION_RETRY,
+  UI_LICENSE_STATUS_ERROR_BODY,
+  UI_LICENSE_STATUS_ERROR_TITLE,
+  UI_LICENSE_STATUS_LOADING_BODY,
+  UI_LICENSE_STATUS_LOADING_TITLE,
   UI_MODAL_SIZE_XL,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
+import { AsyncStatusGate } from '../feedback/AsyncStatusGate'
 import type { FormBlueprint } from '../formBuilder/blueprint'
 import { DynamicForm } from '../formBuilder/DynamicForm'
 import { createLicenseBlueprint } from '../formBuilder/factories'
-import { useFormMutation } from '../formBuilder/useFormMutation'
 import { ModalDialog } from '../overlay/ModalDialog'
 import type { UiSelectOption } from '../types'
 import { LicenseActivationsPanel } from './LicenseActivationsPanel'
 import { LicenseUsageDetailsPanel } from './LicenseUsageDetailsPanel'
-import { wrapMutationAdapter } from './mutationHelpers'
+import { useDialogFormMutation } from './useDialogFormMutation'
 
 type LicenseUpdateDialogProps = {
   client: Client
@@ -64,30 +68,40 @@ export function LicenseUpdateDialog({
   const [metadataString, setMetadataString] = useState<string>('')
   const [licenseKey, setLicenseKey] = useState<string>(licenseKeyParam)
   const [domain, setDomain] = useState<string>('')
+  const [isLicenseLoading, setIsLicenseLoading] = useState(false)
+  const [isLicenseError, setIsLicenseError] = useState(false)
+
+  const fetchLicenseDetails = useCallback(async () => {
+    setIsLicenseLoading(true)
+    setIsLicenseError(false)
+    setLicenseKey(licenseKeyParam)
+    setDomain('')
+    setMetadataString('')
+    try {
+      const response = await client.getLicense(licenseKeyParam)
+      const license = response.license
+      if (license.metadata) {
+        setMetadataString(JSON.stringify(license.metadata, null, 2))
+      }
+      if (license.licenseKey) {
+        setLicenseKey(license.licenseKey)
+      }
+      if (license.domain != null && license.domain !== '') {
+        setDomain(String(license.domain))
+      }
+    } catch (e) {
+      logger.error(e instanceof Error ? e : new Error(String(e)), { message: 'Failed to fetch license details' })
+      setIsLicenseError(true)
+    } finally {
+      setIsLicenseLoading(false)
+    }
+  }, [client, licenseKeyParam, logger])
 
   useEffect(() => {
-    const fetchLicenseDetails = async () => {
-      try {
-        const response = await client.getLicense(licenseKeyParam)
-        const license = response.license
-        if (license.metadata) {
-          setMetadataString(JSON.stringify(license.metadata, null, 2))
-        }
-        if (license.licenseKey) {
-          setLicenseKey(license.licenseKey)
-        }
-        if (license.domain != null && license.domain !== '') {
-          setDomain(String(license.domain))
-        }
-      } catch (e) {
-        logger.error(e instanceof Error ? e : new Error(String(e)), { message: 'Failed to fetch license details' })
-      }
-    }
-
     if (show) {
       void fetchLicenseDetails()
     }
-  }, [client, licenseKeyParam, show, logger])
+  }, [show, fetchLicenseDetails])
 
   const updateMutation = useUpdateLicense(client)
 
@@ -106,20 +120,12 @@ export function LicenseUpdateDialog({
     isPending: updateMutation.isPending,
   }
 
-  const wrappedMutation = wrapMutationAdapter(adapter, {
-    onClose,
+  const { handleSubmit } = useDialogFormMutation({
+    mutation: adapter,
     onCompleted,
     onSuccess,
     onError,
-  })
-
-  const { handleSubmit } = useFormMutation({
-    mutation: wrappedMutation,
-    onSuccess: () => {
-      onSuccess?.()
-      onClose()
-    },
-    onError,
+    onClose,
   })
 
   const blueprint = createLicenseBlueprint('update', {
@@ -147,21 +153,36 @@ export function LicenseUpdateDialog({
           className={UI_CLASS_MARGIN_BOTTOM_LARGE}
         >
           <Tab eventKey="details" title="Details">
-            <div className={UI_CLASS_MARGIN_BOTTOM_MUTED}>
-              <strong>{UI_ANALYTICS_COLUMN_LICENSE_KEY}:</strong> <code>{licenseKey || UI_VALUE_PLACEHOLDER}</code>
-            </div>
-            <div className={UI_CLASS_MARGIN_BOTTOM_MUTED}>
-              <strong>{UI_LICENSE_ACTIVATIONS_COLUMN_DOMAIN}:</strong> <code>{domain || UI_VALUE_PLACEHOLDER}</code>
-            </div>
-            <DynamicForm
-              blueprint={blueprint}
-              defaultValues={defaultValues}
-              onSubmit={handleSubmit}
-              submitLabel={UI_LICENSE_FORM_SUBMIT_UPDATE}
-              pendingLabel={UI_LICENSE_FORM_PENDING_UPDATE}
-              cancelLabel="Cancel"
-              onCancel={onClose}
-            />
+            <AsyncStatusGate
+              isLoading={isLicenseLoading}
+              isError={isLicenseError}
+              loadingTitle={UI_LICENSE_STATUS_LOADING_TITLE}
+              loadingMessage={UI_LICENSE_STATUS_LOADING_BODY}
+              errorTitle={UI_LICENSE_STATUS_ERROR_TITLE}
+              errorMessage={UI_LICENSE_STATUS_ERROR_BODY}
+              retryLabel={UI_LICENSE_STATUS_ACTION_RETRY}
+              onRetry={() => {
+                if (show) {
+                  void fetchLicenseDetails()
+                }
+              }}
+            >
+              <div className={UI_CLASS_MARGIN_BOTTOM_MUTED}>
+                <strong>{UI_ANALYTICS_COLUMN_LICENSE_KEY}:</strong> <code>{licenseKey || UI_VALUE_PLACEHOLDER}</code>
+              </div>
+              <div className={UI_CLASS_MARGIN_BOTTOM_MUTED}>
+                <strong>{UI_LICENSE_ACTIVATIONS_COLUMN_DOMAIN}:</strong> <code>{domain || UI_VALUE_PLACEHOLDER}</code>
+              </div>
+              <DynamicForm
+                blueprint={blueprint}
+                defaultValues={defaultValues}
+                onSubmit={handleSubmit}
+                submitLabel={UI_LICENSE_FORM_SUBMIT_UPDATE}
+                pendingLabel={UI_LICENSE_FORM_PENDING_UPDATE}
+                cancelLabel="Cancel"
+                onCancel={onClose}
+              />
+            </AsyncStatusGate>
           </Tab>
           <Tab eventKey="activations" title="Activations">
             <div className={UI_CLASS_PADDING_TOP_SMALL}>
@@ -175,16 +196,27 @@ export function LicenseUpdateDialog({
           </Tab>
           <Tab eventKey="usage" title="Usage">
             <div className={UI_CLASS_PADDING_TOP_SMALL}>
-              {licenseKey ? (
+              <AsyncStatusGate
+                isLoading={isLicenseLoading || !licenseKey}
+                isError={isLicenseError}
+                loadingTitle={UI_LICENSE_STATUS_LOADING_TITLE}
+                loadingMessage={UI_LICENSE_STATUS_LOADING_BODY}
+                errorTitle={UI_LICENSE_STATUS_ERROR_TITLE}
+                errorMessage={UI_LICENSE_STATUS_ERROR_BODY}
+                retryLabel={UI_LICENSE_STATUS_ACTION_RETRY}
+                onRetry={() => {
+                  if (show) {
+                    void fetchLicenseDetails()
+                  }
+                }}
+              >
                 <LicenseUsageDetailsPanel
                   client={client}
                   licenseKey={licenseKey}
                   currentUser={currentUser}
                   // Usage panel handles fetching internally
                 />
-              ) : (
-                <div className={UI_CLASS_TEXT_CENTER_PADDED_MUTED}>Loading license details...</div>
-              )}
+              </AsyncStatusGate>
             </div>
           </Tab>
         </Tabs>

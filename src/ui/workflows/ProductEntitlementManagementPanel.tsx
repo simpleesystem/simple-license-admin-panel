@@ -122,7 +122,6 @@ export function ProductEntitlementManagementPanel({
   const canView = canViewEntitlements(currentUser ?? null)
 
   const refreshWith = (action: 'create' | 'update' | 'delete') => {
-    onRefresh?.()
     notifyProductEntitlementSuccess(notificationBus, action)
   }
 

@@ -25,7 +25,7 @@ import {
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { SummaryList } from '../data/SummaryList'
-import { InlineAlert } from '../feedback/InlineAlert'
+import { InlineStatusGate } from '../feedback/InlineStatusGate'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiSummaryCardItem } from '../types'
@@ -99,17 +99,18 @@ export function TenantQuotaPanel({
         }
       />
 
-      {isLoading ? (
-        <InlineAlert variant={UI_ALERT_VARIANT_INFO} title={UI_TENANT_QUOTA_LOADING_TITLE}>
-          {UI_TENANT_QUOTA_LOADING_BODY}
-        </InlineAlert>
-      ) : hasError ? (
-        <InlineAlert variant={UI_ALERT_VARIANT_DANGER} title={UI_TENANT_QUOTA_ERROR_TITLE}>
-          {UI_TENANT_QUOTA_ERROR_BODY}
-        </InlineAlert>
-      ) : (
+      <InlineStatusGate
+        isLoading={isLoading}
+        isError={hasError}
+        loadingTitle={UI_TENANT_QUOTA_LOADING_TITLE}
+        loadingMessage={UI_TENANT_QUOTA_LOADING_BODY}
+        errorTitle={UI_TENANT_QUOTA_ERROR_TITLE}
+        errorMessage={UI_TENANT_QUOTA_ERROR_BODY}
+        loadingVariant={UI_ALERT_VARIANT_INFO}
+        errorVariant={UI_ALERT_VARIANT_DANGER}
+      >
         <SummaryList items={usageItems} />
-      )}
+      </InlineStatusGate>
 
       <TenantQuotaFormFlow
         client={client}

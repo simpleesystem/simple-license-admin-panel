@@ -276,7 +276,6 @@ export function UserManagementPanel({
   )
 
   const refreshWith = (action: 'create' | 'update' | 'delete') => {
-    onRefresh?.()
     notifyUserSuccess(notificationBus, action)
   }
 

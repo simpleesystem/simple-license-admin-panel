@@ -37,7 +37,7 @@ import {
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
-import { InlineAlert } from '../feedback/InlineAlert'
+import { InlineStatusGate } from '../feedback/InlineStatusGate'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn } from '../types'
@@ -139,22 +139,23 @@ export function UsageSummaryPanel({ client, title = UI_ANALYTICS_SUMMARY_TITLE, 
         }
       />
 
-      {isLoading ? (
-        <InlineAlert variant={UI_ALERT_VARIANT_INFO} title={UI_ANALYTICS_SUMMARY_LOADING_TITLE}>
-          {UI_ANALYTICS_SUMMARY_LOADING_BODY}
-        </InlineAlert>
-      ) : hasError ? (
-        <InlineAlert variant={UI_ALERT_VARIANT_DANGER} title={UI_ANALYTICS_SUMMARY_ERROR_TITLE}>
-          {UI_ANALYTICS_SUMMARY_ERROR_BODY}
-        </InlineAlert>
-      ) : (
+      <InlineStatusGate
+        isLoading={isLoading}
+        isError={hasError}
+        loadingTitle={UI_ANALYTICS_SUMMARY_LOADING_TITLE}
+        loadingMessage={UI_ANALYTICS_SUMMARY_LOADING_BODY}
+        errorTitle={UI_ANALYTICS_SUMMARY_ERROR_TITLE}
+        errorMessage={UI_ANALYTICS_SUMMARY_ERROR_BODY}
+        loadingVariant={UI_ALERT_VARIANT_INFO}
+        errorVariant={UI_ALERT_VARIANT_DANGER}
+      >
         <DataTable
           data={rows}
           columns={columns}
           rowKey={(row) => row.id.toString()}
           emptyState={UI_ANALYTICS_SUMMARY_EMPTY_STATE}
         />
-      )}
+      </InlineStatusGate>
     </Stack>
   )
 }
