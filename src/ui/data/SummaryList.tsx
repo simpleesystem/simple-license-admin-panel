@@ -1,9 +1,14 @@
 import {
   UI_ARIA_LABEL_SUMMARY_LIST,
+  UI_CLASS_FLEX_COLUMN_GAP_SMALL,
   UI_CLASS_SUMMARY_CARD,
+  UI_CLASS_SUMMARY_HEADER,
   UI_CLASS_SUMMARY_LIST,
+  UI_CLASS_SUMMARY_MULTILINE,
+  UI_CLASS_SUMMARY_MULTILINE_CODE,
   UI_CLASS_SUMMARY_VALUE,
   UI_CLASS_TEXT_MUTED,
+  UI_STYLE_SUMMARY_MULTILINE,
   UI_TEST_ID_SUMMARY_LIST,
   UI_VALUE_SEPARATOR,
 } from '../constants'
@@ -33,28 +38,18 @@ export function SummaryList({
               data-testid={item.testId}
               aria-labelledby={`${item.id}-summary-label`}
             >
-              <div className="d-flex justify-content-between align-items-center mb-2">
+              <div className={UI_CLASS_SUMMARY_HEADER}>
                 <span className={UI_CLASS_TEXT_MUTED} id={`${item.id}-summary-label`}>
                   {item.label}
                 </span>
                 {item.icon}
               </div>
               {typeof item.value === 'string' && item.value.includes('\n') ? (
-                <pre
-                  className="mb-0 bg-light p-2 rounded border"
-                  style={{
-                    fontSize: '0.875rem',
-                    lineHeight: '1.5',
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-word',
-                    maxHeight: '400px',
-                    overflowY: 'auto',
-                  }}
-                >
-                  <code className="text-dark">{item.value}</code>
+                <pre className={UI_CLASS_SUMMARY_MULTILINE} style={UI_STYLE_SUMMARY_MULTILINE}>
+                  <code className={UI_CLASS_SUMMARY_MULTILINE_CODE}>{item.value}</code>
                 </pre>
               ) : typeof item.value === 'string' && item.value.includes(UI_VALUE_SEPARATOR) ? (
-                <div className="d-flex flex-column gap-1">
+                <div className={UI_CLASS_FLEX_COLUMN_GAP_SMALL}>
                   {item.value.split(UI_VALUE_SEPARATOR).map((part, index) => (
                     <strong key={`${item.id}-${index}`} className={UI_CLASS_SUMMARY_VALUE}>
                       {part.trim()}

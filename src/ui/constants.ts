@@ -338,10 +338,38 @@ export const UI_CLASS_TABLE_TOOLBAR = 'd-flex flex-wrap justify-content-between 
 export const UI_CLASS_TABLE_CONTROL_GROUP = 'd-flex flex-wrap gap-2 align-items-center'
 export const UI_CLASS_TABLE_TOOLBAR_GROUP_START = 'd-flex flex-wrap align-items-end gap-2'
 export const UI_CLASS_TABLE_TOOLBAR_GROUP_END = 'd-flex flex-wrap align-items-end justify-content-end gap-2'
+export const UI_CLASS_TABLE_CONTROL_WRAPPER = 'd-flex flex-column align-items-start gap-1'
+export const UI_CLASS_TABLE_CONTROL_SELECT = 'w-auto'
+export const UI_CLASS_TABLE_CONTROL_LABEL = 'form-label small text-muted fw-semibold mb-0'
+export const UI_STYLE_TABLE_CONTROL_SEARCH = {
+  minWidth: UI_TABLE_CONTROL_MIN_WIDTH,
+  maxWidth: UI_TABLE_SEARCH_MAX_WIDTH,
+} as const
+export const UI_STYLE_TABLE_CONTROL_FILTER = {
+  minWidth: UI_TABLE_CONTROL_MIN_WIDTH,
+  maxWidth: UI_TABLE_FILTER_MAX_WIDTH,
+} as const
+export const UI_CLASS_TABLE_PAGINATION_NAV =
+  'd-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between gap-3'
+export const UI_CLASS_TABLE_PAGINATION_META = 'd-flex flex-wrap align-items-center gap-2'
+export const UI_CLASS_TABLE_PAGINATION_SUMMARY = 'text-muted small'
+export const UI_CLASS_TABLE_PAGINATION_ACTIONS = 'd-flex flex-wrap align-items-center gap-2 ms-lg-auto'
+export const UI_CLASS_TABLE_PAGINATION_STATUS = 'd-flex align-items-center px-2'
 
 export const UI_CLASS_SUMMARY_LIST = 'row row-cols-1 row-cols-md-2 g-3 list-unstyled mb-0'
 export const UI_CLASS_SUMMARY_CARD = 'p-3 border rounded bg-body'
 export const UI_CLASS_SUMMARY_VALUE = 'h4 mb-0'
+export const UI_CLASS_SUMMARY_HEADER = 'd-flex justify-content-between align-items-center mb-2'
+export const UI_CLASS_SUMMARY_MULTILINE = 'mb-0 bg-light p-2 rounded border'
+export const UI_STYLE_SUMMARY_MULTILINE = {
+  fontSize: '0.875rem',
+  lineHeight: '1.5',
+  whiteSpace: 'pre-wrap',
+  wordBreak: 'break-word',
+  maxHeight: '400px',
+  overflowY: 'auto',
+} as const
+export const UI_CLASS_SUMMARY_MULTILINE_CODE = 'text-dark'
 export const UI_ARIA_LABEL_SUMMARY_LIST = 'Summary cards'
 export const UI_ANALYTICS_STATS_TITLE = 'System Health Overview' as const
 export const UI_ANALYTICS_STATS_DESCRIPTION =

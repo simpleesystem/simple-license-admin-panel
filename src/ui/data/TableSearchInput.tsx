@@ -3,10 +3,10 @@ import { type ChangeEvent, useId } from 'react'
 import Form from 'react-bootstrap/Form'
 
 import {
-  UI_CLASS_MARGIN_RESET,
+  UI_CLASS_TABLE_CONTROL_LABEL,
+  UI_CLASS_TABLE_CONTROL_WRAPPER,
   UI_FORM_CONTROL_TYPE_SEARCH,
-  UI_TABLE_CONTROL_MIN_WIDTH,
-  UI_TABLE_SEARCH_MAX_WIDTH,
+  UI_STYLE_TABLE_CONTROL_SEARCH,
   UI_TABLE_SEARCH_PLACEHOLDER,
 } from '../constants'
 
@@ -32,9 +32,9 @@ export function TableSearchInput({
   }
 
   return (
-    <div className="d-flex flex-column align-items-start gap-1">
+    <div className={UI_CLASS_TABLE_CONTROL_WRAPPER}>
       {label ? (
-        <label htmlFor={inputId} className={`form-label small text-muted fw-semibold ${UI_CLASS_MARGIN_RESET}`}>
+        <label htmlFor={inputId} className={UI_CLASS_TABLE_CONTROL_LABEL}>
           {label}
         </label>
       ) : null}
@@ -45,7 +45,7 @@ export function TableSearchInput({
         value={value}
         onChange={handleChange}
         disabled={disabled}
-        style={{ minWidth: UI_TABLE_CONTROL_MIN_WIDTH, maxWidth: UI_TABLE_SEARCH_MAX_WIDTH }}
+        style={UI_STYLE_TABLE_CONTROL_SEARCH}
       />
     </div>
   )

@@ -3,12 +3,14 @@ import { useId } from 'react'
 import Form from 'react-bootstrap/Form'
 
 import {
-  UI_CLASS_MARGIN_RESET,
+  UI_CLASS_TABLE_CONTROL_LABEL,
+  UI_CLASS_TABLE_CONTROL_SELECT,
+  UI_CLASS_TABLE_CONTROL_WRAPPER,
   UI_SIZE_SMALL,
-  UI_TABLE_CONTROL_MIN_WIDTH,
-  UI_TABLE_FILTER_MAX_WIDTH,
+  UI_STYLE_TABLE_CONTROL_FILTER,
 } from '../constants'
 import type { UiSelectOption } from '../types'
+import { composeClassNames } from '../utils/classNames'
 
 type TableFilterSharedProps = {
   label?: string
@@ -56,9 +58,9 @@ export function TableFilter({
   }
 
   return (
-    <div className={`d-flex flex-column align-items-start gap-1 ${className ?? ''}`}>
+    <div className={composeClassNames(UI_CLASS_TABLE_CONTROL_WRAPPER, className)}>
       {label ? (
-        <label htmlFor={selectId} className={`form-label small text-muted fw-semibold ${UI_CLASS_MARGIN_RESET}`}>
+        <label htmlFor={selectId} className={UI_CLASS_TABLE_CONTROL_LABEL}>
           {label}
         </label>
       ) : null}
@@ -69,7 +71,8 @@ export function TableFilter({
         multiple={multiple}
         onChange={handleChange}
         disabled={disabled}
-        style={{ minWidth: UI_TABLE_CONTROL_MIN_WIDTH, maxWidth: UI_TABLE_FILTER_MAX_WIDTH }}
+        className={UI_CLASS_TABLE_CONTROL_SELECT}
+        style={UI_STYLE_TABLE_CONTROL_FILTER}
       >
         {placeholder && !multiple ? <option value="">{placeholder}</option> : null}
         {options.map((option) => (

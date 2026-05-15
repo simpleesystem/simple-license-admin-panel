@@ -5,6 +5,13 @@ import Form from 'react-bootstrap/Form'
 
 import {
   UI_BUTTON_VARIANT_SECONDARY,
+  UI_CLASS_TABLE_CONTROL_LABEL,
+  UI_CLASS_TABLE_CONTROL_SELECT,
+  UI_CLASS_TABLE_PAGINATION_ACTIONS,
+  UI_CLASS_TABLE_PAGINATION_META,
+  UI_CLASS_TABLE_PAGINATION_NAV,
+  UI_CLASS_TABLE_PAGINATION_STATUS,
+  UI_CLASS_TABLE_PAGINATION_SUMMARY,
   UI_SIZE_SMALL,
   UI_TABLE_PAGE_STATUS_SEPARATOR,
   UI_TABLE_PAGINATION_LABEL,
@@ -52,16 +59,13 @@ export function TablePaginationFooter({
   }
 
   return (
-    <nav
-      className="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between gap-3"
-      aria-label={UI_TABLE_PAGINATION_LABEL}
-    >
+    <nav className={UI_CLASS_TABLE_PAGINATION_NAV} aria-label={UI_TABLE_PAGINATION_LABEL}>
       {showPageSize || summary ? (
-        <div className="d-flex flex-wrap align-items-center gap-2">
+        <div className={UI_CLASS_TABLE_PAGINATION_META}>
           {showPageSize ? (
             <>
               {pageSizeLabel ? (
-                <Form.Label htmlFor={pageSizeId} className="mb-0 small text-muted">
+                <Form.Label htmlFor={pageSizeId} className={UI_CLASS_TABLE_CONTROL_LABEL}>
                   {pageSizeLabel}
                 </Form.Label>
               ) : null}
@@ -70,7 +74,7 @@ export function TablePaginationFooter({
                 size={UI_SIZE_SMALL}
                 value={pageSize}
                 onChange={handlePageSizeChange}
-                className="w-auto"
+                className={UI_CLASS_TABLE_CONTROL_SELECT}
               >
                 {pageSizeOptions?.map((option) => (
                   <option key={option} value={option}>
@@ -80,12 +84,12 @@ export function TablePaginationFooter({
               </Form.Select>
             </>
           ) : null}
-          {summary ? <span className="text-muted small">{summary}</span> : null}
+          {summary ? <span className={UI_CLASS_TABLE_PAGINATION_SUMMARY}>{summary}</span> : null}
         </div>
       ) : null}
 
       {showNavigation ? (
-        <div className="d-flex flex-wrap align-items-center gap-2 ms-lg-auto">
+        <div className={UI_CLASS_TABLE_PAGINATION_ACTIONS}>
           <Button
             variant={UI_BUTTON_VARIANT_SECONDARY}
             onClick={() => onPageChange(safePage - 1)}
@@ -93,7 +97,7 @@ export function TablePaginationFooter({
           >
             {UI_TABLE_PAGINATION_PREVIOUS}
           </Button>
-          <div className="d-flex align-items-center px-2">
+          <div className={UI_CLASS_TABLE_PAGINATION_STATUS}>
             <span>
               {safePage} {UI_TABLE_PAGE_STATUS_SEPARATOR} {safeTotalPages}
             </span>
