@@ -23,9 +23,12 @@ import {
   UI_PRODUCT_BUILD_TOKENS_ISSUE,
   UI_PRODUCT_BUILD_TOKENS_ISSUING,
   UI_PRODUCT_BUILD_TOKENS_LABEL_EXPIRES,
+  UI_PRODUCT_BUILD_TOKENS_LABEL_ISSUED_TOKEN,
   UI_PRODUCT_BUILD_TOKENS_LABEL_LAST_USED,
   UI_PRODUCT_BUILD_TOKENS_LABEL_PREFIX,
+  UI_PRODUCT_BUILD_TOKENS_LABEL_RELEASE_ENDPOINT,
   UI_PRODUCT_BUILD_TOKENS_LABEL_STATUS,
+  UI_PRODUCT_BUILD_TOKENS_LABEL_USAGE_NOTE,
   UI_PRODUCT_BUILD_TOKENS_LOADING,
   UI_PRODUCT_BUILD_TOKENS_MODAL_TITLE,
   UI_PRODUCT_BUILD_TOKENS_RELEASE_ENDPOINT,
@@ -390,15 +393,31 @@ export function ProductRowActions({
                   {isIssuingBuildToken ? UI_PRODUCT_BUILD_TOKENS_ISSUING : UI_PRODUCT_BUILD_TOKENS_ISSUE}
                 </Button>
                 {issuedBuildToken !== null ? (
-                  <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
-                    <div>{UI_PRODUCT_BUILD_TOKENS_TOKEN_ONCE}</div>
-                    <code>{issuedBuildToken}</code>
-                  </Stack>
+                  <KeyValueList
+                    items={[
+                      {
+                        id: 'build-token-issued',
+                        label: UI_PRODUCT_BUILD_TOKENS_LABEL_ISSUED_TOKEN,
+                        value: <code>{issuedBuildToken}</code>,
+                      },
+                    ]}
+                  />
                 ) : null}
-                <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
-                  <div>{UI_PRODUCT_BUILD_TOKENS_USAGE_NOTE}</div>
-                  <code>{UI_PRODUCT_BUILD_TOKENS_RELEASE_ENDPOINT}</code>
-                </Stack>
+                <div>{UI_PRODUCT_BUILD_TOKENS_TOKEN_ONCE}</div>
+                <KeyValueList
+                  items={[
+                    {
+                      id: 'build-token-usage-note',
+                      label: UI_PRODUCT_BUILD_TOKENS_LABEL_USAGE_NOTE,
+                      value: UI_PRODUCT_BUILD_TOKENS_USAGE_NOTE,
+                    },
+                    {
+                      id: 'build-token-release-endpoint',
+                      label: UI_PRODUCT_BUILD_TOKENS_LABEL_RELEASE_ENDPOINT,
+                      value: <code>{UI_PRODUCT_BUILD_TOKENS_RELEASE_ENDPOINT}</code>,
+                    },
+                  ]}
+                />
                 <div>{UI_PRODUCT_BUILD_TOKENS_CURRENT}</div>
                 {buildTokens.length === 0 ? (
                   <div>{UI_PRODUCT_BUILD_TOKENS_EMPTY}</div>

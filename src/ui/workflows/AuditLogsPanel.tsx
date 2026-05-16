@@ -89,6 +89,11 @@ type AuditLogsPanelProps = {
 
 type AuditLogRow = AuditLogEntry
 type AuditLogSortBy = NonNullable<AuditLogFilters['sortBy']>
+type AuditFilterFieldName =
+  | typeof UI_FIELD_AUDIT_FILTER_ADMIN
+  | typeof UI_FIELD_AUDIT_FILTER_ACTION
+  | typeof UI_FIELD_AUDIT_FILTER_RESOURCE_TYPE
+  | typeof UI_FIELD_AUDIT_FILTER_RESOURCE_ID
 
 const AUDIT_LOG_SORT_BY_COLUMN: Record<string, AuditLogSortBy> = {
   [UI_COLUMN_ID_AUDIT_LOG_TIMESTAMP]: UI_AUDIT_LOGS_SORT_CREATED_AT,
@@ -98,6 +103,16 @@ const AUDIT_LOG_SORT_BY_COLUMN: Record<string, AuditLogSortBy> = {
   [UI_COLUMN_ID_AUDIT_LOG_RESOURCE_ID]: UI_AUDIT_LOGS_SORT_RESOURCE_ID,
   [UI_COLUMN_ID_AUDIT_LOG_IP]: UI_AUDIT_LOGS_SORT_IP,
 }
+
+const AUDIT_LOG_FILTER_FIELDS: ReadonlyArray<{
+  name: AuditFilterFieldName
+  label: string
+}> = [
+  { name: UI_FIELD_AUDIT_FILTER_ADMIN, label: UI_AUDIT_LOGS_FILTER_ADMIN_LABEL },
+  { name: UI_FIELD_AUDIT_FILTER_ACTION, label: UI_AUDIT_LOGS_FILTER_ACTION_LABEL },
+  { name: UI_FIELD_AUDIT_FILTER_RESOURCE_TYPE, label: UI_AUDIT_LOGS_FILTER_RESOURCE_TYPE_LABEL },
+  { name: UI_FIELD_AUDIT_FILTER_RESOURCE_ID, label: UI_AUDIT_LOGS_FILTER_RESOURCE_ID_LABEL },
+]
 
 const formatValue = (value: unknown) => {
   if (value === null || value === undefined || value === '') {
@@ -152,45 +167,17 @@ type AuditLogsFilterBarProps = {
 function AuditLogsFilterBar({ formState, onChange, onSubmit, onReset }: AuditLogsFilterBarProps) {
   return (
     <Form className={UI_CLASS_AUDIT_FILTER_FORM} onSubmit={onSubmit}>
-      <Form.Group className={UI_CLASS_AUDIT_FILTER_FIELD} controlId={UI_FIELD_AUDIT_FILTER_ADMIN}>
-        <Form.Label className={UI_CLASS_AUDIT_FILTER_LABEL}>{UI_AUDIT_LOGS_FILTER_ADMIN_LABEL}</Form.Label>
-        <Form.Control
-          name={UI_FIELD_AUDIT_FILTER_ADMIN}
-          size={UI_SIZE_SMALL}
-          value={formState.adminId ?? ''}
-          onChange={onChange}
-        />
-      </Form.Group>
-
-      <Form.Group className={UI_CLASS_AUDIT_FILTER_FIELD} controlId={UI_FIELD_AUDIT_FILTER_ACTION}>
-        <Form.Label className={UI_CLASS_AUDIT_FILTER_LABEL}>{UI_AUDIT_LOGS_FILTER_ACTION_LABEL}</Form.Label>
-        <Form.Control
-          name={UI_FIELD_AUDIT_FILTER_ACTION}
-          size={UI_SIZE_SMALL}
-          value={formState.action ?? ''}
-          onChange={onChange}
-        />
-      </Form.Group>
-
-      <Form.Group className={UI_CLASS_AUDIT_FILTER_FIELD} controlId={UI_FIELD_AUDIT_FILTER_RESOURCE_TYPE}>
-        <Form.Label className={UI_CLASS_AUDIT_FILTER_LABEL}>{UI_AUDIT_LOGS_FILTER_RESOURCE_TYPE_LABEL}</Form.Label>
-        <Form.Control
-          name={UI_FIELD_AUDIT_FILTER_RESOURCE_TYPE}
-          size={UI_SIZE_SMALL}
-          value={formState.resourceType ?? ''}
-          onChange={onChange}
-        />
-      </Form.Group>
-
-      <Form.Group className={UI_CLASS_AUDIT_FILTER_FIELD} controlId={UI_FIELD_AUDIT_FILTER_RESOURCE_ID}>
-        <Form.Label className={UI_CLASS_AUDIT_FILTER_LABEL}>{UI_AUDIT_LOGS_FILTER_RESOURCE_ID_LABEL}</Form.Label>
-        <Form.Control
-          name={UI_FIELD_AUDIT_FILTER_RESOURCE_ID}
-          size={UI_SIZE_SMALL}
-          value={formState.resourceId ?? ''}
-          onChange={onChange}
-        />
-      </Form.Group>
+      {AUDIT_LOG_FILTER_FIELDS.map((field) => (
+        <Form.Group key={field.name} className={UI_CLASS_AUDIT_FILTER_FIELD} controlId={field.name}>
+          <Form.Label className={UI_CLASS_AUDIT_FILTER_LABEL}>{field.label}</Form.Label>
+          <Form.Control
+            name={field.name}
+            size={UI_SIZE_SMALL}
+            value={formState[field.name] ?? ''}
+            onChange={onChange}
+          />
+        </Form.Group>
+      ))}
 
       <div className={UI_CLASS_AUDIT_FILTER_ACTIONS}>
         <Button type="submit" variant={UI_BUTTON_VARIANT_PRIMARY} size={UI_SIZE_SMALL}>
