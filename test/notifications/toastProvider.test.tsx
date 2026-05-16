@@ -3,11 +3,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { NOTIFICATION_EVENT_TOAST, TEST_ID_NOTIFICATION_PORTAL } from '../../src/app/constants'
 import { NotificationBusProvider } from '../../src/notifications/bus'
-import {
-  DEFAULT_NOTIFICATION_DURATION,
-  NOTIFICATION_DISMISS_RETRY_WHEN_MODAL_OPEN_MS,
-  NOTIFICATION_PORTAL_Z_INDEX,
-} from '../../src/notifications/constants'
+import { DEFAULT_NOTIFICATION_DURATION } from '../../src/notifications/constants'
 import { NotificationBannerProvider } from '../../src/notifications/ToastProvider'
 import { useNotificationBus } from '../../src/notifications/useNotificationBus'
 
@@ -30,11 +26,31 @@ function EmitToastButton() {
   )
 }
 
+function EmitEmptyMessageToastButton() {
+  const bus = useNotificationBus()
+  return (
+    <button
+      type="button"
+      onClick={() =>
+        bus.emit(NOTIFICATION_EVENT_TOAST, {
+          id: 'toast-provider-empty-message',
+          titleKey: 'test.toast.fallback',
+          message: '',
+          variant: 'info',
+        })
+      }
+    >
+      Emit empty-message toast
+    </button>
+  )
+}
+
 describe('NotificationBannerProvider', () => {
   const renderNotificationHarness = () =>
     render(
       <NotificationBusProvider>
         <EmitToastButton />
+        <EmitEmptyMessageToastButton />
         <NotificationBannerProvider />
       </NotificationBusProvider>
     )
@@ -44,16 +60,16 @@ describe('NotificationBannerProvider', () => {
     vi.useRealTimers()
   })
 
-  test('renders toast portal above modal z-index', async () => {
+  test('renders toast banner container in normal layout flow', async () => {
     renderNotificationHarness()
     fireEvent.click(screen.getByRole('button', { name: /emit toast/i }))
 
     const portal = await screen.findByTestId(TEST_ID_NOTIFICATION_PORTAL)
     expect(portal).toBeInTheDocument()
-    expect(portal).toHaveStyle({ zIndex: String(NOTIFICATION_PORTAL_Z_INDEX) })
+    expect(portal.className).not.toContain('position-fixed')
   })
 
-  test('keeps toast visible while a modal is open', async () => {
+  test('dismisses toast on schedule even when a modal is open', async () => {
     vi.useFakeTimers()
     renderNotificationHarness()
     act(() => {
@@ -64,15 +80,34 @@ describe('NotificationBannerProvider', () => {
     document.body.classList.add('modal-open')
 
     act(() => {
-      vi.advanceTimersByTime(DEFAULT_NOTIFICATION_DURATION + NOTIFICATION_DISMISS_RETRY_WHEN_MODAL_OPEN_MS * 2)
+      vi.advanceTimersByTime(DEFAULT_NOTIFICATION_DURATION + 10)
     })
 
-    expect(screen.getByText('Modal safe toast')).toBeInTheDocument()
+    expect(screen.queryByText('Modal safe toast')).toBeNull()
+  })
 
-    document.body.classList.remove('modal-open')
-    act(() => {
-      vi.advanceTimersByTime(NOTIFICATION_DISMISS_RETRY_WHEN_MODAL_OPEN_MS + 10)
-    })
+  test('de-duplicates repeated toasts that share the same id', async () => {
+    renderNotificationHarness()
+    fireEvent.click(screen.getByRole('button', { name: /emit toast/i }))
+    fireEvent.click(screen.getByRole('button', { name: /emit toast/i }))
+
+    const renderedToasts = await screen.findAllByText('Modal safe toast')
+    expect(renderedToasts).toHaveLength(1)
+  })
+
+  test('falls back to translated title when message is empty', async () => {
+    renderNotificationHarness()
+    fireEvent.click(screen.getByRole('button', { name: /emit empty-message toast/i }))
+
+    expect(await screen.findByText('test.toast.fallback')).toBeInTheDocument()
+  })
+
+  test('allows dismissing a toast with close action', async () => {
+    renderNotificationHarness()
+    fireEvent.click(screen.getByRole('button', { name: /emit toast/i }))
+
+    const closeButton = await screen.findByRole('button', { name: /close/i })
+    fireEvent.click(closeButton)
 
     expect(screen.queryByText('Modal safe toast')).toBeNull()
   })

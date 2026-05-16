@@ -2,6 +2,7 @@ import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import Nav from 'react-bootstrap/Nav'
+import { NotificationBannerProvider } from '../../notifications/ToastProvider'
 import { ChangePasswordForm } from '../../ui/auth/ChangePasswordForm'
 import {
   UI_BUTTON_VARIANT_OUTLINE_SECONDARY,
@@ -80,6 +81,7 @@ export function PersistentHeader() {
             : undefined
         }
       />
+      <NotificationBannerProvider />
 
       <ModalDialog
         show={showPasswordModal}

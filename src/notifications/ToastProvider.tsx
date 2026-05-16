@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Alert from 'react-bootstrap/Alert'
-import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 
 import {
@@ -11,14 +10,7 @@ import {
   TEST_ID_NOTIFICATION_PORTAL,
 } from '../app/constants'
 import type { NotificationVariant } from './constants'
-import {
-  DEFAULT_NOTIFICATION_DURATION,
-  DEFAULT_NOTIFICATION_POSITION,
-  NOTIFICATION_ALERT_MAX_WIDTH,
-  NOTIFICATION_DISMISS_RETRY_WHEN_MODAL_OPEN_MS,
-  NOTIFICATION_PORTAL_Z_INDEX,
-  type ToastNotificationPayload,
-} from './constants'
+import { DEFAULT_NOTIFICATION_DURATION, NOTIFICATION_ALERT_MAX_WIDTH, type ToastNotificationPayload } from './constants'
 import { useNotificationBus } from './useNotificationBus'
 
 type ToastItem = ToastNotificationPayload & {
@@ -64,13 +56,6 @@ export function NotificationBannerProvider() {
     timeoutMapRef.current.delete(key)
   }, [])
 
-  const hasOpenModal = useCallback(() => {
-    if (typeof document === 'undefined') {
-      return false
-    }
-    return document.body.classList.contains('modal-open')
-  }, [])
-
   const removeToast = useCallback(
     (key: string) => {
       clearRemovalTimer(key)
@@ -83,15 +68,11 @@ export function NotificationBannerProvider() {
     (key: string, delayMs: number) => {
       clearRemovalTimer(key)
       const timerId = setTimeout(() => {
-        if (hasOpenModal()) {
-          scheduleRemoval(key, NOTIFICATION_DISMISS_RETRY_WHEN_MODAL_OPEN_MS)
-          return
-        }
         removeToast(key)
       }, delayMs)
       timeoutMapRef.current.set(key, timerId)
     },
-    [clearRemovalTimer, hasOpenModal, removeToast]
+    [clearRemovalTimer, removeToast]
   )
 
   useEffect(() => {
@@ -126,40 +107,20 @@ export function NotificationBannerProvider() {
     }
   }, [bus, scheduleRemoval])
 
-  const alignmentByPosition: Record<string, string> = {
-    'top-left': 'justify-content-start',
-    'bottom-left': 'justify-content-start',
-    'top-center': 'justify-content-center',
-    'bottom-center': 'justify-content-center',
-    'top-right': 'justify-content-end',
-    'bottom-right': 'justify-content-end',
-  }
-  const bannerAlignmentClass = alignmentByPosition[String(DEFAULT_NOTIFICATION_POSITION)] ?? 'justify-content-end'
-  const verticalPositionClass = String(DEFAULT_NOTIFICATION_POSITION).startsWith('bottom')
-    ? 'bottom-0 pb-3'
-    : 'top-0 pt-3'
-  const portalContainerClass = useMemo(
-    () => `position-fixed start-0 end-0 px-3 ${verticalPositionClass}`,
-    [verticalPositionClass]
-  )
+  const bannerContainerClass = useMemo(() => 'px-3 py-2 border-top bg-body-tertiary', [])
 
   if (toasts.length === 0) {
     return null
   }
 
-  if (typeof document === 'undefined') {
-    return null
-  }
-
-  return createPortal(
+  return (
     <div
       data-testid={TEST_ID_NOTIFICATION_PORTAL}
       aria-live="polite"
       aria-atomic="true"
-      className={portalContainerClass}
-      style={{ zIndex: NOTIFICATION_PORTAL_Z_INDEX }}
+      className={bannerContainerClass}
     >
-      <div className={`d-flex flex-column gap-2 ${bannerAlignmentClass}`}>
+      <div className="d-flex flex-column gap-2">
         {toasts.map((toast) => {
           const title = formatToastContent(toast.message, () => t(toast.titleKey))
           const description = toast.descriptionKey ? formatToastContent(t(toast.descriptionKey)) : ''
@@ -178,7 +139,6 @@ export function NotificationBannerProvider() {
           )
         })}
       </div>
-    </div>,
-    document.body
+    </div>
   )
 }

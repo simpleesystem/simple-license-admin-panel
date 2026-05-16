@@ -46,6 +46,7 @@ export function AppProviders({ children, queryClient, apiClient }: AppProvidersP
 }
 
 function AppProvidersInner({ children, queryClient: externalQueryClient, apiClient }: AppProvidersProps) {
+  const hasCustomChildren = children !== undefined
   const appConfig = useAppConfig()
   const logger = useMemo(() => createAppLogger(appConfig), [appConfig])
   const trackingClient = useMemo(() => createTrackingClient(), [])
@@ -71,7 +72,7 @@ function AppProvidersInner({ children, queryClient: externalQueryClient, apiClie
                   <AbilityProvider>
                     <NotificationBusProvider>
                       <QueryErrorNotifierBridge />
-                      <NotificationBannerProvider />
+                      {hasCustomChildren ? <NotificationBannerProvider /> : null}
                       <RouterContextBridge queryClient={queryClient}>
                         <SurfaceRenderer />
                         <AppErrorBoundary>{children ?? <RouterProvider router={router} />}</AppErrorBoundary>
