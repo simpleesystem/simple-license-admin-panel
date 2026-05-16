@@ -293,8 +293,9 @@ export const UI_CLASS_SMALL_MARGIN_TOP = 'small mt-1'
 
 export const UI_CLASS_BADGE_TEXT = 'd-inline-flex align-items-center gap-1'
 export const UI_CLASS_EMPTY_STATE_ACTIONS = 'd-flex justify-content-center gap-2 mt-3'
-export const UI_CLASS_TOP_NAV_MAIN = 'me-auto d-flex align-items-center gap-2'
-export const UI_CLASS_TOP_NAV_ACTIONS = 'd-flex align-items-center gap-2 mt-2 mt-lg-0'
+export const UI_CLASS_TOP_NAV_MAIN = 'me-auto d-flex flex-wrap align-items-center gap-2 min-w-0'
+export const UI_CLASS_TOP_NAV_ACTIONS =
+  'd-flex flex-wrap align-items-center justify-content-end gap-2 mt-2 mt-lg-0 min-w-0'
 export const UI_CLASS_AUDIT_FILTER_FIELD = 'col-12 col-md-3'
 export const UI_CLASS_AUDIT_FILTER_LABEL = 'small text-muted mb-1'
 export const UI_CLASS_AUDIT_FILTER_FORM = 'row g-2 align-items-end w-100'
@@ -1293,7 +1294,9 @@ export const UI_ARIA_LABEL_REMOVE_CHIP = 'Remove item'
 
 export const UI_CLASS_HEADER_NAV_LIST = 'nav nav-pills flex-wrap align-items-center gap-2 mb-0'
 export const UI_CLASS_HEADER_NAV_LINK = 'nav-link px-3 py-1 fw-semibold text-nowrap'
-export const UI_CLASS_HEADER_ACTIONS = 'd-flex flex-wrap align-items-center gap-2'
+export const UI_CLASS_HEADER_ACTIONS =
+  'd-flex flex-wrap flex-lg-nowrap align-items-center justify-content-end gap-2 min-w-0 w-100'
+export const UI_CLASS_HEADER_USER_LABEL = 'text-muted text-truncate w-100 w-lg-auto mb-1 mb-lg-0 me-0 me-lg-2'
 export const UI_ARIA_LABEL_PRIMARY_NAV = 'Primary navigation'
 export const UI_ARIA_LABEL_USER_ACTIONS = 'User actions'
 export const UI_TEST_ID_HEADER = `${UI_TEST_ID_PREFIX}header`
