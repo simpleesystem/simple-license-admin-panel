@@ -1296,7 +1296,7 @@ export const UI_CLASS_HEADER_NAV_LIST = 'nav nav-pills flex-wrap align-items-cen
 export const UI_CLASS_HEADER_NAV_LINK = 'nav-link px-3 py-1 fw-semibold text-nowrap'
 export const UI_CLASS_HEADER_ACTIONS =
   'd-flex flex-wrap flex-lg-nowrap align-items-center justify-content-end gap-2 min-w-0 w-100'
-export const UI_CLASS_HEADER_USER_LABEL = 'text-muted text-truncate w-100 w-lg-auto mb-1 mb-lg-0 me-0 me-lg-2'
+export const UI_CLASS_HEADER_USER_LABEL = 'text-muted text-truncate d-none d-md-inline-block me-2 mw-100'
 export const UI_ARIA_LABEL_PRIMARY_NAV = 'Primary navigation'
 export const UI_ARIA_LABEL_USER_ACTIONS = 'User actions'
 export const UI_TEST_ID_HEADER = `${UI_TEST_ID_PREFIX}header`

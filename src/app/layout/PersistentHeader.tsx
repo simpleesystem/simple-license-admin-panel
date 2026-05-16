@@ -9,6 +9,7 @@ import {
   UI_CLASS_HEADER_ACTIONS,
   UI_CLASS_HEADER_NAV_LINK,
   UI_CLASS_HEADER_USER_LABEL,
+  UI_CLASS_PANEL_ACTION_BUTTON,
   UI_HEADER_ACTION_CHANGE_PASSWORD,
   UI_HEADER_ACTION_SIGN_OUT,
   UI_HEADER_MODAL_TITLE_CHANGE_PASSWORD,
@@ -132,11 +133,21 @@ const renderUserActions = ({ userLabel, showChangePasswordAction, onChangePasswo
         {userLabel}
       </div>
       {showChangePasswordAction ? (
-        <Button variant={UI_BUTTON_VARIANT_OUTLINE_SECONDARY} size={UI_SIZE_SMALL} onClick={onChangePassword}>
+        <Button
+          variant={UI_BUTTON_VARIANT_OUTLINE_SECONDARY}
+          size={UI_SIZE_SMALL}
+          onClick={onChangePassword}
+          className={UI_CLASS_PANEL_ACTION_BUTTON}
+        >
           {UI_HEADER_ACTION_CHANGE_PASSWORD}
         </Button>
       ) : null}
-      <Button variant={UI_BUTTON_VARIANT_SECONDARY} size={UI_SIZE_SMALL} onClick={onLogout}>
+      <Button
+        variant={UI_BUTTON_VARIANT_SECONDARY}
+        size={UI_SIZE_SMALL}
+        onClick={onLogout}
+        className={UI_CLASS_PANEL_ACTION_BUTTON}
+      >
         {UI_HEADER_ACTION_SIGN_OUT}
       </Button>
     </div>
