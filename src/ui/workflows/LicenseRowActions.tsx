@@ -8,6 +8,8 @@ import { useNotificationBus } from '../../notifications/useNotificationBus'
 import { adaptMutation } from '../actions/mutationAdapter'
 import {
   UI_BUTTON_VARIANT_GHOST,
+  UI_BUTTON_VARIANT_OUTLINE_DANGER,
+  UI_BUTTON_VARIANT_OUTLINE_SECONDARY,
   UI_LICENSE_ACTION_DELETE,
   UI_LICENSE_ACTION_EDIT,
   UI_LICENSE_ACTION_RESUME,
@@ -181,7 +183,7 @@ export function LicenseRowActions({
 
         {allowUpdate && ownsLicense ? (
           <Button
-            variant={UI_BUTTON_VARIANT_GHOST}
+            variant={UI_BUTTON_VARIANT_OUTLINE_SECONDARY}
             onClick={() => setShowRevokeConfirm(true)}
             disabled={revokeMutation.isPending}
             aria-label={UI_LICENSE_ACTION_REVOKE}
@@ -192,7 +194,7 @@ export function LicenseRowActions({
 
         {allowDelete && ownsLicense ? (
           <Button
-            variant={UI_BUTTON_VARIANT_GHOST}
+            variant={UI_BUTTON_VARIANT_OUTLINE_DANGER}
             onClick={() => setShowDeleteConfirm(true)}
             disabled={softDeleteMutation.isPending}
             aria-label={UI_LICENSE_ACTION_DELETE}
