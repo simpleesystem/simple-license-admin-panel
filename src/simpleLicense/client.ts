@@ -1280,10 +1280,7 @@ export class Client {
       testedWpVersion: this.getNullableStringProperty(source, 'tested_wp_version', 'testedWpVersion'),
       isPrerelease: this.toSafeBoolean(source.is_prerelease ?? source.isPrerelease),
       isPromoted: this.toSafeBoolean(source.is_promoted ?? source.isPromoted),
-      filePresent:
-        source.file_present === undefined && source.filePresent === undefined
-          ? undefined
-          : this.toSafeBoolean(source.file_present ?? source.filePresent),
+      filePresent: this.toSafeBoolean(source.file_present ?? source.filePresent),
       createdAt: normalizedCreatedAt,
       updatedAt: normalizedUpdatedAt,
     }

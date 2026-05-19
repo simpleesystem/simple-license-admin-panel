@@ -214,7 +214,7 @@ export function ReleasesPanel({
                 className={UI_CLASS_ALIGN_TEXT_BOTTOM}
               />
             ) : null}
-            {row.filePresent === false ? (
+            {row.filePresent !== true ? (
               <BadgeText
                 text={UI_RELEASE_FILE_MISSING}
                 variant={UI_BADGE_VARIANT_DANGER}
@@ -252,7 +252,7 @@ export function ReleasesPanel({
         id: UI_RELEASE_COLUMN_ID_ACTIONS,
         header: UI_RELEASE_COLUMN_ACTIONS,
         cell: (row) => {
-          const downloadUrl = row.filePresent === false ? '' : client.getReleaseDownloadUrl(selectedProductId, row.id)
+          const downloadUrl = row.filePresent === true ? client.getReleaseDownloadUrl(selectedProductId, row.id) : ''
 
           return (
             <ReleaseRowActions
