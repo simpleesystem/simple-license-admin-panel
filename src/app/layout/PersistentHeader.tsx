@@ -9,11 +9,15 @@ import {
   UI_BUTTON_VARIANT_SECONDARY,
   UI_CLASS_HEADER_ACTIONS,
   UI_CLASS_HEADER_NAV_LINK,
+  UI_CLASS_HEADER_USER_CONTEXT,
+  UI_CLASS_HEADER_USER_IDENTITY,
   UI_CLASS_HEADER_USER_LABEL,
   UI_CLASS_PANEL_ACTION_BUTTON,
   UI_HEADER_ACTION_CHANGE_PASSWORD,
   UI_HEADER_ACTION_SIGN_OUT,
   UI_HEADER_MODAL_TITLE_CHANGE_PASSWORD,
+  UI_HEADER_USER_CONTEXT_FALLBACK_ROLE,
+  UI_HEADER_USER_CONTEXT_PREFIX,
   UI_MODAL_SIZE_LG,
   UI_SIZE_SMALL,
   UI_TEST_ID_HEADER,
@@ -74,6 +78,7 @@ export function PersistentHeader() {
                 userLabel: isPasswordResetGateActive
                   ? UI_HEADER_MODAL_TITLE_CHANGE_PASSWORD
                   : (currentUser?.email ?? currentUser?.username ?? UI_NAV_LABEL_DASHBOARD),
+                userRole: currentUser?.role,
                 showChangePasswordAction: !isPasswordResetGateActive && showChangePasswordAction,
                 onChangePassword: () => setShowPasswordModal(true),
                 onLogout: handleLogout,
@@ -123,16 +128,26 @@ const renderNavigation = (items: PrimaryNavItem[]) => {
 
 type UserActionsProps = {
   userLabel: string
+  userRole?: string
   showChangePasswordAction: boolean
   onChangePassword: () => void
   onLogout: () => void
 }
 
-const renderUserActions = ({ userLabel, showChangePasswordAction, onChangePassword, onLogout }: UserActionsProps) => {
+const renderUserActions = ({
+  userLabel,
+  userRole,
+  showChangePasswordAction,
+  onChangePassword,
+  onLogout,
+}: UserActionsProps) => {
+  const normalizedRole = formatRoleLabel(userRole)
+  const userContextLabel = `${UI_HEADER_USER_CONTEXT_PREFIX} ${normalizedRole}`
   return (
     <div className={UI_CLASS_HEADER_ACTIONS} data-testid={UI_TEST_ID_HEADER_ACTIONS}>
-      <div className={UI_CLASS_HEADER_USER_LABEL} title={userLabel}>
-        {userLabel}
+      <div className={UI_CLASS_HEADER_USER_LABEL} title={`${userContextLabel} (${userLabel})`}>
+        <span className={UI_CLASS_HEADER_USER_CONTEXT}>{userContextLabel}</span>
+        <span className={UI_CLASS_HEADER_USER_IDENTITY}>{userLabel}</span>
       </div>
       {showChangePasswordAction ? (
         <Button
@@ -154,4 +169,16 @@ const renderUserActions = ({ userLabel, showChangePasswordAction, onChangePasswo
       </Button>
     </div>
   )
+}
+
+const formatRoleLabel = (role: string | undefined): string => {
+  if (typeof role !== 'string' || role.trim().length === 0) {
+    return UI_HEADER_USER_CONTEXT_FALLBACK_ROLE
+  }
+
+  return role
+    .toLowerCase()
+    .split('_')
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .join(' ')
 }

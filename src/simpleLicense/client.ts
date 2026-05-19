@@ -1280,7 +1280,7 @@ export class Client {
       testedWpVersion: this.getNullableStringProperty(source, 'tested_wp_version', 'testedWpVersion'),
       isPrerelease: this.toSafeBoolean(source.is_prerelease ?? source.isPrerelease),
       isPromoted: this.toSafeBoolean(source.is_promoted ?? source.isPromoted),
-      filePresent: this.toSafeBoolean(source.file_present ?? source.filePresent),
+      filePresent: this.toOptionalBoolean(source.file_present ?? source.filePresent),
       createdAt: normalizedCreatedAt,
       updatedAt: normalizedUpdatedAt,
     }
@@ -1344,6 +1344,35 @@ export class Client {
     }
 
     return false
+  }
+
+  private toOptionalBoolean(value: unknown): boolean | undefined {
+    if (typeof value === 'boolean') {
+      return value
+    }
+
+    if (typeof value === 'string') {
+      const lowered = value.toLowerCase()
+      if (lowered === 'true') {
+        return true
+      }
+      if (lowered === 'false') {
+        return false
+      }
+      return undefined
+    }
+
+    if (typeof value === 'number') {
+      if (value === 1) {
+        return true
+      }
+      if (value === 0) {
+        return false
+      }
+      return undefined
+    }
+
+    return undefined
   }
 
   private getRecordProperty(

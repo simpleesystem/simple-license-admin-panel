@@ -1296,12 +1296,16 @@ export const UI_CLASS_HEADER_NAV_LIST = 'nav nav-pills flex-wrap align-items-cen
 export const UI_CLASS_HEADER_NAV_LINK = 'nav-link px-3 py-1 fw-semibold text-nowrap'
 export const UI_CLASS_HEADER_ACTIONS =
   'd-flex flex-wrap flex-lg-nowrap align-items-center justify-content-end gap-2 min-w-0 w-100'
-export const UI_CLASS_HEADER_USER_LABEL = 'text-muted text-truncate d-none d-md-inline-block me-2 mw-100'
+export const UI_CLASS_HEADER_USER_LABEL = 'text-muted d-inline-flex flex-column align-items-end text-end me-2'
+export const UI_CLASS_HEADER_USER_CONTEXT = 'small text-uppercase fw-semibold lh-1'
+export const UI_CLASS_HEADER_USER_IDENTITY = 'small text-truncate mw-100'
 export const UI_ARIA_LABEL_PRIMARY_NAV = 'Primary navigation'
 export const UI_ARIA_LABEL_USER_ACTIONS = 'User actions'
 export const UI_TEST_ID_HEADER = `${UI_TEST_ID_PREFIX}header`
 export const UI_TEST_ID_HEADER_NAV = `${UI_TEST_ID_PREFIX}header-nav`
 export const UI_TEST_ID_HEADER_ACTIONS = `${UI_TEST_ID_PREFIX}header-actions`
+export const UI_HEADER_USER_CONTEXT_PREFIX = 'You are logged in as'
+export const UI_HEADER_USER_CONTEXT_FALLBACK_ROLE = 'User'
 export const UI_HEADER_ACTION_CHANGE_PASSWORD = 'Account'
 export const UI_HEADER_ACTION_SIGN_OUT = 'Sign out'
 export const UI_HEADER_MODAL_TITLE_CHANGE_PASSWORD = 'Secure your account'
