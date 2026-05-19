@@ -203,25 +203,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setError(null)
       try {
         const response = await client.login(credentials.username, credentials.password)
-        if (response.user) {
-          // Check if password reset is required from login response
-          const mustChangePassword = response.must_change_password ?? response.mustChangePassword ?? false
+        const mustChangePassword = response.must_change_password ?? response.mustChangePassword ?? false
+        const hasLoginUser =
+          typeof response.user === 'object' &&
+          response.user !== null &&
+          typeof response.user.id === 'string' &&
+          response.user.id.trim().length > 0
+
+        if (hasLoginUser) {
           const userWithResetFlag: User = {
             ...response.user,
             passwordResetRequired: mustChangePassword || response.user.passwordResetRequired || false,
           }
           setUser(userWithResetFlag)
           userRef.current = userWithResetFlag
-          // Dispatch to Zustand store to keep global state in sync
           useAppStore.getState().dispatch({
             type: 'auth/setUser',
             payload: userWithResetFlag,
           })
-          // If password reset is required, don't fetch user (it will fail with 403)
-          // Otherwise, refresh user to ensure we have the latest state from the server
-          if (!userWithResetFlag.passwordResetRequired) {
-            await fetchUser(true)
-          }
+        }
+
+        // Always attempt to hydrate the authoritative user profile after login.
+        // Some deployments may return token-first login payloads where user is omitted.
+        if (!mustChangePassword) {
+          await fetchUser(hasLoginUser)
+        }
+
+        if (!userRef.current) {
+          throw new Error('Login succeeded but user profile could not be loaded')
         }
       } catch (err: unknown) {
         logger.error(err instanceof Error ? err : new Error(String(err)), { message: 'Login failed' })
