@@ -251,20 +251,24 @@ export function ReleasesPanel({
       {
         id: UI_RELEASE_COLUMN_ID_ACTIONS,
         header: UI_RELEASE_COLUMN_ACTIONS,
-        cell: (row) => (
-          <ReleaseRowActions
-            client={client}
-            productId={selectedProductId}
-            releaseId={row.id}
-            releaseVersion={row.version}
-            releaseFileName={row.fileName}
-            downloadUrl={client.getReleaseDownloadUrl(selectedProductId, row.id)}
-            isPromoted={Boolean(row.isPromoted)}
-            allowPromote={allowPromote}
-            allowDelete={allowDelete}
-            onCompleted={onRefresh}
-          />
-        ),
+        cell: (row) => {
+          const downloadUrl = row.filePresent === false ? '' : client.getReleaseDownloadUrl(selectedProductId, row.id)
+
+          return (
+            <ReleaseRowActions
+              client={client}
+              productId={selectedProductId}
+              releaseId={row.id}
+              releaseVersion={row.version}
+              releaseFileName={row.fileName}
+              downloadUrl={downloadUrl}
+              isPromoted={Boolean(row.isPromoted)}
+              allowPromote={allowPromote}
+              allowDelete={allowDelete}
+              onCompleted={onRefresh}
+            />
+          )
+        },
       },
     ],
     [allowDelete, allowPromote, client, onRefresh, selectedProductId]
