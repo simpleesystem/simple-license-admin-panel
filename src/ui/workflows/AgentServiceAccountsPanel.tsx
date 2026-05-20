@@ -1,20 +1,33 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
 import { DEFAULT_NOTIFICATION_EVENT, NOTIFICATION_VARIANT_ERROR, NOTIFICATION_VARIANT_SUCCESS } from '@/app/constants'
 import { useNotificationBus } from '@/notifications/useNotificationBus'
-import type { AgentServiceAccount, Client } from '@/simpleLicense'
-import { useAdminAgentServiceAccounts, useIssueAgentServiceCredential } from '@/simpleLicense'
+import type { AgentServiceAccount, AgentServiceCredential, Client } from '@/simpleLicense'
+import {
+  useAdminAgentServiceAccounts,
+  useIssueAgentServiceCredential,
+  useRevokeAgentServiceCredential,
+} from '@/simpleLicense'
 import {
   UI_ACTION_CANCEL,
   UI_ACTION_CLOSE,
   UI_AGENT_SERVICE_ACCOUNT_ACTION_ISSUE_CREDENTIAL,
+  UI_AGENT_SERVICE_ACCOUNT_ACTION_VIEW_CREDENTIALS,
   UI_AGENT_SERVICE_ACCOUNT_COLUMN_ACTIONS,
   UI_AGENT_SERVICE_ACCOUNT_COLUMN_LAST_USED,
   UI_AGENT_SERVICE_ACCOUNT_COLUMN_NAME,
   UI_AGENT_SERVICE_ACCOUNT_COLUMN_SCOPE,
   UI_AGENT_SERVICE_ACCOUNT_COLUMN_STATUS,
   UI_AGENT_SERVICE_ACCOUNT_COLUMN_VENDOR,
+  UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_COLUMN_ACTIONS,
+  UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_COLUMN_CLIENT_ID,
+  UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_COLUMN_CREATED,
+  UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_COLUMN_EXPIRES,
+  UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_COLUMN_NAME,
+  UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_COLUMN_REVOKED,
+  UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_COLUMN_SCOPES,
+  UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_EMPTY_STATE,
   UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_RESULT_CLIENT_ID,
   UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_RESULT_CLIENT_SECRET,
   UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_RESULT_TITLE,
@@ -22,13 +35,17 @@ import {
   UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_CREDENTIAL_NAME,
   UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_EXPIRES_AT,
   UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_SCOPES,
+  UI_AGENT_SERVICE_ACCOUNT_MODAL_CREDENTIAL_HISTORY_TITLE,
   UI_AGENT_SERVICE_ACCOUNT_MODAL_ISSUE_CREDENTIAL_TITLE,
   UI_AGENT_SERVICE_ACCOUNT_PANEL_DESCRIPTION,
   UI_AGENT_SERVICE_ACCOUNT_PANEL_TITLE,
   UI_AGENT_SERVICE_ACCOUNT_SCOPE_MODE_SYSTEM,
   UI_AGENT_SERVICE_ACCOUNT_SUBMIT_ISSUE,
+  UI_AGENT_SERVICE_ACCOUNT_SUBMIT_REVOKE,
   UI_AGENT_SERVICE_ACCOUNT_TOAST_ISSUE_ERROR,
   UI_AGENT_SERVICE_ACCOUNT_TOAST_ISSUE_SUCCESS,
+  UI_AGENT_SERVICE_ACCOUNT_TOAST_REVOKE_ERROR,
+  UI_AGENT_SERVICE_ACCOUNT_TOAST_REVOKE_SUCCESS,
   UI_BUTTON_VARIANT_PRIMARY,
   UI_BUTTON_VARIANT_SECONDARY,
   UI_STACK_GAP_MEDIUM,
@@ -58,6 +75,7 @@ export function AgentServiceAccountsPanel({
   tenantNameById,
 }: AgentServiceAccountsPanelProps) {
   const [selectedAccount, setSelectedAccount] = useState<AgentServiceAccount | null>(null)
+  const [historyAccount, setHistoryAccount] = useState<AgentServiceAccount | null>(null)
   const [credentialName, setCredentialName] = useState('')
   const [scopesInput, setScopesInput] = useState('')
   const [expiresAt, setExpiresAt] = useState('')
@@ -65,6 +83,7 @@ export function AgentServiceAccountsPanel({
   const notificationBus = useNotificationBus()
   const listQuery = useAdminAgentServiceAccounts(client, currentUserVendorId ?? null)
   const issueMutation = useIssueAgentServiceCredential(client)
+  const revokeMutation = useRevokeAgentServiceCredential(client)
 
   const rows = useMemo<AgentServiceAccount[]>(() => listQuery.data ?? [], [listQuery.data])
   const issueButtonDisabled = issueMutation.isPending || credentialName.trim().length === 0
@@ -105,22 +124,111 @@ export function AgentServiceAccountsPanel({
         id: 'agent-service-account-actions',
         header: UI_AGENT_SERVICE_ACCOUNT_COLUMN_ACTIONS,
         cell: (row) => (
-          <Button
-            variant={UI_BUTTON_VARIANT_SECONDARY}
-            onClick={() => {
-              setSelectedAccount(row)
-              setCredentialName('')
-              setScopesInput('')
-              setExpiresAt('')
-              setCredentialResult(null)
-            }}
-          >
-            {UI_AGENT_SERVICE_ACCOUNT_ACTION_ISSUE_CREDENTIAL}
-          </Button>
+          <Stack direction="row" gap={UI_STACK_GAP_MEDIUM}>
+            <Button
+              variant={UI_BUTTON_VARIANT_SECONDARY}
+              onClick={() => {
+                setSelectedAccount(row)
+                setCredentialName('')
+                setScopesInput('')
+                setExpiresAt('')
+                setCredentialResult(null)
+              }}
+            >
+              {UI_AGENT_SERVICE_ACCOUNT_ACTION_ISSUE_CREDENTIAL}
+            </Button>
+            <Button
+              variant={UI_BUTTON_VARIANT_SECONDARY}
+              onClick={() => {
+                setHistoryAccount(row)
+              }}
+            >
+              {UI_AGENT_SERVICE_ACCOUNT_ACTION_VIEW_CREDENTIALS}
+            </Button>
+          </Stack>
         ),
       },
     ],
     [tenantNameById]
+  )
+
+  const credentialsForHistory = useMemo<AgentServiceCredential[]>(
+    () => historyAccount?.credentials ?? [],
+    [historyAccount?.credentials]
+  )
+
+  const handleRevokeCredential = useCallback(
+    async (credentialId: string) => {
+      try {
+        await revokeMutation.mutateAsync(credentialId)
+        notificationBus.emit(DEFAULT_NOTIFICATION_EVENT, {
+          titleKey: UI_AGENT_SERVICE_ACCOUNT_TOAST_REVOKE_SUCCESS,
+          variant: NOTIFICATION_VARIANT_SUCCESS,
+        })
+        const refreshed = (listQuery.data ?? []).find((account) => account.id === historyAccount?.id) ?? null
+        setHistoryAccount(refreshed)
+      } catch {
+        notificationBus.emit(DEFAULT_NOTIFICATION_EVENT, {
+          titleKey: UI_AGENT_SERVICE_ACCOUNT_TOAST_REVOKE_ERROR,
+          variant: NOTIFICATION_VARIANT_ERROR,
+        })
+      }
+    },
+    [historyAccount?.id, listQuery.data, notificationBus, revokeMutation]
+  )
+
+  const credentialHistoryColumns: UiDataTableColumn<AgentServiceCredential>[] = useMemo(
+    () => [
+      {
+        id: 'agent-credential-name',
+        header: UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_COLUMN_NAME,
+        cell: (row) => row.credentialName,
+      },
+      {
+        id: 'agent-credential-client-id',
+        header: UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_COLUMN_CLIENT_ID,
+        cell: (row) => row.clientId,
+      },
+      {
+        id: 'agent-credential-scopes',
+        header: UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_COLUMN_SCOPES,
+        cell: (row) => row.scopes.join(', '),
+      },
+      {
+        id: 'agent-credential-created',
+        header: UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_COLUMN_CREATED,
+        cell: (row) => formatDateSafe(row.createdAt),
+      },
+      {
+        id: 'agent-credential-expires',
+        header: UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_COLUMN_EXPIRES,
+        cell: (row) => formatDateSafe(row.expiresAt ?? null),
+      },
+      {
+        id: 'agent-credential-revoked',
+        header: UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_COLUMN_REVOKED,
+        cell: (row) => formatDateSafe(row.revokedAt ?? null),
+      },
+      {
+        id: 'agent-credential-actions',
+        header: UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_COLUMN_ACTIONS,
+        cell: (row) =>
+          row.revokedAt ? (
+            UI_VALUE_PLACEHOLDER
+          ) : (
+            <Button
+              variant={UI_BUTTON_VARIANT_SECONDARY}
+              disabled={revokeMutation.isPending}
+              onClick={() => {
+                void handleRevokeCredential(row.id)
+              }}
+            >
+              {UI_AGENT_SERVICE_ACCOUNT_SUBMIT_REVOKE}
+            </Button>
+          ),
+      },
+    ],
+    [handleRevokeCredential, revokeMutation.isPending]
   )
 
   const handleIssueCredential = async () => {
@@ -242,6 +350,30 @@ export function AgentServiceAccountsPanel({
                 disabled: issueButtonDisabled,
               }
         }
+      />
+      <ModalDialog
+        show={Boolean(historyAccount)}
+        onClose={() => {
+          setHistoryAccount(null)
+        }}
+        title={UI_AGENT_SERVICE_ACCOUNT_MODAL_CREDENTIAL_HISTORY_TITLE}
+        body={
+          <DataTable
+            data={credentialsForHistory}
+            columns={credentialHistoryColumns}
+            rowKey={(row) => row.id}
+            emptyState={UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_EMPTY_STATE}
+            isLoading={listQuery.isLoading || revokeMutation.isPending}
+          />
+        }
+        secondaryAction={{
+          id: 'agent-credential-history-close',
+          label: UI_ACTION_CLOSE,
+          onClick: () => {
+            setHistoryAccount(null)
+          },
+          variant: UI_BUTTON_VARIANT_SECONDARY,
+        }}
       />
     </Stack>
   )

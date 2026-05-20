@@ -44,6 +44,10 @@ vi.mock('../../../src/ui/workflows/AgentServiceAccountCreateModal', () => ({
   AgentServiceAccountCreateModal: () => null,
 }))
 
+vi.mock('../../../src/ui/workflows/AgentServiceAccountsPanel', () => ({
+  AgentServiceAccountsPanel: () => null,
+}))
+
 const mockMutation = () => ({
   mutateAsync: vi.fn(async () => ({})),
   isPending: false,

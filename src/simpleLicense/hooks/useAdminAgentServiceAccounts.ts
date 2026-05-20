@@ -33,6 +33,8 @@ export function useCreateAgentServiceAccount(client: Client) {
 }
 
 export function useIssueAgentServiceCredential(client: Client) {
+  const queryClient = useQueryClient()
+
   return useMutation<
     IssueAgentServiceCredentialResponse,
     Error,
@@ -40,6 +42,9 @@ export function useIssueAgentServiceCredential(client: Client) {
   >({
     mutationFn: async ({ serviceAccountId, request }) => {
       return await client.issueAgentServiceCredential(serviceAccountId, request)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminAgentServiceAccounts.all() })
     },
   })
 }

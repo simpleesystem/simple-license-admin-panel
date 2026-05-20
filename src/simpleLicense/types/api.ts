@@ -353,6 +353,7 @@ export interface AgentServiceAccount {
   vendorId?: string | null
   createdByAdminId?: string | null
   lastUsedAt?: string | null
+  credentials?: AgentServiceCredential[]
   createdAt: string
   updatedAt: string
 }
