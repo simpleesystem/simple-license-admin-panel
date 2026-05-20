@@ -4,6 +4,8 @@
 
 import axios from 'axios'
 import {
+  API_ENDPOINT_ADMIN_AGENT_CREDENTIAL_REVOKE_SUFFIX,
+  API_ENDPOINT_ADMIN_AGENT_CREDENTIALS_SUFFIX,
   API_ENDPOINT_ADMIN_AGENT_SERVICE_ACCOUNTS,
   API_ENDPOINT_ADMIN_ANALYTICS_DISTRIBUTION,
   API_ENDPOINT_ADMIN_ANALYTICS_LICENSE,
@@ -135,6 +137,8 @@ import type {
   GetUserResponse,
   HealthMetricsResponse,
   HealthSnapshotResponse,
+  IssueAgentServiceCredentialRequest,
+  IssueAgentServiceCredentialResponse,
   IssueProtectionBuildTokenRequest,
   IssueProtectionBuildTokenResponse,
   LicenseDataResponse,
@@ -157,6 +161,7 @@ import type {
   ProtectionBuildTokenMetadata,
   ProtectionSigningPublicKeyResponse,
   ReportUsageRequest,
+  RevokeAgentServiceCredentialResponse,
   RevokeProtectionBuildTokenResponse,
   ServerStatusResponse,
   SystemStatsResponse,
@@ -895,6 +900,29 @@ export class Client {
     return {
       success: true,
       data: this.handleApiResponse(response.data, {} as AgentServiceAccount),
+    }
+  }
+
+  async issueAgentServiceCredential(
+    serviceAccountId: string,
+    request: IssueAgentServiceCredentialRequest
+  ): Promise<IssueAgentServiceCredentialResponse> {
+    const url = `${API_ENDPOINT_ADMIN_AGENT_SERVICE_ACCOUNTS}/${encodeURIComponent(serviceAccountId)}${API_ENDPOINT_ADMIN_AGENT_CREDENTIALS_SUFFIX}`
+    const response = await this.httpClient.post<ApiResponse<IssueAgentServiceCredentialResponse['data']>>(url, request)
+
+    return {
+      success: true,
+      data: this.handleApiResponse(response.data, {} as IssueAgentServiceCredentialResponse['data']),
+    }
+  }
+
+  async revokeAgentServiceCredential(credentialId: string): Promise<RevokeAgentServiceCredentialResponse> {
+    const url = `${API_ENDPOINT_ADMIN_AGENT_SERVICE_ACCOUNTS}/credentials/${encodeURIComponent(credentialId)}${API_ENDPOINT_ADMIN_AGENT_CREDENTIAL_REVOKE_SUFFIX}`
+    const response = await this.httpClient.post<ApiResponse<RevokeAgentServiceCredentialResponse['data']>>(url)
+
+    return {
+      success: true,
+      data: this.handleApiResponse(response.data, {} as RevokeAgentServiceCredentialResponse['data']),
     }
   }
 
