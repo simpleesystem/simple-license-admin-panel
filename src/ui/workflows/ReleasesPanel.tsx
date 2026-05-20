@@ -3,10 +3,8 @@ import Button from 'react-bootstrap/Button'
 
 import type { Client, PluginRelease } from '@/simpleLicense'
 import {
-  UI_BADGE_VARIANT_DANGER,
   UI_BADGE_VARIANT_SUCCESS,
   UI_BUTTON_VARIANT_PRIMARY,
-  UI_CLASS_ALIGN_TEXT_BOTTOM,
   UI_CLASS_INLINE_FILENAME,
   UI_RELEASE_BUTTON_NEW,
   UI_RELEASE_CHANNEL_FILTER_LABEL,
@@ -23,7 +21,6 @@ import {
   UI_RELEASE_COLUMN_STATUS,
   UI_RELEASE_COLUMN_VERSION,
   UI_RELEASE_EMPTY_MESSAGE,
-  UI_RELEASE_FILE_MISSING,
   UI_RELEASE_FILTER_ALL,
   UI_RELEASE_FILTER_PRERELEASE_ONLY,
   UI_RELEASE_FILTER_STABLE_ONLY,
@@ -206,13 +203,6 @@ export function ReleasesPanel({
         cell: (row) => (
           <>
             <span className={UI_CLASS_INLINE_FILENAME}>{row.fileName}</span>
-            {row.filePresent === false ? (
-              <BadgeText
-                text={UI_RELEASE_FILE_MISSING}
-                variant={UI_BADGE_VARIANT_DANGER}
-                className={UI_CLASS_ALIGN_TEXT_BOTTOM}
-              />
-            ) : null}
           </>
         ),
         sortable: true,
@@ -244,7 +234,7 @@ export function ReleasesPanel({
         id: UI_RELEASE_COLUMN_ID_ACTIONS,
         header: UI_RELEASE_COLUMN_ACTIONS,
         cell: (row) => {
-          const downloadUrl = row.filePresent === false ? '' : client.getReleaseDownloadUrl(selectedProductId, row.id)
+          const downloadUrl = client.getReleaseDownloadUrl(selectedProductId, row.id)
 
           return (
             <ReleaseRowActions
