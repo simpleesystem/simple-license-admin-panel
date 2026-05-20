@@ -4,6 +4,7 @@
 
 // Query keys
 export { QUERY_KEYS } from './queryKeys'
+export * from './useAdminAgentServiceAccounts'
 export * from './useAdminAnalytics'
 export * from './useAdminAudit'
 export * from './useAdminEntitlements'

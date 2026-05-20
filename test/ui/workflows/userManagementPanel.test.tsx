@@ -40,6 +40,10 @@ vi.mock('@/simpleLicense', async () => {
   }
 })
 
+vi.mock('../../../src/ui/workflows/AgentServiceAccountCreateModal', () => ({
+  AgentServiceAccountCreateModal: () => null,
+}))
+
 const mockMutation = () => ({
   mutateAsync: vi.fn(async () => ({})),
   isPending: false,

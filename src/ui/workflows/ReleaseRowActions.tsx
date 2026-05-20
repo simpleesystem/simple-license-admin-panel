@@ -48,6 +48,9 @@ type ReleaseRowActionsProps = {
   onCompleted?: () => void
 }
 
+const UI_RELEASE_PROMOTE_ERROR_MISSING = 'Cannot set live because the release file is missing from storage.'
+const UI_RELEASE_PROMOTE_ERROR_GENERIC = 'Unable to set this release live right now.'
+
 export function ReleaseRowActions({
   client,
   productId,
@@ -79,6 +82,14 @@ export function ReleaseRowActions({
       onSuccess: () => {
         setShowPromoteConfirm(false)
         onCompleted?.()
+      },
+      onError: (error) => {
+        const message = error instanceof Error ? error.message : UI_RELEASE_PROMOTE_ERROR_GENERIC
+        const normalizedMessage =
+          message === 'Release file is missing'
+            ? UI_RELEASE_PROMOTE_ERROR_MISSING
+            : message || UI_RELEASE_PROMOTE_ERROR_GENERIC
+        notifyDownloadError(normalizedMessage)
       },
     })
   }

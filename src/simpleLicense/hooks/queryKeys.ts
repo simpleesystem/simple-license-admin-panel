@@ -58,6 +58,11 @@ export const QUERY_KEYS = {
     current: () => ['admin', 'users', 'me'] as const,
   },
 
+  // Admin API - Agent service accounts
+  adminAgentServiceAccounts: {
+    all: (vendorId?: string | null) => ['admin', 'agent-service-accounts', vendorId ?? null] as const,
+  },
+
   // Admin API - Tenants
   adminTenants: {
     all: () => ['admin', 'tenants'] as const,

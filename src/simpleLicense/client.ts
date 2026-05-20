@@ -4,6 +4,7 @@
 
 import axios from 'axios'
 import {
+  API_ENDPOINT_ADMIN_AGENT_SERVICE_ACCOUNTS,
   API_ENDPOINT_ADMIN_ANALYTICS_DISTRIBUTION,
   API_ENDPOINT_ADMIN_ANALYTICS_LICENSE,
   API_ENDPOINT_ADMIN_ANALYTICS_THRESHOLDS,
@@ -89,6 +90,7 @@ import type {
   ActivateLicenseRequest,
   ActivateLicenseResponse,
   ActivationDistributionResponse,
+  AgentServiceAccount,
   AlertThresholdsResponse,
   ApiResponse,
   AuditLogEntry,
@@ -99,6 +101,8 @@ import type {
   ChangePasswordResponse,
   CheckUpdateRequest,
   CheckUpdateResponse,
+  CreateAgentServiceAccountRequest,
+  CreateAgentServiceAccountResponse,
   CreateEntitlementRequest,
   CreateEntitlementResponse,
   CreateLicenseRequest,
@@ -864,6 +868,34 @@ export class Client {
     const response = await this.httpClient.get<ApiResponse<GetCurrentUserResponse>>(API_ENDPOINT_ADMIN_USERS_ME)
 
     return this.handleApiResponse(response.data, {} as GetCurrentUserResponse)
+  }
+
+  async listAgentServiceAccounts(vendorId?: string): Promise<AgentServiceAccount[]> {
+    const queryParams = new URLSearchParams()
+    if (typeof vendorId === 'string' && vendorId.trim().length > 0) {
+      queryParams.append('vendorId', vendorId)
+    }
+
+    const url =
+      queryParams.size > 0
+        ? `${API_ENDPOINT_ADMIN_AGENT_SERVICE_ACCOUNTS}?${queryParams.toString()}`
+        : API_ENDPOINT_ADMIN_AGENT_SERVICE_ACCOUNTS
+    const response = await this.httpClient.get<ApiResponse<AgentServiceAccount[]>>(url)
+    return this.handleApiResponse(response.data, [] as AgentServiceAccount[])
+  }
+
+  async createAgentServiceAccount(
+    request: CreateAgentServiceAccountRequest
+  ): Promise<CreateAgentServiceAccountResponse> {
+    const response = await this.httpClient.post<ApiResponse<AgentServiceAccount>>(
+      API_ENDPOINT_ADMIN_AGENT_SERVICE_ACCOUNTS,
+      request
+    )
+
+    return {
+      success: true,
+      data: this.handleApiResponse(response.data, {} as AgentServiceAccount),
+    }
   }
 
   // Admin API - Tenants

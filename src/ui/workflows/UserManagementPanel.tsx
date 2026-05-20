@@ -5,6 +5,7 @@ import { useAdminTenants } from '@/simpleLicense'
 import { canCreateUser, canDeleteUser, canUpdateUser } from '../../app/auth/permissions'
 import { useNotificationBus } from '../../notifications/useNotificationBus'
 import {
+  UI_AGENT_SERVICE_ACCOUNT_BUTTON_CREATE,
   UI_BUTTON_VARIANT_PRIMARY,
   UI_STACK_GAP_MEDIUM,
   UI_STACK_GAP_SMALL,
@@ -66,6 +67,7 @@ import {
 } from '../data/tableFieldFactory'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
+import { AgentServiceAccountCreateModal } from './AgentServiceAccountCreateModal'
 import { notifyCrudError, notifyUserSuccess } from './notifications'
 import { UserFormFlow } from './UserFormFlow'
 import { UserRowActions } from './UserRowActions'
@@ -119,6 +121,7 @@ export function UserManagementPanel({
   onVendorFilterChange,
 }: UserManagementPanelProps) {
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showCreateAgentModal, setShowCreateAgentModal] = useState(false)
   const [editingUser, setEditingUser] = useState<UserListItem | null>(null)
   const notificationBus = useNotificationBus()
   const canCreate = useMemo(() => canCreateUser(currentUser as unknown as User), [currentUser])
@@ -201,9 +204,14 @@ export function UserManagementPanel({
       }
       actions={
         canCreate ? (
-          <Button variant={UI_BUTTON_VARIANT_PRIMARY} onClick={() => setShowCreateModal(true)}>
-            {UI_USER_BUTTON_CREATE}
-          </Button>
+          <Stack direction="row" gap={UI_STACK_GAP_SMALL}>
+            <Button variant={UI_BUTTON_VARIANT_PRIMARY} onClick={() => setShowCreateModal(true)}>
+              {UI_USER_BUTTON_CREATE}
+            </Button>
+            <Button variant={UI_BUTTON_VARIANT_PRIMARY} onClick={() => setShowCreateAgentModal(true)}>
+              {UI_AGENT_SERVICE_ACCOUNT_BUTTON_CREATE}
+            </Button>
+          </Stack>
         ) : null
       }
     />
@@ -338,6 +346,16 @@ export function UserManagementPanel({
           onError={handleMutationError}
         />
       ) : null}
+
+      <AgentServiceAccountCreateModal
+        client={client}
+        show={showCreateAgentModal}
+        onClose={() => setShowCreateAgentModal(false)}
+        vendorOptions={vendorOptions}
+        currentUserRole={currentUser?.role}
+        currentUserVendorId={currentUser?.vendorId ?? null}
+        onCompleted={onRefresh}
+      />
     </Stack>
   )
 }

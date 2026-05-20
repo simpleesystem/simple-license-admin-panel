@@ -342,6 +342,32 @@ export interface UpdateUserRequest {
   vendor_id?: string | null
 }
 
+export type AgentServiceAccountScopeMode = 'SYSTEM' | 'VENDOR'
+
+export interface AgentServiceAccount {
+  id: string
+  name: string
+  description?: string | null
+  status: 'ACTIVE' | 'DISABLED'
+  scopeMode: AgentServiceAccountScopeMode
+  vendorId?: string | null
+  createdByAdminId?: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateAgentServiceAccountRequest {
+  name: string
+  description?: string
+  scopeMode?: AgentServiceAccountScopeMode
+  vendorId?: string
+}
+
+export interface CreateAgentServiceAccountResponse {
+  success: boolean
+  data: AgentServiceAccount
+}
+
 export interface CreateTenantRequest {
   name: string
   status?: string
