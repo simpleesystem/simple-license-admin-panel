@@ -84,6 +84,8 @@ export const API_ENDPOINT_ADMIN_USERS_DELETE = '/api/v1/admin/users'
 export const API_ENDPOINT_ADMIN_USERS_ME = '/api/v1/admin/users/me'
 export const API_ENDPOINT_ADMIN_USERS_ME_PASSWORD = '/api/v1/admin/users/me/password'
 export const API_ENDPOINT_ADMIN_AGENT_SERVICE_ACCOUNTS = '/api/v1/admin/agent/service-accounts'
+export const API_ENDPOINT_ADMIN_AGENT_CREDENTIALS_SUFFIX = '/credentials'
+export const API_ENDPOINT_ADMIN_AGENT_CREDENTIAL_REVOKE_SUFFIX = '/revoke'
 
 // Admin Analytics Endpoints
 export const API_ENDPOINT_ADMIN_ANALYTICS_USAGE = '/api/v1/admin/analytics/usage'

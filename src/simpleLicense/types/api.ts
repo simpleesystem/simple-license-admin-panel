@@ -368,6 +368,40 @@ export interface CreateAgentServiceAccountResponse {
   data: AgentServiceAccount
 }
 
+export interface IssueAgentServiceCredentialRequest {
+  credentialName: string
+  scopes?: string[]
+  expiresAt?: string
+}
+
+export interface AgentServiceCredential {
+  id: string
+  serviceAccountId: string
+  credentialName: string
+  clientId: string
+  secretPreview?: string | null
+  scopes: string[]
+  expiresAt?: string | null
+  revokedAt?: string | null
+  createdByAdminId?: string | null
+  createdByAdminUserId?: string | null
+  lastUsedAt?: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface IssueAgentServiceCredentialResponse {
+  success: boolean
+  data: AgentServiceCredential & {
+    clientSecret: string
+  }
+}
+
+export interface RevokeAgentServiceCredentialResponse {
+  success: boolean
+  data: AgentServiceCredential
+}
+
 export interface CreateTenantRequest {
   name: string
   status?: string
