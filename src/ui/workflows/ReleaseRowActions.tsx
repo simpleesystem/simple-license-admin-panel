@@ -2,6 +2,8 @@ import { useState } from 'react'
 import Button from 'react-bootstrap/Button'
 
 import type { Client } from '@/simpleLicense'
+import { NOTIFICATION_EVENT_TOAST, NOTIFICATION_VARIANT_ERROR } from '../../app/constants'
+import { useNotificationBus } from '../../notifications/useNotificationBus'
 
 import { useDeleteRelease, usePromoteRelease } from '../../simpleLicense/hooks'
 import {
@@ -23,6 +25,8 @@ import {
   UI_RELEASE_CONFIRM_DELETE_TITLE,
   UI_RELEASE_CONFIRM_PROMOTE_BODY,
   UI_RELEASE_CONFIRM_PROMOTE_TITLE,
+  UI_RELEASE_DOWNLOAD_ERROR_GENERIC,
+  UI_RELEASE_DOWNLOAD_ERROR_MISSING,
   UI_RELEASE_MODAL_CANCEL,
   UI_RELEASE_VERSION_PREFIX,
   UI_SIZE_SMALL,
@@ -61,6 +65,7 @@ export function ReleaseRowActions({
   const [showPromoteConfirm, setShowPromoteConfirm] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
+  const notificationBus = useNotificationBus()
 
   const showPromoteButton = allowPromote && !isPromoted
   const showDeleteButton = allowDelete
@@ -87,6 +92,32 @@ export function ReleaseRowActions({
     })
   }
 
+  const notifyDownloadError = (message: string) => {
+    notificationBus.emit(NOTIFICATION_EVENT_TOAST, {
+      titleKey: UI_RELEASE_DOWNLOAD_ERROR_GENERIC,
+      message,
+      variant: NOTIFICATION_VARIANT_ERROR,
+    })
+  }
+
+  const parseDownloadErrorMessage = async (response: Response): Promise<string> => {
+    if (response.status === 404) {
+      return UI_RELEASE_DOWNLOAD_ERROR_MISSING
+    }
+    try {
+      const body = (await response.json()) as {
+        error?: { message?: string }
+      }
+      const apiMessage = body.error?.message
+      if (typeof apiMessage === 'string' && apiMessage.trim().length > 0) {
+        return apiMessage
+      }
+    } catch {
+      // fallback to generic message
+    }
+    return UI_RELEASE_DOWNLOAD_ERROR_GENERIC
+  }
+
   const handleDownload = async () => {
     if (!downloadUrl || isDownloading) {
       return
@@ -101,7 +132,8 @@ export function ReleaseRowActions({
         headers: authToken ? { Authorization: `Bearer ${authToken}` } : undefined,
       })
       if (!response.ok) {
-        throw new Error(`Download failed with status ${response.status}`)
+        notifyDownloadError(await parseDownloadErrorMessage(response))
+        return
       }
 
       const blob = await response.blob()
@@ -113,6 +145,8 @@ export function ReleaseRowActions({
       anchor.click()
       document.body.removeChild(anchor)
       URL.revokeObjectURL(objectUrl)
+    } catch {
+      notifyDownloadError(UI_RELEASE_DOWNLOAD_ERROR_GENERIC)
     } finally {
       setIsDownloading(false)
     }
