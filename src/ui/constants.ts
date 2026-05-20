@@ -868,6 +868,7 @@ export const UI_USER_TOAST_CREATE_SUCCESS = 'User created successfully' as const
 export const UI_USER_TOAST_UPDATE_SUCCESS = 'User updated successfully' as const
 export const UI_USER_TOAST_DELETE_SUCCESS = 'User deleted successfully' as const
 export const UI_AGENT_SERVICE_ACCOUNT_TOAST_CREATE_SUCCESS = 'Agent account created successfully' as const
+export const UI_AGENT_SERVICE_ACCOUNT_TOAST_CREATE_ERROR = 'Unable to create agent account' as const
 export const UI_USER_CONFIRM_DELETE_TITLE = 'Delete user?' as const
 export const UI_USER_CONFIRM_DELETE_BODY =
   'Deleting a user will disable their access. You can restore them later by changing their status.' as const
@@ -901,6 +902,29 @@ export const UI_AGENT_SERVICE_ACCOUNT_SCOPE_MODE_VENDOR = 'VENDOR' as const
 export const UI_AGENT_SERVICE_ACCOUNT_SCOPE_MODE_LABEL_SYSTEM = 'System (global access)' as const
 export const UI_AGENT_SERVICE_ACCOUNT_SCOPE_MODE_LABEL_VENDOR = 'Vendor (tenant scoped)' as const
 export const UI_AGENT_SERVICE_ACCOUNT_SUBMIT_CREATE = 'Create agent account' as const
+export const UI_AGENT_SERVICE_ACCOUNT_PANEL_TITLE = 'Agent service accounts' as const
+export const UI_AGENT_SERVICE_ACCOUNT_PANEL_DESCRIPTION =
+  'Manage machine identities for system and vendor automation.' as const
+export const UI_AGENT_SERVICE_ACCOUNT_COLUMN_NAME = 'Name' as const
+export const UI_AGENT_SERVICE_ACCOUNT_COLUMN_SCOPE = 'Scope' as const
+export const UI_AGENT_SERVICE_ACCOUNT_COLUMN_VENDOR = 'Vendor' as const
+export const UI_AGENT_SERVICE_ACCOUNT_COLUMN_STATUS = 'Status' as const
+export const UI_AGENT_SERVICE_ACCOUNT_COLUMN_LAST_USED = 'Last used' as const
+export const UI_AGENT_SERVICE_ACCOUNT_COLUMN_ACTIONS = 'Actions' as const
+export const UI_AGENT_SERVICE_ACCOUNT_EMPTY_STATE = 'No agent service accounts found.' as const
+export const UI_AGENT_SERVICE_ACCOUNT_ACTION_ISSUE_CREDENTIAL = 'Issue credential' as const
+export const UI_AGENT_SERVICE_ACCOUNT_MODAL_ISSUE_CREDENTIAL_TITLE = 'Issue Agent Credential' as const
+export const UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_CREDENTIAL_NAME = 'Credential name' as const
+export const UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_SCOPES = 'Scopes (comma-separated)' as const
+export const UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_EXPIRES_AT = 'Expires at (optional)' as const
+export const UI_AGENT_SERVICE_ACCOUNT_SUBMIT_ISSUE = 'Issue credential' as const
+export const UI_AGENT_SERVICE_ACCOUNT_TOAST_ISSUE_SUCCESS = 'Credential issued successfully' as const
+export const UI_AGENT_SERVICE_ACCOUNT_TOAST_ISSUE_ERROR = 'Unable to issue credential' as const
+export const UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_RESULT_TITLE = 'Credential created (save now)' as const
+export const UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_RESULT_CLIENT_ID = 'Client ID' as const
+export const UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_RESULT_CLIENT_SECRET = 'Client Secret' as const
+export const UI_ACTION_CANCEL = 'Cancel' as const
+export const UI_ACTION_CLOSE = 'Close' as const
 
 export const UI_TENANT_PANEL_TITLE = 'Tenant directory' as const
 export const UI_TENANT_PANEL_DESCRIPTION = 'Search, filter, and manage organizations on this license server.' as const

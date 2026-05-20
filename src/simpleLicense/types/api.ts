@@ -352,6 +352,7 @@ export interface AgentServiceAccount {
   scopeMode: AgentServiceAccountScopeMode
   vendorId?: string | null
   createdByAdminId?: string | null
+  lastUsedAt?: string | null
   createdAt: string
   updatedAt: string
 }

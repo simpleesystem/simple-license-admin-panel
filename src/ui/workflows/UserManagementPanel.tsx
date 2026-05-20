@@ -68,6 +68,7 @@ import {
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
 import { AgentServiceAccountCreateModal } from './AgentServiceAccountCreateModal'
+import { AgentServiceAccountsPanel } from './AgentServiceAccountsPanel'
 import { notifyCrudError, notifyUserSuccess } from './notifications'
 import { UserFormFlow } from './UserFormFlow'
 import { UserRowActions } from './UserRowActions'
@@ -314,6 +315,12 @@ export function UserManagementPanel({
             />
           ) : undefined
         }
+      />
+
+      <AgentServiceAccountsPanel
+        client={client}
+        currentUserVendorId={currentUser?.vendorId ?? null}
+        tenantNameById={tenantNameById}
       />
 
       <UserFormFlow

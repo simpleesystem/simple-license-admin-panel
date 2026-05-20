@@ -5,6 +5,7 @@ import { useNotificationBus } from '@/notifications/useNotificationBus'
 import type { Client } from '@/simpleLicense'
 import { useCreateAgentServiceAccount } from '@/simpleLicense'
 import {
+  UI_ACTION_CANCEL,
   UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_DESCRIPTION,
   UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_NAME,
   UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_SCOPE_MODE,
@@ -14,6 +15,7 @@ import {
   UI_AGENT_SERVICE_ACCOUNT_SCOPE_MODE_SYSTEM,
   UI_AGENT_SERVICE_ACCOUNT_SCOPE_MODE_VENDOR,
   UI_AGENT_SERVICE_ACCOUNT_SUBMIT_CREATE,
+  UI_AGENT_SERVICE_ACCOUNT_TOAST_CREATE_ERROR,
   UI_AGENT_SERVICE_ACCOUNT_TOAST_CREATE_SUCCESS,
   UI_BUTTON_VARIANT_PRIMARY,
   UI_BUTTON_VARIANT_SECONDARY,
@@ -95,7 +97,7 @@ export function AgentServiceAccountCreateModal({
       onClose()
     } catch (_error) {
       notificationBus.emit(DEFAULT_NOTIFICATION_EVENT, {
-        titleKey: 'Unable to create agent account',
+        titleKey: UI_AGENT_SERVICE_ACCOUNT_TOAST_CREATE_ERROR,
         variant: NOTIFICATION_VARIANT_ERROR,
       })
     }
@@ -154,7 +156,7 @@ export function AgentServiceAccountCreateModal({
       }
       secondaryAction={{
         id: 'agent-service-account-cancel',
-        label: 'Cancel',
+        label: UI_ACTION_CANCEL,
         onClick: onClose,
         variant: UI_BUTTON_VARIANT_SECONDARY,
         disabled: createMutation.isPending,
