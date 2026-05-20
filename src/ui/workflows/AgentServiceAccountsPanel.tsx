@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useState } from 'react'
+import { QueryClientContext } from '@tanstack/react-query'
+import { useCallback, useContext, useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
 import { DEFAULT_NOTIFICATION_EVENT, NOTIFICATION_VARIANT_ERROR, NOTIFICATION_VARIANT_SUCCESS } from '@/app/constants'
@@ -28,9 +29,25 @@ import {
   UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_COLUMN_REVOKED,
   UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_COLUMN_SCOPES,
   UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_EMPTY_STATE,
+  UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_ACTIVE,
+  UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_ALL,
+  UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_EXPIRED,
+  UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_LABEL,
+  UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_REVOKED,
+  UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_VALUE_ACTIVE,
+  UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_VALUE_ALL,
+  UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_VALUE_EXPIRED,
+  UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_VALUE_REVOKED,
   UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_RESULT_CLIENT_ID,
   UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_RESULT_CLIENT_SECRET,
   UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_RESULT_TITLE,
+  UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SEARCH_LABEL,
+  UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SEARCH_PLACEHOLDER,
+  UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SORT_LABEL,
+  UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SORT_NEWEST,
+  UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SORT_OLDEST,
+  UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SORT_VALUE_NEWEST,
+  UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SORT_VALUE_OLDEST,
   UI_AGENT_SERVICE_ACCOUNT_EMPTY_STATE,
   UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_CREDENTIAL_NAME,
   UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_EXPIRES_AT,
@@ -74,12 +91,37 @@ export function AgentServiceAccountsPanel({
   currentUserVendorId,
   tenantNameById,
 }: AgentServiceAccountsPanelProps) {
+  const queryClient = useContext(QueryClientContext)
+  if (!queryClient) {
+    return null
+  }
+  return (
+    <AgentServiceAccountsPanelWithQuery
+      client={client}
+      currentUserVendorId={currentUserVendorId}
+      tenantNameById={tenantNameById}
+    />
+  )
+}
+
+function AgentServiceAccountsPanelWithQuery({
+  client,
+  currentUserVendorId,
+  tenantNameById,
+}: AgentServiceAccountsPanelProps) {
   const [selectedAccount, setSelectedAccount] = useState<AgentServiceAccount | null>(null)
   const [historyAccount, setHistoryAccount] = useState<AgentServiceAccount | null>(null)
   const [credentialName, setCredentialName] = useState('')
   const [scopesInput, setScopesInput] = useState('')
   const [expiresAt, setExpiresAt] = useState('')
   const [credentialResult, setCredentialResult] = useState<CredentialResult | null>(null)
+  const [credentialStatusFilter, setCredentialStatusFilter] = useState<'ALL' | 'ACTIVE' | 'REVOKED' | 'EXPIRED'>(
+    UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_VALUE_ALL
+  )
+  const [credentialSearchTerm, setCredentialSearchTerm] = useState('')
+  const [credentialSortOrder, setCredentialSortOrder] = useState<'NEWEST' | 'OLDEST'>(
+    UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SORT_VALUE_NEWEST
+  )
   const notificationBus = useNotificationBus()
   const listQuery = useAdminAgentServiceAccounts(client, currentUserVendorId ?? null)
   const issueMutation = useIssueAgentServiceCredential(client)
@@ -141,6 +183,9 @@ export function AgentServiceAccountsPanel({
               variant={UI_BUTTON_VARIANT_SECONDARY}
               onClick={() => {
                 setHistoryAccount(row)
+                setCredentialStatusFilter(UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_VALUE_ALL)
+                setCredentialSearchTerm('')
+                setCredentialSortOrder(UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SORT_VALUE_NEWEST)
               }}
             >
               {UI_AGENT_SERVICE_ACCOUNT_ACTION_VIEW_CREDENTIALS}
@@ -152,10 +197,41 @@ export function AgentServiceAccountsPanel({
     [tenantNameById]
   )
 
-  const credentialsForHistory = useMemo<AgentServiceCredential[]>(
-    () => historyAccount?.credentials ?? [],
-    [historyAccount?.credentials]
-  )
+  const credentialsForHistory = useMemo<AgentServiceCredential[]>(() => {
+    const credentials = historyAccount?.credentials ?? []
+    const filteredByStatus = credentials.filter((credential) => {
+      if (credentialStatusFilter === UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_VALUE_ACTIVE) {
+        return !credential.revokedAt && !isCredentialExpired(credential)
+      }
+      if (credentialStatusFilter === UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_VALUE_REVOKED) {
+        return Boolean(credential.revokedAt)
+      }
+      if (credentialStatusFilter === UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_VALUE_EXPIRED) {
+        return !credential.revokedAt && isCredentialExpired(credential)
+      }
+      return true
+    })
+
+    const normalizedSearch = credentialSearchTerm.trim().toLowerCase()
+    const filteredBySearch =
+      normalizedSearch.length === 0
+        ? filteredByStatus
+        : filteredByStatus.filter((credential) => {
+            return (
+              credential.credentialName.toLowerCase().includes(normalizedSearch) ||
+              credential.clientId.toLowerCase().includes(normalizedSearch)
+            )
+          })
+
+    return filteredBySearch.slice().sort((left, right) => {
+      const leftTime = new Date(left.createdAt).getTime()
+      const rightTime = new Date(right.createdAt).getTime()
+      if (credentialSortOrder === UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SORT_VALUE_OLDEST) {
+        return leftTime - rightTime
+      }
+      return rightTime - leftTime
+    })
+  }, [credentialSearchTerm, credentialSortOrder, credentialStatusFilter, historyAccount?.credentials])
 
   const handleRevokeCredential = useCallback(
     async (credentialId: string) => {
@@ -358,13 +434,57 @@ export function AgentServiceAccountsPanel({
         }}
         title={UI_AGENT_SERVICE_ACCOUNT_MODAL_CREDENTIAL_HISTORY_TITLE}
         body={
-          <DataTable
-            data={credentialsForHistory}
-            columns={credentialHistoryColumns}
-            rowKey={(row) => row.id}
-            emptyState={UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_EMPTY_STATE}
-            isLoading={listQuery.isLoading || revokeMutation.isPending}
-          />
+          <Stack direction="column" gap={UI_STACK_GAP_MEDIUM}>
+            <Form.Group>
+              <Form.Label>{UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_LABEL}</Form.Label>
+              <Form.Select
+                value={credentialStatusFilter}
+                onChange={(event) => setCredentialStatusFilter(event.target.value as 'ALL' | 'ACTIVE' | 'REVOKED')}
+              >
+                <option value={UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_VALUE_ALL}>
+                  {UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_ALL}
+                </option>
+                <option value={UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_VALUE_ACTIVE}>
+                  {UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_ACTIVE}
+                </option>
+                <option value={UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_VALUE_REVOKED}>
+                  {UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_REVOKED}
+                </option>
+                <option value={UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_VALUE_EXPIRED}>
+                  {UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_EXPIRED}
+                </option>
+              </Form.Select>
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>{UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SEARCH_LABEL}</Form.Label>
+              <Form.Control
+                value={credentialSearchTerm}
+                onChange={(event) => setCredentialSearchTerm(event.target.value)}
+                placeholder={UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SEARCH_PLACEHOLDER}
+              />
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>{UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SORT_LABEL}</Form.Label>
+              <Form.Select
+                value={credentialSortOrder}
+                onChange={(event) => setCredentialSortOrder(event.target.value as 'NEWEST' | 'OLDEST')}
+              >
+                <option value={UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SORT_VALUE_NEWEST}>
+                  {UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SORT_NEWEST}
+                </option>
+                <option value={UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SORT_VALUE_OLDEST}>
+                  {UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SORT_OLDEST}
+                </option>
+              </Form.Select>
+            </Form.Group>
+            <DataTable
+              data={credentialsForHistory}
+              columns={credentialHistoryColumns}
+              rowKey={(row) => row.id}
+              emptyState={UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_EMPTY_STATE}
+              isLoading={listQuery.isLoading || revokeMutation.isPending}
+            />
+          </Stack>
         }
         secondaryAction={{
           id: 'agent-credential-history-close',
@@ -377,4 +497,15 @@ export function AgentServiceAccountsPanel({
       />
     </Stack>
   )
+}
+
+const isCredentialExpired = (credential: AgentServiceCredential): boolean => {
+  if (!credential.expiresAt) {
+    return false
+  }
+  const expiresAtTime = new Date(credential.expiresAt).getTime()
+  if (Number.isNaN(expiresAtTime)) {
+    return false
+  }
+  return expiresAtTime <= Date.now()
 }
