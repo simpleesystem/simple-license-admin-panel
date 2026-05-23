@@ -61,6 +61,7 @@ import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
 import { BadgeText } from '../typography/BadgeText'
 import { EmptyState } from '../typography/EmptyState'
+import { MutedText } from '../typography/MutedText'
 import { formatBytes, formatDateSafe } from '../utils/formatUtils'
 import { ReleaseFormFlow } from './ReleaseFormFlow'
 import { ReleaseRowActions } from './ReleaseRowActions'
@@ -95,6 +96,8 @@ type ReleasesPanelProps = {
   releasesLoading?: boolean
   releasesError?: boolean
   onRefresh?: () => void
+  refreshLabel?: string
+  refreshStatus?: string
 }
 
 export function ReleasesPanel({
@@ -125,6 +128,8 @@ export function ReleasesPanel({
   releasesLoading,
   releasesError,
   onRefresh,
+  refreshLabel,
+  refreshStatus,
 }: ReleasesPanelProps) {
   const [showCreateModal, setShowCreateModal] = useState(false)
 
@@ -191,19 +196,23 @@ export function ReleasesPanel({
           ? {
               onClick: onRefresh,
               disabled: !selectedProductId || Boolean(releasesLoading),
+              label: refreshLabel,
             }
           : undefined
       }
       actions={
-        allowCreate ? (
-          <Button
-            variant={UI_BUTTON_VARIANT_PRIMARY}
-            onClick={() => setShowCreateModal(true)}
-            disabled={!selectedProductId}
-          >
-            {UI_RELEASE_BUTTON_NEW}
-          </Button>
-        ) : null
+        <>
+          {refreshStatus && selectedProductId ? <MutedText>{refreshStatus}</MutedText> : null}
+          {allowCreate ? (
+            <Button
+              variant={UI_BUTTON_VARIANT_PRIMARY}
+              onClick={() => setShowCreateModal(true)}
+              disabled={!selectedProductId}
+            >
+              {UI_RELEASE_BUTTON_NEW}
+            </Button>
+          ) : null}
+        </>
       }
     />
   )

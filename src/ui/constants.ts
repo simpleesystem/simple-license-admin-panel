@@ -755,6 +755,14 @@ export const UI_RELEASE_STATUS_ERROR_TITLE = 'Unable to load releases' as const
 export const UI_RELEASE_STATUS_ERROR_BODY = 'Please try again after refreshing the page.' as const
 export const UI_RELEASE_STATUS_ACTION_RETRY = 'Retry' as const
 export const UI_RELEASE_AUTO_REFRESH_INTERVAL_MS = 15000 as const
+export const UI_RELEASE_REFRESH_LABEL_IDLE = 'Refresh' as const
+export const UI_RELEASE_REFRESH_LABEL_CHECKING = 'Checking…' as const
+export const UI_RELEASE_REFRESH_LABEL_NEW_AVAILABLE = 'Review new releases' as const
+export const UI_RELEASE_REFRESH_STATUS_LIVE_SYNC = 'Live sync active' as const
+export const UI_RELEASE_REFRESH_STATUS_WAITING_FIRST_CHECK = 'waiting for first check' as const
+export const UI_RELEASE_REFRESH_STATUS_LAST_CHECKED_PREFIX = 'last checked' as const
+export const UI_RELEASE_AUTO_REFRESH_TOAST_TITLE = 'New releases detected' as const
+export const UI_RELEASE_AUTO_REFRESH_TOAST_MESSAGE = 'Release list updated from live hook activity.' as const
 export const UI_RELEASE_ROUTE_STATUS_LOADING_TITLE = 'Loading release workspace' as const
 export const UI_RELEASE_ROUTE_STATUS_LOADING_BODY =
   'Fetching products and tenant filters for release management.' as const

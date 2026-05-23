@@ -1,16 +1,20 @@
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import type { PluginRelease } from '@/simpleLicense'
 
 import { useApiClient } from '../../api/apiContext'
 import { canDeleteRelease, canUpdateProduct, canViewProducts } from '../../app/auth/permissions'
 import { useAuth } from '../../app/auth/useAuth'
+import { DEFAULT_NOTIFICATION_EVENT, NOTIFICATION_VARIANT_INFO } from '../../app/constants'
+import { useNotificationBus } from '../../notifications/useNotificationBus'
 import { useAdminProducts, useAdminReleases, useAdminTenants } from '../../simpleLicense/hooks'
 import {
   UI_PAGE_SUBTITLE_RELEASES,
   UI_PAGE_TITLE_RELEASES,
   UI_PAGE_VARIANT_FULL_WIDTH,
   UI_RELEASE_AUTO_REFRESH_INTERVAL_MS,
+  UI_RELEASE_AUTO_REFRESH_TOAST_MESSAGE,
+  UI_RELEASE_AUTO_REFRESH_TOAST_TITLE,
   UI_RELEASE_COLUMN_ID_CREATED,
   UI_RELEASE_COLUMN_ID_FILE,
   UI_RELEASE_COLUMN_ID_SIZE,
@@ -19,6 +23,12 @@ import {
   UI_RELEASE_FILTER_VALUE_ALL,
   UI_RELEASE_FILTER_VALUE_PRERELEASE,
   UI_RELEASE_FILTER_VALUE_STABLE,
+  UI_RELEASE_REFRESH_LABEL_CHECKING,
+  UI_RELEASE_REFRESH_LABEL_IDLE,
+  UI_RELEASE_REFRESH_LABEL_NEW_AVAILABLE,
+  UI_RELEASE_REFRESH_STATUS_LAST_CHECKED_PREFIX,
+  UI_RELEASE_REFRESH_STATUS_LIVE_SYNC,
+  UI_RELEASE_REFRESH_STATUS_WAITING_FIRST_CHECK,
   UI_RELEASE_ROUTE_STATUS_ERROR_BODY,
   UI_RELEASE_ROUTE_STATUS_ERROR_TITLE,
   UI_RELEASE_ROUTE_STATUS_LOADING_BODY,
@@ -49,6 +59,7 @@ type ReleaseFilters = {
 export function ReleasesRouteComponent() {
   const client = useApiClient()
   const { user: currentUser } = useAuth()
+  const notificationBus = useNotificationBus()
   const {
     data: productsData,
     isLoading: productsLoading,
@@ -94,6 +105,11 @@ export function ReleasesRouteComponent() {
     () => (Array.isArray(releasesData) ? (releasesData as PluginRelease[]) : []),
     [releasesData]
   )
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [lastCheckedAt, setLastCheckedAt] = useState<number | null>(null)
+  const [pendingNewReleaseCount, setPendingNewReleaseCount] = useState(0)
+  const isRefreshingRef = useRef(false)
+  const releaseIdSnapshotRef = useRef<Set<string>>(new Set())
 
   const searchReleases = useCallback((release: ReleaseListItem, term: string) => {
     const needle = term.toLowerCase()
@@ -148,24 +164,93 @@ export function ReleasesRouteComponent() {
     releasesTable.goToPage
   )
 
-  const handleRefresh = useCallback(() => {
-    if (!selectedProductId) {
-      return
-    }
-    void refetchReleases()
-  }, [refetchReleases, selectedProductId])
+  const handleRefresh = useCallback(
+    async (source: 'manual' | 'auto' = 'manual') => {
+      if (!selectedProductId) {
+        return
+      }
+      if (isRefreshingRef.current) {
+        return
+      }
+
+      isRefreshingRef.current = true
+      setIsRefreshing(true)
+      try {
+        const previousIds = releaseIdSnapshotRef.current
+        const result = await refetchReleases()
+        const latestReleases = Array.isArray(result?.data) ? (result.data as PluginRelease[]) : []
+        const latestIds = new Set(latestReleases.map((release) => release.id))
+        releaseIdSnapshotRef.current = latestIds
+        setLastCheckedAt(Date.now())
+
+        if (source === 'auto') {
+          let newCount = 0
+          for (const releaseId of latestIds) {
+            if (!previousIds.has(releaseId)) {
+              newCount += 1
+            }
+          }
+
+          if (newCount > 0) {
+            setPendingNewReleaseCount((previousCount) => previousCount + newCount)
+            notificationBus.emit(DEFAULT_NOTIFICATION_EVENT, {
+              titleKey: UI_RELEASE_AUTO_REFRESH_TOAST_TITLE,
+              message:
+                newCount === 1
+                  ? UI_RELEASE_AUTO_REFRESH_TOAST_MESSAGE
+                  : `${UI_RELEASE_AUTO_REFRESH_TOAST_MESSAGE} (+${newCount})`,
+              variant: NOTIFICATION_VARIANT_INFO,
+            })
+          }
+        } else {
+          setPendingNewReleaseCount(0)
+        }
+      } finally {
+        isRefreshingRef.current = false
+        setIsRefreshing(false)
+      }
+    },
+    [notificationBus, refetchReleases, selectedProductId]
+  )
 
   useEffect(() => {
     if (!selectedProductId) {
       return
     }
     const intervalId = window.setInterval(() => {
-      handleRefresh()
+      void handleRefresh('auto')
     }, UI_RELEASE_AUTO_REFRESH_INTERVAL_MS)
     return () => {
       window.clearInterval(intervalId)
     }
   }, [handleRefresh, selectedProductId])
+
+  useEffect(() => {
+    if (selectedProductId) {
+      releaseIdSnapshotRef.current = new Set()
+      isRefreshingRef.current = false
+      setIsRefreshing(false)
+      setLastCheckedAt(null)
+      setPendingNewReleaseCount(0)
+      return
+    }
+
+    releaseIdSnapshotRef.current = new Set()
+    isRefreshingRef.current = false
+    setIsRefreshing(false)
+    setLastCheckedAt(null)
+    setPendingNewReleaseCount(0)
+  }, [selectedProductId])
+
+  useEffect(() => {
+    if (!selectedProductId) {
+      return
+    }
+    if (releaseIdSnapshotRef.current.size === 0 && releases.length > 0) {
+      releaseIdSnapshotRef.current = new Set(releases.map((release) => release.id))
+      setLastCheckedAt(Date.now())
+    }
+  }, [releases, selectedProductId])
 
   const handleProductChange = (productId: string) => {
     setFilterAndReset('productId', productId)
@@ -178,6 +263,34 @@ export function ReleasesRouteComponent() {
   const handleChannelChange = (value: string) => {
     setFilterAndReset('channel', value)
   }
+
+  const refreshLabel = useMemo(() => {
+    if (isRefreshing) {
+      return UI_RELEASE_REFRESH_LABEL_CHECKING
+    }
+    if (pendingNewReleaseCount > 0) {
+      return UI_RELEASE_REFRESH_LABEL_NEW_AVAILABLE
+    }
+    return UI_RELEASE_REFRESH_LABEL_IDLE
+  }, [isRefreshing, pendingNewReleaseCount])
+
+  const refreshStatus = useMemo(() => {
+    if (!selectedProductId) {
+      return ''
+    }
+    const checkedAtLabel =
+      lastCheckedAt === null
+        ? UI_RELEASE_REFRESH_STATUS_WAITING_FIRST_CHECK
+        : new Date(lastCheckedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' })
+    const newReleaseLabel =
+      pendingNewReleaseCount > 0
+        ? pendingNewReleaseCount === 1
+          ? '1 new release detected'
+          : `${pendingNewReleaseCount} new releases detected`
+        : ''
+    const newSegment = newReleaseLabel.length > 0 ? `${newReleaseLabel} · ` : ''
+    return `${UI_RELEASE_REFRESH_STATUS_LIVE_SYNC} · ${newSegment}${UI_RELEASE_REFRESH_STATUS_LAST_CHECKED_PREFIX} ${checkedAtLabel}`
+  }, [lastCheckedAt, pendingNewReleaseCount, selectedProductId])
 
   const showLoading = Boolean(selectedProductId) && releasesLoading
   const showError = Boolean(selectedProductId) && releasesError
@@ -232,7 +345,11 @@ export function ReleasesRouteComponent() {
           allowDelete={allowDelete}
           releasesLoading={showLoading}
           releasesError={showError}
-          onRefresh={handleRefresh}
+          onRefresh={() => {
+            void handleRefresh('manual')
+          }}
+          refreshLabel={refreshLabel}
+          refreshStatus={refreshStatus}
         />
       ) : null}
     </Page>
