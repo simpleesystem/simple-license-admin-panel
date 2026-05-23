@@ -37,14 +37,12 @@ import {
   UI_TABLE_FILTER_LABEL_STATUS,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_PRODUCTS,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
-  UI_TABLE_PAGE_SIZE_LABEL,
-  UI_TABLE_PAGE_SIZE_OPTIONS,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
+import { StandardTablePaginationFooter } from '../data/StandardTablePaginationFooter'
 import { TableControls } from '../data/TableControls'
 import { TableFilter } from '../data/TableFilter'
-import { TablePaginationFooter } from '../data/TablePaginationFooter'
 import { TenantFilterControl } from '../data/TenantFilterControl'
 import { TABLE_BATCH_TABLE_LICENSES, useTableBatchBus } from '../data/tableBatchBus'
 import {
@@ -287,17 +285,13 @@ export function LicenseManagementPanel({
         selection={selection}
         toolbar={toolbar}
         footer={
-          totalPages > 1 || onPageSizeChange ? (
-            <TablePaginationFooter
-              page={page}
-              totalPages={totalPages}
-              onPageChange={onPageChange}
-              pageSize={pageSize}
-              pageSizeOptions={UI_TABLE_PAGE_SIZE_OPTIONS}
-              onPageSizeChange={onPageSizeChange}
-              pageSizeLabel={UI_TABLE_PAGE_SIZE_LABEL}
-            />
-          ) : undefined
+          <StandardTablePaginationFooter
+            page={page}
+            totalPages={totalPages}
+            onPageChange={onPageChange}
+            pageSize={pageSize}
+            onPageSizeChange={onPageSizeChange}
+          />
         }
       />
 

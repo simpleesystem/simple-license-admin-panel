@@ -32,14 +32,12 @@ import {
   UI_PRODUCT_STATUS_ACTIVE,
   UI_PRODUCT_STATUS_SUSPENDED,
   UI_STACK_GAP_MEDIUM,
-  UI_TABLE_PAGE_SIZE_LABEL,
-  UI_TABLE_PAGE_SIZE_OPTIONS,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
+import { StandardTablePaginationFooter } from '../data/StandardTablePaginationFooter'
 import { TableControls } from '../data/TableControls'
 import { TableFilter } from '../data/TableFilter'
-import { TablePaginationFooter } from '../data/TablePaginationFooter'
 import { TenantFilterControl } from '../data/TenantFilterControl'
 import { TABLE_BATCH_TABLE_PRODUCTS, useTableBatchBus } from '../data/tableBatchBus'
 import { createStandardStatusFilterField, createStandardTableSearchField } from '../data/tableFieldFactory'
@@ -261,17 +259,13 @@ export function ProductManagementPanel({
         selection={selection}
         toolbar={toolbar}
         footer={
-          totalPages > 1 || onPageSizeChange ? (
-            <TablePaginationFooter
-              page={page}
-              totalPages={totalPages}
-              onPageChange={onPageChange}
-              pageSize={pageSize}
-              pageSizeOptions={UI_TABLE_PAGE_SIZE_OPTIONS}
-              onPageSizeChange={onPageSizeChange}
-              pageSizeLabel={UI_TABLE_PAGE_SIZE_LABEL}
-            />
-          ) : undefined
+          <StandardTablePaginationFooter
+            page={page}
+            totalPages={totalPages}
+            onPageChange={onPageChange}
+            pageSize={pageSize}
+            onPageSizeChange={onPageSizeChange}
+          />
         }
       />
 

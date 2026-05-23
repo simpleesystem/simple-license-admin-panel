@@ -14,8 +14,6 @@ import {
   UI_TABLE_FILTER_PLACEHOLDER_ALL_ROLES,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_VENDORS,
-  UI_TABLE_PAGE_SIZE_LABEL,
-  UI_TABLE_PAGE_SIZE_OPTIONS,
   UI_USER_BUTTON_CREATE,
   UI_USER_COLUMN_HEADER_ACTIONS,
   UI_USER_COLUMN_HEADER_EMAIL,
@@ -57,9 +55,9 @@ import {
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
+import { StandardTablePaginationFooter } from '../data/StandardTablePaginationFooter'
 import { TableControls } from '../data/TableControls'
 import { TableFilter } from '../data/TableFilter'
-import { TablePaginationFooter } from '../data/TablePaginationFooter'
 import { TABLE_BATCH_TABLE_USERS, useTableBatchBus } from '../data/tableBatchBus'
 import {
   createStandardStatusFilterField,
@@ -263,32 +261,28 @@ export function UserManagementPanel({
       {
         id: UI_USER_COLUMN_ID_ACTIONS,
         header: UI_USER_COLUMN_HEADER_ACTIONS,
-        cell: (row) => (
-          <Stack direction="row" gap={UI_STACK_GAP_SMALL}>
-            {(() => {
-              const allowUpdate = canUpdateUser(currentUser as unknown as User, row) && currentUser?.id !== row.id
-              const allowDelete =
-                canDeleteUser(currentUser as unknown as User, row) &&
-                currentUser?.id !== row.id &&
-                row.status !== UI_USER_STATUS_DELETED
-              const hasActions = allowUpdate || allowDelete
-              return (
-                <>
-                  <UserRowActions
-                    client={client}
-                    user={row}
-                    onEdit={(selected) => setEditingUser(selected)}
-                    onCompleted={onRefresh}
-                    allowUpdate={allowUpdate}
-                    allowDelete={allowDelete}
-                    currentUserId={currentUser?.id}
-                  />
-                  {hasActions ? null : UI_VALUE_PLACEHOLDER}
-                </>
-              )
-            })()}
-          </Stack>
-        ),
+        cell: (row) => {
+          const allowUpdate = canUpdateUser(currentUser as unknown as User, row) && currentUser?.id !== row.id
+          const allowDelete =
+            canDeleteUser(currentUser as unknown as User, row) &&
+            currentUser?.id !== row.id &&
+            row.status !== UI_USER_STATUS_DELETED
+          const hasActions = allowUpdate || allowDelete
+          return (
+            <Stack direction="row" gap={UI_STACK_GAP_SMALL}>
+              <UserRowActions
+                client={client}
+                user={row}
+                onEdit={(selected) => setEditingUser(selected)}
+                onCompleted={onRefresh}
+                allowUpdate={allowUpdate}
+                allowDelete={allowDelete}
+                currentUserId={currentUser?.id}
+              />
+              {hasActions ? null : UI_VALUE_PLACEHOLDER}
+            </Stack>
+          )
+        },
       },
     ],
     [client, currentUser, onRefresh, tenantNameById]
@@ -314,17 +308,13 @@ export function UserManagementPanel({
         selection={selection}
         toolbar={toolbar}
         footer={
-          totalPages > 1 || onPageSizeChange ? (
-            <TablePaginationFooter
-              page={page}
-              totalPages={totalPages}
-              onPageChange={onPageChange}
-              pageSize={pageSize}
-              pageSizeOptions={UI_TABLE_PAGE_SIZE_OPTIONS}
-              onPageSizeChange={onPageSizeChange}
-              pageSizeLabel={UI_TABLE_PAGE_SIZE_LABEL}
-            />
-          ) : undefined
+          <StandardTablePaginationFooter
+            page={page}
+            totalPages={totalPages}
+            onPageChange={onPageChange}
+            pageSize={pageSize}
+            onPageSizeChange={onPageSizeChange}
+          />
         }
       />
 

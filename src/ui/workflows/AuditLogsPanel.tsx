@@ -72,8 +72,8 @@ import {
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
+import { StandardTablePaginationFooter } from '../data/StandardTablePaginationFooter'
 import { TableControls } from '../data/TableControls'
-import { TablePaginationFooter } from '../data/TablePaginationFooter'
 import { RouteStatus } from '../feedback/RouteStatus'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
@@ -369,7 +369,7 @@ export function AuditLogsPanel({
   )
 
   const footer = (
-    <TablePaginationFooter
+    <StandardTablePaginationFooter
       page={currentPage}
       totalPages={totalPages}
       onPageChange={handlePageChange}

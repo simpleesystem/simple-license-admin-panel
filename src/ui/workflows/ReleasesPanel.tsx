@@ -42,15 +42,13 @@ import {
   UI_RELEASE_STATUS_LOADING_TITLE,
   UI_STACK_GAP_MEDIUM,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_PRODUCTS,
-  UI_TABLE_PAGE_SIZE_LABEL,
-  UI_TABLE_PAGE_SIZE_OPTIONS,
   UI_TENANT_FILTER_LABEL,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
+import { StandardTablePaginationFooter } from '../data/StandardTablePaginationFooter'
 import { TableControls } from '../data/TableControls'
 import { TableFilter } from '../data/TableFilter'
-import { TablePaginationFooter } from '../data/TablePaginationFooter'
 import { TableSearchInput } from '../data/TableSearchInput'
 import { TenantFilterControl } from '../data/TenantFilterControl'
 import { TABLE_BATCH_TABLE_RELEASES, useTableBatchBus } from '../data/tableBatchBus'
@@ -303,18 +301,16 @@ export function ReleasesPanel({
   ) : (
     <EmptyState title={UI_RELEASE_SELECT_PRODUCT_PLACEHOLDER} body={UI_RELEASE_SELECT_PRODUCT_BODY} />
   )
-  const footer =
-    selectedProductId && (totalPages > 1 || onPageSizeChange) ? (
-      <TablePaginationFooter
-        page={page}
-        totalPages={totalPages}
-        onPageChange={onPageChange}
-        pageSize={pageSize}
-        pageSizeOptions={UI_TABLE_PAGE_SIZE_OPTIONS}
-        onPageSizeChange={onPageSizeChange}
-        pageSizeLabel={UI_TABLE_PAGE_SIZE_LABEL}
-      />
-    ) : undefined
+  const footer = (
+    <StandardTablePaginationFooter
+      enabled={Boolean(selectedProductId)}
+      page={page}
+      totalPages={totalPages}
+      onPageChange={onPageChange}
+      pageSize={pageSize}
+      onPageSizeChange={onPageSizeChange}
+    />
+  )
 
   return (
     <Stack direction="column" gap={UI_STACK_GAP_MEDIUM}>

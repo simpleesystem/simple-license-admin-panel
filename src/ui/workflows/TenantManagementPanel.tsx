@@ -14,8 +14,6 @@ import {
   UI_BUTTON_VARIANT_PRIMARY,
   UI_STACK_GAP_MEDIUM,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
-  UI_TABLE_PAGE_SIZE_LABEL,
-  UI_TABLE_PAGE_SIZE_OPTIONS,
   UI_TENANT_BUTTON_CREATE,
   UI_TENANT_COLUMN_HEADER_ACTIONS,
   UI_TENANT_COLUMN_HEADER_CREATED,
@@ -37,9 +35,9 @@ import {
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
+import { StandardTablePaginationFooter } from '../data/StandardTablePaginationFooter'
 import { TableControls } from '../data/TableControls'
 import { TableFilter } from '../data/TableFilter'
-import { TablePaginationFooter } from '../data/TablePaginationFooter'
 import { TABLE_BATCH_TABLE_TENANTS, useTableBatchBus } from '../data/tableBatchBus'
 import { createStandardStatusFilterField, createStandardTableSearchField } from '../data/tableFieldFactory'
 import { PanelHeader } from '../layout/PanelHeader'
@@ -218,17 +216,13 @@ export function TenantManagementPanel({
         selection={selection}
         toolbar={toolbar}
         footer={
-          totalPages > 1 || onPageSizeChange ? (
-            <TablePaginationFooter
-              page={page}
-              totalPages={totalPages}
-              onPageChange={onPageChange}
-              pageSize={pageSize}
-              pageSizeOptions={UI_TABLE_PAGE_SIZE_OPTIONS}
-              onPageSizeChange={onPageSizeChange}
-              pageSizeLabel={UI_TABLE_PAGE_SIZE_LABEL}
-            />
-          ) : undefined
+          <StandardTablePaginationFooter
+            page={page}
+            totalPages={totalPages}
+            onPageChange={onPageChange}
+            pageSize={pageSize}
+            onPageSizeChange={onPageSizeChange}
+          />
         }
       />
 
