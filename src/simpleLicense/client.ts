@@ -189,6 +189,8 @@ import type {
   ServerStatusResponse,
   SystemStatsResponse,
   TopLicensesResponse,
+  UpdateAgentServiceAccountRequest,
+  UpdateAgentServiceAccountResponse,
   UpdateAlertThresholdsRequest,
   UpdateEntitlementRequest,
   UpdateEntitlementResponse,
@@ -1007,6 +1009,19 @@ export class Client {
       API_ENDPOINT_ADMIN_AGENT_SERVICE_ACCOUNTS,
       request
     )
+
+    return {
+      success: true,
+      data: this.handleApiResponse(response.data, {} as AgentServiceAccount),
+    }
+  }
+
+  async updateAgentServiceAccount(
+    serviceAccountId: string,
+    request: UpdateAgentServiceAccountRequest
+  ): Promise<UpdateAgentServiceAccountResponse> {
+    const url = `${API_ENDPOINT_ADMIN_AGENT_SERVICE_ACCOUNTS}/${encodeURIComponent(serviceAccountId)}`
+    const response = await this.httpClient.put<ApiResponse<AgentServiceAccount>>(url, request)
 
     return {
       success: true,

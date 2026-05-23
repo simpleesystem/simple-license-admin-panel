@@ -30,7 +30,12 @@ export function TableControls({ search, filters, batch, refresh, actions }: Tabl
     refresh || actions ? (
       <>
         {refresh ? (
-          <Button variant={UI_BUTTON_VARIANT_SECONDARY} onClick={refresh.onClick} disabled={refresh.disabled}>
+          <Button
+            type="button"
+            variant={UI_BUTTON_VARIANT_SECONDARY}
+            onClick={refresh.onClick}
+            disabled={refresh.disabled}
+          >
             {refresh.label ?? UI_TABLE_REFRESH_LABEL}
           </Button>
         ) : null}

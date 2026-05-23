@@ -370,6 +370,17 @@ export interface CreateAgentServiceAccountResponse {
   data: AgentServiceAccount
 }
 
+export interface UpdateAgentServiceAccountRequest {
+  name?: string
+  description?: string | null
+  status?: 'ACTIVE' | 'DISABLED'
+}
+
+export interface UpdateAgentServiceAccountResponse {
+  success: boolean
+  data: AgentServiceAccount
+}
+
 export interface IssueAgentServiceCredentialRequest {
   credentialName: string
   scopes?: string[]

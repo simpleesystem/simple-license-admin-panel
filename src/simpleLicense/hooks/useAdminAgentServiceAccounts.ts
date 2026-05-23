@@ -7,6 +7,8 @@ import type {
   IssueAgentServiceCredentialRequest,
   IssueAgentServiceCredentialResponse,
   RevokeAgentServiceCredentialResponse,
+  UpdateAgentServiceAccountRequest,
+  UpdateAgentServiceAccountResponse,
 } from '../types/api'
 import { QUERY_KEYS } from './queryKeys'
 
@@ -25,6 +27,23 @@ export function useCreateAgentServiceAccount(client: Client) {
   return useMutation<CreateAgentServiceAccountResponse, Error, CreateAgentServiceAccountRequest>({
     mutationFn: async (request) => {
       return await client.createAgentServiceAccount(request)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminAgentServiceAccounts.all() })
+    },
+  })
+}
+
+export function useUpdateAgentServiceAccount(client: Client) {
+  const queryClient = useQueryClient()
+
+  return useMutation<
+    UpdateAgentServiceAccountResponse,
+    Error,
+    { serviceAccountId: string; request: UpdateAgentServiceAccountRequest }
+  >({
+    mutationFn: async ({ serviceAccountId, request }) => {
+      return await client.updateAgentServiceAccount(serviceAccountId, request)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminAgentServiceAccounts.all() })

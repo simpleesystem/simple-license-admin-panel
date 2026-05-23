@@ -331,6 +331,7 @@ export function UserManagementPanel({
       <AgentServiceAccountsPanel
         client={client}
         currentUserVendorId={currentUser?.vendorId ?? null}
+        currentUserRole={currentUser?.role ?? null}
         tenantNameById={tenantNameById}
       />
 

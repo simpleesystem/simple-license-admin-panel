@@ -9,10 +9,12 @@ import {
   useAdminAgentServiceAccounts,
   useIssueAgentServiceCredential,
   useRevokeAgentServiceCredential,
+  useUpdateAgentServiceAccount,
 } from '@/simpleLicense'
 import {
   UI_ACTION_CANCEL,
   UI_ACTION_CLOSE,
+  UI_AGENT_SERVICE_ACCOUNT_ACTION_EDIT,
   UI_AGENT_SERVICE_ACCOUNT_ACTION_ISSUE_CREDENTIAL,
   UI_AGENT_SERVICE_ACCOUNT_ACTION_VIEW_CREDENTIALS,
   UI_AGENT_SERVICE_ACCOUNT_COLUMN_ACTIONS,
@@ -50,19 +52,30 @@ import {
   UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SORT_VALUE_OLDEST,
   UI_AGENT_SERVICE_ACCOUNT_EMPTY_STATE,
   UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_CREDENTIAL_NAME,
+  UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_DESCRIPTION,
   UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_EXPIRES_AT,
+  UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_NAME,
   UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_SCOPES,
+  UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_STATUS,
   UI_AGENT_SERVICE_ACCOUNT_MODAL_CREDENTIAL_HISTORY_TITLE,
+  UI_AGENT_SERVICE_ACCOUNT_MODAL_EDIT_TITLE,
   UI_AGENT_SERVICE_ACCOUNT_MODAL_ISSUE_CREDENTIAL_TITLE,
   UI_AGENT_SERVICE_ACCOUNT_PANEL_DESCRIPTION,
   UI_AGENT_SERVICE_ACCOUNT_PANEL_TITLE,
   UI_AGENT_SERVICE_ACCOUNT_SCOPE_MODE_SYSTEM,
+  UI_AGENT_SERVICE_ACCOUNT_STATUS_ACTIVE,
+  UI_AGENT_SERVICE_ACCOUNT_STATUS_DISABLED,
+  UI_AGENT_SERVICE_ACCOUNT_STATUS_LABEL_ACTIVE,
+  UI_AGENT_SERVICE_ACCOUNT_STATUS_LABEL_DISABLED,
   UI_AGENT_SERVICE_ACCOUNT_SUBMIT_ISSUE,
   UI_AGENT_SERVICE_ACCOUNT_SUBMIT_REVOKE,
+  UI_AGENT_SERVICE_ACCOUNT_SUBMIT_UPDATE,
   UI_AGENT_SERVICE_ACCOUNT_TOAST_ISSUE_ERROR,
   UI_AGENT_SERVICE_ACCOUNT_TOAST_ISSUE_SUCCESS,
   UI_AGENT_SERVICE_ACCOUNT_TOAST_REVOKE_ERROR,
   UI_AGENT_SERVICE_ACCOUNT_TOAST_REVOKE_SUCCESS,
+  UI_AGENT_SERVICE_ACCOUNT_TOAST_UPDATE_ERROR,
+  UI_AGENT_SERVICE_ACCOUNT_TOAST_UPDATE_SUCCESS,
   UI_BUTTON_VARIANT_PRIMARY,
   UI_BUTTON_VARIANT_SECONDARY,
   UI_STACK_GAP_MEDIUM,
@@ -80,6 +93,7 @@ import { formatDateSafe } from '../utils/formatUtils'
 type AgentServiceAccountsPanelProps = {
   client: Client
   currentUserVendorId?: string | null
+  currentUserRole?: string | null
   tenantNameById: Record<string, string>
 }
 
@@ -91,6 +105,7 @@ type CredentialResult = {
 export function AgentServiceAccountsPanel({
   client,
   currentUserVendorId,
+  currentUserRole,
   tenantNameById,
 }: AgentServiceAccountsPanelProps) {
   const queryClient = useContext(QueryClientContext)
@@ -101,6 +116,7 @@ export function AgentServiceAccountsPanel({
     <AgentServiceAccountsPanelWithQuery
       client={client}
       currentUserVendorId={currentUserVendorId}
+      currentUserRole={currentUserRole}
       tenantNameById={tenantNameById}
     />
   )
@@ -109,10 +125,15 @@ export function AgentServiceAccountsPanel({
 function AgentServiceAccountsPanelWithQuery({
   client,
   currentUserVendorId,
+  currentUserRole,
   tenantNameById,
 }: AgentServiceAccountsPanelProps) {
   const [selectedAccount, setSelectedAccount] = useState<AgentServiceAccount | null>(null)
   const [historyAccount, setHistoryAccount] = useState<AgentServiceAccount | null>(null)
+  const [editingAccount, setEditingAccount] = useState<AgentServiceAccount | null>(null)
+  const [editingName, setEditingName] = useState('')
+  const [editingDescription, setEditingDescription] = useState('')
+  const [editingStatus, setEditingStatus] = useState<'ACTIVE' | 'DISABLED'>(UI_AGENT_SERVICE_ACCOUNT_STATUS_ACTIVE)
   const [credentialName, setCredentialName] = useState('')
   const [scopesInput, setScopesInput] = useState('')
   const [expiresAt, setExpiresAt] = useState('')
@@ -125,9 +146,12 @@ function AgentServiceAccountsPanelWithQuery({
     UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SORT_VALUE_NEWEST
   )
   const notificationBus = useNotificationBus()
-  const listQuery = useAdminAgentServiceAccounts(client, currentUserVendorId ?? null)
+  const canManageSystemAccounts = currentUserRole === 'SUPERUSER' || currentUserRole === 'ADMIN'
+  const effectiveVendorFilter = canManageSystemAccounts ? null : (currentUserVendorId ?? null)
+  const listQuery = useAdminAgentServiceAccounts(client, effectiveVendorFilter)
   const issueMutation = useIssueAgentServiceCredential(client)
   const revokeMutation = useRevokeAgentServiceCredential(client)
+  const updateMutation = useUpdateAgentServiceAccount(client)
 
   const rows = useMemo<AgentServiceAccount[]>(() => listQuery.data ?? [], [listQuery.data])
   const issueButtonDisabled = issueMutation.isPending || credentialName.trim().length === 0
@@ -169,6 +193,21 @@ function AgentServiceAccountsPanelWithQuery({
         header: UI_AGENT_SERVICE_ACCOUNT_COLUMN_ACTIONS,
         cell: (row) => (
           <Stack direction="row" gap={UI_STACK_GAP_MEDIUM}>
+            <Button
+              variant={UI_BUTTON_VARIANT_SECONDARY}
+              onClick={() => {
+                setEditingAccount(row)
+                setEditingName(row.name)
+                setEditingDescription(row.description ?? '')
+                setEditingStatus(
+                  row.status === UI_AGENT_SERVICE_ACCOUNT_STATUS_DISABLED
+                    ? UI_AGENT_SERVICE_ACCOUNT_STATUS_DISABLED
+                    : UI_AGENT_SERVICE_ACCOUNT_STATUS_ACTIVE
+                )
+              }}
+            >
+              {UI_AGENT_SERVICE_ACCOUNT_ACTION_EDIT}
+            </Button>
             <Button
               variant={UI_BUTTON_VARIANT_SECONDARY}
               onClick={() => {
@@ -364,6 +403,41 @@ function AgentServiceAccountsPanelWithQuery({
     }
   }
 
+  const canSubmitEdit = editingAccount !== null && editingName.trim().length > 0 && !updateMutation.isPending
+
+  const handleUpdateAccount = async () => {
+    if (!editingAccount || !canSubmitEdit) {
+      return
+    }
+
+    const nextName = editingName.trim()
+    const nextDescription = editingDescription.trim()
+
+    try {
+      await updateMutation.mutateAsync({
+        serviceAccountId: editingAccount.id,
+        request: {
+          name: nextName,
+          description: nextDescription.length > 0 ? nextDescription : null,
+          status: editingStatus,
+        },
+      })
+      notificationBus.emit(DEFAULT_NOTIFICATION_EVENT, {
+        titleKey: UI_AGENT_SERVICE_ACCOUNT_TOAST_UPDATE_SUCCESS,
+        variant: NOTIFICATION_VARIANT_SUCCESS,
+      })
+      setEditingAccount(null)
+      setEditingName('')
+      setEditingDescription('')
+      setEditingStatus(UI_AGENT_SERVICE_ACCOUNT_STATUS_ACTIVE)
+    } catch {
+      notificationBus.emit(DEFAULT_NOTIFICATION_EVENT, {
+        titleKey: UI_AGENT_SERVICE_ACCOUNT_TOAST_UPDATE_ERROR,
+        variant: NOTIFICATION_VARIANT_ERROR,
+      })
+    }
+  }
+
   return (
     <Stack direction="column" gap={UI_STACK_GAP_MEDIUM}>
       <PanelHeader
@@ -376,6 +450,72 @@ function AgentServiceAccountsPanelWithQuery({
         rowKey={(row) => row.id}
         emptyState={UI_AGENT_SERVICE_ACCOUNT_EMPTY_STATE}
         isLoading={listQuery.isLoading}
+      />
+      <ModalDialog
+        show={Boolean(editingAccount)}
+        onClose={() => {
+          setEditingAccount(null)
+          setEditingName('')
+          setEditingDescription('')
+          setEditingStatus(UI_AGENT_SERVICE_ACCOUNT_STATUS_ACTIVE)
+        }}
+        title={UI_AGENT_SERVICE_ACCOUNT_MODAL_EDIT_TITLE}
+        body={
+          <Stack direction="column" gap={UI_STACK_GAP_MEDIUM}>
+            <Form.Group>
+              <Form.Label>{UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_NAME}</Form.Label>
+              <Form.Control value={editingName} onChange={(event) => setEditingName(event.target.value)} />
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>{UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_DESCRIPTION}</Form.Label>
+              <Form.Control
+                value={editingDescription}
+                onChange={(event) => setEditingDescription(event.target.value)}
+              />
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>{UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_STATUS}</Form.Label>
+              <Form.Select
+                value={editingStatus}
+                onChange={(event) =>
+                  setEditingStatus(
+                    event.target.value === UI_AGENT_SERVICE_ACCOUNT_STATUS_DISABLED
+                      ? UI_AGENT_SERVICE_ACCOUNT_STATUS_DISABLED
+                      : UI_AGENT_SERVICE_ACCOUNT_STATUS_ACTIVE
+                  )
+                }
+              >
+                <option value={UI_AGENT_SERVICE_ACCOUNT_STATUS_ACTIVE}>
+                  {UI_AGENT_SERVICE_ACCOUNT_STATUS_LABEL_ACTIVE}
+                </option>
+                <option value={UI_AGENT_SERVICE_ACCOUNT_STATUS_DISABLED}>
+                  {UI_AGENT_SERVICE_ACCOUNT_STATUS_LABEL_DISABLED}
+                </option>
+              </Form.Select>
+            </Form.Group>
+          </Stack>
+        }
+        secondaryAction={{
+          id: 'agent-account-edit-cancel',
+          label: UI_ACTION_CANCEL,
+          onClick: () => {
+            setEditingAccount(null)
+            setEditingName('')
+            setEditingDescription('')
+            setEditingStatus(UI_AGENT_SERVICE_ACCOUNT_STATUS_ACTIVE)
+          },
+          variant: UI_BUTTON_VARIANT_SECONDARY,
+          disabled: updateMutation.isPending,
+        }}
+        primaryAction={{
+          id: 'agent-account-edit-save',
+          label: UI_AGENT_SERVICE_ACCOUNT_SUBMIT_UPDATE,
+          onClick: () => {
+            void handleUpdateAccount()
+          },
+          variant: UI_BUTTON_VARIANT_PRIMARY,
+          disabled: !canSubmitEdit,
+        }}
       />
       <ModalDialog
         show={Boolean(selectedAccount)}

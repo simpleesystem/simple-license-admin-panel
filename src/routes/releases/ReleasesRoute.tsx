@@ -148,21 +148,24 @@ export function ReleasesRouteComponent() {
     releasesTable.goToPage
   )
 
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
+    if (!selectedProductId) {
+      return
+    }
     void refetchReleases()
-  }
+  }, [refetchReleases, selectedProductId])
 
   useEffect(() => {
     if (!selectedProductId) {
       return
     }
     const intervalId = window.setInterval(() => {
-      void refetchReleases()
+      handleRefresh()
     }, UI_RELEASE_AUTO_REFRESH_INTERVAL_MS)
     return () => {
       window.clearInterval(intervalId)
     }
-  }, [refetchReleases, selectedProductId])
+  }, [handleRefresh, selectedProductId])
 
   const handleProductChange = (productId: string) => {
     setFilterAndReset('productId', productId)
