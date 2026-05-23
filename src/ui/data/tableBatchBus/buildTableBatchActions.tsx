@@ -1,19 +1,5 @@
 import type { AgentServiceCredential, Client, ProtectionBuildTokenMetadata, User } from '@/simpleLicense'
 import {
-  useBatchDeleteEntitlements,
-  useBatchDeleteProducts,
-  useBatchDeleteProductTiers,
-  useBatchDeleteReleases,
-  useBatchDeleteUsers,
-  useBatchResumeProducts,
-  useBatchResumeTenants,
-  useBatchRevokeAgentServiceCredentials,
-  useBatchRevokeProtectionBuildTokens,
-  useBatchSoftDeleteLicenses,
-  useBatchSuspendProducts,
-  useBatchSuspendTenants,
-} from '@/simpleLicense'
-import {
   canBatchSoftDeleteLicenses,
   canDeleteEntitlement,
   canDeleteLicense,
@@ -24,7 +10,6 @@ import {
 } from '../../../app/auth/permissions'
 import { isSystemAdminUser } from '../../../app/auth/userUtils'
 import { useNotificationBus } from '../../../notifications/useNotificationBus'
-import { adaptMutation } from '../../actions/mutationAdapter'
 import {
   UI_AGENT_CREDENTIAL_BATCH_CONFIRM_BODY,
   UI_AGENT_CREDENTIAL_BATCH_CONFIRM_BUTTON,
@@ -137,19 +122,6 @@ export function useBuildTableBatchActions<TData, TTableId extends TableBatchTabl
       ? ((context as { productId?: string }).productId ?? '')
       : ''
 
-  const softDeleteLicensesMutation = adaptMutation(useBatchSoftDeleteLicenses(sharedClient))
-  const deleteReleasesMutation = adaptMutation(useBatchDeleteReleases(sharedClient, productId))
-  const deleteProductsMutation = adaptMutation(useBatchDeleteProducts(sharedClient))
-  const suspendProductsMutation = adaptMutation(useBatchSuspendProducts(sharedClient))
-  const resumeProductsMutation = adaptMutation(useBatchResumeProducts(sharedClient))
-  const deleteUsersMutation = adaptMutation(useBatchDeleteUsers(sharedClient))
-  const suspendTenantsMutation = adaptMutation(useBatchSuspendTenants(sharedClient))
-  const resumeTenantsMutation = adaptMutation(useBatchResumeTenants(sharedClient))
-  const deleteProductTiersMutation = adaptMutation(useBatchDeleteProductTiers(sharedClient, productId))
-  const deleteEntitlementsMutation = adaptMutation(useBatchDeleteEntitlements(sharedClient, productId))
-  const revokeAgentCredentialsMutation = adaptMutation(useBatchRevokeAgentServiceCredentials(sharedClient))
-  const revokeBuildTokensMutation = adaptMutation(useBatchRevokeProtectionBuildTokens(sharedClient, productId))
-
   if (tableId === TABLE_BATCH_TABLE_LICENSES) {
     const licenseContext = context as TableBatchBusContextMap[typeof TABLE_BATCH_TABLE_LICENSES]
     if (!canBatchSoftDeleteLicenses(licenseContext.currentUser ?? null)) {
@@ -167,7 +139,7 @@ export function useBuildTableBatchActions<TData, TTableId extends TableBatchTabl
         cancelLabel: UI_LICENSE_CONFIRM_DELETE_CANCEL,
         onExecute: async (rows) => {
           const licenses = rows as readonly LicenseListItem[]
-          const result = await softDeleteLicensesMutation.mutateAsync({
+          const result = await sharedClient.batchSoftDeleteLicenses({
             licenseKeys: licenses.map((row) => row.licenseKey),
           })
           notifyBatchOperationResult(
@@ -196,7 +168,9 @@ export function useBuildTableBatchActions<TData, TTableId extends TableBatchTabl
         cancelLabel: UI_RELEASE_MODAL_CANCEL,
         onExecute: async (rows) => {
           const releases = rows as readonly ReleaseListItem[]
-          const result = await deleteReleasesMutation.mutateAsync({ releaseIds: releases.map((row) => row.id) })
+          const result = await sharedClient.batchDeleteReleases(productId, {
+            releaseIds: releases.map((row) => row.id),
+          })
           notifyBatchOperationResult(notificationBus, result, UI_RELEASE_BATCH_TOAST_SUCCESS)
           releaseContext.onRefresh?.()
         },
@@ -218,7 +192,7 @@ export function useBuildTableBatchActions<TData, TTableId extends TableBatchTabl
         confirmLabel: UI_PRODUCT_BATCH_CONFIRM_DELETE_BUTTON,
         cancelLabel: UI_PRODUCT_CONFIRM_DELETE_CANCEL,
         onExecute: async (rows) => {
-          const result = await deleteProductsMutation.mutateAsync({ productIds: rows.map((row) => row.id) })
+          const result = await sharedClient.batchDeleteProducts({ productIds: rows.map((row) => row.id) })
           notifyBatchOperationResult(
             notificationBus,
             result,
@@ -241,7 +215,7 @@ export function useBuildTableBatchActions<TData, TTableId extends TableBatchTabl
           confirmLabel: UI_PRODUCT_BATCH_CONFIRM_SUSPEND_BUTTON,
           cancelLabel: UI_PRODUCT_CONFIRM_DELETE_CANCEL,
           onExecute: async (rows) => {
-            const result = await suspendProductsMutation.mutateAsync({ productIds: rows.map((row) => row.id) })
+            const result = await sharedClient.batchSuspendProducts({ productIds: rows.map((row) => row.id) })
             notifyBatchOperationResult(
               notificationBus,
               result,
@@ -261,7 +235,7 @@ export function useBuildTableBatchActions<TData, TTableId extends TableBatchTabl
           confirmLabel: UI_PRODUCT_BATCH_CONFIRM_RESUME_BUTTON,
           cancelLabel: UI_PRODUCT_CONFIRM_DELETE_CANCEL,
           onExecute: async (rows) => {
-            const result = await resumeProductsMutation.mutateAsync({ productIds: rows.map((row) => row.id) })
+            const result = await sharedClient.batchResumeProducts({ productIds: rows.map((row) => row.id) })
             notifyBatchOperationResult(
               notificationBus,
               result,
@@ -293,7 +267,7 @@ export function useBuildTableBatchActions<TData, TTableId extends TableBatchTabl
         cancelLabel: UI_USER_CONFIRM_DELETE_CANCEL,
         onExecute: async (rows) => {
           const users = rows as readonly UserListItem[]
-          const result = await deleteUsersMutation.mutateAsync({ userIds: users.map((row) => row.id) })
+          const result = await sharedClient.batchDeleteUsers({ userIds: users.map((row) => row.id) })
           notifyBatchOperationResult(
             notificationBus,
             result,
@@ -320,7 +294,7 @@ export function useBuildTableBatchActions<TData, TTableId extends TableBatchTabl
         cancelLabel: UI_PRODUCT_CONFIRM_DELETE_CANCEL,
         onExecute: async (rows) => {
           const tenants = rows as readonly TenantListItem[]
-          const result = await suspendTenantsMutation.mutateAsync({ tenantIds: tenants.map((row) => row.id) })
+          const result = await sharedClient.batchSuspendTenants({ tenantIds: tenants.map((row) => row.id) })
           notifyBatchOperationResult(
             notificationBus,
             result,
@@ -341,7 +315,7 @@ export function useBuildTableBatchActions<TData, TTableId extends TableBatchTabl
         cancelLabel: UI_PRODUCT_CONFIRM_DELETE_CANCEL,
         onExecute: async (rows) => {
           const tenants = rows as readonly TenantListItem[]
-          const result = await resumeTenantsMutation.mutateAsync({ tenantIds: tenants.map((row) => row.id) })
+          const result = await sharedClient.batchResumeTenants({ tenantIds: tenants.map((row) => row.id) })
           notifyBatchOperationResult(
             notificationBus,
             result,
@@ -371,7 +345,9 @@ export function useBuildTableBatchActions<TData, TTableId extends TableBatchTabl
         cancelLabel: UI_PRODUCT_CONFIRM_DELETE_CANCEL,
         onExecute: async (rows) => {
           const tiers = rows as readonly ProductTierListItem[]
-          const result = await deleteProductTiersMutation.mutateAsync({ tierIds: tiers.map((row) => row.id) })
+          const result = await sharedClient.batchDeleteProductTiers(productId, {
+            tierIds: tiers.map((row) => row.id),
+          })
           notifyBatchOperationResult(
             notificationBus,
             result,
@@ -401,7 +377,7 @@ export function useBuildTableBatchActions<TData, TTableId extends TableBatchTabl
         cancelLabel: UI_PRODUCT_CONFIRM_DELETE_CANCEL,
         onExecute: async (rows) => {
           const entitlements = rows as readonly ProductEntitlementListItem[]
-          const result = await deleteEntitlementsMutation.mutateAsync({
+          const result = await sharedClient.batchDeleteEntitlements(productId, {
             entitlementIds: entitlements.map((row) => row.id),
           })
           notifyBatchOperationResult(
@@ -430,7 +406,7 @@ export function useBuildTableBatchActions<TData, TTableId extends TableBatchTabl
         cancelLabel: UI_PRODUCT_CONFIRM_DELETE_CANCEL,
         onExecute: async (rows) => {
           const credentials = rows as readonly AgentServiceCredential[]
-          const result = await revokeAgentCredentialsMutation.mutateAsync({
+          const result = await sharedClient.batchRevokeAgentServiceCredentials({
             credentialIds: credentials.map((row) => row.id),
           })
           notifyBatchOperationResult(
@@ -459,7 +435,9 @@ export function useBuildTableBatchActions<TData, TTableId extends TableBatchTabl
         cancelLabel: UI_PRODUCT_CONFIRM_DELETE_CANCEL,
         onExecute: async (rows) => {
           const tokens = rows as readonly ProtectionBuildTokenMetadata[]
-          const result = await revokeBuildTokensMutation.mutateAsync({ tokenIds: tokens.map((row) => row.id) })
+          const result = await sharedClient.batchRevokeProtectionBuildTokens(productId, {
+            tokenIds: tokens.map((row) => row.id),
+          })
           notifyBatchOperationResult(
             notificationBus,
             result,
