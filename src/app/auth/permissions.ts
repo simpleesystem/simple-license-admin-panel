@@ -193,15 +193,28 @@ export const canDeleteLicense = (user: User | null, license?: License): boolean 
   if (!user) {
     return false
   }
+  const perms = derivePermissionsFromUser(user)
+  if (!perms.manageLicenses) {
+    return false
+  }
   if (isSystemAdminUser(user)) {
     return true
   }
   if (license && isVendorScopedUser(user)) {
-    // Assuming license doesn't have direct vendorId but product does, or we check customer?
-    // Using simple ownership check for now
-    return false // Only admins delete licenses for now unless we look up product ownership
+    return isLicenseOwnedByUser(user, license)
   }
   return false
+}
+
+export const canBatchSoftDeleteLicenses = (user: User | null): boolean => {
+  if (!user) {
+    return false
+  }
+  const perms = derivePermissionsFromUser(user)
+  if (!perms.manageLicenses) {
+    return false
+  }
+  return isSystemAdminUser(user) || isVendorScopedUser(user)
 }
 
 export const canUpdateLicense = (user: User | null): boolean => {

@@ -8,13 +8,15 @@ vi.mock('@/ui/navigation/TopNavBar', () => ({
     navigation,
     actions,
     testId,
+    className,
   }: {
     brand?: React.ReactNode
     navigation?: React.ReactNode
     actions?: React.ReactNode
     testId?: string
+    className?: string
   }) => (
-    <div data-testid={testId ?? 'top-nav'}>
+    <div data-testid={testId ?? 'top-nav'} className={className}>
       <div data-testid="top-nav-brand">{brand}</div>
       <div data-testid="top-nav-navigation">{navigation}</div>
       <div data-testid="top-nav-actions">{actions}</div>
@@ -31,9 +33,13 @@ import * as UseAuthorization from '@/app/auth/useAuthorization'
 import { APP_BRAND_NAME, AUTH_STATUS_IDLE, ROUTE_PATH_DASHBOARD } from '@/app/constants'
 import { PersistentHeader } from '@/app/layout/PersistentHeader'
 import {
+  UI_CLASS_HEADER_ACTIONS_BREAK_GLASS,
+  UI_CLASS_TOP_NAV_BREAK_GLASS,
   UI_HEADER_ACTION_CHANGE_PASSWORD,
   UI_HEADER_ACTION_SIGN_OUT,
   UI_HEADER_MODAL_TITLE_CHANGE_PASSWORD,
+  UI_HEADER_USER_CONTEXT_BREAK_GLASS_SUPERUSER,
+  UI_HEADER_USER_CONTEXT_PREFIX,
   UI_TEST_ID_MODAL_DIALOG,
 } from '@/ui/constants'
 import { UI_NAV_LABEL_HEALTH, UI_NAV_LABEL_TENANTS, UI_NAV_LABEL_USERS } from '@/ui/navigation/navConstants'
@@ -122,6 +128,23 @@ describe('PersistentHeader', () => {
       permissions: buildPermissions({ viewDashboard: true }),
     })
     expect(screen.getByRole('link', { name: UI_NAV_LABEL_HEALTH })).toBeInTheDocument()
+  })
+
+  test('applies break-glass session styling for superuser role', () => {
+    renderHeader({
+      user: buildUser({ role: 'SUPERUSER' }),
+    })
+    expect(screen.getByText(UI_HEADER_USER_CONTEXT_BREAK_GLASS_SUPERUSER)).toBeInTheDocument()
+    expect(screen.getByTestId('ui-header')).toHaveClass(UI_CLASS_TOP_NAV_BREAK_GLASS)
+    expect(screen.getByTestId('ui-header-actions')).toHaveClass(UI_CLASS_HEADER_ACTIONS_BREAK_GLASS)
+  })
+
+  test('uses standard user context label for non-superuser roles', () => {
+    renderHeader({
+      user: buildUser({ role: 'ADMIN' }),
+    })
+    expect(screen.getByText(new RegExp(`${UI_HEADER_USER_CONTEXT_PREFIX}\\s+Admin`))).toBeInTheDocument()
+    expect(screen.queryByText(UI_HEADER_USER_CONTEXT_BREAK_GLASS_SUPERUSER)).not.toBeInTheDocument()
   })
 
   test('sign out action invokes logout', () => {

@@ -5,6 +5,7 @@
 import axios from 'axios'
 import {
   API_ENDPOINT_ADMIN_AGENT_CREDENTIAL_REVOKE_SUFFIX,
+  API_ENDPOINT_ADMIN_AGENT_CREDENTIALS_BATCH_REVOKE_SUFFIX,
   API_ENDPOINT_ADMIN_AGENT_CREDENTIALS_SUFFIX,
   API_ENDPOINT_ADMIN_AGENT_SERVICE_ACCOUNTS,
   API_ENDPOINT_ADMIN_ANALYTICS_DISTRIBUTION,
@@ -16,12 +17,14 @@ import {
   API_ENDPOINT_ADMIN_AUDIT_LOGS,
   API_ENDPOINT_ADMIN_AUDIT_VERIFY,
   API_ENDPOINT_ADMIN_DASHBOARD_SNAPSHOT,
+  API_ENDPOINT_ADMIN_ENTITLEMENTS_BATCH_DELETE_SUFFIX,
   API_ENDPOINT_ADMIN_ENTITLEMENTS_DELETE,
   API_ENDPOINT_ADMIN_ENTITLEMENTS_GET,
   API_ENDPOINT_ADMIN_ENTITLEMENTS_UPDATE,
   API_ENDPOINT_ADMIN_HEALTH,
   API_ENDPOINT_ADMIN_HEALTH_SNAPSHOT,
   API_ENDPOINT_ADMIN_LICENSES_ACTIVATIONS,
+  API_ENDPOINT_ADMIN_LICENSES_BATCH_SOFT_DELETE,
   API_ENDPOINT_ADMIN_LICENSES_CREATE,
   API_ENDPOINT_ADMIN_LICENSES_FREEZE,
   API_ENDPOINT_ADMIN_LICENSES_GET,
@@ -32,9 +35,13 @@ import {
   API_ENDPOINT_ADMIN_LICENSES_SUSPEND,
   API_ENDPOINT_ADMIN_LICENSES_UPDATE,
   API_ENDPOINT_ADMIN_METRICS,
+  API_ENDPOINT_ADMIN_PRODUCT_TIERS_BATCH_DELETE_SUFFIX,
   API_ENDPOINT_ADMIN_PRODUCT_TIERS_DELETE,
   API_ENDPOINT_ADMIN_PRODUCT_TIERS_GET,
   API_ENDPOINT_ADMIN_PRODUCT_TIERS_UPDATE,
+  API_ENDPOINT_ADMIN_PRODUCTS_BATCH_DELETE,
+  API_ENDPOINT_ADMIN_PRODUCTS_BATCH_RESUME,
+  API_ENDPOINT_ADMIN_PRODUCTS_BATCH_SUSPEND,
   API_ENDPOINT_ADMIN_PRODUCTS_CREATE,
   API_ENDPOINT_ADMIN_PRODUCTS_DELETE,
   API_ENDPOINT_ADMIN_PRODUCTS_GET,
@@ -42,9 +49,13 @@ import {
   API_ENDPOINT_ADMIN_PRODUCTS_RESUME,
   API_ENDPOINT_ADMIN_PRODUCTS_SUSPEND,
   API_ENDPOINT_ADMIN_PRODUCTS_UPDATE,
+  API_ENDPOINT_ADMIN_PROTECTION_BUILD_TOKENS_BATCH_REVOKE_SUFFIX,
+  API_ENDPOINT_ADMIN_RELEASES_BATCH_DELETE_SUFFIX,
   API_ENDPOINT_ADMIN_STATS,
   API_ENDPOINT_ADMIN_STATUS,
   API_ENDPOINT_ADMIN_TENANTS_BACKUP_PATH,
+  API_ENDPOINT_ADMIN_TENANTS_BATCH_RESUME,
+  API_ENDPOINT_ADMIN_TENANTS_BATCH_SUSPEND,
   API_ENDPOINT_ADMIN_TENANTS_CREATE,
   API_ENDPOINT_ADMIN_TENANTS_LIST,
   API_ENDPOINT_ADMIN_TENANTS_QUOTA_CONFIG_PATH,
@@ -53,6 +64,7 @@ import {
   API_ENDPOINT_ADMIN_TENANTS_RESUME,
   API_ENDPOINT_ADMIN_TENANTS_SUSPEND,
   API_ENDPOINT_ADMIN_TENANTS_UPDATE,
+  API_ENDPOINT_ADMIN_USERS_BATCH_DELETE,
   API_ENDPOINT_ADMIN_USERS_CREATE,
   API_ENDPOINT_ADMIN_USERS_DELETE,
   API_ENDPOINT_ADMIN_USERS_GET,
@@ -99,6 +111,17 @@ import type {
   AuditLogFilters,
   AuditVerificationParams,
   AuditVerificationResponse,
+  BatchDeleteEntitlementsRequest,
+  BatchDeleteProductsRequest,
+  BatchDeleteProductTiersRequest,
+  BatchDeleteReleasesRequest,
+  BatchDeleteUsersRequest,
+  BatchOperationResponse,
+  BatchOperationResultData,
+  BatchRevokeAgentCredentialsRequest,
+  BatchRevokeProtectionBuildTokensRequest,
+  BatchSoftDeleteLicensesRequest,
+  BatchSuspendTenantsRequest,
   ChangePasswordRequest,
   ChangePasswordResponse,
   CheckUpdateRequest,
@@ -542,6 +565,86 @@ export class Client {
     return this.handleApiResponse<ActionSuccessResponse>(response.data, { success: true })
   }
 
+  async batchSoftDeleteLicenses(request: BatchSoftDeleteLicensesRequest): Promise<BatchOperationResponse> {
+    const response = await this.httpClient.post<ApiResponse<BatchOperationResultData>>(
+      API_ENDPOINT_ADMIN_LICENSES_BATCH_SOFT_DELETE,
+      request
+    )
+    const data = this.handleApiResponse<BatchOperationResultData>(response.data, {
+      deletedCount: 0,
+      deleted: [],
+      skipped: [],
+      failed: [],
+      maxBatchSize: 0,
+    })
+    return { success: true, data }
+  }
+
+  async batchDeleteReleases(productId: string, request: BatchDeleteReleasesRequest): Promise<BatchOperationResponse> {
+    const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}${API_ENDPOINT_ADMIN_RELEASES_BATCH_DELETE_SUFFIX}`
+    const response = await this.httpClient.post<ApiResponse<BatchOperationResultData>>(url, request)
+    const data = this.handleApiResponse<BatchOperationResultData>(response.data, {
+      deletedCount: 0,
+      deleted: [],
+      skipped: [],
+      failed: [],
+      maxBatchSize: 0,
+    })
+    return { success: true, data }
+  }
+
+  private async postBatchOperation(url: string, body: object): Promise<BatchOperationResponse> {
+    const response = await this.httpClient.post<ApiResponse<BatchOperationResultData>>(url, body)
+    const data = this.handleApiResponse<BatchOperationResultData>(response.data, {
+      deletedCount: 0,
+      deleted: [],
+      skipped: [],
+      failed: [],
+      maxBatchSize: 0,
+    })
+    return { success: true, data }
+  }
+
+  async batchDeleteProducts(request: BatchDeleteProductsRequest): Promise<BatchOperationResponse> {
+    return this.postBatchOperation(API_ENDPOINT_ADMIN_PRODUCTS_BATCH_DELETE, request)
+  }
+
+  async batchSuspendProducts(request: BatchDeleteProductsRequest): Promise<BatchOperationResponse> {
+    return this.postBatchOperation(API_ENDPOINT_ADMIN_PRODUCTS_BATCH_SUSPEND, request)
+  }
+
+  async batchResumeProducts(request: BatchDeleteProductsRequest): Promise<BatchOperationResponse> {
+    return this.postBatchOperation(API_ENDPOINT_ADMIN_PRODUCTS_BATCH_RESUME, request)
+  }
+
+  async batchDeleteUsers(request: BatchDeleteUsersRequest): Promise<BatchOperationResponse> {
+    return this.postBatchOperation(API_ENDPOINT_ADMIN_USERS_BATCH_DELETE, request)
+  }
+
+  async batchSuspendTenants(request: BatchSuspendTenantsRequest): Promise<BatchOperationResponse> {
+    return this.postBatchOperation(API_ENDPOINT_ADMIN_TENANTS_BATCH_SUSPEND, request)
+  }
+
+  async batchResumeTenants(request: BatchSuspendTenantsRequest): Promise<BatchOperationResponse> {
+    return this.postBatchOperation(API_ENDPOINT_ADMIN_TENANTS_BATCH_RESUME, request)
+  }
+
+  async batchDeleteProductTiers(
+    productId: string,
+    request: BatchDeleteProductTiersRequest
+  ): Promise<BatchOperationResponse> {
+    const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}${API_ENDPOINT_ADMIN_PRODUCT_TIERS_BATCH_DELETE_SUFFIX}`
+    return this.postBatchOperation(url, request)
+  }
+
+  async batchDeleteEntitlements(
+    productId: string,
+    request: BatchDeleteEntitlementsRequest
+  ): Promise<BatchOperationResponse> {
+    const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}${API_ENDPOINT_ADMIN_ENTITLEMENTS_BATCH_DELETE_SUFFIX}`
+    return this.postBatchOperation(url, request)
+  }
+
   async getLicenseActivations(idOrKey: string): Promise<GetLicenseActivationsResponse> {
     const url = `${API_ENDPOINT_ADMIN_LICENSES_ACTIVATIONS}/${encodeURIComponent(idOrKey)}/activations`
     const response = await this.httpClient.get<ApiResponse<GetLicenseActivationsResponse>>(url)
@@ -622,6 +725,14 @@ export class Client {
     const response = await this.httpClient.post<ApiResponse<RevokeProtectionBuildTokenResponse>>(url, {})
     const rawData = this.handleApiResponse<Record<string, unknown>>(response.data, {})
     return this.normalizeRevokeProtectionBuildTokenResponse(rawData)
+  }
+
+  async batchRevokeProtectionBuildTokens(
+    productId: string,
+    request: BatchRevokeProtectionBuildTokensRequest
+  ): Promise<BatchOperationResponse> {
+    const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}${API_ENDPOINT_ADMIN_PROTECTION_BUILD_TOKENS_BATCH_REVOKE_SUFFIX}`
+    return this.postBatchOperation(url, request)
   }
 
   // Admin API - Releases (plugin release files per product)
@@ -924,6 +1035,13 @@ export class Client {
       success: true,
       data: this.handleApiResponse(response.data, {} as RevokeAgentServiceCredentialResponse['data']),
     }
+  }
+
+  async batchRevokeAgentServiceCredentials(
+    request: BatchRevokeAgentCredentialsRequest
+  ): Promise<BatchOperationResponse> {
+    const url = `${API_ENDPOINT_ADMIN_AGENT_SERVICE_ACCOUNTS}${API_ENDPOINT_ADMIN_AGENT_CREDENTIALS_BATCH_REVOKE_SUFFIX}`
+    return this.postBatchOperation(url, request)
   }
 
   // Admin API - Tenants

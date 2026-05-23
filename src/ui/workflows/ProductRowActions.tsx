@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import type { Client, ProtectionBuildTokenMetadata, User } from '@/simpleLicense'
 import { useDeleteProduct, useResumeProduct, useSuspendProduct } from '@/simpleLicense'
@@ -8,7 +8,6 @@ import { useNotificationBus } from '../../notifications/useNotificationBus'
 import { adaptMutation } from '../actions/mutationAdapter'
 import {
   UI_BUTTON_VARIANT_GHOST,
-  UI_CLASS_BORDER_ROUNDED_PADDED,
   UI_PRODUCT_ACTION_BUILD_TOKENS,
   UI_PRODUCT_ACTION_DELETE,
   UI_PRODUCT_ACTION_EDIT,
@@ -66,9 +65,12 @@ import {
   UI_STACK_GAP_SMALL,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
+import { DataTable } from '../data/DataTable'
+import { TableControls } from '../data/TableControls'
+import { TABLE_BATCH_TABLE_PROTECTION_BUILD_TOKENS, useTableBatchBus } from '../data/tableBatchBus'
 import { Stack } from '../layout/Stack'
 import { ModalDialog } from '../overlay/ModalDialog'
-import type { UiCommonProps } from '../types'
+import type { UiCommonProps, UiDataTableColumn } from '../types'
 import { KeyValueList } from '../typography/KeyValueList'
 import { VisibilityGate } from '../utils/PermissionGate'
 import { notifyCrudError, notifyProductSuccess } from './notifications'
@@ -254,6 +256,65 @@ export function ProductRowActions({
 
   const getOptionalTimestamp = (value: string | null): string => value ?? UI_VALUE_PLACEHOLDER
 
+  const { selection, batchBar, clearSelection } = useTableBatchBus<
+    ProtectionBuildTokenMetadata,
+    typeof TABLE_BATCH_TABLE_PROTECTION_BUILD_TOKENS
+  >({
+    tableId: TABLE_BATCH_TABLE_PROTECTION_BUILD_TOKENS,
+    enabled: showBuildTokensModal && allowUpdate && ownsProduct,
+    visibleRows: buildTokens,
+    rowKey: (row) => row.id,
+    context: { client, productId, onRefresh: () => void loadBuildTokens() },
+  })
+
+  useEffect(() => {
+    if (!showBuildTokensModal) {
+      clearSelection()
+    }
+  }, [clearSelection, showBuildTokensModal])
+
+  const buildTokenColumns: UiDataTableColumn<ProtectionBuildTokenMetadata>[] = [
+    {
+      id: 'build-token-prefix',
+      header: UI_PRODUCT_BUILD_TOKENS_LABEL_PREFIX,
+      cell: (row) => <code>{row.token_prefix}</code>,
+    },
+    {
+      id: 'build-token-status',
+      header: UI_PRODUCT_BUILD_TOKENS_LABEL_STATUS,
+      cell: (row) => getBuildTokenStatusLabel(row),
+    },
+    {
+      id: 'build-token-expires',
+      header: UI_PRODUCT_BUILD_TOKENS_LABEL_EXPIRES,
+      cell: (row) => getOptionalTimestamp(row.expires_at),
+    },
+    {
+      id: 'build-token-last-used',
+      header: UI_PRODUCT_BUILD_TOKENS_LABEL_LAST_USED,
+      cell: (row) => getOptionalTimestamp(row.last_used_at),
+    },
+    {
+      id: 'build-token-actions',
+      header: UI_PRODUCT_BUILD_TOKENS_REVOKE,
+      cell: (row) => {
+        const tokenStatusLabel = getBuildTokenStatusLabel(row)
+        const isTokenRevokable = tokenStatusLabel === UI_PRODUCT_BUILD_TOKENS_STATUS_ACTIVE
+        return (
+          <Button
+            variant={UI_BUTTON_VARIANT_GHOST}
+            onClick={() => {
+              void handleRevokeBuildToken(row.id)
+            }}
+            disabled={!isTokenRevokable || revokingBuildTokenId === row.id}
+          >
+            {revokingBuildTokenId === row.id ? UI_PRODUCT_BUILD_TOKENS_REVOKING : UI_PRODUCT_BUILD_TOKENS_REVOKE}
+          </Button>
+        )
+      },
+    },
+  ]
+
   if (!canShowButtons) {
     return null
   }
@@ -419,60 +480,15 @@ export function ProductRowActions({
                   ]}
                 />
                 <div>{UI_PRODUCT_BUILD_TOKENS_CURRENT}</div>
-                {buildTokens.length === 0 ? (
-                  <div>{UI_PRODUCT_BUILD_TOKENS_EMPTY}</div>
-                ) : (
-                  <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
-                    {buildTokens.map((token) => {
-                      const tokenStatusLabel = getBuildTokenStatusLabel(token)
-                      const isTokenRevokable = tokenStatusLabel === UI_PRODUCT_BUILD_TOKENS_STATUS_ACTIVE
-                      return (
-                        <Stack
-                          key={token.id}
-                          direction="column"
-                          gap={UI_STACK_GAP_SMALL}
-                          className={UI_CLASS_BORDER_ROUNDED_PADDED}
-                        >
-                          <KeyValueList
-                            items={[
-                              {
-                                id: `${token.id}-prefix`,
-                                label: UI_PRODUCT_BUILD_TOKENS_LABEL_PREFIX,
-                                value: <code>{token.token_prefix}</code>,
-                              },
-                              {
-                                id: `${token.id}-status`,
-                                label: UI_PRODUCT_BUILD_TOKENS_LABEL_STATUS,
-                                value: tokenStatusLabel,
-                              },
-                              {
-                                id: `${token.id}-expires`,
-                                label: UI_PRODUCT_BUILD_TOKENS_LABEL_EXPIRES,
-                                value: getOptionalTimestamp(token.expires_at),
-                              },
-                              {
-                                id: `${token.id}-last-used`,
-                                label: UI_PRODUCT_BUILD_TOKENS_LABEL_LAST_USED,
-                                value: getOptionalTimestamp(token.last_used_at),
-                              },
-                            ]}
-                          />
-                          <Button
-                            variant={UI_BUTTON_VARIANT_GHOST}
-                            onClick={() => {
-                              void handleRevokeBuildToken(token.id)
-                            }}
-                            disabled={!isTokenRevokable || revokingBuildTokenId === token.id}
-                          >
-                            {revokingBuildTokenId === token.id
-                              ? UI_PRODUCT_BUILD_TOKENS_REVOKING
-                              : UI_PRODUCT_BUILD_TOKENS_REVOKE}
-                          </Button>
-                        </Stack>
-                      )
-                    })}
-                  </Stack>
-                )}
+                <TableControls batch={batchBar} />
+                <DataTable
+                  data={buildTokens}
+                  columns={buildTokenColumns}
+                  rowKey={(row) => row.id}
+                  emptyState={UI_PRODUCT_BUILD_TOKENS_EMPTY}
+                  isLoading={isBuildTokensLoading}
+                  selection={selection}
+                />
               </Stack>
             )
           }

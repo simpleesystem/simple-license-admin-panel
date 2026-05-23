@@ -3,6 +3,7 @@ import Button from 'react-bootstrap/Button'
 import type { Client, ProductTier, User } from '@/simpleLicense'
 import {
   canCreateProductTier,
+  canDeleteProductTier,
   canUpdateProductTier,
   canViewProductTiers,
   isProductTierOwnedByUser,
@@ -38,6 +39,7 @@ import {
 import { DataTable } from '../data/DataTable'
 import { TableControls } from '../data/TableControls'
 import { TableFilter } from '../data/TableFilter'
+import { TABLE_BATCH_TABLE_PRODUCT_TIERS, useTableBatchBus } from '../data/tableBatchBus'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
@@ -128,6 +130,16 @@ export function ProductTierManagementPanel({
   }, [currentUser, tiers, statusFilter, searchTerm, currentSortState, isVendorScoped])
   const allowCreate = canCreateProductTier(currentUser ?? null)
   const canView = canViewProductTiers(currentUser ?? null)
+  const allowBatchDelete = canDeleteProductTier(currentUser ?? null)
+
+  const { selection, batchBar } = useTableBatchBus<ProductTierListItem, typeof TABLE_BATCH_TABLE_PRODUCT_TIERS>({
+    tableId: TABLE_BATCH_TABLE_PRODUCT_TIERS,
+    enabled: allowBatchDelete && Boolean(productId),
+    visibleRows: visibleTiers,
+    rowKey: (row) => row.id,
+    context: { client, productId, currentUser, onRefresh },
+  })
+
   const statusOptions: UiSelectOption[] = [
     { value: 'true', label: UI_PRODUCT_TIER_STATUS_ACTIVE },
     { value: 'false', label: UI_PRODUCT_TIER_STATUS_DEACTIVATED },
@@ -135,6 +147,7 @@ export function ProductTierManagementPanel({
 
   const toolbar = (
     <TableControls
+      batch={batchBar}
       search={{
         value: searchTerm,
         onChange: setSearchTerm,
@@ -231,6 +244,7 @@ export function ProductTierManagementPanel({
         emptyState={UI_PRODUCT_TIER_EMPTY_STATE_MESSAGE}
         sortState={currentSortState}
         onSort={handleSortChange}
+        selection={selection}
         toolbar={toolbar}
       />
 

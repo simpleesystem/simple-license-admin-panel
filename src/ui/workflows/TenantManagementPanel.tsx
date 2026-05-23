@@ -3,6 +3,7 @@ import Button from 'react-bootstrap/Button'
 import type { Client, Tenant, User } from '@/simpleLicense'
 import {
   canCreateTenant,
+  canSuspendTenant,
   canUpdateTenant,
   canViewTenants,
   isTenantOwnedByUser,
@@ -39,6 +40,7 @@ import { DataTable } from '../data/DataTable'
 import { TableControls } from '../data/TableControls'
 import { TableFilter } from '../data/TableFilter'
 import { TablePaginationFooter } from '../data/TablePaginationFooter'
+import { TABLE_BATCH_TABLE_TENANTS, useTableBatchBus } from '../data/tableBatchBus'
 import { createStandardStatusFilterField, createStandardTableSearchField } from '../data/tableFieldFactory'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
@@ -100,6 +102,18 @@ export function TenantManagementPanel({
   )
   const allowCreate = canCreateTenant(currentUser ?? null)
   const canView = canViewTenants(currentUser ?? null)
+  const allowBatch = useMemo(
+    () => visibleTenants.some((tenant) => canSuspendTenant(currentUser ?? null, tenant as unknown as Tenant)),
+    [currentUser, visibleTenants]
+  )
+
+  const { selection, batchBar } = useTableBatchBus<TenantListItem, typeof TABLE_BATCH_TABLE_TENANTS>({
+    tableId: TABLE_BATCH_TABLE_TENANTS,
+    enabled: allowBatch,
+    visibleRows: visibleTenants,
+    rowKey: (row) => row.id,
+    context: { client, onRefresh },
+  })
 
   const statusOptions: UiSelectOption[] = [
     { value: UI_TENANT_STATUS_ACTIVE, label: UI_TENANT_STATUS_LABEL_ACTIVE },
@@ -108,6 +122,7 @@ export function TenantManagementPanel({
 
   const toolbar = (
     <TableControls
+      batch={batchBar}
       search={
         onSearchChange
           ? createStandardTableSearchField({
@@ -200,6 +215,7 @@ export function TenantManagementPanel({
         emptyState={UI_TENANT_EMPTY_STATE_MESSAGE}
         sortState={sortState}
         onSort={onSortChange}
+        selection={selection}
         toolbar={toolbar}
         footer={
           totalPages > 1 || onPageSizeChange ? (

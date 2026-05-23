@@ -634,6 +634,64 @@ export interface ActionSuccessResponse {
   message?: string
 }
 
+export interface BatchOperationSkipResult {
+  id: string
+  reason: string
+}
+
+export interface BatchOperationFailureResult {
+  id: string
+  reason: string
+}
+
+export interface BatchOperationResultData {
+  deletedCount: number
+  deleted: string[]
+  skipped: BatchOperationSkipResult[]
+  failed: BatchOperationFailureResult[]
+  maxBatchSize: number
+}
+
+export interface BatchOperationResponse extends ActionSuccessResponse {
+  data: BatchOperationResultData
+}
+
+export interface BatchSoftDeleteLicensesRequest {
+  licenseKeys: string[]
+}
+
+export interface BatchDeleteReleasesRequest {
+  releaseIds: string[]
+}
+
+export interface BatchDeleteProductsRequest {
+  productIds: string[]
+}
+
+export interface BatchDeleteUsersRequest {
+  userIds: string[]
+}
+
+export interface BatchSuspendTenantsRequest {
+  tenantIds: string[]
+}
+
+export interface BatchDeleteProductTiersRequest {
+  tierIds: string[]
+}
+
+export interface BatchDeleteEntitlementsRequest {
+  entitlementIds: string[]
+}
+
+export interface BatchRevokeAgentCredentialsRequest {
+  credentialIds: string[]
+}
+
+export interface BatchRevokeProtectionBuildTokensRequest {
+  tokenIds: string[]
+}
+
 // OpenAPI Specification response
 export interface OpenAPISpecResponse {
   openapi: string

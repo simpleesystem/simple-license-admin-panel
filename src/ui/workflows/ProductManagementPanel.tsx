@@ -3,6 +3,7 @@ import Button from 'react-bootstrap/Button'
 import type { Client, Product, User } from '@/simpleLicense'
 import {
   canCreateProduct,
+  canDeleteProduct,
   canUpdateProduct,
   canViewProducts,
   isProductOwnedByUser,
@@ -40,6 +41,7 @@ import { TableControls } from '../data/TableControls'
 import { TableFilter } from '../data/TableFilter'
 import { TablePaginationFooter } from '../data/TablePaginationFooter'
 import { TenantFilterControl } from '../data/TenantFilterControl'
+import { TABLE_BATCH_TABLE_PRODUCTS, useTableBatchBus } from '../data/tableBatchBus'
 import { createStandardStatusFilterField, createStandardTableSearchField } from '../data/tableFieldFactory'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
@@ -120,6 +122,15 @@ export function ProductManagementPanel({
   )
   const allowCreate = canCreateProduct(currentUser ?? null)
   const canView = canViewProducts(currentUser ?? null)
+  const allowBatch = canDeleteProduct(currentUser ?? null) || canUpdateProduct(currentUser ?? null)
+
+  const { selection, batchBar } = useTableBatchBus<ProductListItem, typeof TABLE_BATCH_TABLE_PRODUCTS>({
+    tableId: TABLE_BATCH_TABLE_PRODUCTS,
+    enabled: allowBatch,
+    visibleRows: visibleProducts,
+    rowKey: (row) => row.id,
+    context: { client, currentUser, onRefresh },
+  })
 
   const statusOptions: UiSelectOption[] = [
     { value: UI_PRODUCT_FILTER_VALUE_ACTIVE, label: UI_PRODUCT_STATUS_ACTIVE },
@@ -128,6 +139,7 @@ export function ProductManagementPanel({
 
   const toolbar = (
     <TableControls
+      batch={batchBar}
       search={
         onSearchChange
           ? createStandardTableSearchField({
@@ -246,6 +258,7 @@ export function ProductManagementPanel({
         emptyState={UI_PRODUCT_EMPTY_STATE_MESSAGE}
         sortState={sortState}
         onSort={onSortChange}
+        selection={selection}
         toolbar={toolbar}
         footer={
           totalPages > 1 || onPageSizeChange ? (

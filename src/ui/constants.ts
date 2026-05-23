@@ -348,6 +348,7 @@ export const UI_ICON_SORT_DEFAULT = '⇅'
 export const UI_ICON_SORT_ASCENDING = '▲'
 export const UI_ICON_SORT_DESCENDING = '▼'
 export const UI_ARIA_LABEL_TABLE_TOOLBAR = 'Table controls'
+export const UI_TABLE_REFRESH_LABEL = 'Refresh' as const
 
 export const UI_CLASS_TABLE_TOOLBAR = 'd-flex flex-wrap justify-content-between align-items-center gap-3 mb-3'
 export const UI_CLASS_TABLE_CONTROL_GROUP = 'd-flex flex-wrap gap-2 align-items-center'
@@ -370,6 +371,9 @@ export const UI_CLASS_TABLE_PAGINATION_META = 'd-flex flex-wrap align-items-cent
 export const UI_CLASS_TABLE_PAGINATION_SUMMARY = 'text-muted small'
 export const UI_CLASS_TABLE_PAGINATION_ACTIONS = 'd-flex flex-wrap align-items-center gap-2 ms-lg-auto'
 export const UI_CLASS_TABLE_PAGINATION_STATUS = 'd-flex align-items-center px-2'
+export const UI_CLASS_TABLE_BATCH_ACTIONS =
+  'd-flex flex-wrap align-items-center gap-2 mb-2 p-2 border rounded bg-body-tertiary'
+export const UI_CLASS_TABLE_BATCH_META = 'text-muted small fw-semibold me-1'
 
 export const UI_CLASS_SUMMARY_LIST = 'row row-cols-1 row-cols-md-2 g-3 list-unstyled mb-0'
 export const UI_CLASS_SUMMARY_CARD = 'p-3 border rounded bg-body'
@@ -750,6 +754,7 @@ export const UI_RELEASE_STATUS_LOADING_BODY = 'Fetching release list for this pr
 export const UI_RELEASE_STATUS_ERROR_TITLE = 'Unable to load releases' as const
 export const UI_RELEASE_STATUS_ERROR_BODY = 'Please try again after refreshing the page.' as const
 export const UI_RELEASE_STATUS_ACTION_RETRY = 'Retry' as const
+export const UI_RELEASE_AUTO_REFRESH_INTERVAL_MS = 15000 as const
 export const UI_RELEASE_ROUTE_STATUS_LOADING_TITLE = 'Loading release workspace' as const
 export const UI_RELEASE_ROUTE_STATUS_LOADING_BODY =
   'Fetching products and tenant filters for release management.' as const
@@ -779,6 +784,16 @@ export const UI_RELEASE_CONFIRM_DELETE_TITLE = 'Delete this release?' as const
 export const UI_RELEASE_CONFIRM_DELETE_BODY =
   'This will remove the release from the database. The associated file will be deleted from storage if present. This action cannot be undone.' as const
 export const UI_RELEASE_CONFIRM_DELETE_BUTTON = 'Delete release' as const
+export const UI_RELEASE_BATCH_DELETE_LABEL = 'Delete selected' as const
+export const UI_RELEASE_BATCH_DELETE_PENDING = 'Deleting…' as const
+export const UI_RELEASE_BATCH_CONFIRM_TITLE = 'Delete selected releases?' as const
+export const UI_RELEASE_BATCH_CONFIRM_BODY =
+  'Non-live releases will be removed from the database and storage. Promoted (live) releases are skipped automatically.' as const
+export const UI_RELEASE_BATCH_CONFIRM_BUTTON = 'Delete selected' as const
+export const UI_RELEASE_BATCH_TOAST_SUCCESS = 'Selected releases deleted' as const
+export const UI_RELEASE_BATCH_TOAST_PARTIAL =
+  'Some releases were skipped (live) or could not be deleted. Review the list and try again if needed.' as const
+export const UI_RELEASE_ROW_NOT_SELECTABLE_TITLE = 'Live releases cannot be bulk-deleted' as const
 export const UI_RELEASE_VERSION_PREFIX = 'v' as const
 export const UI_RELEASE_MODAL_CANCEL = 'Cancel' as const
 export const UI_RELEASE_PANEL_TITLE = 'Releases' as const
@@ -921,6 +936,20 @@ export const UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_SCOPES = 'Scopes (comma-separa
 export const UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_EXPIRES_AT = 'Expires at (optional)' as const
 export const UI_AGENT_SERVICE_ACCOUNT_SUBMIT_ISSUE = 'Issue credential' as const
 export const UI_AGENT_SERVICE_ACCOUNT_SUBMIT_REVOKE = 'Revoke' as const
+export const UI_AGENT_CREDENTIAL_BATCH_REVOKE_LABEL = 'Revoke selected' as const
+export const UI_AGENT_CREDENTIAL_BATCH_REVOKE_PENDING = 'Revoking…' as const
+export const UI_AGENT_CREDENTIAL_BATCH_CONFIRM_TITLE = 'Revoke credentials' as const
+export const UI_AGENT_CREDENTIAL_BATCH_CONFIRM_BODY =
+  'Revoke the selected credentials? They can no longer mint agent tokens.' as const
+export const UI_AGENT_CREDENTIAL_BATCH_CONFIRM_BUTTON = 'Revoke credentials' as const
+export const UI_AGENT_CREDENTIAL_BATCH_TOAST_SUCCESS = 'Credentials revoked' as const
+export const UI_PROTECTION_BUILD_TOKEN_BATCH_REVOKE_LABEL = 'Revoke selected' as const
+export const UI_PROTECTION_BUILD_TOKEN_BATCH_REVOKE_PENDING = 'Revoking…' as const
+export const UI_PROTECTION_BUILD_TOKEN_BATCH_CONFIRM_TITLE = 'Revoke build tokens' as const
+export const UI_PROTECTION_BUILD_TOKEN_BATCH_CONFIRM_BODY =
+  'Revoke the selected protection build tokens? They can no longer authenticate protected builds.' as const
+export const UI_PROTECTION_BUILD_TOKEN_BATCH_CONFIRM_BUTTON = 'Revoke selected' as const
+export const UI_PROTECTION_BUILD_TOKEN_BATCH_TOAST_SUCCESS = 'Build tokens revoked' as const
 export const UI_AGENT_SERVICE_ACCOUNT_TOAST_ISSUE_SUCCESS = 'Credential issued successfully' as const
 export const UI_AGENT_SERVICE_ACCOUNT_TOAST_ISSUE_ERROR = 'Unable to issue credential' as const
 export const UI_AGENT_SERVICE_ACCOUNT_TOAST_REVOKE_SUCCESS = 'Credential revoked successfully' as const
@@ -1316,6 +1345,74 @@ export const UI_LICENSE_CONFIRM_RESUME_BODY =
 export const UI_LICENSE_CONFIRM_RESUME_CONFIRM = 'Resume license' as const
 export const UI_LICENSE_CONFIRM_RESUME_CANCEL = 'Cancel' as const
 
+export const UI_TABLE_BATCH_SELECTED_COUNT_LABEL = 'selected' as const
+export const UI_TABLE_BATCH_HINT =
+  'Select rows using the checkboxes in the table, then run a batch action here.' as const
+export const UI_TABLE_BATCH_CLEAR_SELECTION = 'Clear selection' as const
+export const UI_LICENSE_BATCH_SOFT_DELETE_LABEL = 'Soft delete selected' as const
+export const UI_LICENSE_BATCH_SOFT_DELETE_PENDING = 'Soft deleting…' as const
+export const UI_LICENSE_BATCH_CONFIRM_TITLE = 'Soft delete selected licenses?' as const
+export const UI_LICENSE_BATCH_CONFIRM_BODY =
+  'Soft deleting revokes each selected license and removes it from the default list. This cannot be undone.' as const
+export const UI_LICENSE_BATCH_CONFIRM_BUTTON = 'Soft delete selected' as const
+export const UI_LICENSE_BATCH_TOAST_SUCCESS = 'Selected licenses soft deleted' as const
+export const UI_LICENSE_BATCH_TOAST_PARTIAL =
+  'Some licenses were skipped or could not be deleted. Review the results and try again if needed.' as const
+
+export const UI_TABLE_BATCH_TOAST_SUCCESS = 'Batch operation completed' as const
+export const UI_TABLE_BATCH_TOAST_PARTIAL =
+  'Some rows were skipped or could not be updated. Review the results and try again if needed.' as const
+
+export const UI_PRODUCT_BATCH_DELETE_LABEL = 'Deactivate selected' as const
+export const UI_PRODUCT_BATCH_DELETE_PENDING = 'Deactivating…' as const
+export const UI_PRODUCT_BATCH_CONFIRM_DELETE_TITLE = 'Deactivate selected products?' as const
+export const UI_PRODUCT_BATCH_CONFIRM_DELETE_BODY =
+  'Selected products will be deactivated and their licenses suspended.' as const
+export const UI_PRODUCT_BATCH_CONFIRM_DELETE_BUTTON = 'Deactivate selected' as const
+export const UI_PRODUCT_BATCH_SUSPEND_LABEL = 'Suspend selected' as const
+export const UI_PRODUCT_BATCH_SUSPEND_PENDING = 'Suspending…' as const
+export const UI_PRODUCT_BATCH_CONFIRM_SUSPEND_TITLE = 'Suspend selected products?' as const
+export const UI_PRODUCT_BATCH_CONFIRM_SUSPEND_BODY =
+  'Suspends selected products and cascades to their licenses.' as const
+export const UI_PRODUCT_BATCH_CONFIRM_SUSPEND_BUTTON = 'Suspend selected' as const
+export const UI_PRODUCT_BATCH_RESUME_LABEL = 'Resume selected' as const
+export const UI_PRODUCT_BATCH_RESUME_PENDING = 'Resuming…' as const
+export const UI_PRODUCT_BATCH_CONFIRM_RESUME_TITLE = 'Resume selected products?' as const
+export const UI_PRODUCT_BATCH_CONFIRM_RESUME_BODY = 'Resumes selected products and their suspended licenses.' as const
+export const UI_PRODUCT_BATCH_CONFIRM_RESUME_BUTTON = 'Resume selected' as const
+
+export const UI_USER_BATCH_DELETE_LABEL = 'Delete selected' as const
+export const UI_USER_BATCH_DELETE_PENDING = 'Deleting…' as const
+export const UI_USER_BATCH_CONFIRM_DELETE_TITLE = 'Delete selected users?' as const
+export const UI_USER_BATCH_CONFIRM_DELETE_BODY =
+  'Marks each selected user as deleted. Your own account is skipped automatically.' as const
+export const UI_USER_BATCH_CONFIRM_DELETE_BUTTON = 'Delete selected' as const
+
+export const UI_TENANT_BATCH_SUSPEND_LABEL = 'Suspend selected' as const
+export const UI_TENANT_BATCH_SUSPEND_PENDING = 'Suspending…' as const
+export const UI_TENANT_BATCH_CONFIRM_SUSPEND_TITLE = 'Suspend selected tenants?' as const
+export const UI_TENANT_BATCH_CONFIRM_SUSPEND_BODY = 'Suspends each selected tenant.' as const
+export const UI_TENANT_BATCH_CONFIRM_SUSPEND_BUTTON = 'Suspend selected' as const
+export const UI_TENANT_BATCH_RESUME_LABEL = 'Resume selected' as const
+export const UI_TENANT_BATCH_RESUME_PENDING = 'Resuming…' as const
+export const UI_TENANT_BATCH_CONFIRM_RESUME_TITLE = 'Resume selected tenants?' as const
+export const UI_TENANT_BATCH_CONFIRM_RESUME_BODY = 'Resumes tenants that are currently suspended.' as const
+export const UI_TENANT_BATCH_CONFIRM_RESUME_BUTTON = 'Resume selected' as const
+
+export const UI_PRODUCT_TIER_BATCH_DELETE_LABEL = 'Delete selected' as const
+export const UI_PRODUCT_TIER_BATCH_DELETE_PENDING = 'Deleting…' as const
+export const UI_PRODUCT_TIER_BATCH_CONFIRM_DELETE_TITLE = 'Delete selected tiers?' as const
+export const UI_PRODUCT_TIER_BATCH_CONFIRM_DELETE_BODY =
+  'Deactivates each selected tier and suspends matching licenses.' as const
+export const UI_PRODUCT_TIER_BATCH_CONFIRM_DELETE_BUTTON = 'Delete selected' as const
+
+export const UI_ENTITLEMENT_BATCH_DELETE_LABEL = 'Delete selected' as const
+export const UI_ENTITLEMENT_BATCH_DELETE_PENDING = 'Deleting…' as const
+export const UI_ENTITLEMENT_BATCH_CONFIRM_DELETE_TITLE = 'Delete selected entitlements?' as const
+export const UI_ENTITLEMENT_BATCH_CONFIRM_DELETE_BODY =
+  'Permanently removes the selected entitlements for this product.' as const
+export const UI_ENTITLEMENT_BATCH_CONFIRM_DELETE_BUTTON = 'Delete selected' as const
+
 export const UI_LICENSE_FREEZE_BUTTON_OPEN = 'Freeze license' as const
 export const UI_LICENSE_FREEZE_BUTTON_SUBMIT = 'Freeze license' as const
 export const UI_LICENSE_FREEZE_BUTTON_PENDING = 'Freezing…' as const
@@ -1370,6 +1467,7 @@ export const UI_TEST_ID_HEADER_NAV = `${UI_TEST_ID_PREFIX}header-nav`
 export const UI_TEST_ID_HEADER_ACTIONS = `${UI_TEST_ID_PREFIX}header-actions`
 export const UI_HEADER_USER_CONTEXT_PREFIX = 'You are logged in as'
 export const UI_HEADER_USER_CONTEXT_FALLBACK_ROLE = 'User'
+export const UI_HEADER_USER_CONTEXT_BREAK_GLASS_SUPERUSER = 'Break-glass superuser session'
 export const UI_HEADER_ACTION_CHANGE_PASSWORD = 'Account'
 export const UI_HEADER_ACTION_SIGN_OUT = 'Sign out'
 export const UI_HEADER_MODAL_TITLE_CHANGE_PASSWORD = 'Secure your account'
@@ -1406,6 +1504,10 @@ export const UI_ARIA_LABEL_SIDEBAR_NAV = 'Sidebar navigation'
 
 export const UI_CLASS_TOP_NAV = 'navbar bg-body border-bottom shadow-sm'
 export const UI_CLASS_TOP_NAV_CONTENT = 'container-fluid d-flex align-items-center gap-3'
+export const UI_CLASS_TOP_NAV_BREAK_GLASS = 'border-danger bg-danger-subtle'
+export const UI_CLASS_HEADER_ACTIONS_BREAK_GLASS =
+  'border border-danger-subtle bg-danger-subtle text-danger-emphasis rounded px-2 py-1'
+export const UI_CLASS_HEADER_USER_CONTEXT_BREAK_GLASS = 'text-danger-emphasis'
 
 export const UI_CLASS_BREADCRUMBS = 'breadcrumb mb-0'
 export const UI_ARIA_LABEL_BREADCRUMBS = 'Breadcrumbs'

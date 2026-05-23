@@ -51,6 +51,16 @@ export const API_ENDPOINT_ADMIN_LICENSES_FREEZE = '/api/v1/admin/licenses'
 export const API_ENDPOINT_ADMIN_LICENSES_REVOKE = '/api/v1/admin/licenses'
 export const API_ENDPOINT_ADMIN_LICENSES_MARK_REVOKED = '/api/v1/admin/licenses'
 export const API_ENDPOINT_ADMIN_LICENSES_ACTIVATIONS = '/api/v1/admin/licenses'
+export const API_ENDPOINT_ADMIN_LICENSES_BATCH_SOFT_DELETE = '/api/v1/admin/licenses/batch-soft-delete'
+export const API_ENDPOINT_ADMIN_RELEASES_BATCH_DELETE_SUFFIX = '/releases/batch-delete'
+export const API_ENDPOINT_ADMIN_PRODUCTS_BATCH_DELETE = '/api/v1/admin/products/batch-delete'
+export const API_ENDPOINT_ADMIN_PRODUCTS_BATCH_SUSPEND = '/api/v1/admin/products/batch-suspend'
+export const API_ENDPOINT_ADMIN_PRODUCTS_BATCH_RESUME = '/api/v1/admin/products/batch-resume'
+export const API_ENDPOINT_ADMIN_USERS_BATCH_DELETE = '/api/v1/admin/users/batch-delete'
+export const API_ENDPOINT_ADMIN_TENANTS_BATCH_SUSPEND = '/api/v1/admin/tenants/batch-suspend'
+export const API_ENDPOINT_ADMIN_TENANTS_BATCH_RESUME = '/api/v1/admin/tenants/batch-resume'
+export const API_ENDPOINT_ADMIN_PRODUCT_TIERS_BATCH_DELETE_SUFFIX = '/tiers/batch-delete'
+export const API_ENDPOINT_ADMIN_ENTITLEMENTS_BATCH_DELETE_SUFFIX = '/entitlements/batch-delete'
 
 // Admin Product Endpoints
 export const API_ENDPOINT_ADMIN_PRODUCTS_LIST = '/api/v1/admin/products'
@@ -86,6 +96,8 @@ export const API_ENDPOINT_ADMIN_USERS_ME_PASSWORD = '/api/v1/admin/users/me/pass
 export const API_ENDPOINT_ADMIN_AGENT_SERVICE_ACCOUNTS = '/api/v1/admin/agent/service-accounts'
 export const API_ENDPOINT_ADMIN_AGENT_CREDENTIALS_SUFFIX = '/credentials'
 export const API_ENDPOINT_ADMIN_AGENT_CREDENTIAL_REVOKE_SUFFIX = '/revoke'
+export const API_ENDPOINT_ADMIN_AGENT_CREDENTIALS_BATCH_REVOKE_SUFFIX = '/credentials/batch-revoke'
+export const API_ENDPOINT_ADMIN_PROTECTION_BUILD_TOKENS_BATCH_REVOKE_SUFFIX = '/protection/build-tokens/batch-revoke'
 
 // Admin Analytics Endpoints
 export const API_ENDPOINT_ADMIN_ANALYTICS_USAGE = '/api/v1/admin/analytics/usage'

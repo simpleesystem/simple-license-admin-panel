@@ -48,11 +48,12 @@ import {
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
+import { TableControls } from '../data/TableControls'
 import { TableFilter } from '../data/TableFilter'
 import { TablePaginationFooter } from '../data/TablePaginationFooter'
 import { TableSearchInput } from '../data/TableSearchInput'
-import { TableToolbar } from '../data/TableToolbar'
 import { TenantFilterControl } from '../data/TenantFilterControl'
+import { TABLE_BATCH_TABLE_RELEASES, useTableBatchBus } from '../data/tableBatchBus'
 import { createTableFilterField, createTableSearchField } from '../data/tableFieldFactory'
 import { RouteStatus } from '../feedback/RouteStatus'
 import { PanelHeader } from '../layout/PanelHeader'
@@ -127,6 +128,15 @@ export function ReleasesPanel({
 }: ReleasesPanelProps) {
   const [showCreateModal, setShowCreateModal] = useState(false)
 
+  const { selection, batchBar } = useTableBatchBus<ReleaseListItem, typeof TABLE_BATCH_TABLE_RELEASES>({
+    tableId: TABLE_BATCH_TABLE_RELEASES,
+    enabled: allowDelete && Boolean(selectedProductId),
+    visibleRows: releases,
+    rowKey: (row) => row.id,
+    context: { client, productId: selectedProductId, onRefresh },
+    isRowSelectable: (row) => !row.isPromoted,
+  })
+
   const productFilterOptions = useMemo<UiSelectOption[]>(() => [...productOptions], [productOptions])
 
   const channelOptions: UiSelectOption[] = [
@@ -136,8 +146,9 @@ export function ReleasesPanel({
   ]
 
   const toolbar = (
-    <TableToolbar
-      start={
+    <TableControls
+      batch={batchBar}
+      filters={
         <>
           <TenantFilterControl
             show={showTenantFilter}
@@ -175,7 +186,15 @@ export function ReleasesPanel({
           />
         </>
       }
-      end={
+      refresh={
+        onRefresh
+          ? {
+              onClick: onRefresh,
+              disabled: !selectedProductId || Boolean(releasesLoading),
+            }
+          : undefined
+      }
+      actions={
         allowCreate ? (
           <Button
             variant={UI_BUTTON_VARIANT_PRIMARY}
@@ -300,6 +319,7 @@ export function ReleasesPanel({
         emptyState={emptyState}
         sortState={sortState}
         onSort={onSortChange}
+        selection={selection}
         toolbar={toolbar}
         footer={footer}
       />

@@ -113,7 +113,15 @@ export function DataTable<TData>({
     onSort(columnId, nextDirection)
   }
 
-  const allSelected = showSelection && data.length > 0 && data.every((row) => isRowSelected(row))
+  const isSelectableRow = (row: TData): boolean => {
+    if (!selection?.isRowSelectable) {
+      return true
+    }
+    return selection.isRowSelectable(row)
+  }
+
+  const selectableRows = showSelection ? data.filter(isSelectableRow) : []
+  const allSelected = showSelection && selectableRows.length > 0 && selectableRows.every((row) => isRowSelected(row))
   const showEmptyState = !isLoading && data.length === 0
   const cellSpan = columns.length + (showSelection ? 1 : 0)
 
@@ -208,6 +216,7 @@ export function DataTable<TData>({
                             type="checkbox"
                             aria-label={`Select row ${key}`}
                             checked={isRowSelected(row)}
+                            disabled={!isSelectableRow(row)}
                             onChange={() => handleToggleRow(row)}
                           />
                         </td>

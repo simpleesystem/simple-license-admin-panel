@@ -1,5 +1,5 @@
 import { QueryClientContext } from '@tanstack/react-query'
-import { useCallback, useContext, useMemo, useState } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
 import { DEFAULT_NOTIFICATION_EVENT, NOTIFICATION_VARIANT_ERROR, NOTIFICATION_VARIANT_SUCCESS } from '@/app/constants'
@@ -69,6 +69,8 @@ import {
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
+import { TableControls } from '../data/TableControls'
+import { TABLE_BATCH_TABLE_AGENT_CREDENTIALS, useTableBatchBus } from '../data/tableBatchBus'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import { ModalDialog } from '../overlay/ModalDialog'
@@ -233,6 +235,28 @@ function AgentServiceAccountsPanelWithQuery({
     })
   }, [credentialSearchTerm, credentialSortOrder, credentialStatusFilter, historyAccount?.credentials])
 
+  const refreshCredentialHistory = useCallback(async () => {
+    const result = await listQuery.refetch()
+    const accounts = result.data ?? listQuery.data ?? []
+    const refreshed = accounts.find((account) => account.id === historyAccount?.id) ?? null
+    setHistoryAccount(refreshed)
+  }, [historyAccount?.id, listQuery])
+
+  const { selection, batchBar, clearSelection } = useTableBatchBus<
+    AgentServiceCredential,
+    typeof TABLE_BATCH_TABLE_AGENT_CREDENTIALS
+  >({
+    tableId: TABLE_BATCH_TABLE_AGENT_CREDENTIALS,
+    enabled: Boolean(historyAccount),
+    visibleRows: credentialsForHistory,
+    rowKey: (row) => row.id,
+    context: { client, onRefresh: () => void refreshCredentialHistory() },
+  })
+
+  useEffect(() => {
+    clearSelection()
+  }, [clearSelection])
+
   const handleRevokeCredential = useCallback(
     async (credentialId: string) => {
       try {
@@ -241,8 +265,7 @@ function AgentServiceAccountsPanelWithQuery({
           titleKey: UI_AGENT_SERVICE_ACCOUNT_TOAST_REVOKE_SUCCESS,
           variant: NOTIFICATION_VARIANT_SUCCESS,
         })
-        const refreshed = (listQuery.data ?? []).find((account) => account.id === historyAccount?.id) ?? null
-        setHistoryAccount(refreshed)
+        await refreshCredentialHistory()
       } catch {
         notificationBus.emit(DEFAULT_NOTIFICATION_EVENT, {
           titleKey: UI_AGENT_SERVICE_ACCOUNT_TOAST_REVOKE_ERROR,
@@ -250,7 +273,7 @@ function AgentServiceAccountsPanelWithQuery({
         })
       }
     },
-    [historyAccount?.id, listQuery.data, notificationBus, revokeMutation]
+    [notificationBus, refreshCredentialHistory, revokeMutation]
   )
 
   const credentialHistoryColumns: UiDataTableColumn<AgentServiceCredential>[] = useMemo(
@@ -477,12 +500,14 @@ function AgentServiceAccountsPanelWithQuery({
                 </option>
               </Form.Select>
             </Form.Group>
+            <TableControls batch={batchBar} />
             <DataTable
               data={credentialsForHistory}
               columns={credentialHistoryColumns}
               rowKey={(row) => row.id}
               emptyState={UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_EMPTY_STATE}
               isLoading={listQuery.isLoading || revokeMutation.isPending}
+              selection={selection}
             />
           </Stack>
         }

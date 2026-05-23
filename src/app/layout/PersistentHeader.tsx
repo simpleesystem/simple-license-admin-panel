@@ -8,14 +8,18 @@ import {
   UI_BUTTON_VARIANT_OUTLINE_SECONDARY,
   UI_BUTTON_VARIANT_SECONDARY,
   UI_CLASS_HEADER_ACTIONS,
+  UI_CLASS_HEADER_ACTIONS_BREAK_GLASS,
   UI_CLASS_HEADER_NAV_LINK,
   UI_CLASS_HEADER_USER_CONTEXT,
+  UI_CLASS_HEADER_USER_CONTEXT_BREAK_GLASS,
   UI_CLASS_HEADER_USER_IDENTITY,
   UI_CLASS_HEADER_USER_LABEL,
   UI_CLASS_PANEL_ACTION_BUTTON,
+  UI_CLASS_TOP_NAV_BREAK_GLASS,
   UI_HEADER_ACTION_CHANGE_PASSWORD,
   UI_HEADER_ACTION_SIGN_OUT,
   UI_HEADER_MODAL_TITLE_CHANGE_PASSWORD,
+  UI_HEADER_USER_CONTEXT_BREAK_GLASS_SUPERUSER,
   UI_HEADER_USER_CONTEXT_FALLBACK_ROLE,
   UI_HEADER_USER_CONTEXT_PREFIX,
   UI_MODAL_SIZE_LG,
@@ -23,10 +27,12 @@ import {
   UI_TEST_ID_HEADER,
   UI_TEST_ID_HEADER_ACTIONS,
   UI_TEST_ID_HEADER_NAV,
+  UI_USER_ROLE_SUPERUSER,
 } from '../../ui/constants'
 import { UI_NAV_LABEL_DASHBOARD } from '../../ui/navigation/navConstants'
 import { TopNavBar } from '../../ui/navigation/TopNavBar'
 import { ModalDialog } from '../../ui/overlay/ModalDialog'
+import { composeClassNames } from '../../ui/utils/classNames'
 import { useAuth } from '../auth/useAuth'
 import { usePermissions } from '../auth/useAuthorization'
 import { isApiUser } from '../auth/userUtils'
@@ -42,6 +48,7 @@ export function PersistentHeader() {
   const navigate = useNavigate()
 
   const isPasswordResetGateActive = currentUser?.passwordResetRequired ?? false
+  const isBreakGlassSession = currentUser?.role === UI_USER_ROLE_SUPERUSER
   const headerShouldRenderActions = isAuthenticated || isPasswordResetGateActive
 
   const navItems = useMemo(() => {
@@ -71,6 +78,7 @@ export function PersistentHeader() {
       <TopNavBar
         testId={UI_TEST_ID_HEADER}
         brand={APP_BRAND_NAME}
+        className={isBreakGlassSession ? UI_CLASS_TOP_NAV_BREAK_GLASS : undefined}
         navigation={renderNavigation(navItems)}
         actions={
           headerShouldRenderActions
@@ -79,6 +87,7 @@ export function PersistentHeader() {
                   ? UI_HEADER_MODAL_TITLE_CHANGE_PASSWORD
                   : (currentUser?.email ?? currentUser?.username ?? UI_NAV_LABEL_DASHBOARD),
                 userRole: currentUser?.role,
+                isBreakGlassSession,
                 showChangePasswordAction: !isPasswordResetGateActive && showChangePasswordAction,
                 onChangePassword: () => setShowPasswordModal(true),
                 onLogout: handleLogout,
@@ -129,6 +138,7 @@ const renderNavigation = (items: PrimaryNavItem[]) => {
 type UserActionsProps = {
   userLabel: string
   userRole?: string
+  isBreakGlassSession: boolean
   showChangePasswordAction: boolean
   onChangePassword: () => void
   onLogout: () => void
@@ -137,16 +147,29 @@ type UserActionsProps = {
 const renderUserActions = ({
   userLabel,
   userRole,
+  isBreakGlassSession,
   showChangePasswordAction,
   onChangePassword,
   onLogout,
 }: UserActionsProps) => {
   const normalizedRole = formatRoleLabel(userRole)
-  const userContextLabel = `${UI_HEADER_USER_CONTEXT_PREFIX} ${normalizedRole}`
+  const userContextLabel = isBreakGlassSession
+    ? UI_HEADER_USER_CONTEXT_BREAK_GLASS_SUPERUSER
+    : `${UI_HEADER_USER_CONTEXT_PREFIX} ${normalizedRole}`
   return (
-    <div className={UI_CLASS_HEADER_ACTIONS} data-testid={UI_TEST_ID_HEADER_ACTIONS}>
+    <div
+      className={composeClassNames(UI_CLASS_HEADER_ACTIONS, isBreakGlassSession && UI_CLASS_HEADER_ACTIONS_BREAK_GLASS)}
+      data-testid={UI_TEST_ID_HEADER_ACTIONS}
+    >
       <div className={UI_CLASS_HEADER_USER_LABEL} title={`${userContextLabel} (${userLabel})`}>
-        <span className={UI_CLASS_HEADER_USER_CONTEXT}>{userContextLabel}</span>
+        <span
+          className={composeClassNames(
+            UI_CLASS_HEADER_USER_CONTEXT,
+            isBreakGlassSession && UI_CLASS_HEADER_USER_CONTEXT_BREAK_GLASS
+          )}
+        >
+          {userContextLabel}
+        </span>
         <span className={UI_CLASS_HEADER_USER_IDENTITY}>{userLabel}</span>
       </div>
       {showChangePasswordAction ? (

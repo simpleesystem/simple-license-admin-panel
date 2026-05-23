@@ -272,6 +272,20 @@ export type UiDataTableSelection<TData> = {
   selectedIds: readonly string[]
   onToggleRow: (row: TData) => void
   onToggleAll?: (rows: readonly TData[]) => void
+  isRowSelectable?: (row: TData) => boolean
+}
+
+export type UiTableBatchAction<TData> = {
+  id: string
+  label: string
+  pendingLabel?: string
+  variant?: 'primary' | 'secondary' | 'outline-danger' | 'outline-secondary' | 'danger'
+  disabled?: boolean
+  confirmTitle: string
+  confirmBody: string
+  confirmLabel: string
+  cancelLabel: string
+  onExecute: (rows: readonly TData[]) => Promise<void>
 }
 
 export type AppShellProps = PropsWithChildren<

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import type { Client, License, LicenseStatus, User } from '@/simpleLicense'
 import {
+  canBatchSoftDeleteLicenses,
   canCreateLicense,
   canUpdateLicense,
   canViewLicenses,
@@ -45,6 +46,7 @@ import { TableControls } from '../data/TableControls'
 import { TableFilter } from '../data/TableFilter'
 import { TablePaginationFooter } from '../data/TablePaginationFooter'
 import { TenantFilterControl } from '../data/TenantFilterControl'
+import { TABLE_BATCH_TABLE_LICENSES, useTableBatchBus } from '../data/tableBatchBus'
 import {
   createStandardStatusFilterField,
   createStandardTableSearchField,
@@ -132,6 +134,15 @@ export function LicenseManagementPanel({
   )
   const allowCreate = canCreateLicense(currentUser ?? null)
   const canView = canViewLicenses(currentUser ?? null)
+  const allowBatch = canBatchSoftDeleteLicenses(currentUser ?? null)
+
+  const { selection, batchBar } = useTableBatchBus<LicenseListItem, typeof TABLE_BATCH_TABLE_LICENSES>({
+    tableId: TABLE_BATCH_TABLE_LICENSES,
+    enabled: allowBatch,
+    visibleRows: visibleLicenses,
+    rowKey: (row) => row.id,
+    context: { client, currentUser, onRefresh },
+  })
 
   const statusOptions: UiSelectOption[] = [
     { value: UI_LICENSE_STATUS_ACTIVE, label: UI_LICENSE_STATUS_ACTIVE },
@@ -144,6 +155,7 @@ export function LicenseManagementPanel({
 
   const toolbar = (
     <TableControls
+      batch={batchBar}
       search={
         onSearchChange
           ? createStandardTableSearchField({
@@ -272,6 +284,7 @@ export function LicenseManagementPanel({
         emptyState={UI_LICENSE_EMPTY_STATE_MESSAGE}
         sortState={sortState}
         onSort={onSortChange}
+        selection={selection}
         toolbar={toolbar}
         footer={
           totalPages > 1 || onPageSizeChange ? (

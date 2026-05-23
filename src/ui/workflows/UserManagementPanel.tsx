@@ -60,6 +60,7 @@ import { DataTable } from '../data/DataTable'
 import { TableControls } from '../data/TableControls'
 import { TableFilter } from '../data/TableFilter'
 import { TablePaginationFooter } from '../data/TablePaginationFooter'
+import { TABLE_BATCH_TABLE_USERS, useTableBatchBus } from '../data/tableBatchBus'
 import {
   createStandardStatusFilterField,
   createStandardTableSearchField,
@@ -126,6 +127,14 @@ export function UserManagementPanel({
   const [editingUser, setEditingUser] = useState<UserListItem | null>(null)
   const notificationBus = useNotificationBus()
   const canCreate = useMemo(() => canCreateUser(currentUser as unknown as User), [currentUser])
+  const allowBatchDelete = useMemo(() => canDeleteUser(currentUser as unknown as User), [currentUser])
+  const { selection, batchBar } = useTableBatchBus<UserListItem, typeof TABLE_BATCH_TABLE_USERS>({
+    tableId: TABLE_BATCH_TABLE_USERS,
+    enabled: allowBatchDelete,
+    visibleRows: users,
+    rowKey: (row) => row.id,
+    context: { client, currentUser, onRefresh },
+  })
   const tenantsQuery = useAdminTenants(client)
   const tenantNameById = useMemo(() => {
     const tenantList = Array.isArray(tenantsQuery.data) ? tenantsQuery.data : (tenantsQuery.data?.data ?? [])
@@ -162,6 +171,7 @@ export function UserManagementPanel({
 
   const toolbar = (
     <TableControls
+      batch={batchBar}
       search={createStandardTableSearchField({
         value: searchTerm,
         onChange: onSearchChange,
@@ -301,6 +311,7 @@ export function UserManagementPanel({
         emptyState={UI_USER_EMPTY_STATE_MESSAGE}
         sortState={sortState}
         onSort={onSortChange}
+        selection={selection}
         toolbar={toolbar}
         footer={
           totalPages > 1 || onPageSizeChange ? (

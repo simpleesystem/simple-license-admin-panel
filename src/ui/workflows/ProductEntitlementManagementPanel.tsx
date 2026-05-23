@@ -3,6 +3,7 @@ import Button from 'react-bootstrap/Button'
 import type { Client, User } from '@/simpleLicense'
 import {
   canCreateEntitlement,
+  canDeleteEntitlement,
   canUpdateEntitlement,
   canViewEntitlements,
   isEntitlementOwnedByUser,
@@ -38,6 +39,7 @@ import {
 import { DataTable } from '../data/DataTable'
 import { TableControls } from '../data/TableControls'
 import { TagList } from '../data/TagList'
+import { TABLE_BATCH_TABLE_ENTITLEMENTS, useTableBatchBus } from '../data/tableBatchBus'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
@@ -120,6 +122,15 @@ export function ProductEntitlementManagementPanel({
   }, [currentUser, entitlements, isVendorScoped, searchTerm, currentSortState])
   const allowCreate = canCreateEntitlement(currentUser ?? null)
   const canView = canViewEntitlements(currentUser ?? null)
+  const allowBatchDelete = canDeleteEntitlement(currentUser ?? null)
+
+  const { selection, batchBar } = useTableBatchBus<ProductEntitlementListItem, typeof TABLE_BATCH_TABLE_ENTITLEMENTS>({
+    tableId: TABLE_BATCH_TABLE_ENTITLEMENTS,
+    enabled: allowBatchDelete && Boolean(productId),
+    visibleRows: visibleEntitlements,
+    rowKey: (row) => row.id,
+    context: { client, productId, currentUser, onRefresh },
+  })
 
   const refreshWith = (action: 'create' | 'update' | 'delete') => {
     notifyProductEntitlementSuccess(notificationBus, action)
@@ -131,6 +142,7 @@ export function ProductEntitlementManagementPanel({
 
   const toolbar = (
     <TableControls
+      batch={batchBar}
       search={{
         value: searchTerm,
         onChange: setSearchTerm,
@@ -241,6 +253,7 @@ export function ProductEntitlementManagementPanel({
         emptyState={UI_ENTITLEMENT_EMPTY_STATE_MESSAGE}
         sortState={currentSortState}
         onSort={handleSortChange}
+        selection={selection}
         toolbar={toolbar}
       />
 

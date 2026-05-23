@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 
 import type { PluginRelease } from '@/simpleLicense'
 
@@ -10,6 +10,7 @@ import {
   UI_PAGE_SUBTITLE_RELEASES,
   UI_PAGE_TITLE_RELEASES,
   UI_PAGE_VARIANT_FULL_WIDTH,
+  UI_RELEASE_AUTO_REFRESH_INTERVAL_MS,
   UI_RELEASE_COLUMN_ID_CREATED,
   UI_RELEASE_COLUMN_ID_FILE,
   UI_RELEASE_COLUMN_ID_SIZE,
@@ -150,6 +151,18 @@ export function ReleasesRouteComponent() {
   const handleRefresh = () => {
     void refetchReleases()
   }
+
+  useEffect(() => {
+    if (!selectedProductId) {
+      return
+    }
+    const intervalId = window.setInterval(() => {
+      void refetchReleases()
+    }, UI_RELEASE_AUTO_REFRESH_INTERVAL_MS)
+    return () => {
+      window.clearInterval(intervalId)
+    }
+  }, [refetchReleases, selectedProductId])
 
   const handleProductChange = (productId: string) => {
     setFilterAndReset('productId', productId)
