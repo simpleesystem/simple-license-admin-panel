@@ -23,11 +23,11 @@ import {
   UI_RELEASE_FILTER_VALUE_ALL,
   UI_RELEASE_FILTER_VALUE_PRERELEASE,
   UI_RELEASE_FILTER_VALUE_STABLE,
-  UI_RELEASE_REFRESH_LABEL_CHECKING,
-  UI_RELEASE_REFRESH_LABEL_IDLE,
-  UI_RELEASE_REFRESH_LABEL_NEW_AVAILABLE,
+  UI_RELEASE_REFRESH_STATUS_CHECKING,
   UI_RELEASE_REFRESH_STATUS_LAST_CHECKED_PREFIX,
   UI_RELEASE_REFRESH_STATUS_LIVE_SYNC,
+  UI_RELEASE_REFRESH_STATUS_NEW_RELEASE_PLURAL_SUFFIX,
+  UI_RELEASE_REFRESH_STATUS_NEW_RELEASE_SINGULAR,
   UI_RELEASE_REFRESH_STATUS_WAITING_FIRST_CHECK,
   UI_RELEASE_ROUTE_STATUS_ERROR_BODY,
   UI_RELEASE_ROUTE_STATUS_ERROR_TITLE,
@@ -264,33 +264,24 @@ export function ReleasesRouteComponent() {
     setFilterAndReset('channel', value)
   }
 
-  const refreshLabel = useMemo(() => {
-    if (isRefreshing) {
-      return UI_RELEASE_REFRESH_LABEL_CHECKING
-    }
-    if (pendingNewReleaseCount > 0) {
-      return UI_RELEASE_REFRESH_LABEL_NEW_AVAILABLE
-    }
-    return UI_RELEASE_REFRESH_LABEL_IDLE
-  }, [isRefreshing, pendingNewReleaseCount])
-
   const refreshStatus = useMemo(() => {
     if (!selectedProductId) {
       return ''
     }
+    const activityLabel = isRefreshing
+      ? UI_RELEASE_REFRESH_STATUS_CHECKING
+      : pendingNewReleaseCount > 0
+        ? pendingNewReleaseCount === 1
+          ? UI_RELEASE_REFRESH_STATUS_NEW_RELEASE_SINGULAR
+          : `${pendingNewReleaseCount} ${UI_RELEASE_REFRESH_STATUS_NEW_RELEASE_PLURAL_SUFFIX}`
+        : ''
     const checkedAtLabel =
       lastCheckedAt === null
         ? UI_RELEASE_REFRESH_STATUS_WAITING_FIRST_CHECK
         : new Date(lastCheckedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' })
-    const newReleaseLabel =
-      pendingNewReleaseCount > 0
-        ? pendingNewReleaseCount === 1
-          ? '1 new release detected'
-          : `${pendingNewReleaseCount} new releases detected`
-        : ''
-    const newSegment = newReleaseLabel.length > 0 ? `${newReleaseLabel} · ` : ''
-    return `${UI_RELEASE_REFRESH_STATUS_LIVE_SYNC} · ${newSegment}${UI_RELEASE_REFRESH_STATUS_LAST_CHECKED_PREFIX} ${checkedAtLabel}`
-  }, [lastCheckedAt, pendingNewReleaseCount, selectedProductId])
+    const activitySegment = activityLabel.length > 0 ? `${activityLabel} · ` : ''
+    return `${UI_RELEASE_REFRESH_STATUS_LIVE_SYNC} · ${activitySegment}${UI_RELEASE_REFRESH_STATUS_LAST_CHECKED_PREFIX} ${checkedAtLabel}`
+  }, [isRefreshing, lastCheckedAt, pendingNewReleaseCount, selectedProductId])
 
   const showLoading = Boolean(selectedProductId) && releasesLoading
   const showError = Boolean(selectedProductId) && releasesError
@@ -348,7 +339,6 @@ export function ReleasesRouteComponent() {
           onRefresh={() => {
             void handleRefresh('manual')
           }}
-          refreshLabel={refreshLabel}
           refreshStatus={refreshStatus}
         />
       ) : null}

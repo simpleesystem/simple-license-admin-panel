@@ -6,6 +6,8 @@ import {
   UI_BADGE_VARIANT_SUCCESS,
   UI_BUTTON_VARIANT_PRIMARY,
   UI_CLASS_INLINE_FILENAME,
+  UI_CLASS_RELEASE_REFRESH_STATUS,
+  UI_CLASS_RELEASE_TOOLBAR_ACTIONS,
   UI_RELEASE_BUTTON_NEW,
   UI_RELEASE_CHANNEL_FILTER_LABEL,
   UI_RELEASE_COLUMN_ACTIONS,
@@ -41,6 +43,7 @@ import {
   UI_RELEASE_STATUS_LOADING_BODY,
   UI_RELEASE_STATUS_LOADING_TITLE,
   UI_STACK_GAP_MEDIUM,
+  UI_STYLE_RELEASE_REFRESH_STATUS,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_PRODUCTS,
   UI_TENANT_FILTER_LABEL,
   UI_VALUE_PLACEHOLDER,
@@ -59,7 +62,6 @@ import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDirection } from '../types'
 import { BadgeText } from '../typography/BadgeText'
 import { EmptyState } from '../typography/EmptyState'
-import { MutedText } from '../typography/MutedText'
 import { formatBytes, formatDateTimeSafe } from '../utils/formatUtils'
 import { ReleaseFormFlow } from './ReleaseFormFlow'
 import { ReleaseRowActions } from './ReleaseRowActions'
@@ -94,7 +96,6 @@ type ReleasesPanelProps = {
   releasesLoading?: boolean
   releasesError?: boolean
   onRefresh?: () => void
-  refreshLabel?: string
   refreshStatus?: string
 }
 
@@ -126,7 +127,6 @@ export function ReleasesPanel({
   releasesLoading,
   releasesError,
   onRefresh,
-  refreshLabel,
   refreshStatus,
 }: ReleasesPanelProps) {
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -147,6 +147,26 @@ export function ReleasesPanel({
     { value: UI_RELEASE_FILTER_VALUE_STABLE, label: UI_RELEASE_FILTER_STABLE_ONLY },
     { value: UI_RELEASE_FILTER_VALUE_PRERELEASE, label: UI_RELEASE_FILTER_PRERELEASE_ONLY },
   ]
+
+  const toolbarActions =
+    (refreshStatus && selectedProductId) || allowCreate ? (
+      <div className={UI_CLASS_RELEASE_TOOLBAR_ACTIONS}>
+        {refreshStatus && selectedProductId ? (
+          <span className={UI_CLASS_RELEASE_REFRESH_STATUS} style={UI_STYLE_RELEASE_REFRESH_STATUS}>
+            {refreshStatus}
+          </span>
+        ) : null}
+        {allowCreate ? (
+          <Button
+            variant={UI_BUTTON_VARIANT_PRIMARY}
+            onClick={() => setShowCreateModal(true)}
+            disabled={!selectedProductId}
+          >
+            {UI_RELEASE_BUTTON_NEW}
+          </Button>
+        ) : null}
+      </div>
+    ) : null
 
   const toolbar = (
     <TableControls
@@ -194,24 +214,10 @@ export function ReleasesPanel({
           ? {
               onClick: onRefresh,
               disabled: !selectedProductId || Boolean(releasesLoading),
-              label: refreshLabel,
             }
           : undefined
       }
-      actions={
-        <>
-          {refreshStatus && selectedProductId ? <MutedText>{refreshStatus}</MutedText> : null}
-          {allowCreate ? (
-            <Button
-              variant={UI_BUTTON_VARIANT_PRIMARY}
-              onClick={() => setShowCreateModal(true)}
-              disabled={!selectedProductId}
-            >
-              {UI_RELEASE_BUTTON_NEW}
-            </Button>
-          ) : null}
-        </>
-      }
+      actions={toolbarActions}
     />
   )
 

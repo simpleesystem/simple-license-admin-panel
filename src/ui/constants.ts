@@ -761,6 +761,15 @@ export const UI_RELEASE_REFRESH_LABEL_NEW_AVAILABLE = 'Review new releases' as c
 export const UI_RELEASE_REFRESH_STATUS_LIVE_SYNC = 'Live sync active' as const
 export const UI_RELEASE_REFRESH_STATUS_WAITING_FIRST_CHECK = 'waiting for first check' as const
 export const UI_RELEASE_REFRESH_STATUS_LAST_CHECKED_PREFIX = 'last checked' as const
+export const UI_RELEASE_REFRESH_STATUS_CHECKING = 'checking for updates' as const
+export const UI_RELEASE_REFRESH_STATUS_NEW_RELEASE_SINGULAR = '1 new release detected' as const
+export const UI_RELEASE_REFRESH_STATUS_NEW_RELEASE_PLURAL_SUFFIX = 'new releases detected' as const
+export const UI_CLASS_RELEASE_TOOLBAR_ACTIONS = 'd-flex flex-nowrap align-items-center gap-2 overflow-hidden'
+export const UI_CLASS_RELEASE_REFRESH_STATUS = 'text-muted text-nowrap text-truncate d-inline-block'
+export const UI_RELEASE_REFRESH_STATUS_WIDTH = '24rem' as const
+export const UI_STYLE_RELEASE_REFRESH_STATUS = {
+  width: UI_RELEASE_REFRESH_STATUS_WIDTH,
+} as const
 export const UI_RELEASE_AUTO_REFRESH_TOAST_TITLE = 'New releases detected' as const
 export const UI_RELEASE_AUTO_REFRESH_TOAST_MESSAGE = 'Release list updated from live hook activity.' as const
 export const UI_RELEASE_ROUTE_STATUS_LOADING_TITLE = 'Loading release workspace' as const
