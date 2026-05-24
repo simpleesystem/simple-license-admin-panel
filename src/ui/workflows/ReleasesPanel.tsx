@@ -60,7 +60,7 @@ import type { UiDataTableColumn, UiDataTableSortState, UiSelectOption, UiSortDir
 import { BadgeText } from '../typography/BadgeText'
 import { EmptyState } from '../typography/EmptyState'
 import { MutedText } from '../typography/MutedText'
-import { formatBytes, formatDateSafe } from '../utils/formatUtils'
+import { formatBytes, formatDateTimeSafe } from '../utils/formatUtils'
 import { ReleaseFormFlow } from './ReleaseFormFlow'
 import { ReleaseRowActions } from './ReleaseRowActions'
 
@@ -242,7 +242,7 @@ export function ReleasesPanel({
       {
         id: UI_RELEASE_COLUMN_ID_CREATED,
         header: UI_RELEASE_COLUMN_CREATED,
-        cell: (row) => formatDateSafe(row.createdAt),
+        cell: (row) => formatDateTimeSafe(row.createdAt),
         sortable: true,
       },
       {

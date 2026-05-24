@@ -1,4 +1,4 @@
-import { formatDate } from '../../utils/date'
+import { formatDate, formatDateTime } from '../../utils/date'
 import {
   UI_DATE_FORMAT_LOCALE,
   UI_DATE_FORMAT_OPTIONS,
@@ -34,6 +34,17 @@ export const formatDateSafe = (value: string | Date | number | null | undefined)
   }
   try {
     return formatDate(value)
+  } catch {
+    return typeof value === 'string' ? value : UI_VALUE_PLACEHOLDER
+  }
+}
+
+export const formatDateTimeSafe = (value: string | Date | number | null | undefined): string => {
+  if (value == null || (typeof value === 'string' && value.trim().length === 0)) {
+    return UI_VALUE_PLACEHOLDER
+  }
+  try {
+    return formatDateTime(value)
   } catch {
     return typeof value === 'string' ? value : UI_VALUE_PLACEHOLDER
   }
