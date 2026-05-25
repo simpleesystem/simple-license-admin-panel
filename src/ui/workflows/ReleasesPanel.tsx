@@ -7,7 +7,6 @@ import {
   UI_BUTTON_VARIANT_PRIMARY,
   UI_CLASS_INLINE_FILENAME,
   UI_CLASS_RELEASE_REFRESH_STATUS,
-  UI_CLASS_RELEASE_TOOLBAR_ACTIONS,
   UI_RELEASE_BUTTON_NEW,
   UI_RELEASE_CHANNEL_FILTER_LABEL,
   UI_RELEASE_COLUMN_ACTIONS,
@@ -43,7 +42,7 @@ import {
   UI_RELEASE_STATUS_LOADING_BODY,
   UI_RELEASE_STATUS_LOADING_TITLE,
   UI_STACK_GAP_MEDIUM,
-  UI_STYLE_RELEASE_REFRESH_STATUS,
+  UI_STACK_GAP_SMALL,
   UI_TABLE_FILTER_PLACEHOLDER_ALL_PRODUCTS,
   UI_TENANT_FILTER_LABEL,
   UI_VALUE_PLACEHOLDER,
@@ -52,7 +51,6 @@ import { DataTable } from '../data/DataTable'
 import { StandardTablePaginationFooter } from '../data/StandardTablePaginationFooter'
 import { TableControls } from '../data/TableControls'
 import { TableFilter } from '../data/TableFilter'
-import { TableSearchInput } from '../data/TableSearchInput'
 import { TenantFilterControl } from '../data/TenantFilterControl'
 import { TABLE_BATCH_TABLE_RELEASES, useTableBatchBus } from '../data/tableBatchBus'
 import { createTableFilterField, createTableSearchField } from '../data/tableFieldFactory'
@@ -148,77 +146,66 @@ export function ReleasesPanel({
     { value: UI_RELEASE_FILTER_VALUE_PRERELEASE, label: UI_RELEASE_FILTER_PRERELEASE_ONLY },
   ]
 
-  const toolbarActions =
-    (refreshStatus && selectedProductId) || allowCreate ? (
-      <div className={UI_CLASS_RELEASE_TOOLBAR_ACTIONS}>
-        {refreshStatus && selectedProductId ? (
-          <span className={UI_CLASS_RELEASE_REFRESH_STATUS} style={UI_STYLE_RELEASE_REFRESH_STATUS}>
-            {refreshStatus}
-          </span>
-        ) : null}
-        {allowCreate ? (
-          <Button
-            variant={UI_BUTTON_VARIANT_PRIMARY}
-            onClick={() => setShowCreateModal(true)}
-            disabled={!selectedProductId}
-          >
-            {UI_RELEASE_BUTTON_NEW}
-          </Button>
-        ) : null}
-      </div>
-    ) : null
+  const toolbarActions = allowCreate ? (
+    <Button variant={UI_BUTTON_VARIANT_PRIMARY} onClick={() => setShowCreateModal(true)} disabled={!selectedProductId}>
+      {UI_RELEASE_BUTTON_NEW}
+    </Button>
+  ) : null
 
   const toolbar = (
-    <TableControls
-      batch={batchBar}
-      filters={
-        <>
-          <TenantFilterControl
-            show={showTenantFilter}
-            label={UI_TENANT_FILTER_LABEL}
-            value={selectedTenantId}
-            options={tenantOptions}
-            onChange={onTenantChange}
-          />
-          <TableFilter
-            {...createTableFilterField({
-              label: UI_RELEASE_PRODUCT_FILTER_LABEL,
-              value: selectedProductId,
-              options: productFilterOptions,
-              onChange: onProductChange,
-              placeholder: UI_TABLE_FILTER_PLACEHOLDER_ALL_PRODUCTS,
-            })}
-          />
-          <TableSearchInput
-            {...createTableSearchField({
-              label: UI_RELEASE_SEARCH_LABEL,
-              value: searchTerm,
-              onChange: onSearchChange,
-              placeholder: UI_RELEASE_SEARCH_PLACEHOLDER,
-              disabled: !selectedProductId,
-            })}
-          />
-          <TableFilter
-            {...createTableFilterField({
-              label: UI_RELEASE_CHANNEL_FILTER_LABEL,
-              value: channelFilter,
-              options: channelOptions,
-              onChange: onChannelFilterChange,
-              disabled: !selectedProductId,
-            })}
-          />
-        </>
-      }
-      refresh={
-        onRefresh
-          ? {
-              onClick: onRefresh,
-              disabled: !selectedProductId || Boolean(releasesLoading),
-            }
-          : undefined
-      }
-      actions={toolbarActions}
-    />
+    <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
+      <TableControls
+        batch={batchBar}
+        search={createTableSearchField({
+          label: UI_RELEASE_SEARCH_LABEL,
+          value: searchTerm,
+          onChange: onSearchChange,
+          placeholder: UI_RELEASE_SEARCH_PLACEHOLDER,
+          disabled: !selectedProductId,
+        })}
+        filters={
+          <>
+            <TenantFilterControl
+              show={showTenantFilter}
+              label={UI_TENANT_FILTER_LABEL}
+              value={selectedTenantId}
+              options={tenantOptions}
+              onChange={onTenantChange}
+            />
+            <TableFilter
+              {...createTableFilterField({
+                label: UI_RELEASE_PRODUCT_FILTER_LABEL,
+                value: selectedProductId,
+                options: productFilterOptions,
+                onChange: onProductChange,
+                placeholder: UI_TABLE_FILTER_PLACEHOLDER_ALL_PRODUCTS,
+              })}
+            />
+            <TableFilter
+              {...createTableFilterField({
+                label: UI_RELEASE_CHANNEL_FILTER_LABEL,
+                value: channelFilter,
+                options: channelOptions,
+                onChange: onChannelFilterChange,
+                disabled: !selectedProductId,
+              })}
+            />
+          </>
+        }
+        refresh={
+          onRefresh
+            ? {
+                onClick: onRefresh,
+                disabled: !selectedProductId || Boolean(releasesLoading),
+              }
+            : undefined
+        }
+        actions={toolbarActions}
+      />
+      {refreshStatus && selectedProductId ? (
+        <span className={UI_CLASS_RELEASE_REFRESH_STATUS}>{refreshStatus}</span>
+      ) : null}
+    </Stack>
   )
 
   const columns: UiDataTableColumn<ReleaseListItem>[] = useMemo(

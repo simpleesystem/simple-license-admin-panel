@@ -1,5 +1,5 @@
 import { QueryClientContext } from '@tanstack/react-query'
-import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { type ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
 import { DEFAULT_NOTIFICATION_EVENT, NOTIFICATION_VARIANT_ERROR, NOTIFICATION_VARIANT_SUCCESS } from '@/app/constants'
@@ -87,7 +87,7 @@ import { TABLE_BATCH_TABLE_AGENT_CREDENTIALS, useTableBatchBus } from '../data/t
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import { ModalDialog } from '../overlay/ModalDialog'
-import type { UiDataTableColumn } from '../types'
+import type { UiDataTableColumn, UiDataTableSelection } from '../types'
 import { formatDateSafe } from '../utils/formatUtils'
 
 type AgentServiceAccountsPanelProps = {
@@ -101,6 +101,10 @@ type CredentialResult = {
   clientId: string
   clientSecret: string
 }
+
+type AccountStatus = 'ACTIVE' | 'DISABLED'
+type CredentialStatusFilter = 'ALL' | 'ACTIVE' | 'REVOKED' | 'EXPIRED'
+type CredentialSortOrder = 'NEWEST' | 'OLDEST'
 
 export function AgentServiceAccountsPanel({
   client,
@@ -133,16 +137,16 @@ function AgentServiceAccountsPanelWithQuery({
   const [editingAccount, setEditingAccount] = useState<AgentServiceAccount | null>(null)
   const [editingName, setEditingName] = useState('')
   const [editingDescription, setEditingDescription] = useState('')
-  const [editingStatus, setEditingStatus] = useState<'ACTIVE' | 'DISABLED'>(UI_AGENT_SERVICE_ACCOUNT_STATUS_ACTIVE)
+  const [editingStatus, setEditingStatus] = useState<AccountStatus>(UI_AGENT_SERVICE_ACCOUNT_STATUS_ACTIVE)
   const [credentialName, setCredentialName] = useState('')
   const [scopesInput, setScopesInput] = useState('')
   const [expiresAt, setExpiresAt] = useState('')
   const [credentialResult, setCredentialResult] = useState<CredentialResult | null>(null)
-  const [credentialStatusFilter, setCredentialStatusFilter] = useState<'ALL' | 'ACTIVE' | 'REVOKED' | 'EXPIRED'>(
+  const [credentialStatusFilter, setCredentialStatusFilter] = useState<CredentialStatusFilter>(
     UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_VALUE_ALL
   )
   const [credentialSearchTerm, setCredentialSearchTerm] = useState('')
-  const [credentialSortOrder, setCredentialSortOrder] = useState<'NEWEST' | 'OLDEST'>(
+  const [credentialSortOrder, setCredentialSortOrder] = useState<CredentialSortOrder>(
     UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SORT_VALUE_NEWEST
   )
   const notificationBus = useNotificationBus()
@@ -155,6 +159,47 @@ function AgentServiceAccountsPanelWithQuery({
 
   const rows = useMemo<AgentServiceAccount[]>(() => listQuery.data ?? [], [listQuery.data])
   const issueButtonDisabled = issueMutation.isPending || credentialName.trim().length === 0
+
+  const resetEditingState = useCallback(() => {
+    setEditingAccount(null)
+    setEditingName('')
+    setEditingDescription('')
+    setEditingStatus(UI_AGENT_SERVICE_ACCOUNT_STATUS_ACTIVE)
+  }, [])
+
+  const openEditModal = useCallback((account: AgentServiceAccount) => {
+    setEditingAccount(account)
+    setEditingName(account.name)
+    setEditingDescription(account.description ?? '')
+    setEditingStatus(
+      account.status === UI_AGENT_SERVICE_ACCOUNT_STATUS_DISABLED
+        ? UI_AGENT_SERVICE_ACCOUNT_STATUS_DISABLED
+        : UI_AGENT_SERVICE_ACCOUNT_STATUS_ACTIVE
+    )
+  }, [])
+
+  const resetIssueState = useCallback(() => {
+    setSelectedAccount(null)
+    setCredentialName('')
+    setScopesInput('')
+    setExpiresAt('')
+    setCredentialResult(null)
+  }, [])
+
+  const openIssueModal = useCallback((account: AgentServiceAccount) => {
+    setSelectedAccount(account)
+    setCredentialName('')
+    setScopesInput('')
+    setExpiresAt('')
+    setCredentialResult(null)
+  }, [])
+
+  const openHistoryModal = useCallback((account: AgentServiceAccount) => {
+    setHistoryAccount(account)
+    setCredentialStatusFilter(UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_VALUE_ALL)
+    setCredentialSearchTerm('')
+    setCredentialSortOrder(UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SORT_VALUE_NEWEST)
+  }, [])
 
   const columns: UiDataTableColumn<AgentServiceAccount>[] = useMemo(
     () => [
@@ -192,50 +237,15 @@ function AgentServiceAccountsPanelWithQuery({
         id: 'agent-service-account-actions',
         header: UI_AGENT_SERVICE_ACCOUNT_COLUMN_ACTIONS,
         cell: (row) => (
-          <Stack direction="row" gap={UI_STACK_GAP_MEDIUM}>
-            <Button
-              variant={UI_BUTTON_VARIANT_SECONDARY}
-              onClick={() => {
-                setEditingAccount(row)
-                setEditingName(row.name)
-                setEditingDescription(row.description ?? '')
-                setEditingStatus(
-                  row.status === UI_AGENT_SERVICE_ACCOUNT_STATUS_DISABLED
-                    ? UI_AGENT_SERVICE_ACCOUNT_STATUS_DISABLED
-                    : UI_AGENT_SERVICE_ACCOUNT_STATUS_ACTIVE
-                )
-              }}
-            >
-              {UI_AGENT_SERVICE_ACCOUNT_ACTION_EDIT}
-            </Button>
-            <Button
-              variant={UI_BUTTON_VARIANT_SECONDARY}
-              onClick={() => {
-                setSelectedAccount(row)
-                setCredentialName('')
-                setScopesInput('')
-                setExpiresAt('')
-                setCredentialResult(null)
-              }}
-            >
-              {UI_AGENT_SERVICE_ACCOUNT_ACTION_ISSUE_CREDENTIAL}
-            </Button>
-            <Button
-              variant={UI_BUTTON_VARIANT_SECONDARY}
-              onClick={() => {
-                setHistoryAccount(row)
-                setCredentialStatusFilter(UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_VALUE_ALL)
-                setCredentialSearchTerm('')
-                setCredentialSortOrder(UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SORT_VALUE_NEWEST)
-              }}
-            >
-              {UI_AGENT_SERVICE_ACCOUNT_ACTION_VIEW_CREDENTIALS}
-            </Button>
-          </Stack>
+          <AgentServiceAccountRowActions
+            onEdit={() => openEditModal(row)}
+            onIssueCredential={() => openIssueModal(row)}
+            onViewCredentials={() => openHistoryModal(row)}
+          />
         ),
       },
     ],
-    [tenantNameById]
+    [openEditModal, openHistoryModal, openIssueModal, tenantNameById]
   )
 
   const credentialsForHistory = useMemo<AgentServiceCredential[]>(() => {
@@ -426,10 +436,7 @@ function AgentServiceAccountsPanelWithQuery({
         titleKey: UI_AGENT_SERVICE_ACCOUNT_TOAST_UPDATE_SUCCESS,
         variant: NOTIFICATION_VARIANT_SUCCESS,
       })
-      setEditingAccount(null)
-      setEditingName('')
-      setEditingDescription('')
-      setEditingStatus(UI_AGENT_SERVICE_ACCOUNT_STATUS_ACTIVE)
+      resetEditingState()
     } catch {
       notificationBus.emit(DEFAULT_NOTIFICATION_EVENT, {
         titleKey: UI_AGENT_SERVICE_ACCOUNT_TOAST_UPDATE_ERROR,
@@ -451,216 +458,362 @@ function AgentServiceAccountsPanelWithQuery({
         emptyState={UI_AGENT_SERVICE_ACCOUNT_EMPTY_STATE}
         isLoading={listQuery.isLoading}
       />
-      <ModalDialog
+      <EditServiceAccountModal
         show={Boolean(editingAccount)}
-        onClose={() => {
-          setEditingAccount(null)
-          setEditingName('')
-          setEditingDescription('')
-          setEditingStatus(UI_AGENT_SERVICE_ACCOUNT_STATUS_ACTIVE)
+        editingName={editingName}
+        editingDescription={editingDescription}
+        editingStatus={editingStatus}
+        onNameChange={setEditingName}
+        onDescriptionChange={setEditingDescription}
+        onStatusChange={setEditingStatus}
+        onClose={resetEditingState}
+        onSave={() => {
+          void handleUpdateAccount()
         }}
-        title={UI_AGENT_SERVICE_ACCOUNT_MODAL_EDIT_TITLE}
-        body={
-          <Stack direction="column" gap={UI_STACK_GAP_MEDIUM}>
-            <Form.Group>
-              <Form.Label>{UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_NAME}</Form.Label>
-              <Form.Control value={editingName} onChange={(event) => setEditingName(event.target.value)} />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label>{UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_DESCRIPTION}</Form.Label>
-              <Form.Control
-                value={editingDescription}
-                onChange={(event) => setEditingDescription(event.target.value)}
-              />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label>{UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_STATUS}</Form.Label>
-              <Form.Select
-                value={editingStatus}
-                onChange={(event) =>
-                  setEditingStatus(
-                    event.target.value === UI_AGENT_SERVICE_ACCOUNT_STATUS_DISABLED
-                      ? UI_AGENT_SERVICE_ACCOUNT_STATUS_DISABLED
-                      : UI_AGENT_SERVICE_ACCOUNT_STATUS_ACTIVE
-                  )
-                }
-              >
-                <option value={UI_AGENT_SERVICE_ACCOUNT_STATUS_ACTIVE}>
-                  {UI_AGENT_SERVICE_ACCOUNT_STATUS_LABEL_ACTIVE}
-                </option>
-                <option value={UI_AGENT_SERVICE_ACCOUNT_STATUS_DISABLED}>
-                  {UI_AGENT_SERVICE_ACCOUNT_STATUS_LABEL_DISABLED}
-                </option>
-              </Form.Select>
-            </Form.Group>
-          </Stack>
-        }
-        secondaryAction={{
-          id: 'agent-account-edit-cancel',
-          label: UI_ACTION_CANCEL,
-          onClick: () => {
-            setEditingAccount(null)
-            setEditingName('')
-            setEditingDescription('')
-            setEditingStatus(UI_AGENT_SERVICE_ACCOUNT_STATUS_ACTIVE)
-          },
-          variant: UI_BUTTON_VARIANT_SECONDARY,
-          disabled: updateMutation.isPending,
-        }}
-        primaryAction={{
-          id: 'agent-account-edit-save',
-          label: UI_AGENT_SERVICE_ACCOUNT_SUBMIT_UPDATE,
-          onClick: () => {
-            void handleUpdateAccount()
-          },
-          variant: UI_BUTTON_VARIANT_PRIMARY,
-          disabled: !canSubmitEdit,
-        }}
+        isPending={updateMutation.isPending}
+        canSubmit={canSubmitEdit}
       />
-      <ModalDialog
+      <IssueCredentialModal
         show={Boolean(selectedAccount)}
-        onClose={() => {
-          setSelectedAccount(null)
-          setCredentialResult(null)
+        credentialName={credentialName}
+        scopesInput={scopesInput}
+        expiresAt={expiresAt}
+        credentialResult={credentialResult}
+        onCredentialNameChange={setCredentialName}
+        onScopesInputChange={setScopesInput}
+        onExpiresAtChange={setExpiresAt}
+        onClose={resetIssueState}
+        onIssue={() => {
+          void handleIssueCredential()
         }}
-        title={UI_AGENT_SERVICE_ACCOUNT_MODAL_ISSUE_CREDENTIAL_TITLE}
-        body={
-          <Stack direction="column" gap={UI_STACK_GAP_MEDIUM}>
-            <Form.Group>
-              <Form.Label>{UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_CREDENTIAL_NAME}</Form.Label>
-              <Form.Control
-                value={credentialName}
-                onChange={(event) => setCredentialName(event.target.value)}
-                disabled={Boolean(credentialResult)}
-              />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label>{UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_SCOPES}</Form.Label>
-              <Form.Control
-                value={scopesInput}
-                onChange={(event) => setScopesInput(event.target.value)}
-                disabled={Boolean(credentialResult)}
-              />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label>{UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_EXPIRES_AT}</Form.Label>
-              <Form.Control
-                type="datetime-local"
-                value={expiresAt}
-                onChange={(event) => setExpiresAt(event.target.value)}
-                disabled={Boolean(credentialResult)}
-              />
-            </Form.Group>
-            {credentialResult ? (
-              <Stack direction="column" gap={UI_STACK_GAP_MEDIUM}>
-                <strong>{UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_RESULT_TITLE}</strong>
-                <Form.Group>
-                  <Form.Label>{UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_RESULT_CLIENT_ID}</Form.Label>
-                  <Form.Control value={credentialResult.clientId} readOnly={true} />
-                </Form.Group>
-                <Form.Group>
-                  <Form.Label>{UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_RESULT_CLIENT_SECRET}</Form.Label>
-                  <Form.Control value={credentialResult.clientSecret} readOnly={true} />
-                </Form.Group>
-              </Stack>
-            ) : null}
-          </Stack>
-        }
-        secondaryAction={{
-          id: 'agent-credential-close',
-          label: credentialResult ? UI_ACTION_CLOSE : UI_ACTION_CANCEL,
-          onClick: () => {
-            setSelectedAccount(null)
-            setCredentialResult(null)
-          },
-          variant: UI_BUTTON_VARIANT_SECONDARY,
-          disabled: issueMutation.isPending,
-        }}
-        primaryAction={
-          credentialResult
-            ? undefined
-            : {
-                id: 'agent-credential-issue',
-                label: UI_AGENT_SERVICE_ACCOUNT_SUBMIT_ISSUE,
-                onClick: () => {
-                  void handleIssueCredential()
-                },
-                variant: UI_BUTTON_VARIANT_PRIMARY,
-                disabled: issueButtonDisabled,
-              }
-        }
+        issuePending={issueMutation.isPending}
+        issueButtonDisabled={issueButtonDisabled}
       />
-      <ModalDialog
+      <CredentialHistoryModal
         show={Boolean(historyAccount)}
+        credentialStatusFilter={credentialStatusFilter}
+        credentialSearchTerm={credentialSearchTerm}
+        credentialSortOrder={credentialSortOrder}
+        onStatusFilterChange={setCredentialStatusFilter}
+        onSearchTermChange={setCredentialSearchTerm}
+        onSortOrderChange={setCredentialSortOrder}
+        batchBar={batchBar}
+        credentials={credentialsForHistory}
+        columns={credentialHistoryColumns}
+        selection={selection}
+        isLoading={listQuery.isLoading || revokeMutation.isPending}
         onClose={() => {
           setHistoryAccount(null)
         }}
-        title={UI_AGENT_SERVICE_ACCOUNT_MODAL_CREDENTIAL_HISTORY_TITLE}
-        body={
-          <Stack direction="column" gap={UI_STACK_GAP_MEDIUM}>
-            <Form.Group>
-              <Form.Label>{UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_LABEL}</Form.Label>
-              <Form.Select
-                value={credentialStatusFilter}
-                onChange={(event) => setCredentialStatusFilter(event.target.value as 'ALL' | 'ACTIVE' | 'REVOKED')}
-              >
-                <option value={UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_VALUE_ALL}>
-                  {UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_ALL}
-                </option>
-                <option value={UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_VALUE_ACTIVE}>
-                  {UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_ACTIVE}
-                </option>
-                <option value={UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_VALUE_REVOKED}>
-                  {UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_REVOKED}
-                </option>
-                <option value={UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_VALUE_EXPIRED}>
-                  {UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_EXPIRED}
-                </option>
-              </Form.Select>
-            </Form.Group>
-            <Form.Group>
-              <Form.Label>{UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SEARCH_LABEL}</Form.Label>
-              <Form.Control
-                value={credentialSearchTerm}
-                onChange={(event) => setCredentialSearchTerm(event.target.value)}
-                placeholder={UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SEARCH_PLACEHOLDER}
-              />
-            </Form.Group>
-            <Form.Group>
-              <Form.Label>{UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SORT_LABEL}</Form.Label>
-              <Form.Select
-                value={credentialSortOrder}
-                onChange={(event) => setCredentialSortOrder(event.target.value as 'NEWEST' | 'OLDEST')}
-              >
-                <option value={UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SORT_VALUE_NEWEST}>
-                  {UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SORT_NEWEST}
-                </option>
-                <option value={UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SORT_VALUE_OLDEST}>
-                  {UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SORT_OLDEST}
-                </option>
-              </Form.Select>
-            </Form.Group>
-            <TableControls batch={batchBar} />
-            <DataTable
-              data={credentialsForHistory}
-              columns={credentialHistoryColumns}
-              rowKey={(row) => row.id}
-              emptyState={UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_EMPTY_STATE}
-              isLoading={listQuery.isLoading || revokeMutation.isPending}
-              selection={selection}
-            />
-          </Stack>
-        }
-        secondaryAction={{
-          id: 'agent-credential-history-close',
-          label: UI_ACTION_CLOSE,
-          onClick: () => {
-            setHistoryAccount(null)
-          },
-          variant: UI_BUTTON_VARIANT_SECONDARY,
-        }}
       />
     </Stack>
+  )
+}
+
+type AgentServiceAccountRowActionsProps = {
+  onEdit: () => void
+  onIssueCredential: () => void
+  onViewCredentials: () => void
+}
+
+function AgentServiceAccountRowActions({
+  onEdit,
+  onIssueCredential,
+  onViewCredentials,
+}: AgentServiceAccountRowActionsProps) {
+  return (
+    <Stack direction="row" gap={UI_STACK_GAP_MEDIUM}>
+      <Button variant={UI_BUTTON_VARIANT_SECONDARY} onClick={onEdit}>
+        {UI_AGENT_SERVICE_ACCOUNT_ACTION_EDIT}
+      </Button>
+      <Button variant={UI_BUTTON_VARIANT_SECONDARY} onClick={onIssueCredential}>
+        {UI_AGENT_SERVICE_ACCOUNT_ACTION_ISSUE_CREDENTIAL}
+      </Button>
+      <Button variant={UI_BUTTON_VARIANT_SECONDARY} onClick={onViewCredentials}>
+        {UI_AGENT_SERVICE_ACCOUNT_ACTION_VIEW_CREDENTIALS}
+      </Button>
+    </Stack>
+  )
+}
+
+type EditServiceAccountModalProps = {
+  show: boolean
+  editingName: string
+  editingDescription: string
+  editingStatus: AccountStatus
+  onNameChange: (value: string) => void
+  onDescriptionChange: (value: string) => void
+  onStatusChange: (value: AccountStatus) => void
+  onClose: () => void
+  onSave: () => void
+  isPending: boolean
+  canSubmit: boolean
+}
+
+function EditServiceAccountModal({
+  show,
+  editingName,
+  editingDescription,
+  editingStatus,
+  onNameChange,
+  onDescriptionChange,
+  onStatusChange,
+  onClose,
+  onSave,
+  isPending,
+  canSubmit,
+}: EditServiceAccountModalProps) {
+  return (
+    <ModalDialog
+      show={show}
+      onClose={onClose}
+      title={UI_AGENT_SERVICE_ACCOUNT_MODAL_EDIT_TITLE}
+      body={
+        <Stack direction="column" gap={UI_STACK_GAP_MEDIUM}>
+          <Form.Group>
+            <Form.Label>{UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_NAME}</Form.Label>
+            <Form.Control value={editingName} onChange={(event) => onNameChange(event.target.value)} />
+          </Form.Group>
+          <Form.Group>
+            <Form.Label>{UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_DESCRIPTION}</Form.Label>
+            <Form.Control value={editingDescription} onChange={(event) => onDescriptionChange(event.target.value)} />
+          </Form.Group>
+          <Form.Group>
+            <Form.Label>{UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_STATUS}</Form.Label>
+            <Form.Select
+              value={editingStatus}
+              onChange={(event) =>
+                onStatusChange(
+                  event.target.value === UI_AGENT_SERVICE_ACCOUNT_STATUS_DISABLED
+                    ? UI_AGENT_SERVICE_ACCOUNT_STATUS_DISABLED
+                    : UI_AGENT_SERVICE_ACCOUNT_STATUS_ACTIVE
+                )
+              }
+            >
+              <option value={UI_AGENT_SERVICE_ACCOUNT_STATUS_ACTIVE}>
+                {UI_AGENT_SERVICE_ACCOUNT_STATUS_LABEL_ACTIVE}
+              </option>
+              <option value={UI_AGENT_SERVICE_ACCOUNT_STATUS_DISABLED}>
+                {UI_AGENT_SERVICE_ACCOUNT_STATUS_LABEL_DISABLED}
+              </option>
+            </Form.Select>
+          </Form.Group>
+        </Stack>
+      }
+      secondaryAction={{
+        id: 'agent-account-edit-cancel',
+        label: UI_ACTION_CANCEL,
+        onClick: onClose,
+        variant: UI_BUTTON_VARIANT_SECONDARY,
+        disabled: isPending,
+      }}
+      primaryAction={{
+        id: 'agent-account-edit-save',
+        label: UI_AGENT_SERVICE_ACCOUNT_SUBMIT_UPDATE,
+        onClick: onSave,
+        variant: UI_BUTTON_VARIANT_PRIMARY,
+        disabled: !canSubmit,
+      }}
+    />
+  )
+}
+
+type IssueCredentialModalProps = {
+  show: boolean
+  credentialName: string
+  scopesInput: string
+  expiresAt: string
+  credentialResult: CredentialResult | null
+  onCredentialNameChange: (value: string) => void
+  onScopesInputChange: (value: string) => void
+  onExpiresAtChange: (value: string) => void
+  onClose: () => void
+  onIssue: () => void
+  issuePending: boolean
+  issueButtonDisabled: boolean
+}
+
+function IssueCredentialModal({
+  show,
+  credentialName,
+  scopesInput,
+  expiresAt,
+  credentialResult,
+  onCredentialNameChange,
+  onScopesInputChange,
+  onExpiresAtChange,
+  onClose,
+  onIssue,
+  issuePending,
+  issueButtonDisabled,
+}: IssueCredentialModalProps) {
+  return (
+    <ModalDialog
+      show={show}
+      onClose={onClose}
+      title={UI_AGENT_SERVICE_ACCOUNT_MODAL_ISSUE_CREDENTIAL_TITLE}
+      body={
+        <Stack direction="column" gap={UI_STACK_GAP_MEDIUM}>
+          <Form.Group>
+            <Form.Label>{UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_CREDENTIAL_NAME}</Form.Label>
+            <Form.Control
+              value={credentialName}
+              onChange={(event) => onCredentialNameChange(event.target.value)}
+              disabled={Boolean(credentialResult)}
+            />
+          </Form.Group>
+          <Form.Group>
+            <Form.Label>{UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_SCOPES}</Form.Label>
+            <Form.Control
+              value={scopesInput}
+              onChange={(event) => onScopesInputChange(event.target.value)}
+              disabled={Boolean(credentialResult)}
+            />
+          </Form.Group>
+          <Form.Group>
+            <Form.Label>{UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_EXPIRES_AT}</Form.Label>
+            <Form.Control
+              type="datetime-local"
+              value={expiresAt}
+              onChange={(event) => onExpiresAtChange(event.target.value)}
+              disabled={Boolean(credentialResult)}
+            />
+          </Form.Group>
+          {credentialResult ? (
+            <Stack direction="column" gap={UI_STACK_GAP_MEDIUM}>
+              <strong>{UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_RESULT_TITLE}</strong>
+              <Form.Group>
+                <Form.Label>{UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_RESULT_CLIENT_ID}</Form.Label>
+                <Form.Control value={credentialResult.clientId} readOnly={true} />
+              </Form.Group>
+              <Form.Group>
+                <Form.Label>{UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_RESULT_CLIENT_SECRET}</Form.Label>
+                <Form.Control value={credentialResult.clientSecret} readOnly={true} />
+              </Form.Group>
+            </Stack>
+          ) : null}
+        </Stack>
+      }
+      secondaryAction={{
+        id: 'agent-credential-close',
+        label: credentialResult ? UI_ACTION_CLOSE : UI_ACTION_CANCEL,
+        onClick: onClose,
+        variant: UI_BUTTON_VARIANT_SECONDARY,
+        disabled: issuePending,
+      }}
+      primaryAction={
+        credentialResult
+          ? undefined
+          : {
+              id: 'agent-credential-issue',
+              label: UI_AGENT_SERVICE_ACCOUNT_SUBMIT_ISSUE,
+              onClick: onIssue,
+              variant: UI_BUTTON_VARIANT_PRIMARY,
+              disabled: issueButtonDisabled,
+            }
+      }
+    />
+  )
+}
+
+type CredentialHistoryModalProps = {
+  show: boolean
+  credentialStatusFilter: CredentialStatusFilter
+  credentialSearchTerm: string
+  credentialSortOrder: CredentialSortOrder
+  onStatusFilterChange: (value: CredentialStatusFilter) => void
+  onSearchTermChange: (value: string) => void
+  onSortOrderChange: (value: CredentialSortOrder) => void
+  batchBar: ReactNode
+  credentials: readonly AgentServiceCredential[]
+  columns: readonly UiDataTableColumn<AgentServiceCredential>[]
+  selection?: UiDataTableSelection<AgentServiceCredential>
+  isLoading: boolean
+  onClose: () => void
+}
+
+function CredentialHistoryModal({
+  show,
+  credentialStatusFilter,
+  credentialSearchTerm,
+  credentialSortOrder,
+  onStatusFilterChange,
+  onSearchTermChange,
+  onSortOrderChange,
+  batchBar,
+  credentials,
+  columns,
+  selection,
+  isLoading,
+  onClose,
+}: CredentialHistoryModalProps) {
+  return (
+    <ModalDialog
+      show={show}
+      onClose={onClose}
+      title={UI_AGENT_SERVICE_ACCOUNT_MODAL_CREDENTIAL_HISTORY_TITLE}
+      body={
+        <Stack direction="column" gap={UI_STACK_GAP_MEDIUM}>
+          <Form.Group>
+            <Form.Label>{UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_LABEL}</Form.Label>
+            <Form.Select
+              value={credentialStatusFilter}
+              onChange={(event) => onStatusFilterChange(event.target.value as CredentialStatusFilter)}
+            >
+              <option value={UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_VALUE_ALL}>
+                {UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_ALL}
+              </option>
+              <option value={UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_VALUE_ACTIVE}>
+                {UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_ACTIVE}
+              </option>
+              <option value={UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_VALUE_REVOKED}>
+                {UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_REVOKED}
+              </option>
+              <option value={UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_VALUE_EXPIRED}>
+                {UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_FILTER_EXPIRED}
+              </option>
+            </Form.Select>
+          </Form.Group>
+          <Form.Group>
+            <Form.Label>{UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SEARCH_LABEL}</Form.Label>
+            <Form.Control
+              value={credentialSearchTerm}
+              onChange={(event) => onSearchTermChange(event.target.value)}
+              placeholder={UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SEARCH_PLACEHOLDER}
+            />
+          </Form.Group>
+          <Form.Group>
+            <Form.Label>{UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SORT_LABEL}</Form.Label>
+            <Form.Select
+              value={credentialSortOrder}
+              onChange={(event) => onSortOrderChange(event.target.value as CredentialSortOrder)}
+            >
+              <option value={UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SORT_VALUE_NEWEST}>
+                {UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SORT_NEWEST}
+              </option>
+              <option value={UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SORT_VALUE_OLDEST}>
+                {UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_SORT_OLDEST}
+              </option>
+            </Form.Select>
+          </Form.Group>
+          <TableControls batch={batchBar} />
+          <DataTable
+            data={credentials}
+            columns={columns}
+            rowKey={(row) => row.id}
+            emptyState={UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_EMPTY_STATE}
+            isLoading={isLoading}
+            selection={selection}
+          />
+        </Stack>
+      }
+      secondaryAction={{
+        id: 'agent-credential-history-close',
+        label: UI_ACTION_CLOSE,
+        onClick: onClose,
+        variant: UI_BUTTON_VARIANT_SECONDARY,
+      }}
+    />
   )
 }
 

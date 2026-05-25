@@ -7,6 +7,7 @@ import {
   UI_BUTTON_VARIANT_SECONDARY,
   UI_CLASS_TABLE_BATCH_ACTIONS,
   UI_CLASS_TABLE_BATCH_META,
+  UI_STYLE_TABLE_BATCH_ACTIONS,
   UI_TABLE_BATCH_CLEAR_SELECTION,
   UI_TABLE_BATCH_HINT,
   UI_TABLE_BATCH_SELECTED_COUNT_LABEL,
@@ -35,7 +36,11 @@ export function TableBatchActions<TData>({
 
   if (selectedCount === 0) {
     return (
-      <output className={composeClassNames(UI_CLASS_TABLE_BATCH_ACTIONS, className)} aria-live="polite">
+      <output
+        className={composeClassNames(UI_CLASS_TABLE_BATCH_ACTIONS, className)}
+        style={UI_STYLE_TABLE_BATCH_ACTIONS}
+        aria-live="polite"
+      >
         <span className={UI_CLASS_TABLE_BATCH_META}>{UI_TABLE_BATCH_HINT}</span>
       </output>
     )
@@ -56,7 +61,11 @@ export function TableBatchActions<TData>({
   }
 
   return (
-    <fieldset className={composeClassNames(UI_CLASS_TABLE_BATCH_ACTIONS, className)} aria-live="polite">
+    <fieldset
+      className={composeClassNames(UI_CLASS_TABLE_BATCH_ACTIONS, className)}
+      style={UI_STYLE_TABLE_BATCH_ACTIONS}
+      aria-live="polite"
+    >
       <span className={UI_CLASS_TABLE_BATCH_META}>
         {selectedCount} {UI_TABLE_BATCH_SELECTED_COUNT_LABEL}
       </span>

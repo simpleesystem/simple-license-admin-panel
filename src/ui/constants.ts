@@ -374,6 +374,10 @@ export const UI_CLASS_TABLE_PAGINATION_STATUS = 'd-flex align-items-center px-2'
 export const UI_CLASS_TABLE_BATCH_ACTIONS =
   'd-flex flex-wrap align-items-center gap-2 mb-2 p-2 border rounded bg-body-tertiary'
 export const UI_CLASS_TABLE_BATCH_META = 'text-muted small fw-semibold me-1'
+export const UI_TABLE_BATCH_ACTIONS_MIN_HEIGHT = '2.75rem' as const
+export const UI_STYLE_TABLE_BATCH_ACTIONS = {
+  minHeight: UI_TABLE_BATCH_ACTIONS_MIN_HEIGHT,
+} as const
 
 export const UI_CLASS_SUMMARY_LIST = 'row row-cols-1 row-cols-md-2 g-3 list-unstyled mb-0'
 export const UI_CLASS_SUMMARY_CARD = 'p-3 border rounded bg-body'
@@ -755,9 +759,6 @@ export const UI_RELEASE_STATUS_ERROR_TITLE = 'Unable to load releases' as const
 export const UI_RELEASE_STATUS_ERROR_BODY = 'Please try again after refreshing the page.' as const
 export const UI_RELEASE_STATUS_ACTION_RETRY = 'Retry' as const
 export const UI_RELEASE_AUTO_REFRESH_INTERVAL_MS = 15000 as const
-export const UI_RELEASE_REFRESH_LABEL_IDLE = 'Refresh' as const
-export const UI_RELEASE_REFRESH_LABEL_CHECKING = 'Checking…' as const
-export const UI_RELEASE_REFRESH_LABEL_NEW_AVAILABLE = 'Review new releases' as const
 export const UI_RELEASE_REFRESH_STATUS_LIVE_SYNC = 'Live sync active' as const
 export const UI_RELEASE_REFRESH_STATUS_WAITING_FIRST_CHECK = 'waiting for first check' as const
 export const UI_RELEASE_REFRESH_STATUS_LAST_CHECKED_PREFIX = 'last checked' as const

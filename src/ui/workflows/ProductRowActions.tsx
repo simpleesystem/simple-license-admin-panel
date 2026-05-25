@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import type { Client, ProtectionBuildTokenMetadata, User } from '@/simpleLicense'
 import { useDeleteProduct, useResumeProduct, useSuspendProduct } from '@/simpleLicense'
@@ -70,7 +70,7 @@ import { TableControls } from '../data/TableControls'
 import { TABLE_BATCH_TABLE_PROTECTION_BUILD_TOKENS, useTableBatchBus } from '../data/tableBatchBus'
 import { Stack } from '../layout/Stack'
 import { ModalDialog } from '../overlay/ModalDialog'
-import type { UiCommonProps, UiDataTableColumn } from '../types'
+import type { UiCommonProps, UiDataTableColumn, UiDataTableSelection } from '../types'
 import { KeyValueList } from '../typography/KeyValueList'
 import { VisibilityGate } from '../utils/PermissionGate'
 import { notifyCrudError, notifyProductSuccess } from './notifications'
@@ -84,6 +84,12 @@ type ProductRowActionsProps = UiCommonProps & {
   onEdit?: (product: { id: string }) => void
   onCompleted?: () => void
   currentUser?: User | null
+}
+
+type ProtectionKeyMetadata = {
+  productSlug: string
+  signingKeyId: string
+  publicKey: string
 }
 
 export function ProductRowActions({
@@ -107,11 +113,7 @@ export function ProductRowActions({
   const [showProtectionKeyModal, setShowProtectionKeyModal] = useState(false)
   const [isProtectionKeyLoading, setIsProtectionKeyLoading] = useState(false)
   const [protectionKeyError, setProtectionKeyError] = useState<string | null>(null)
-  const [protectionKeyMetadata, setProtectionKeyMetadata] = useState<{
-    productSlug: string
-    signingKeyId: string
-    publicKey: string
-  } | null>(null)
+  const [protectionKeyMetadata, setProtectionKeyMetadata] = useState<ProtectionKeyMetadata | null>(null)
   const [showBuildTokensModal, setShowBuildTokensModal] = useState(false)
   const [isBuildTokensLoading, setIsBuildTokensLoading] = useState(false)
   const [isIssuingBuildToken, setIsIssuingBuildToken] = useState(false)
@@ -395,108 +397,28 @@ export function ProductRowActions({
           </Button>
         ) : null}
 
-        <ModalDialog
+        <ProtectionKeyModal
           show={showProtectionKeyModal}
+          isLoading={isProtectionKeyLoading}
+          error={protectionKeyError}
+          metadata={protectionKeyMetadata}
           onClose={() => setShowProtectionKeyModal(false)}
-          title={UI_PRODUCT_PROTECTION_KEY_MODAL_TITLE}
-          body={
-            isProtectionKeyLoading ? (
-              UI_PRODUCT_PROTECTION_KEY_LOADING
-            ) : protectionKeyError ? (
-              protectionKeyError
-            ) : (
-              <KeyValueList
-                items={[
-                  {
-                    id: 'protection-product',
-                    label: UI_PRODUCT_PROTECTION_KEY_LABEL_PRODUCT,
-                    value: <code>{protectionKeyMetadata?.productSlug ?? UI_VALUE_PLACEHOLDER}</code>,
-                  },
-                  {
-                    id: 'protection-signing-key-id',
-                    label: UI_PRODUCT_PROTECTION_KEY_LABEL_SIGNING_KEY_ID,
-                    value: <code>{protectionKeyMetadata?.signingKeyId ?? UI_VALUE_PLACEHOLDER}</code>,
-                  },
-                  {
-                    id: 'protection-public-key',
-                    label: UI_PRODUCT_PROTECTION_KEY_LABEL_PUBLIC_KEY,
-                    value: <code>{protectionKeyMetadata?.publicKey ?? UI_VALUE_PLACEHOLDER}</code>,
-                  },
-                ]}
-              />
-            )
-          }
-          secondaryAction={{
-            id: 'protection-key-close',
-            label: UI_PRODUCT_PROTECTION_KEY_CLOSE,
-            onClick: () => setShowProtectionKeyModal(false),
-          }}
         />
 
-        <ModalDialog
+        <BuildTokensModal
           show={showBuildTokensModal}
-          onClose={() => setShowBuildTokensModal(false)}
-          title={UI_PRODUCT_BUILD_TOKENS_MODAL_TITLE}
-          body={
-            isBuildTokensLoading ? (
-              UI_PRODUCT_BUILD_TOKENS_LOADING
-            ) : buildTokensError ? (
-              buildTokensError
-            ) : (
-              <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
-                <Button
-                  variant={UI_BUTTON_VARIANT_GHOST}
-                  onClick={() => {
-                    void handleIssueBuildToken()
-                  }}
-                  disabled={isIssuingBuildToken}
-                >
-                  {isIssuingBuildToken ? UI_PRODUCT_BUILD_TOKENS_ISSUING : UI_PRODUCT_BUILD_TOKENS_ISSUE}
-                </Button>
-                {issuedBuildToken !== null ? (
-                  <KeyValueList
-                    items={[
-                      {
-                        id: 'build-token-issued',
-                        label: UI_PRODUCT_BUILD_TOKENS_LABEL_ISSUED_TOKEN,
-                        value: <code>{issuedBuildToken}</code>,
-                      },
-                    ]}
-                  />
-                ) : null}
-                <div>{UI_PRODUCT_BUILD_TOKENS_TOKEN_ONCE}</div>
-                <KeyValueList
-                  items={[
-                    {
-                      id: 'build-token-usage-note',
-                      label: UI_PRODUCT_BUILD_TOKENS_LABEL_USAGE_NOTE,
-                      value: UI_PRODUCT_BUILD_TOKENS_USAGE_NOTE,
-                    },
-                    {
-                      id: 'build-token-release-endpoint',
-                      label: UI_PRODUCT_BUILD_TOKENS_LABEL_RELEASE_ENDPOINT,
-                      value: <code>{UI_PRODUCT_BUILD_TOKENS_RELEASE_ENDPOINT}</code>,
-                    },
-                  ]}
-                />
-                <div>{UI_PRODUCT_BUILD_TOKENS_CURRENT}</div>
-                <TableControls batch={batchBar} />
-                <DataTable
-                  data={buildTokens}
-                  columns={buildTokenColumns}
-                  rowKey={(row) => row.id}
-                  emptyState={UI_PRODUCT_BUILD_TOKENS_EMPTY}
-                  isLoading={isBuildTokensLoading}
-                  selection={selection}
-                />
-              </Stack>
-            )
-          }
-          secondaryAction={{
-            id: 'build-tokens-close',
-            label: UI_PRODUCT_BUILD_TOKENS_CLOSE,
-            onClick: () => setShowBuildTokensModal(false),
+          isLoading={isBuildTokensLoading}
+          error={buildTokensError}
+          isIssuing={isIssuingBuildToken}
+          issuedToken={issuedBuildToken}
+          tokens={buildTokens}
+          columns={buildTokenColumns}
+          selection={selection}
+          batchBar={batchBar}
+          onIssue={() => {
+            void handleIssueBuildToken()
           }}
+          onClose={() => setShowBuildTokensModal(false)}
         />
 
         <ModalDialog
@@ -554,5 +476,145 @@ export function ProductRowActions({
         />
       </Stack>
     </VisibilityGate>
+  )
+}
+
+type ProtectionKeyModalProps = {
+  show: boolean
+  isLoading: boolean
+  error: string | null
+  metadata: ProtectionKeyMetadata | null
+  onClose: () => void
+}
+
+function ProtectionKeyModal({ show, isLoading, error, metadata, onClose }: ProtectionKeyModalProps) {
+  return (
+    <ModalDialog
+      show={show}
+      onClose={onClose}
+      title={UI_PRODUCT_PROTECTION_KEY_MODAL_TITLE}
+      body={
+        isLoading ? (
+          UI_PRODUCT_PROTECTION_KEY_LOADING
+        ) : error ? (
+          error
+        ) : (
+          <KeyValueList
+            items={[
+              {
+                id: 'protection-product',
+                label: UI_PRODUCT_PROTECTION_KEY_LABEL_PRODUCT,
+                value: <code>{metadata?.productSlug ?? UI_VALUE_PLACEHOLDER}</code>,
+              },
+              {
+                id: 'protection-signing-key-id',
+                label: UI_PRODUCT_PROTECTION_KEY_LABEL_SIGNING_KEY_ID,
+                value: <code>{metadata?.signingKeyId ?? UI_VALUE_PLACEHOLDER}</code>,
+              },
+              {
+                id: 'protection-public-key',
+                label: UI_PRODUCT_PROTECTION_KEY_LABEL_PUBLIC_KEY,
+                value: <code>{metadata?.publicKey ?? UI_VALUE_PLACEHOLDER}</code>,
+              },
+            ]}
+          />
+        )
+      }
+      secondaryAction={{
+        id: 'protection-key-close',
+        label: UI_PRODUCT_PROTECTION_KEY_CLOSE,
+        onClick: onClose,
+      }}
+    />
+  )
+}
+
+type BuildTokensModalProps = {
+  show: boolean
+  isLoading: boolean
+  error: string | null
+  isIssuing: boolean
+  issuedToken: string | null
+  tokens: readonly ProtectionBuildTokenMetadata[]
+  columns: readonly UiDataTableColumn<ProtectionBuildTokenMetadata>[]
+  selection?: UiDataTableSelection<ProtectionBuildTokenMetadata>
+  batchBar: ReactNode
+  onIssue: () => void
+  onClose: () => void
+}
+
+function BuildTokensModal({
+  show,
+  isLoading,
+  error,
+  isIssuing,
+  issuedToken,
+  tokens,
+  columns,
+  selection,
+  batchBar,
+  onIssue,
+  onClose,
+}: BuildTokensModalProps) {
+  return (
+    <ModalDialog
+      show={show}
+      onClose={onClose}
+      title={UI_PRODUCT_BUILD_TOKENS_MODAL_TITLE}
+      body={
+        isLoading ? (
+          UI_PRODUCT_BUILD_TOKENS_LOADING
+        ) : error ? (
+          error
+        ) : (
+          <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
+            <Button variant={UI_BUTTON_VARIANT_GHOST} onClick={onIssue} disabled={isIssuing}>
+              {isIssuing ? UI_PRODUCT_BUILD_TOKENS_ISSUING : UI_PRODUCT_BUILD_TOKENS_ISSUE}
+            </Button>
+            {issuedToken !== null ? (
+              <KeyValueList
+                items={[
+                  {
+                    id: 'build-token-issued',
+                    label: UI_PRODUCT_BUILD_TOKENS_LABEL_ISSUED_TOKEN,
+                    value: <code>{issuedToken}</code>,
+                  },
+                ]}
+              />
+            ) : null}
+            <div>{UI_PRODUCT_BUILD_TOKENS_TOKEN_ONCE}</div>
+            <KeyValueList
+              items={[
+                {
+                  id: 'build-token-usage-note',
+                  label: UI_PRODUCT_BUILD_TOKENS_LABEL_USAGE_NOTE,
+                  value: UI_PRODUCT_BUILD_TOKENS_USAGE_NOTE,
+                },
+                {
+                  id: 'build-token-release-endpoint',
+                  label: UI_PRODUCT_BUILD_TOKENS_LABEL_RELEASE_ENDPOINT,
+                  value: <code>{UI_PRODUCT_BUILD_TOKENS_RELEASE_ENDPOINT}</code>,
+                },
+              ]}
+            />
+            <div>{UI_PRODUCT_BUILD_TOKENS_CURRENT}</div>
+            <TableControls batch={batchBar} />
+            <DataTable
+              data={tokens}
+              columns={columns}
+              rowKey={(row) => row.id}
+              emptyState={UI_PRODUCT_BUILD_TOKENS_EMPTY}
+              isLoading={isLoading}
+              selection={selection}
+            />
+          </Stack>
+        )
+      }
+      secondaryAction={{
+        id: 'build-tokens-close',
+        label: UI_PRODUCT_BUILD_TOKENS_CLOSE,
+        onClick: onClose,
+      }}
+    />
   )
 }
