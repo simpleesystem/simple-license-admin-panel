@@ -146,4 +146,17 @@ describe('LicenseUpdateDialog', () => {
       expect(mockOnClose).toHaveBeenCalledTimes(1)
     })
   })
+
+  it('keeps dialog usable when getLicense payload is missing nested license object', async () => {
+    vi.mocked(mockClient.getLicense).mockResolvedValue({} as never)
+
+    await act(async () => {
+      renderWithQueryClient(<LicenseUpdateDialog {...defaultProps} />)
+    })
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeInTheDocument()
+      expect(screen.getByTestId('dynamic-form')).toBeInTheDocument()
+    })
+  })
 })

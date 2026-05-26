@@ -51,6 +51,11 @@ type LicenseUpdateDialogProps = {
 }
 
 type FormValuesUpdate = Omit<UpdateLicenseRequest, 'metadata'> & { metadata: string }
+type LicenseDialogPayload = {
+  metadata?: Record<string, string | number | boolean | null>
+  licenseKey?: string
+  domain?: string | null
+}
 
 export function LicenseUpdateDialog({
   client,
@@ -80,14 +85,19 @@ export function LicenseUpdateDialog({
     setMetadataString('')
     try {
       const response = await client.getLicense(licenseKeyParam)
-      const license = response.license
-      if (license.metadata) {
+      const licenseResponse =
+        typeof response === 'object' && response !== null
+          ? (response as { license?: LicenseDialogPayload } & LicenseDialogPayload)
+          : undefined
+      const license = licenseResponse?.license ?? licenseResponse
+
+      if (license?.metadata && typeof license.metadata === 'object' && !Array.isArray(license.metadata)) {
         setMetadataString(JSON.stringify(license.metadata, null, 2))
       }
-      if (license.licenseKey) {
+      if (license?.licenseKey) {
         setLicenseKey(license.licenseKey)
       }
-      if (license.domain != null && license.domain !== '') {
+      if (license?.domain != null && license.domain !== '') {
         setDomain(String(license.domain))
       }
     } catch (e) {
