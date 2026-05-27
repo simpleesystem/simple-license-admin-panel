@@ -8,6 +8,7 @@ import { useLogger } from '../../app/logging/loggerContext'
 import type { MutationAdapter } from '../actions/mutationActions'
 import {
   UI_ANALYTICS_COLUMN_LICENSE_KEY,
+  UI_CLASS_CODE_VALUE_WRAP,
   UI_CLASS_MARGIN_BOTTOM_LARGE,
   UI_CLASS_MARGIN_BOTTOM_MUTED,
   UI_CLASS_PADDING_TOP_SMALL,
@@ -184,12 +185,12 @@ export function LicenseUpdateDialog({
                     {
                       id: UI_ANALYTICS_COLUMN_LICENSE_KEY,
                       label: UI_ANALYTICS_COLUMN_LICENSE_KEY,
-                      value: <code>{licenseKey || UI_VALUE_PLACEHOLDER}</code>,
+                      value: <code className={UI_CLASS_CODE_VALUE_WRAP}>{licenseKey || UI_VALUE_PLACEHOLDER}</code>,
                     },
                     {
                       id: UI_LICENSE_ACTIVATIONS_COLUMN_DOMAIN,
                       label: UI_LICENSE_ACTIVATIONS_COLUMN_DOMAIN,
-                      value: <code>{domain || UI_VALUE_PLACEHOLDER}</code>,
+                      value: <code className={UI_CLASS_CODE_VALUE_WRAP}>{domain || UI_VALUE_PLACEHOLDER}</code>,
                     },
                   ]}
                 />
