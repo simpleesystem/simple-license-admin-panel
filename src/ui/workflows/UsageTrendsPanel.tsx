@@ -27,6 +27,7 @@ import {
   UI_USAGE_TRENDS_REFRESH_LABEL,
   UI_USAGE_TRENDS_REFRESH_PENDING,
   UI_USAGE_TRENDS_TITLE,
+  UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
 import { InlineAlert } from '../feedback/InlineAlert'
@@ -34,6 +35,7 @@ import { InlineStatusGate } from '../feedback/InlineStatusGate'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn } from '../types'
+import { collapseZeroMetricRuns, ZERO_METRIC_COLLAPSE_MODE_SUMMARY_ROW } from '../utils/collapseZeroMetricRuns'
 
 type UsageTrendsPanelProps = {
   client: Client
@@ -46,6 +48,7 @@ type TrendRow = {
   totalActivations: number
   totalValidations: number
   totalUsageReports: number
+  isCollapsedZeroRun: boolean
 }
 
 const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
@@ -87,21 +90,36 @@ const formatDateRange = (
   return `${formatDateValue(periodStart, formatter)} - ${formatDateValue(periodEnd, formatter)}`
 }
 
+const isAllZeroTrendRow = (row: TrendRow): boolean =>
+  row.totalActivations === 0 && row.totalValidations === 0 && row.totalUsageReports === 0
+
 export function UsageTrendsPanel({ client, title = UI_USAGE_TRENDS_TITLE }: UsageTrendsPanelProps) {
   const trendsQuery = useUsageTrends(client, { retry: false })
   const { isFetching, isLoading, refetch } = trendsQuery
   const dateFormatter = useMemo(() => new Intl.DateTimeFormat(UI_DATE_FORMAT_LOCALE, UI_DATE_FORMAT_OPTIONS), [])
 
   const rows = useMemo<readonly TrendRow[]>(() => {
-    return (
+    const trendRows =
       trendsQuery.data?.trends?.map((trend) => ({
-        id: trend.period,
+        id: `trend-${trend.period}`,
         period: trend.period,
         totalActivations: trend.totalActivations,
         totalValidations: trend.totalValidations,
         totalUsageReports: trend.totalUsageReports,
+        isCollapsedZeroRun: false,
       })) ?? []
-    )
+
+    return collapseZeroMetricRuns(trendRows, isAllZeroTrendRow, {
+      mode: ZERO_METRIC_COLLAPSE_MODE_SUMMARY_ROW,
+      createSummaryRow: ({ runLength, firstRow, lastRow }) => ({
+        id: `trend-collapsed-${firstRow.id}-${lastRow.id}`,
+        period: `${runLength.toLocaleString()} zero periods collapsed`,
+        totalActivations: 0,
+        totalValidations: 0,
+        totalUsageReports: 0,
+        isCollapsedZeroRun: true,
+      }),
+    })
   }, [trendsQuery.data])
 
   const periodDescription = useMemo(
@@ -114,22 +132,22 @@ export function UsageTrendsPanel({ client, title = UI_USAGE_TRENDS_TITLE }: Usag
       {
         id: UI_COLUMN_ID_ANALYTICS_PERIOD,
         header: UI_ANALYTICS_COLUMN_PERIOD,
-        cell: (row) => formatDateValue(row.period, dateFormatter),
+        cell: (row) => (row.isCollapsedZeroRun ? row.period : formatDateValue(row.period, dateFormatter)),
       },
       {
         id: UI_COLUMN_ID_ANALYTICS_ACTIVATIONS,
         header: UI_ANALYTICS_COLUMN_ACTIVATIONS,
-        cell: (row) => row.totalActivations.toLocaleString(),
+        cell: (row) => (row.isCollapsedZeroRun ? UI_VALUE_PLACEHOLDER : row.totalActivations.toLocaleString()),
       },
       {
         id: UI_COLUMN_ID_ANALYTICS_VALIDATIONS,
         header: UI_ANALYTICS_COLUMN_VALIDATIONS,
-        cell: (row) => row.totalValidations.toLocaleString(),
+        cell: (row) => (row.isCollapsedZeroRun ? UI_VALUE_PLACEHOLDER : row.totalValidations.toLocaleString()),
       },
       {
         id: UI_COLUMN_ID_ANALYTICS_USAGE_REPORTS,
         header: UI_ANALYTICS_COLUMN_USAGE_REPORTS,
-        cell: (row) => row.totalUsageReports.toLocaleString(),
+        cell: (row) => (row.isCollapsedZeroRun ? UI_VALUE_PLACEHOLDER : row.totalUsageReports.toLocaleString()),
       },
     ],
     [dateFormatter]

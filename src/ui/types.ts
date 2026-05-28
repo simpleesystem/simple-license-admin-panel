@@ -266,6 +266,9 @@ export type UiDataTableColumn<TData> = {
   textAlign?: UiTextAlign
   widthClass?: string
   sortable?: boolean
+  truncate?: boolean
+  truncateMaxWidth?: string
+  truncateTitle?: (row: TData) => string | undefined
 }
 
 export type UiDataTableSelection<TData> = {

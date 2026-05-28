@@ -336,11 +336,14 @@ function AgentServiceAccountsPanelWithQuery({
         id: 'agent-credential-client-id',
         header: UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_COLUMN_CLIENT_ID,
         cell: (row) => row.clientId,
+        truncate: true,
       },
       {
         id: 'agent-credential-scopes',
         header: UI_AGENT_SERVICE_ACCOUNT_CREDENTIAL_COLUMN_SCOPES,
         cell: (row) => row.scopes.join(', '),
+        truncate: true,
+        truncateMaxWidth: '18rem',
       },
       {
         id: 'agent-credential-created',

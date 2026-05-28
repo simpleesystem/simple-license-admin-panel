@@ -61,6 +61,7 @@ export function TopLicensesPanel({ client, title = UI_ANALYTICS_TOP_LICENSES_TIT
         id: UI_COLUMN_ID_ANALYTICS_LICENSE_KEY,
         header: UI_ANALYTICS_COLUMN_LICENSE_KEY,
         cell: (row) => row.licenseKey,
+        truncate: true,
       },
       {
         id: UI_COLUMN_ID_ANALYTICS_CUSTOMER_EMAIL,

@@ -52,6 +52,7 @@ export function ActivationDistributionPanel({
         id: UI_COLUMN_ID_ANALYTICS_LICENSE_KEY,
         header: UI_ANALYTICS_COLUMN_LICENSE_KEY,
         cell: (row) => row.licenseKey,
+        truncate: true,
       },
       {
         id: UI_COLUMN_ID_ANALYTICS_ACTIVATIONS,

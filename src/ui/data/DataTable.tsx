@@ -17,6 +17,7 @@ import {
   UI_CLASS_TABLE_SELECTION_CELL,
   UI_CLASS_TABLE_SORT_BUTTON,
   UI_CLASS_TABLE_SPINNER,
+  UI_CLASS_TABLE_TRUNCATED_CELL_CONTENT,
   UI_CLASS_TABLE_WRAPPER,
   UI_CLASS_TEXT_ALIGN_MAP,
   UI_ICON_SORT_ASCENDING,
@@ -25,6 +26,7 @@ import {
   UI_SORT_ASC,
   UI_SORT_BUTTON_LABEL_PREFIX,
   UI_SORT_DESC,
+  UI_STYLE_TABLE_TRUNCATED_CELL_CONTENT,
   UI_TABLE_DENSITY_COMFORTABLE,
   UI_TEST_ID_DATA_TABLE,
 } from '../constants'
@@ -118,6 +120,25 @@ export function DataTable<TData>({
       return true
     }
     return selection.isRowSelectable(row)
+  }
+
+  const renderCell = (row: TData, column: DataTableProps<TData>['columns'][number]): ReactNode => {
+    const content = column.cell(row)
+    if (!column.truncate) {
+      return content
+    }
+
+    const title = column.truncateTitle?.(row) ?? (typeof content === 'string' ? content : undefined)
+    const style =
+      column.truncateMaxWidth === undefined
+        ? UI_STYLE_TABLE_TRUNCATED_CELL_CONTENT
+        : { maxWidth: column.truncateMaxWidth }
+
+    return (
+      <span className={UI_CLASS_TABLE_TRUNCATED_CELL_CONTENT} style={style} title={title}>
+        {content}
+      </span>
+    )
   }
 
   const selectableRows = showSelection ? data.filter(isSelectableRow) : []
@@ -229,7 +250,7 @@ export function DataTable<TData>({
                             column.widthClass
                           )}
                         >
-                          {column.cell(row)}
+                          {renderCell(row, column)}
                         </td>
                       ))}
                     </tr>

@@ -337,6 +337,11 @@ export const UI_CLASS_TABLE_SORT_BUTTON = 'btn btn-link p-0 text-decoration-none
 export const UI_CLASS_TABLE_SELECTION_CELL = 'text-center'
 export const UI_CLASS_TABLE_EMPTY_STATE = 'text-center text-muted py-5'
 export const UI_CLASS_TABLE_SPINNER = 'py-5 text-center'
+export const UI_CLASS_TABLE_TRUNCATED_CELL_CONTENT = 'd-inline-block text-truncate align-top'
+export const UI_TABLE_TRUNCATED_CELL_MAX_WIDTH_DEFAULT = '22rem' as const
+export const UI_STYLE_TABLE_TRUNCATED_CELL_CONTENT = {
+  maxWidth: UI_TABLE_TRUNCATED_CELL_MAX_WIDTH_DEFAULT,
+} as const
 export const UI_CLASS_TABLE_DENSITY_MAP: Record<string, string> = {
   [UI_TABLE_DENSITY_COMFORTABLE]: '',
   [UI_TABLE_DENSITY_COMPACT]: 'table-sm',
@@ -730,6 +735,11 @@ export const UI_COLUMN_ID_ANALYTICS_UNIQUE_DOMAINS = 'analytics-unique-domains' 
 export const UI_COLUMN_ID_ANALYTICS_UNIQUE_IPS = 'analytics-unique-ips' as const
 export const UI_COLUMN_ID_ANALYTICS_PEAK_CONCURRENCY = 'analytics-peak-concurrency' as const
 export const UI_COLUMN_ID_ANALYTICS_LAST_ACTIVATED = 'analytics-last-activated' as const
+export const UI_CLASS_ANALYTICS_LICENSE_KEY = 'd-inline-block text-truncate align-top' as const
+export const UI_ANALYTICS_LICENSE_KEY_MAX_WIDTH = '22rem' as const
+export const UI_STYLE_ANALYTICS_LICENSE_KEY = {
+  maxWidth: UI_ANALYTICS_LICENSE_KEY_MAX_WIDTH,
+} as const
 export const UI_PAGE_PLACEHOLDER_TITLE = 'Screen assembly in progress' as const
 export const UI_PAGE_PLACEHOLDER_BODY =
   'These flows are still being composed into full screens. Continue building out the primitives to unlock this view.' as const

@@ -41,8 +41,22 @@ import { InlineStatusGate } from '../feedback/InlineStatusGate'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
 import type { UiDataTableColumn } from '../types'
+import { collapseZeroMetricRuns, ZERO_METRIC_COLLAPSE_MODE_SUMMARY_ROW } from '../utils/collapseZeroMetricRuns'
 
-type UsageSummaryRow = UsageSummaryResponse['summaries'][number]
+type UsageSummaryDataRow = UsageSummaryResponse['summaries'][number]
+type UsageSummaryRow = {
+  id: string
+  tenantId: number | null
+  licenseId: number | null
+  periodStart: string
+  periodEnd: string
+  totalActivations: number
+  totalValidations: number
+  totalUsageReports: number
+  peakConcurrency: number
+  isCollapsedZeroRun: boolean
+  collapsedZeroRunLabel?: string
+}
 
 type UsageSummaryPanelProps = {
   client: Client
@@ -51,6 +65,10 @@ type UsageSummaryPanelProps = {
 }
 
 const formatPeriodRange = (row: UsageSummaryRow, formatter: Intl.DateTimeFormat) => {
+  if (row.isCollapsedZeroRun) {
+    return row.collapsedZeroRunLabel ?? UI_VALUE_PLACEHOLDER
+  }
+
   const start = formatter.format(new Date(row.periodStart))
   const end = formatter.format(new Date(row.periodEnd))
   return `${start} – ${end}`
@@ -64,6 +82,9 @@ const formatNullableNumber = (value: number | null | undefined) => {
 }
 
 const formatNumber = (value: number) => value.toLocaleString()
+
+const isAllZeroSummaryRow = (row: UsageSummaryRow): boolean =>
+  row.totalActivations === 0 && row.totalValidations === 0 && row.totalUsageReports === 0 && row.peakConcurrency === 0
 
 export function UsageSummaryPanel({ client, title = UI_ANALYTICS_SUMMARY_TITLE, maxRows }: UsageSummaryPanelProps) {
   const usageSummariesQuery = useUsageSummaries(client, { retry: false })
@@ -91,25 +112,25 @@ export function UsageSummaryPanel({ client, title = UI_ANALYTICS_SUMMARY_TITLE, 
       {
         id: UI_COLUMN_ID_ANALYTICS_ACTIVATIONS,
         header: UI_ANALYTICS_COLUMN_ACTIVATIONS,
-        cell: (row) => formatNumber(row.totalActivations),
+        cell: (row) => (row.isCollapsedZeroRun ? UI_VALUE_PLACEHOLDER : formatNumber(row.totalActivations)),
         textAlign: UI_TEXT_ALIGN_END,
       },
       {
         id: UI_COLUMN_ID_ANALYTICS_VALIDATIONS,
         header: UI_ANALYTICS_COLUMN_VALIDATIONS,
-        cell: (row) => formatNumber(row.totalValidations),
+        cell: (row) => (row.isCollapsedZeroRun ? UI_VALUE_PLACEHOLDER : formatNumber(row.totalValidations)),
         textAlign: UI_TEXT_ALIGN_END,
       },
       {
         id: UI_COLUMN_ID_ANALYTICS_USAGE_REPORTS,
         header: UI_ANALYTICS_COLUMN_USAGE_REPORTS,
-        cell: (row) => formatNumber(row.totalUsageReports),
+        cell: (row) => (row.isCollapsedZeroRun ? UI_VALUE_PLACEHOLDER : formatNumber(row.totalUsageReports)),
         textAlign: UI_TEXT_ALIGN_END,
       },
       {
         id: UI_COLUMN_ID_ANALYTICS_PEAK_CONCURRENCY,
         header: UI_ANALYTICS_COLUMN_PEAK_CONCURRENCY,
-        cell: (row) => formatNumber(row.peakConcurrency),
+        cell: (row) => (row.isCollapsedZeroRun ? UI_VALUE_PLACEHOLDER : formatNumber(row.peakConcurrency)),
         textAlign: UI_TEXT_ALIGN_END,
       },
     ],
@@ -117,8 +138,36 @@ export function UsageSummaryPanel({ client, title = UI_ANALYTICS_SUMMARY_TITLE, 
   )
 
   const rows = useMemo(() => {
-    const summaries = usageSummariesQuery.data?.summaries ?? []
-    return summaries.slice(0, rowLimit)
+    const summaries: UsageSummaryRow[] =
+      usageSummariesQuery.data?.summaries.map((summary: UsageSummaryDataRow) => ({
+        id: `usage-summary-${summary.id.toString()}`,
+        tenantId: summary.tenantId,
+        licenseId: summary.licenseId,
+        periodStart: summary.periodStart,
+        periodEnd: summary.periodEnd,
+        totalActivations: summary.totalActivations,
+        totalValidations: summary.totalValidations,
+        totalUsageReports: summary.totalUsageReports,
+        peakConcurrency: summary.peakConcurrency,
+        isCollapsedZeroRun: false,
+      })) ?? []
+
+    return collapseZeroMetricRuns(summaries, isAllZeroSummaryRow, {
+      mode: ZERO_METRIC_COLLAPSE_MODE_SUMMARY_ROW,
+      createSummaryRow: ({ runLength, firstRow, lastRow }) => ({
+        id: `usage-summary-collapsed-${firstRow.id}-${lastRow.id}`,
+        tenantId: null,
+        licenseId: null,
+        periodStart: firstRow.periodStart,
+        periodEnd: lastRow.periodEnd,
+        totalActivations: 0,
+        totalValidations: 0,
+        totalUsageReports: 0,
+        peakConcurrency: 0,
+        isCollapsedZeroRun: true,
+        collapsedZeroRunLabel: `${runLength.toLocaleString()} zero periods collapsed`,
+      }),
+    }).slice(0, rowLimit)
   }, [usageSummariesQuery.data?.summaries, rowLimit])
 
   const isLoading = usageSummariesQuery.isLoading
@@ -152,7 +201,7 @@ export function UsageSummaryPanel({ client, title = UI_ANALYTICS_SUMMARY_TITLE, 
         <DataTable
           data={rows}
           columns={columns}
-          rowKey={(row) => row.id.toString()}
+          rowKey={(row) => row.id}
           emptyState={UI_ANALYTICS_SUMMARY_EMPTY_STATE}
         />
       </InlineStatusGate>
