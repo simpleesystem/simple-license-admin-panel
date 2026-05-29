@@ -18,11 +18,13 @@ import {
   UI_PRODUCT_COLUMN_HEADER_SLUG,
   UI_PRODUCT_COLUMN_HEADER_STATUS,
   UI_PRODUCT_COLUMN_HEADER_VENDOR,
+  UI_PRODUCT_COLUMN_HEADER_WOO_SYNC,
   UI_PRODUCT_COLUMN_ID_ACTIONS,
   UI_PRODUCT_COLUMN_ID_NAME,
   UI_PRODUCT_COLUMN_ID_SLUG,
   UI_PRODUCT_COLUMN_ID_STATUS,
   UI_PRODUCT_COLUMN_ID_VENDOR,
+  UI_PRODUCT_COLUMN_ID_WOO_SYNC,
   UI_PRODUCT_EMPTY_STATE_MESSAGE,
   UI_PRODUCT_FILTER_VALUE_ACTIVE,
   UI_PRODUCT_FILTER_VALUE_INACTIVE,
@@ -31,6 +33,8 @@ import {
   UI_PRODUCT_PANEL_TITLE,
   UI_PRODUCT_STATUS_ACTIVE,
   UI_PRODUCT_STATUS_SUSPENDED,
+  UI_PRODUCT_WOO_SYNC_DISABLED,
+  UI_PRODUCT_WOO_SYNC_ENABLED,
   UI_STACK_GAP_MEDIUM,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
@@ -55,6 +59,7 @@ export type ProductListItem = {
   slug: string
   description?: string
   isActive: boolean
+  syncToWooCatalog?: boolean
   vendorId: string
   vendorName?: string
 }
@@ -197,6 +202,12 @@ export function ProductManagementPanel({
         cell: (row) => (row.isActive ? UI_PRODUCT_STATUS_ACTIVE : UI_PRODUCT_STATUS_SUSPENDED),
         sortable: true,
       },
+      {
+        id: UI_PRODUCT_COLUMN_ID_WOO_SYNC,
+        header: UI_PRODUCT_COLUMN_HEADER_WOO_SYNC,
+        cell: (row) => (row.syncToWooCatalog ? UI_PRODUCT_WOO_SYNC_ENABLED : UI_PRODUCT_WOO_SYNC_DISABLED),
+        sortable: true,
+      },
     ]
 
     if (!isVendorScoped) {
@@ -299,6 +310,7 @@ export function ProductManagementPanel({
             name: productToEdit.name,
             slug: productToEdit.slug,
             description: productToEdit.description,
+            sync_to_woo_catalog: productToEdit.syncToWooCatalog,
           }}
           onCompleted={onRefresh}
           onSuccess={() => refreshWith('update')}

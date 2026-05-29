@@ -254,10 +254,11 @@ export function ProductUpdateDialog({
       name: initialValues?.name,
       slug: initialValues?.slug,
       description: initialValues?.description,
+      sync_to_woo_catalog: product?.syncToWooCatalog ?? initialValues?.sync_to_woo_catalog,
       metadata: metadataString || (initialValues?.metadata ? JSON.stringify(initialValues.metadata, null, 2) : ''),
       vendor_id: product?.vendorId ?? initialValues?.vendor_id,
     }),
-    [metadataString, product?.vendorId, initialValues]
+    [initialValues, metadataString, product?.syncToWooCatalog, product?.vendorId]
   )
 
   return (

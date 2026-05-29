@@ -368,6 +368,11 @@ const PRODUCT_SECTION_BLUEPRINT: BlueprintSectionConfig<CreateProductRequest>[] 
         label: 'Default Max Activations',
         placeholder: '1',
       },
+      {
+        name: 'sync_to_woo_catalog',
+        kind: 'boolean',
+        label: 'Sync to Woo Catalog',
+      },
     ],
   },
   {

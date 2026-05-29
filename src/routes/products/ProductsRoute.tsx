@@ -12,6 +12,7 @@ import {
   UI_PRODUCT_COLUMN_ID_SLUG,
   UI_PRODUCT_COLUMN_ID_STATUS,
   UI_PRODUCT_COLUMN_ID_VENDOR,
+  UI_PRODUCT_COLUMN_ID_WOO_SYNC,
   UI_PRODUCT_FILTER_VALUE_ACTIVE,
   UI_PRODUCT_FILTER_VALUE_INACTIVE,
   UI_PRODUCT_STATUS_ACTION_RETRY,
@@ -66,6 +67,7 @@ export function ProductsRouteComponent() {
       slug: product.slug,
       description: product.description ?? undefined,
       isActive: product.isActive,
+      syncToWooCatalog: product.syncToWooCatalog ?? false,
       vendorId: product.vendorId,
       vendorName: tenantMap.get(product.vendorId),
     }))
@@ -104,6 +106,8 @@ export function ProductsRouteComponent() {
       [UI_PRODUCT_COLUMN_ID_SLUG]: compareText((product) => product.slug),
       [UI_PRODUCT_COLUMN_ID_STATUS]: (a: ProductListItem, b: ProductListItem) =>
         Number(b.isActive) - Number(a.isActive),
+      [UI_PRODUCT_COLUMN_ID_WOO_SYNC]: (a: ProductListItem, b: ProductListItem) =>
+        Number(b.syncToWooCatalog ?? false) - Number(a.syncToWooCatalog ?? false),
       [UI_PRODUCT_COLUMN_ID_VENDOR]: compareText((product) => product.vendorName ?? product.vendorId),
     }),
     [compareText]

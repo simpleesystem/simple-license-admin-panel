@@ -49,6 +49,7 @@ const baseCreateDefaults: CreateProductRequest = {
   slug: '',
   description: '',
   vendor_id: UI_FORM_SELECT_PLACEHOLDER_VALUE,
+  sync_to_woo_catalog: false,
   metadata: {},
 }
 
