@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { resolvePostLoginRedirect } from '@/app/auth/redirect'
 import { useAuth } from '@/app/auth/useAuth'
 import { ROUTE_PATH_DASHBOARD } from '@/app/constants'
 import { useAppStore } from '@/app/state/store'
@@ -54,10 +55,11 @@ export function LoginForm() {
 
     try {
       await login({ username, password })
+      const postLoginTarget = resolvePostLoginRedirect(window.location.search, ROUTE_PATH_DASHBOARD)
       // Use navigation intent system to ensure router context is updated before navigation
       dispatch({
         type: 'nav/intent',
-        payload: { to: ROUTE_PATH_DASHBOARD, replace: true },
+        payload: { to: postLoginTarget, replace: true },
       })
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Login failed'
