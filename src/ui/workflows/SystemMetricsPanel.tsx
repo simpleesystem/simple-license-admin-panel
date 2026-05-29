@@ -199,6 +199,50 @@ const formatCacheInfo = (info: string | unknown): string => {
   return parsed.map(({ key, value }) => `${key}: ${value}`).join('\n')
 }
 
+const formatTenantMetricEntry = (entry: unknown, numberFormatter: Intl.NumberFormat): string | undefined => {
+  if (typeof entry !== 'object' || entry === null) {
+    return undefined
+  }
+
+  const row = entry as Record<string, unknown>
+  const tenantNameCandidate = row.tenant_name ?? row.tenantName
+  const tenantStatusCandidate = row.status
+  const productsCandidate = row.products
+  const usersCandidate = row.users
+  const licensesCandidate = row.licenses_created ?? row.licensesCreated
+  const activationsCandidate = row.activations
+  const usageReportsCandidate = row.usage_reports ?? row.usageReports
+  const uniqueDomainsCandidate = row.unique_domains ?? row.uniqueDomains
+  const uniqueIpsCandidate = row.unique_ips ?? row.uniqueIps
+
+  const tenantName = typeof tenantNameCandidate === 'string' ? tenantNameCandidate : 'Unknown tenant'
+  const tenantStatus = typeof tenantStatusCandidate === 'string' ? tenantStatusCandidate : UI_VALUE_PLACEHOLDER
+
+  const toFormattedCount = (value: unknown): string => {
+    if (typeof value === 'number' && !Number.isNaN(value)) {
+      return numberFormatter.format(value)
+    }
+    if (typeof value === 'string' && value.trim().length > 0) {
+      const parsed = Number(value)
+      if (!Number.isNaN(parsed)) {
+        return numberFormatter.format(parsed)
+      }
+    }
+    return UI_VALUE_PLACEHOLDER
+  }
+
+  return (
+    `${tenantName} (${tenantStatus}) | ` +
+    `products ${toFormattedCount(productsCandidate)}, ` +
+    `users ${toFormattedCount(usersCandidate)}, ` +
+    `licenses ${toFormattedCount(licensesCandidate)}, ` +
+    `activations ${toFormattedCount(activationsCandidate)}, ` +
+    `usage reports ${toFormattedCount(usageReportsCandidate)}, ` +
+    `unique domains ${toFormattedCount(uniqueDomainsCandidate)}, ` +
+    `unique IPs ${toFormattedCount(uniqueIpsCandidate)}`
+  )
+}
+
 const formatMetricValue = (
   key: string,
   value: MetricValue | MetricObject | undefined,
@@ -247,6 +291,15 @@ const formatMetricValue = (
   }
 
   if (Array.isArray(value)) {
+    if (key === 'tenants') {
+      const tenantLines = value
+        .map((entry) => formatTenantMetricEntry(entry, numberFormatter))
+        .filter((line): line is string => Boolean(line))
+      if (tenantLines.length > 0) {
+        return tenantLines.join('\n')
+      }
+    }
+
     return value
       .map((entry) => {
         if (entry === null || entry === undefined) {
