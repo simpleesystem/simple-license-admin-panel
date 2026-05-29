@@ -247,7 +247,24 @@ const formatMetricValue = (
   }
 
   if (Array.isArray(value)) {
-    return value.map((entry) => (typeof entry === 'number' ? numberFormatter.format(entry) : String(entry))).join(', ')
+    return value
+      .map((entry) => {
+        if (entry === null || entry === undefined) {
+          return UI_VALUE_PLACEHOLDER
+        }
+        if (typeof entry === 'number') {
+          return numberFormatter.format(entry)
+        }
+        if (typeof entry === 'string' || typeof entry === 'boolean') {
+          return String(entry)
+        }
+        try {
+          return JSON.stringify(entry)
+        } catch {
+          return UI_VALUE_PLACEHOLDER
+        }
+      })
+      .join(', ')
   }
 
   if (typeof value === 'object' && value !== null) {
