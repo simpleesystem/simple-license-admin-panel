@@ -137,6 +137,20 @@ const formatDateTimeValue = (value: string, formatter: Intl.DateTimeFormat) => {
   return formatter.format(date)
 }
 
+const resolveAdminLabel = (row: AuditLogRow): string => {
+  const normalizedAdminUsername = row.adminUsername?.trim()
+  if (normalizedAdminUsername) {
+    return normalizedAdminUsername
+  }
+
+  const normalizedAdminId = row.adminId?.trim()
+  if (normalizedAdminId) {
+    return normalizedAdminId
+  }
+
+  return UI_VALUE_PLACEHOLDER
+}
+
 const truncateValue = (value: string, maxLength: number) => {
   if (value.length <= maxLength || value === UI_VALUE_PLACEHOLDER) {
     return value
@@ -271,7 +285,7 @@ export function AuditLogsPanel({
       {
         id: UI_COLUMN_ID_AUDIT_LOG_ADMIN,
         header: UI_AUDIT_LOGS_COLUMN_ADMIN,
-        cell: (row) => renderAuditCell(row.adminUsername ?? row.adminId),
+        cell: (row) => renderAuditCell(resolveAdminLabel(row)),
         sortable: true,
       },
       {

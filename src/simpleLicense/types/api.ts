@@ -812,7 +812,7 @@ export interface TopLicensesResponse {
     totalActivations: number
     totalValidations: number
     peakConcurrency: number
-    lastActivatedAt: string
+    lastActivatedAt: string | null
   }>
 }
 

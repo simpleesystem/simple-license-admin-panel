@@ -32,6 +32,7 @@ import {
   UI_DATE_FORMAT_OPTIONS,
   UI_STACK_GAP_SMALL,
   UI_TEXT_ALIGN_END,
+  UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
 import { InlineStatusGate } from '../feedback/InlineStatusGate'
@@ -89,7 +90,8 @@ export function TopLicensesPanel({ client, title = UI_ANALYTICS_TOP_LICENSES_TIT
       {
         id: UI_COLUMN_ID_ANALYTICS_LAST_ACTIVATED,
         header: UI_ANALYTICS_COLUMN_LAST_ACTIVATED,
-        cell: (row) => dateFormatter.format(new Date(row.lastActivatedAt)),
+        cell: (row) =>
+          row.lastActivatedAt ? dateFormatter.format(new Date(row.lastActivatedAt)) : UI_VALUE_PLACEHOLDER,
       },
     ]
   }, [dateFormatter])
