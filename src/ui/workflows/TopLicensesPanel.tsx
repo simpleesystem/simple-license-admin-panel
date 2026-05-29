@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import type { Client, TopLicensesResponse } from '@/simpleLicense'
 import { useTopLicenses } from '@/simpleLicense'
 
@@ -35,6 +35,9 @@ import {
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
 import { DataTable } from '../data/DataTable'
+import { StandardTablePaginationFooter } from '../data/StandardTablePaginationFooter'
+import { TableControls } from '../data/TableControls'
+import { createStandardTableSearchField } from '../data/tableFieldFactory'
 import { InlineStatusGate } from '../feedback/InlineStatusGate'
 import { PanelHeader } from '../layout/PanelHeader'
 import { Stack } from '../layout/Stack'
@@ -53,7 +56,10 @@ const formatNumber = (value: number) => value.toLocaleString()
 export function TopLicensesPanel({ client, title = UI_ANALYTICS_TOP_LICENSES_TITLE, maxRows }: TopLicensesPanelProps) {
   const topLicensesQuery = useTopLicenses(client, { retry: false })
   const { isFetching, isLoading, refetch } = topLicensesQuery
-  const rowLimit = maxRows ?? UI_ANALYTICS_TOP_LICENSES_DEFAULT_LIMIT
+  const initialPageSize = maxRows ?? UI_ANALYTICS_TOP_LICENSES_DEFAULT_LIMIT
+  const [searchTerm, setSearchTerm] = useState('')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(initialPageSize)
   const dateFormatter = useMemo(() => new Intl.DateTimeFormat(UI_DATE_FORMAT_LOCALE, UI_DATE_FORMAT_OPTIONS), [])
 
   const columns = useMemo<UiDataTableColumn<TopLicenseRow>[]>(() => {
@@ -68,6 +74,8 @@ export function TopLicensesPanel({ client, title = UI_ANALYTICS_TOP_LICENSES_TIT
         id: UI_COLUMN_ID_ANALYTICS_CUSTOMER_EMAIL,
         header: UI_ANALYTICS_COLUMN_CUSTOMER_EMAIL,
         cell: (row) => row.customerEmail,
+        truncate: true,
+        truncateMaxWidth: '18rem',
       },
       {
         id: UI_COLUMN_ID_ANALYTICS_ACTIVATIONS,
@@ -96,7 +104,47 @@ export function TopLicensesPanel({ client, title = UI_ANALYTICS_TOP_LICENSES_TIT
     ]
   }, [dateFormatter])
 
-  const rows = (topLicensesQuery.data?.licenses ?? []).slice(0, rowLimit)
+  const rows = topLicensesQuery.data?.licenses ?? []
+  const filteredRows = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase()
+    if (normalizedSearch.length === 0) {
+      return rows
+    }
+
+    return rows.filter((row) => {
+      return (
+        row.licenseKey.toLowerCase().includes(normalizedSearch) ||
+        row.customerEmail.toLowerCase().includes(normalizedSearch)
+      )
+    })
+  }, [rows, searchTerm])
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value)
+    setPage(1)
+  }
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size)
+    setPage(1)
+  }
+
+  const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize))
+  const currentPage = Math.min(page, totalPages)
+  const pageStart = (currentPage - 1) * pageSize
+  const pageEnd = pageStart + pageSize
+  const pagedRows = filteredRows.slice(pageStart, pageEnd)
+  const rangeStart = filteredRows.length > 0 ? pageStart + 1 : 0
+  const rangeEnd = pageStart + pagedRows.length
+
+  const toolbar = (
+    <TableControls
+      search={createStandardTableSearchField({
+        value: searchTerm,
+        onChange: handleSearchChange,
+      })}
+    />
+  )
 
   return (
     <Stack direction="column" gap={UI_STACK_GAP_SMALL}>
@@ -124,10 +172,21 @@ export function TopLicensesPanel({ client, title = UI_ANALYTICS_TOP_LICENSES_TIT
         errorVariant={UI_ALERT_VARIANT_DANGER}
       >
         <DataTable
-          data={rows}
+          data={pagedRows}
           columns={columns}
           rowKey={(row) => row.licenseKey}
           emptyState={UI_ANALYTICS_TOP_LICENSES_EMPTY_STATE}
+          toolbar={toolbar}
+          footer={
+            <StandardTablePaginationFooter
+              page={currentPage}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              pageSize={pageSize}
+              onPageSizeChange={handlePageSizeChange}
+              summary={`${rangeStart.toLocaleString()}-${rangeEnd.toLocaleString()} of ${filteredRows.length.toLocaleString()}`}
+            />
+          }
         />
       </InlineStatusGate>
     </Stack>
