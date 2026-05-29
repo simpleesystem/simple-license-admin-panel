@@ -46,8 +46,8 @@ import { collapseZeroMetricRuns, ZERO_METRIC_COLLAPSE_MODE_SUMMARY_ROW } from '.
 type UsageSummaryDataRow = UsageSummaryResponse['summaries'][number]
 type UsageSummaryRow = {
   id: string
-  tenantId: number | null
-  licenseId: number | null
+  tenantId: string | null
+  licenseId: string | null
   periodStart: string
   periodEnd: string
   totalActivations: number
@@ -74,11 +74,11 @@ const formatPeriodRange = (row: UsageSummaryRow, formatter: Intl.DateTimeFormat)
   return `${start} – ${end}`
 }
 
-const formatNullableNumber = (value: number | null | undefined) => {
-  if (typeof value !== 'number') {
+const formatNullableIdentifier = (value: string | null | undefined) => {
+  if (typeof value !== 'string' || value.trim().length === 0) {
     return UI_VALUE_PLACEHOLDER
   }
-  return value.toLocaleString()
+  return value
 }
 
 const formatNumber = (value: number) => value.toLocaleString()
@@ -102,12 +102,16 @@ export function UsageSummaryPanel({ client, title = UI_ANALYTICS_SUMMARY_TITLE, 
       {
         id: UI_COLUMN_ID_ANALYTICS_TENANT,
         header: UI_ANALYTICS_COLUMN_TENANT_ID,
-        cell: (row) => formatNullableNumber(row.tenantId),
+        cell: (row) => formatNullableIdentifier(row.tenantId),
+        truncate: true,
+        truncateMaxWidth: '11rem',
       },
       {
         id: UI_COLUMN_ID_ANALYTICS_LICENSE,
         header: UI_ANALYTICS_COLUMN_LICENSE_ID,
-        cell: (row) => formatNullableNumber(row.licenseId),
+        cell: (row) => formatNullableIdentifier(row.licenseId),
+        truncate: true,
+        truncateMaxWidth: '11rem',
       },
       {
         id: UI_COLUMN_ID_ANALYTICS_ACTIVATIONS,

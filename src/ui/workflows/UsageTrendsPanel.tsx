@@ -17,6 +17,7 @@ import {
   UI_DATE_FORMAT_LOCALE,
   UI_DATE_FORMAT_OPTIONS,
   UI_STACK_GAP_SMALL,
+  UI_TEXT_ALIGN_END,
   UI_USAGE_TRENDS_EMPTY_BODY,
   UI_USAGE_TRENDS_EMPTY_STATE,
   UI_USAGE_TRENDS_EMPTY_TITLE,
@@ -138,16 +139,19 @@ export function UsageTrendsPanel({ client, title = UI_USAGE_TRENDS_TITLE }: Usag
         id: UI_COLUMN_ID_ANALYTICS_ACTIVATIONS,
         header: UI_ANALYTICS_COLUMN_ACTIVATIONS,
         cell: (row) => (row.isCollapsedZeroRun ? UI_VALUE_PLACEHOLDER : row.totalActivations.toLocaleString()),
+        textAlign: UI_TEXT_ALIGN_END,
       },
       {
         id: UI_COLUMN_ID_ANALYTICS_VALIDATIONS,
         header: UI_ANALYTICS_COLUMN_VALIDATIONS,
         cell: (row) => (row.isCollapsedZeroRun ? UI_VALUE_PLACEHOLDER : row.totalValidations.toLocaleString()),
+        textAlign: UI_TEXT_ALIGN_END,
       },
       {
         id: UI_COLUMN_ID_ANALYTICS_USAGE_REPORTS,
         header: UI_ANALYTICS_COLUMN_USAGE_REPORTS,
         cell: (row) => (row.isCollapsedZeroRun ? UI_VALUE_PLACEHOLDER : row.totalUsageReports.toLocaleString()),
+        textAlign: UI_TEXT_ALIGN_END,
       },
     ],
     [dateFormatter]

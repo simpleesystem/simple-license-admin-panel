@@ -599,9 +599,9 @@ export interface HealthMetricsResponse {
 
 export interface UsageSummaryResponse {
   summaries: Array<{
-    id: number
-    tenantId: number | null
-    licenseId: number | null
+    id: string
+    tenantId: string | null
+    licenseId: string | null
     periodStart: string
     periodEnd: string
     totalActivations: number
