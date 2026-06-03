@@ -144,6 +144,13 @@ export const LICENSE_METADATA_KEY_SUPERSEDED_AT = 'supersededAt'
 export const LICENSE_METADATA_KEY_SUPERSEDE_REASON = 'supersedeReason'
 export const LICENSE_SUPERSEDE_REASON_DOMAIN_CHANGE = 'domain_change'
 
+// Raised when a change-domain creates the replacement license but then fails to
+// revoke/supersede the source, so the operator can finish the move manually
+// instead of re-running change-domain (which would mint another replacement).
+export const ERROR_CODE_DOMAIN_CHANGE_INCOMPLETE = 'DOMAIN_CHANGE_INCOMPLETE'
+export const DETAIL_KEY_REPLACEMENT_LICENSE_KEY = 'replacement_license_key'
+export const DETAIL_KEY_PREVIOUS_LICENSE_KEY = 'previous_license_key'
+
 // Time
 export const MILLISECONDS_PER_DAY = 86_400_000
 

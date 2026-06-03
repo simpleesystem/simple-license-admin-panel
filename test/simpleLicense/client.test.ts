@@ -7,7 +7,10 @@ import {
   ActivationLimitExceededException,
   ApiException,
   AuthenticationException,
+  DETAIL_KEY_PREVIOUS_LICENSE_KEY,
+  DETAIL_KEY_REPLACEMENT_LICENSE_KEY,
   ERROR_CODE_ACTIVATION_LIMIT_EXCEEDED,
+  ERROR_CODE_DOMAIN_CHANGE_INCOMPLETE,
   ERROR_CODE_INVALID_CREDENTIALS,
   ERROR_CODE_LICENSE_EXPIRED,
   ERROR_CODE_LICENSE_NOT_FOUND,
@@ -2077,6 +2080,39 @@ describe('Client', () => {
       ).rejects.toThrow()
 
       expect(mockHttpClient.post).toHaveBeenCalledTimes(1)
+    })
+
+    it('surfaces the created replacement when superseding the source fails', async () => {
+      const previousKey = faker.string.alphanumeric({ casing: 'upper', length: 12 })
+      const newDomain = faker.internet.domainName().toLowerCase()
+      const replacementKey = faker.string.alphanumeric({ casing: 'upper', length: 12 })
+      const source = buildLicense({ licenseKey: previousKey, productSlug: faker.lorem.slug() })
+      const replacement = buildLicense({ licenseKey: replacementKey, domain: newDomain })
+
+      mockHttpClient.get.mockResolvedValue({
+        data: { success: true, data: { license: source } },
+        status: 200,
+      })
+      mockHttpClient.post
+        .mockResolvedValueOnce({
+          data: { success: true, data: { license: replacement } },
+          status: 200,
+        })
+        .mockRejectedValueOnce(new Error('revoke failed'))
+
+      const error = await client
+        .changeLicenseDomain({ current_license_key: previousKey, new_domain: newDomain })
+        .catch((caught: unknown) => caught)
+
+      expect(error).toBeInstanceOf(ApiException)
+      const apiError = error as ApiException
+      expect(apiError.errorCode).toBe(ERROR_CODE_DOMAIN_CHANGE_INCOMPLETE)
+      expect(apiError.message).toContain(replacementKey)
+      expect(apiError.errorDetails?.[DETAIL_KEY_REPLACEMENT_LICENSE_KEY]).toBe(replacementKey)
+      expect(apiError.errorDetails?.[DETAIL_KEY_PREVIOUS_LICENSE_KEY]).toBe(previousKey)
+      // The replacement is created exactly once; the failure must not trigger a retry
+      // that would mint a second replacement.
+      expect(mockHttpClient.post).toHaveBeenCalledTimes(2)
     })
   })
 

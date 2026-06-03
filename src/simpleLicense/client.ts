@@ -83,7 +83,10 @@ import {
   API_ENDPOINT_LICENSES_VALIDATE,
   API_ENDPOINT_PROTECTION_KEYS,
   API_ENDPOINT_UPDATES_CHECK,
+  DETAIL_KEY_PREVIOUS_LICENSE_KEY,
+  DETAIL_KEY_REPLACEMENT_LICENSE_KEY,
   ERROR_CODE_ACTIVATION_LIMIT_EXCEEDED,
+  ERROR_CODE_DOMAIN_CHANGE_INCOMPLETE,
   ERROR_CODE_INVALID_CREDENTIALS,
   ERROR_CODE_LICENSE_EXPIRED,
   ERROR_CODE_LICENSE_NOT_FOUND,
@@ -608,11 +611,28 @@ export class Client {
     const created = await this.createLicense(createPayload)
     const replacement = created.license
 
-    await this.revokeLicense(current_license_key, {
-      superseded_by_key: replacement.licenseKey,
-      superseded_by_domain: new_domain,
-      reason,
-    })
+    try {
+      await this.revokeLicense(current_license_key, {
+        superseded_by_key: replacement.licenseKey,
+        superseded_by_domain: new_domain,
+        reason,
+      })
+    } catch (error) {
+      // The replacement was created, but superseding the source failed. Surface the
+      // replacement key (and keep the original failure as the cause) so the operator
+      // can finish the move by revoking the source manually, instead of re-running
+      // change domain — which would mint a second replacement and orphan this one.
+      const cause = error instanceof Error ? error : undefined
+      throw new ApiException(
+        `Replacement license ${replacement.licenseKey} was created for "${new_domain}", but revoking the source license failed. Revoke the source license manually to finish the move — do not re-run change domain, which would create another replacement and orphan this one.`,
+        ERROR_CODE_DOMAIN_CHANGE_INCOMPLETE,
+        {
+          [DETAIL_KEY_REPLACEMENT_LICENSE_KEY]: replacement.licenseKey,
+          [DETAIL_KEY_PREVIOUS_LICENSE_KEY]: current_license_key,
+        },
+        cause
+      )
+    }
 
     return { license: replacement, previous_license_key: current_license_key }
   }
