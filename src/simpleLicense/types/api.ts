@@ -269,6 +269,7 @@ export interface CreateProductRequest {
   vendor_id?: string
   is_active?: boolean
   sync_to_woo_catalog?: boolean
+  requires_license?: boolean
   default_license_term_days?: number | null
   default_max_activations?: number | null
   metadata?: Record<string, string | number | boolean | null>
@@ -281,6 +282,7 @@ export interface UpdateProductRequest {
   vendor_id?: string
   is_active?: boolean
   sync_to_woo_catalog?: boolean
+  requires_license?: boolean
   default_license_term_days?: number | null
   default_max_activations?: number | null
   metadata?: Record<string, string | number | boolean | null>

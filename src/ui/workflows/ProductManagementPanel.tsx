@@ -14,12 +14,14 @@ import {
   UI_BUTTON_VARIANT_PRIMARY,
   UI_PRODUCT_BUTTON_CREATE,
   UI_PRODUCT_COLUMN_HEADER_ACTIONS,
+  UI_PRODUCT_COLUMN_HEADER_LICENSING,
   UI_PRODUCT_COLUMN_HEADER_NAME,
   UI_PRODUCT_COLUMN_HEADER_SLUG,
   UI_PRODUCT_COLUMN_HEADER_STATUS,
   UI_PRODUCT_COLUMN_HEADER_VENDOR,
   UI_PRODUCT_COLUMN_HEADER_WOO_SYNC,
   UI_PRODUCT_COLUMN_ID_ACTIONS,
+  UI_PRODUCT_COLUMN_ID_LICENSING,
   UI_PRODUCT_COLUMN_ID_NAME,
   UI_PRODUCT_COLUMN_ID_SLUG,
   UI_PRODUCT_COLUMN_ID_STATUS,
@@ -29,6 +31,8 @@ import {
   UI_PRODUCT_FILTER_VALUE_ACTIVE,
   UI_PRODUCT_FILTER_VALUE_INACTIVE,
   UI_PRODUCT_FORM_SUBMIT_CREATE,
+  UI_PRODUCT_LICENSING_FREE,
+  UI_PRODUCT_LICENSING_LICENSED,
   UI_PRODUCT_PANEL_DESCRIPTION,
   UI_PRODUCT_PANEL_TITLE,
   UI_PRODUCT_STATUS_ACTIVE,
@@ -60,6 +64,7 @@ export type ProductListItem = {
   description?: string
   isActive: boolean
   syncToWooCatalog?: boolean
+  requiresLicense?: boolean
   vendorId: string
   vendorName?: string
 }
@@ -208,6 +213,12 @@ export function ProductManagementPanel({
         cell: (row) => (row.syncToWooCatalog ? UI_PRODUCT_WOO_SYNC_ENABLED : UI_PRODUCT_WOO_SYNC_DISABLED),
         sortable: true,
       },
+      {
+        id: UI_PRODUCT_COLUMN_ID_LICENSING,
+        header: UI_PRODUCT_COLUMN_HEADER_LICENSING,
+        cell: (row) => (row.requiresLicense === false ? UI_PRODUCT_LICENSING_FREE : UI_PRODUCT_LICENSING_LICENSED),
+        sortable: true,
+      },
     ]
 
     if (!isVendorScoped) {
@@ -311,6 +322,7 @@ export function ProductManagementPanel({
             slug: productToEdit.slug,
             description: productToEdit.description,
             sync_to_woo_catalog: productToEdit.syncToWooCatalog,
+            requires_license: productToEdit.requiresLicense,
           }}
           onCompleted={onRefresh}
           onSuccess={() => refreshWith('update')}

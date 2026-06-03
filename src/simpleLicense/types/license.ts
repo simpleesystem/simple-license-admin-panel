@@ -78,6 +78,7 @@ export interface Product {
   vendorId: string
   isActive: boolean
   syncToWooCatalog?: boolean
+  requiresLicense?: boolean
   suspendedAt?: Date | string | null
   suspensionReason?: string | null
   defaultLicenseTermDays?: number | null

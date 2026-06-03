@@ -2,6 +2,7 @@ import { faker } from '@faker-js/faker'
 import type { Product } from '@/simpleLicense'
 
 const PRODUCT_STATUS_ACTIVE = true as const
+const PRODUCT_REQUIRES_LICENSE = true as const
 
 export const buildProduct = (overrides?: Partial<Product>): Product => ({
   id: faker.string.uuid(),
@@ -10,6 +11,7 @@ export const buildProduct = (overrides?: Partial<Product>): Product => ({
   description: faker.commerce.productDescription(),
   vendorId: faker.string.uuid(),
   isActive: PRODUCT_STATUS_ACTIVE,
+  requiresLicense: PRODUCT_REQUIRES_LICENSE,
   suspendedAt: null,
   suspensionReason: null,
   defaultLicenseTermDays: faker.number.int({ min: 1, max: 365 }),

@@ -10,6 +10,7 @@ import {
   UI_PRODUCT_FORM_PENDING_UPDATE,
   UI_PRODUCT_FORM_SUBMIT_CREATE,
   UI_PRODUCT_FORM_SUBMIT_UPDATE,
+  UI_PRODUCT_REQUIRES_LICENSE_DEFAULT,
 } from '../constants'
 import type { FormBlueprint } from '../formBuilder/blueprint'
 import { createProductBlueprint } from '../formBuilder/factories'
@@ -50,6 +51,7 @@ const baseCreateDefaults: CreateProductRequest = {
   description: '',
   vendor_id: UI_FORM_SELECT_PLACEHOLDER_VALUE,
   sync_to_woo_catalog: false,
+  requires_license: UI_PRODUCT_REQUIRES_LICENSE_DEFAULT,
   metadata: {},
 }
 

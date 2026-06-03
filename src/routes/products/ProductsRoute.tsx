@@ -8,6 +8,7 @@ import {
   UI_PAGE_SUBTITLE_PRODUCTS,
   UI_PAGE_TITLE_PRODUCTS,
   UI_PAGE_VARIANT_FULL_WIDTH,
+  UI_PRODUCT_COLUMN_ID_LICENSING,
   UI_PRODUCT_COLUMN_ID_NAME,
   UI_PRODUCT_COLUMN_ID_SLUG,
   UI_PRODUCT_COLUMN_ID_STATUS,
@@ -15,6 +16,7 @@ import {
   UI_PRODUCT_COLUMN_ID_WOO_SYNC,
   UI_PRODUCT_FILTER_VALUE_ACTIVE,
   UI_PRODUCT_FILTER_VALUE_INACTIVE,
+  UI_PRODUCT_REQUIRES_LICENSE_DEFAULT,
   UI_PRODUCT_STATUS_ACTION_RETRY,
   UI_PRODUCT_STATUS_ERROR_BODY,
   UI_PRODUCT_STATUS_ERROR_TITLE,
@@ -68,6 +70,7 @@ export function ProductsRouteComponent() {
       description: product.description ?? undefined,
       isActive: product.isActive,
       syncToWooCatalog: product.syncToWooCatalog ?? false,
+      requiresLicense: product.requiresLicense ?? UI_PRODUCT_REQUIRES_LICENSE_DEFAULT,
       vendorId: product.vendorId,
       vendorName: tenantMap.get(product.vendorId),
     }))
@@ -108,6 +111,9 @@ export function ProductsRouteComponent() {
         Number(b.isActive) - Number(a.isActive),
       [UI_PRODUCT_COLUMN_ID_WOO_SYNC]: (a: ProductListItem, b: ProductListItem) =>
         Number(b.syncToWooCatalog ?? false) - Number(a.syncToWooCatalog ?? false),
+      [UI_PRODUCT_COLUMN_ID_LICENSING]: (a: ProductListItem, b: ProductListItem) =>
+        Number(b.requiresLicense ?? UI_PRODUCT_REQUIRES_LICENSE_DEFAULT) -
+        Number(a.requiresLicense ?? UI_PRODUCT_REQUIRES_LICENSE_DEFAULT),
       [UI_PRODUCT_COLUMN_ID_VENDOR]: compareText((product) => product.vendorName ?? product.vendorId),
     }),
     [compareText]
