@@ -13,6 +13,7 @@ import {
   UI_CLASS_MARGIN_BOTTOM_MUTED,
   UI_CLASS_PADDING_TOP_SMALL,
   UI_LICENSE_ACTIVATIONS_COLUMN_DOMAIN,
+  UI_LICENSE_CHANGE_DOMAIN_TAB,
   UI_LICENSE_FORM_PENDING_UPDATE,
   UI_LICENSE_FORM_SUBMIT_UPDATE,
   UI_LICENSE_FORM_TITLE_UPDATE,
@@ -31,6 +32,7 @@ import { createLicenseBlueprint } from '../formBuilder/factories'
 import { ModalDialog } from '../overlay/ModalDialog'
 import type { UiSelectOption } from '../types'
 import { KeyValueList } from '../typography/KeyValueList'
+import { ChangeDomainPanel } from './ChangeDomainPanel'
 import { LicenseActivationsPanel } from './LicenseActivationsPanel'
 import { LicenseUsageDetailsPanel } from './LicenseUsageDetailsPanel'
 import { useDialogFormMutation } from './useDialogFormMutation'
@@ -205,6 +207,34 @@ export function LicenseUpdateDialog({
                 onCancel={onClose}
               />
             </AsyncStatusGate>
+          </Tab>
+          <Tab eventKey="change-domain" title={UI_LICENSE_CHANGE_DOMAIN_TAB}>
+            <div className={UI_CLASS_PADDING_TOP_SMALL}>
+              <AsyncStatusGate
+                isLoading={isLicenseLoading}
+                isError={isLicenseError}
+                loadingTitle={UI_LICENSE_STATUS_LOADING_TITLE}
+                loadingMessage={UI_LICENSE_STATUS_LOADING_BODY}
+                errorTitle={UI_LICENSE_STATUS_ERROR_TITLE}
+                errorMessage={UI_LICENSE_STATUS_ERROR_BODY}
+                retryLabel={UI_LICENSE_STATUS_ACTION_RETRY}
+                onRetry={() => {
+                  if (show) {
+                    void fetchLicenseDetails()
+                  }
+                }}
+              >
+                <ChangeDomainPanel
+                  client={client}
+                  licenseKey={licenseKey}
+                  currentDomain={domain}
+                  onChanged={() => {
+                    onCompleted?.()
+                    void fetchLicenseDetails()
+                  }}
+                />
+              </AsyncStatusGate>
+            </div>
           </Tab>
           <Tab eventKey="activations" title="Activations">
             <div className={UI_CLASS_PADDING_TOP_SMALL}>

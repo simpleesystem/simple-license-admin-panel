@@ -135,6 +135,18 @@ export const LICENSE_STATUS_EXPIRED = 'EXPIRED'
 export const LICENSE_STATUS_REVOKED = 'REVOKED'
 export const LICENSE_STATUS_SUSPENDED = 'SUSPENDED'
 
+// License supersession (domain-move migration) metadata keys + directive reason.
+// The "change domain" admin action creates a replacement license and revokes the
+// old one, stamping these pointers so a moved site's connector can self-heal.
+export const LICENSE_METADATA_KEY_SUPERSEDED_BY_KEY = 'supersededByKey'
+export const LICENSE_METADATA_KEY_SUPERSEDED_BY_DOMAIN = 'supersededByDomain'
+export const LICENSE_METADATA_KEY_SUPERSEDED_AT = 'supersededAt'
+export const LICENSE_METADATA_KEY_SUPERSEDE_REASON = 'supersedeReason'
+export const LICENSE_SUPERSEDE_REASON_DOMAIN_CHANGE = 'domain_change'
+
+// Time
+export const MILLISECONDS_PER_DAY = 86_400_000
+
 // Activation Status Values
 export const ACTIVATION_STATUS_ACTIVE = 'ACTIVE'
 export const ACTIVATION_STATUS_INACTIVE = 'INACTIVE'
@@ -150,6 +162,7 @@ export const ERROR_CODE_INVALID_LICENSE_FORMAT = 'INVALID_LICENSE_FORMAT'
 export const ERROR_CODE_LICENSE_NOT_FOUND = 'LICENSE_NOT_FOUND'
 export const ERROR_CODE_LICENSE_INACTIVE = 'LICENSE_INACTIVE'
 export const ERROR_CODE_LICENSE_EXPIRED = 'LICENSE_EXPIRED'
+export const ERROR_CODE_LICENSE_SUPERSEDED = 'LICENSE_SUPERSEDED'
 export const ERROR_CODE_ACTIVATION_LIMIT_EXCEEDED = 'ACTIVATION_LIMIT_EXCEEDED'
 export const ERROR_CODE_NOT_ACTIVATED_ON_DOMAIN = 'NOT_ACTIVATED_ON_DOMAIN'
 export const ERROR_CODE_DEMO_MODE_MISMATCH = 'DEMO_MODE_MISMATCH'

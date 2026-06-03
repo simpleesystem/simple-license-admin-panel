@@ -1338,6 +1338,25 @@ export const UI_LICENSE_FORM_SUBMIT_CREATE = 'Create license' as const
 export const UI_LICENSE_FORM_SUBMIT_UPDATE = 'Save license' as const
 export const UI_LICENSE_FORM_PENDING_CREATE = 'Creating license…' as const
 export const UI_LICENSE_FORM_PENDING_UPDATE = 'Saving license…' as const
+
+// Change Domain (domain-move migration) panel
+export const UI_LICENSE_CHANGE_DOMAIN_TAB = 'Change Domain' as const
+export const UI_LICENSE_CHANGE_DOMAIN_TITLE = 'Move license to a new domain' as const
+export const UI_LICENSE_CHANGE_DOMAIN_DESCRIPTION =
+  'A license is cryptographically bound to its domain and cannot be edited in place. This issues a replacement license for the new domain and revokes the current one. A site still running the old key from the new domain adopts the replacement automatically on its next check-in.' as const
+export const UI_LICENSE_CHANGE_DOMAIN_FIELD_CURRENT = 'Current domain' as const
+export const UI_LICENSE_CHANGE_DOMAIN_FIELD_NEW = 'New domain' as const
+export const UI_LICENSE_CHANGE_DOMAIN_PLACEHOLDER_NEW = 'new-domain.com' as const
+export const UI_LICENSE_CHANGE_DOMAIN_SUBMIT = 'Create replacement & revoke old' as const
+export const UI_LICENSE_CHANGE_DOMAIN_PENDING = 'Moving license…' as const
+export const UI_LICENSE_CHANGE_DOMAIN_SUCCESS_TITLE = 'License moved' as const
+export const UI_LICENSE_CHANGE_DOMAIN_SUCCESS_BODY =
+  'A replacement license was issued and the old license was revoked (superseded). Share the new key below with the customer if needed.' as const
+export const UI_LICENSE_CHANGE_DOMAIN_RESULT_NEW_KEY = 'New license key' as const
+export const UI_LICENSE_CHANGE_DOMAIN_RESULT_NEW_DOMAIN = 'New domain' as const
+export const UI_LICENSE_CHANGE_DOMAIN_TOAST_SUCCESS = 'License moved to the new domain' as const
+export const UI_LICENSE_CHANGE_DOMAIN_TOAST_ERROR = 'Failed to move license to the new domain' as const
+export const UI_LICENSE_CHANGE_DOMAIN_VALIDATION_SAME = 'New domain must differ from the current domain' as const
 export const UI_LICENSE_ACTION_EDIT = 'Edit License' as const
 export const UI_LICENSE_ACTION_DELETE = 'Soft Delete License' as const
 export const UI_LICENSE_ACTION_REVOKE = 'Revoke License' as const

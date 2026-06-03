@@ -88,6 +88,12 @@ import {
   ERROR_CODE_LICENSE_EXPIRED,
   ERROR_CODE_LICENSE_NOT_FOUND,
   HTTP_UNAUTHORIZED,
+  LICENSE_METADATA_KEY_SUPERSEDE_REASON,
+  LICENSE_METADATA_KEY_SUPERSEDED_AT,
+  LICENSE_METADATA_KEY_SUPERSEDED_BY_DOMAIN,
+  LICENSE_METADATA_KEY_SUPERSEDED_BY_KEY,
+  LICENSE_SUPERSEDE_REASON_DOMAIN_CHANGE,
+  MILLISECONDS_PER_DAY,
   RELEASE_UPLOAD_REQUEST_TIMEOUT_MS,
 } from './constants'
 import {
@@ -122,6 +128,8 @@ import type {
   BatchRevokeProtectionBuildTokensRequest,
   BatchSoftDeleteLicensesRequest,
   BatchSuspendTenantsRequest,
+  ChangeLicenseDomainRequest,
+  ChangeLicenseDomainResponse,
   ChangePasswordRequest,
   ChangePasswordResponse,
   CheckUpdateRequest,
@@ -185,6 +193,7 @@ import type {
   ProtectionSigningPublicKeyResponse,
   ReportUsageRequest,
   RevokeAgentServiceCredentialResponse,
+  RevokeLicenseRequest,
   RevokeProtectionBuildTokenResponse,
   ServerStatusResponse,
   SystemStatsResponse,
@@ -553,11 +562,105 @@ export class Client {
     return this.handleApiResponse(response.data, {} as FreezeLicenseResponse)
   }
 
-  async revokeLicense(idOrKey: string): Promise<ActionSuccessResponse> {
+  async revokeLicense(idOrKey: string, request?: RevokeLicenseRequest): Promise<ActionSuccessResponse> {
     const url = `${API_ENDPOINT_ADMIN_LICENSES_MARK_REVOKED}/${encodeURIComponent(idOrKey)}/revoke`
-    const response = await this.httpClient.post<ApiResponse<{ success: boolean }>>(url)
+    const response = await this.httpClient.post<ApiResponse<{ success: boolean }>>(url, request ?? {})
 
     return this.handleApiResponse<ActionSuccessResponse>(response.data, { success: true })
+  }
+
+  /**
+   * Move a license to a new domain. A license's domain is cryptographically bound
+   * into its signed key and cannot be edited in place, so this creates a fresh
+   * replacement license bound to `newDomain` (copying the source's product, tier,
+   * customer, activation limit, remaining term, and sanitized metadata) and then
+   * revokes the source with a supersession pointer to the replacement. A connector
+   * still presenting the old key from the new domain self-heals on its next
+   * validate.
+   */
+  async changeLicenseDomain(request: ChangeLicenseDomainRequest): Promise<ChangeLicenseDomainResponse> {
+    const { current_license_key, new_domain } = request
+    const reason = request.reason ?? LICENSE_SUPERSEDE_REASON_DOMAIN_CHANGE
+
+    const { license } = await this.getLicense(current_license_key)
+    if (!license.productSlug) {
+      throw new ApiException('Cannot change domain: source license is missing a product slug')
+    }
+
+    const createPayload: CreateLicenseRequest = {
+      customer_email: license.customerEmail,
+      product_slug: license.productSlug,
+      tier_code: license.tierCode,
+      domain: new_domain,
+    }
+    if (typeof license.activationLimit === 'number') {
+      createPayload.activation_limit = license.activationLimit
+    }
+    const remainingDays = this.remainingLicenseTermDays(license.expiresAt)
+    if (remainingDays !== undefined) {
+      createPayload.expires_days = remainingDays
+    }
+    const sanitizedMetadata = this.stripSupersessionMetadata(license.metadata)
+    if (sanitizedMetadata) {
+      createPayload.metadata = sanitizedMetadata
+    }
+
+    const created = await this.createLicense(createPayload)
+    const replacement = created.license
+
+    await this.revokeLicense(current_license_key, {
+      superseded_by_key: replacement.licenseKey,
+      superseded_by_domain: new_domain,
+      reason,
+    })
+
+    return { license: replacement, previous_license_key: current_license_key }
+  }
+
+  /**
+   * Whole days remaining on a license term, for carrying the paid term onto a
+   * replacement. Returns undefined when there is no expiry (does-not-expire) so the
+   * caller omits `expires_days` and the tier/metadata default applies.
+   */
+  private remainingLicenseTermDays(expiresAt?: Date | string | null): number | undefined {
+    if (!expiresAt) {
+      return undefined
+    }
+    const expiry = expiresAt instanceof Date ? expiresAt : new Date(expiresAt)
+    const expiryMs = expiry.getTime()
+    if (Number.isNaN(expiryMs)) {
+      return undefined
+    }
+    const remainingMs = expiryMs - Date.now()
+    const remainingDays = Math.ceil(remainingMs / MILLISECONDS_PER_DAY)
+    // Never carry a non-positive term; a moved-but-expired license should get at
+    // least a single day so the replacement is usable and can be renewed.
+    return remainingDays > 0 ? remainingDays : 1
+  }
+
+  /**
+   * Copy of `metadata` without supersession pointer keys, so a replacement license
+   * is never born already "superseded". Returns undefined when nothing remains.
+   */
+  private stripSupersessionMetadata(
+    metadata?: Record<string, string | number | boolean | null>
+  ): Record<string, string | number | boolean | null> | undefined {
+    if (!metadata) {
+      return undefined
+    }
+    const supersessionKeys = new Set<string>([
+      LICENSE_METADATA_KEY_SUPERSEDED_BY_KEY,
+      LICENSE_METADATA_KEY_SUPERSEDED_BY_DOMAIN,
+      LICENSE_METADATA_KEY_SUPERSEDED_AT,
+      LICENSE_METADATA_KEY_SUPERSEDE_REASON,
+    ])
+    const sanitized: Record<string, string | number | boolean | null> = {}
+    for (const [key, value] of Object.entries(metadata)) {
+      if (!supersessionKeys.has(key)) {
+        sanitized[key] = value
+      }
+    }
+    return Object.keys(sanitized).length > 0 ? sanitized : undefined
   }
 
   async softDeleteLicense(idOrKey: string): Promise<ActionSuccessResponse> {
@@ -649,9 +752,15 @@ export class Client {
 
   async getLicenseActivations(idOrKey: string): Promise<GetLicenseActivationsResponse> {
     const url = `${API_ENDPOINT_ADMIN_LICENSES_ACTIVATIONS}/${encodeURIComponent(idOrKey)}/activations`
-    const response = await this.httpClient.get<ApiResponse<GetLicenseActivationsResponse>>(url)
+    // The admin endpoint returns the activation rows directly as the envelope `data` array,
+    // so normalize to the `{ activations }` shape the SDK type and UI consume.
+    const response = await this.httpClient.get<ApiResponse<GetLicenseActivationsResponse['activations']>>(url)
+    const data = this.handleApiResponse<GetLicenseActivationsResponse['activations'] | GetLicenseActivationsResponse>(
+      response.data,
+      []
+    )
 
-    return this.handleApiResponse(response.data, {} as GetLicenseActivationsResponse)
+    return { activations: Array.isArray(data) ? data : (data.activations ?? []) }
   }
 
   // Admin API - Products

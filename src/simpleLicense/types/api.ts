@@ -256,6 +256,33 @@ export interface UpdateLicenseRequest {
   metadata?: Record<string, string | number | boolean | null>
 }
 
+/**
+ * Optional supersession pointer sent with a revoke. When present, the old license
+ * is stamped with the replacement key/domain so the validate endpoint can hand the
+ * new key back to a moved site (domain-move migration).
+ */
+export interface RevokeLicenseRequest {
+  superseded_by_key?: string
+  superseded_by_domain?: string
+  reason?: string
+}
+
+/**
+ * Admin "change domain" orchestration input: create a replacement license bound to
+ * `new_domain` (copied from the source license) and revoke the source with a
+ * supersession pointer to the replacement.
+ */
+export interface ChangeLicenseDomainRequest {
+  current_license_key: string
+  new_domain: string
+  reason?: string
+}
+
+export interface ChangeLicenseDomainResponse {
+  license: License
+  previous_license_key: string
+}
+
 export interface ListLicensesRequest extends PaginationOptions {
   status?: LicenseStatus
   product_slug?: string

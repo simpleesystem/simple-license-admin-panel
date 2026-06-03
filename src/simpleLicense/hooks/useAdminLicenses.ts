@@ -4,6 +4,8 @@
 import { type UseQueryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Client } from '../client'
 import type {
+  ChangeLicenseDomainRequest,
+  ChangeLicenseDomainResponse,
   CreateLicenseRequest,
   CreateLicenseResponse,
   FreezeLicenseRequest,
@@ -134,6 +136,23 @@ export function useRevokeLicense(client: Client) {
     onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminLicenses.all() })
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminLicenses.detail(id) })
+    },
+  })
+}
+
+// Change a license's domain (create replacement + revoke old as superseded)
+export function useChangeLicenseDomain(client: Client) {
+  const queryClient = useQueryClient()
+
+  return useMutation<ChangeLicenseDomainResponse, Error, ChangeLicenseDomainRequest>({
+    mutationFn: async (request) => {
+      return await client.changeLicenseDomain(request)
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminLicenses.all() })
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.adminLicenses.detail(variables.current_license_key),
+      })
     },
   })
 }

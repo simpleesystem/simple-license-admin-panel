@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker'
+import { buildActivation } from '@test/factories/activationFactory'
 import { buildLicense } from '@test/factories/licenseFactory'
 import { buildUser } from '@test/factories/userFactory'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -12,6 +13,8 @@ import {
   ERROR_CODE_LICENSE_NOT_FOUND,
   ERROR_CODE_UNAUTHORIZED,
   HTTP_UNAUTHORIZED,
+  LICENSE_METADATA_KEY_SUPERSEDED_BY_KEY,
+  LICENSE_SUPERSEDE_REASON_DOMAIN_CHANGE,
   LicenseExpiredException,
   LicenseNotFoundException,
   RELEASE_UPLOAD_FIELD_NAME,
@@ -1267,6 +1270,41 @@ describe('Client', () => {
     })
   })
 
+  describe('getLicenseActivations', () => {
+    it('normalizes the envelope data array into an activations object', async () => {
+      const activation = buildActivation()
+      const mockResponse = {
+        data: {
+          success: true,
+          data: [activation],
+        },
+        status: 200,
+      }
+
+      mockHttpClient.get.mockResolvedValue(mockResponse)
+
+      const result = await client.getLicenseActivations(faker.string.uuid())
+
+      expect(result.activations).toEqual([activation])
+    })
+
+    it('returns an empty activations list when the license has none', async () => {
+      const mockResponse = {
+        data: {
+          success: true,
+          data: [],
+        },
+        status: 200,
+      }
+
+      mockHttpClient.get.mockResolvedValue(mockResponse)
+
+      const result = await client.getLicenseActivations(faker.string.uuid())
+
+      expect(result.activations).toEqual([])
+    })
+  })
+
   describe('activateLicense', () => {
     it('activates license with all options', async () => {
       const mockResponse = {
@@ -1929,7 +1967,116 @@ describe('Client', () => {
       const result = await client.revokeLicense(licenseId)
 
       expect(result).toBeDefined()
-      expect(mockHttpClient.post).toHaveBeenCalledWith(`/api/v1/admin/licenses/${encodeURIComponent(licenseId)}/revoke`)
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        `/api/v1/admin/licenses/${encodeURIComponent(licenseId)}/revoke`,
+        {}
+      )
+    })
+
+    it('forwards supersession pointers to the revoke endpoint', async () => {
+      const licenseId = faker.string.uuid()
+      const supersededByKey = faker.string.alphanumeric({ casing: 'upper', length: 16 })
+      const supersededByDomain = faker.internet.domainName().toLowerCase()
+      mockHttpClient.post.mockResolvedValue({
+        data: { success: true, data: { success: true } },
+        status: 200,
+      })
+
+      await client.revokeLicense(licenseId, {
+        superseded_by_key: supersededByKey,
+        superseded_by_domain: supersededByDomain,
+        reason: LICENSE_SUPERSEDE_REASON_DOMAIN_CHANGE,
+      })
+
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        `/api/v1/admin/licenses/${encodeURIComponent(licenseId)}/revoke`,
+        {
+          superseded_by_key: supersededByKey,
+          superseded_by_domain: supersededByDomain,
+          reason: LICENSE_SUPERSEDE_REASON_DOMAIN_CHANGE,
+        }
+      )
+    })
+  })
+
+  describe('changeLicenseDomain', () => {
+    it('issues a replacement bound to the new domain and revokes the source as superseded', async () => {
+      const previousKey = faker.string.alphanumeric({ casing: 'upper', length: 12 })
+      const newDomain = faker.internet.domainName().toLowerCase()
+      const replacementKey = faker.string.alphanumeric({ casing: 'upper', length: 12 })
+      const source = buildLicense({
+        licenseKey: previousKey,
+        domain: faker.internet.domainName().toLowerCase(),
+        productSlug: faker.lorem.slug(),
+        activationLimit: 5,
+        expiresAt: faker.date.soon({ days: 30 }),
+        metadata: {
+          plan_note: 'keep-me',
+          [LICENSE_METADATA_KEY_SUPERSEDED_BY_KEY]: 'should-be-stripped',
+        },
+      })
+      const replacement = buildLicense({ licenseKey: replacementKey, domain: newDomain })
+
+      mockHttpClient.get.mockResolvedValue({
+        data: { success: true, data: { license: source } },
+        status: 200,
+      })
+      mockHttpClient.post
+        .mockResolvedValueOnce({
+          data: { success: true, data: { license: replacement } },
+          status: 200,
+        })
+        .mockResolvedValueOnce({
+          data: { success: true, data: { success: true } },
+          status: 200,
+        })
+
+      const result = await client.changeLicenseDomain({
+        current_license_key: previousKey,
+        new_domain: newDomain,
+      })
+
+      expect(result.previous_license_key).toBe(previousKey)
+      expect(result.license.licenseKey).toBe(replacementKey)
+
+      const [createUrl, createPayload] = mockHttpClient.post.mock.calls[0] ?? []
+      expect(createUrl).toBe('/api/v1/admin/licenses/create')
+      expect(createPayload).toMatchObject({
+        customer_email: source.customerEmail,
+        product_slug: source.productSlug,
+        tier_code: source.tierCode,
+        domain: newDomain,
+        activation_limit: 5,
+      })
+      expect((createPayload as { metadata?: Record<string, unknown> }).metadata).toEqual({ plan_note: 'keep-me' })
+
+      const [revokeUrl, revokePayload] = mockHttpClient.post.mock.calls[1] ?? []
+      expect(revokeUrl).toBe(`/api/v1/admin/licenses/${encodeURIComponent(previousKey)}/revoke`)
+      expect(revokePayload).toEqual({
+        superseded_by_key: replacementKey,
+        superseded_by_domain: newDomain,
+        reason: LICENSE_SUPERSEDE_REASON_DOMAIN_CHANGE,
+      })
+    })
+
+    it('does not revoke the source when the replacement cannot be created', async () => {
+      const previousKey = faker.string.alphanumeric({ casing: 'upper', length: 12 })
+      const source = buildLicense({ licenseKey: previousKey, productSlug: faker.lorem.slug() })
+
+      mockHttpClient.get.mockResolvedValue({
+        data: { success: true, data: { license: source } },
+        status: 200,
+      })
+      mockHttpClient.post.mockRejectedValueOnce(new Error('create failed'))
+
+      await expect(
+        client.changeLicenseDomain({
+          current_license_key: previousKey,
+          new_domain: faker.internet.domainName().toLowerCase(),
+        })
+      ).rejects.toThrow()
+
+      expect(mockHttpClient.post).toHaveBeenCalledTimes(1)
     })
   })
 
