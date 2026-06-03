@@ -13,6 +13,7 @@ import {
   selectNavigationIntent,
   selectPermissions,
   selectSurface,
+  selectTableSeed,
   selectUser,
   useAppStore,
 } from '@/app/state/store'
@@ -35,6 +36,7 @@ describe('useAppStore', () => {
       data: {},
       surface: { errors: {}, lastScope: null, loading: {} },
       navigationIntent: null,
+      tableSeed: null,
     })
   })
 
@@ -289,6 +291,42 @@ describe('useAppStore', () => {
     })
   })
 
+  describe('table/seed action', () => {
+    it('stores a cross-navigation table seed', () => {
+      const store = useAppStore.getState()
+      const seed = { path: faker.system.directoryPath(), term: faker.lorem.word() }
+
+      store.dispatch({ type: 'table/seed', payload: seed })
+
+      const state = useAppStore.getState()
+      expect(state.tableSeed).toEqual(seed)
+    })
+
+    it('replaces a previously stored seed', () => {
+      const store = useAppStore.getState()
+      const firstSeed = { path: faker.system.directoryPath(), term: faker.lorem.word() }
+      const secondSeed = { path: faker.system.directoryPath(), term: faker.lorem.word() }
+
+      store.dispatch({ type: 'table/seed', payload: firstSeed })
+      store.dispatch({ type: 'table/seed', payload: secondSeed })
+
+      const state = useAppStore.getState()
+      expect(state.tableSeed).toEqual(secondSeed)
+    })
+  })
+
+  describe('table/clearSeed action', () => {
+    it('clears a stored table seed', () => {
+      const store = useAppStore.getState()
+      store.dispatch({ type: 'table/seed', payload: { path: faker.system.directoryPath(), term: faker.lorem.word() } })
+
+      store.dispatch({ type: 'table/clearSeed' })
+
+      const state = useAppStore.getState()
+      expect(state.tableSeed).toBeNull()
+    })
+  })
+
   describe('selectors', () => {
     it('selectSurface returns surface state', () => {
       const state = useAppStore.getState()
@@ -429,6 +467,15 @@ describe('useAppStore', () => {
       const state = useAppStore.getState()
       const selectedIntent = selectNavigationIntent(state)
       expect(selectedIntent).toEqual(intent)
+    })
+
+    it('selectTableSeed returns the stored table seed', () => {
+      const store = useAppStore.getState()
+      const seed = { path: faker.system.directoryPath(), term: faker.lorem.word() }
+      store.dispatch({ type: 'table/seed', payload: seed })
+
+      const state = useAppStore.getState()
+      expect(selectTableSeed(state)).toEqual(seed)
     })
 
     it('selectData returns data', () => {

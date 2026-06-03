@@ -9,21 +9,28 @@ import {
   isLicenseOwnedByUser,
   isVendorScopedUser,
 } from '../../app/auth/permissions'
+import { EntityCrossLink } from '../../app/navigation/EntityCrossLink'
+import { ENTITY_LINK_KIND_PRODUCT } from '../../app/navigation/entityLinks'
 import {
   UI_BUTTON_VARIANT_PRIMARY,
   UI_LICENSE_BUTTON_CREATE,
   UI_LICENSE_COLUMN_HEADER_ACTIONS,
   UI_LICENSE_COLUMN_HEADER_CUSTOMER,
   UI_LICENSE_COLUMN_HEADER_DOMAIN,
+  UI_LICENSE_COLUMN_HEADER_KEY,
   UI_LICENSE_COLUMN_HEADER_PRODUCT,
   UI_LICENSE_COLUMN_HEADER_STATUS,
   UI_LICENSE_COLUMN_HEADER_TIER,
   UI_LICENSE_COLUMN_ID_ACTIONS,
   UI_LICENSE_COLUMN_ID_CUSTOMER,
   UI_LICENSE_COLUMN_ID_DOMAIN,
+  UI_LICENSE_COLUMN_ID_KEY,
   UI_LICENSE_COLUMN_ID_PRODUCT,
   UI_LICENSE_COLUMN_ID_STATUS,
   UI_LICENSE_COLUMN_ID_TIER,
+  UI_LICENSE_COPY_LABEL_CUSTOMER,
+  UI_LICENSE_COPY_LABEL_DOMAIN,
+  UI_LICENSE_COPY_LABEL_KEY,
   UI_LICENSE_EMPTY_STATE_MESSAGE,
   UI_LICENSE_FORM_SUBMIT_CREATE,
   UI_LICENSE_PRODUCT_FILTER_LABEL,
@@ -39,6 +46,7 @@ import {
   UI_TABLE_FILTER_PLACEHOLDER_ALL_STATUSES,
   UI_VALUE_PLACEHOLDER,
 } from '../constants'
+import { CopyableValue } from '../data/CopyableValue'
 import { DataTable } from '../data/DataTable'
 import { StandardTablePaginationFooter } from '../data/StandardTablePaginationFooter'
 import { TableControls } from '../data/TableControls'
@@ -210,19 +218,26 @@ export function LicenseManagementPanel({
       {
         id: UI_LICENSE_COLUMN_ID_CUSTOMER,
         header: UI_LICENSE_COLUMN_HEADER_CUSTOMER,
-        cell: (row) => row.customerEmail,
+        cell: (row) => <CopyableValue value={row.customerEmail} label={UI_LICENSE_COPY_LABEL_CUSTOMER} />,
         sortable: true,
+      },
+      {
+        id: UI_LICENSE_COLUMN_ID_KEY,
+        header: UI_LICENSE_COLUMN_HEADER_KEY,
+        cell: (row) => (
+          <CopyableValue value={row.licenseKey} label={UI_LICENSE_COPY_LABEL_KEY} monospace={true} truncate={true} />
+        ),
       },
       {
         id: UI_LICENSE_COLUMN_ID_PRODUCT,
         header: UI_LICENSE_COLUMN_HEADER_PRODUCT,
-        cell: (row) => row.productSlug,
+        cell: (row) => <EntityCrossLink kind={ENTITY_LINK_KIND_PRODUCT} value={row.productSlug} />,
         sortable: true,
       },
       {
         id: UI_LICENSE_COLUMN_ID_DOMAIN,
         header: UI_LICENSE_COLUMN_HEADER_DOMAIN,
-        cell: (row) => row.domain ?? UI_VALUE_PLACEHOLDER,
+        cell: (row) => <CopyableValue value={row.domain} label={UI_LICENSE_COPY_LABEL_DOMAIN} />,
         sortable: true,
       },
       {

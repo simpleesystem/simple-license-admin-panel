@@ -21,6 +21,11 @@ export type NavigationIntent = {
   replace?: boolean
 }
 
+export type TableSeed = {
+  path: string
+  term: string
+}
+
 export type Action =
   | { type: 'error/raise'; payload: AppError }
   | { type: 'error/clear'; scope?: ErrorScope }
@@ -28,6 +33,8 @@ export type Action =
   | { type: 'data/patch'; payload: Record<string, unknown> }
   | { type: 'nav/intent'; payload: NavigationIntent | null }
   | { type: 'nav/clearIntent' }
+  | { type: 'table/seed'; payload: TableSeed }
+  | { type: 'table/clearSeed' }
   | { type: 'loading/set'; scope: ErrorScope; isLoading: boolean }
 
 export type SurfaceState = {
@@ -42,6 +49,7 @@ export type AppState = {
   data: Record<string, unknown>
   surface: SurfaceState
   navigationIntent: NavigationIntent | null
+  tableSeed: TableSeed | null
 }
 
 export type AppStore = AppState & {
@@ -54,6 +62,7 @@ const initialState: AppState = {
   data: {},
   surface: { errors: {}, lastScope: null, loading: {} },
   navigationIntent: null,
+  tableSeed: null,
 }
 
 export const useAppStore = create<AppStore>()((set) => ({
@@ -124,6 +133,18 @@ export const useAppStore = create<AppStore>()((set) => ({
         })
         return
       }
+      case 'table/seed': {
+        set({
+          tableSeed: action.payload,
+        })
+        return
+      }
+      case 'table/clearSeed': {
+        set({
+          tableSeed: null,
+        })
+        return
+      }
       default:
         return
     }
@@ -159,4 +180,5 @@ export const selectAnyLoading = (state: AppStore) =>
 export const selectUser = (state: AppStore) => state.user
 export const selectPermissions = (state: AppStore) => state.permissions
 export const selectNavigationIntent = (state: AppStore) => state.navigationIntent
+export const selectTableSeed = (state: AppStore) => state.tableSeed
 export const selectData = (state: AppStore) => state.data

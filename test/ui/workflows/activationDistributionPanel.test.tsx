@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import type { ActivationDistributionResponse, Client } from '@/simpleLicense'
 
@@ -60,8 +60,9 @@ describe('ActivationDistributionPanel', () => {
     renderWithProviders(<ActivationDistributionPanel client={client} />, client)
 
     expect(screen.getByText('Activation Distribution')).toBeInTheDocument()
-    expect(screen.getByText(row.licenseKey)).toBeInTheDocument()
-    expect(screen.getByText(row.activations.toLocaleString())).toBeInTheDocument()
+    const distributionTable = screen.getByRole('table')
+    expect(within(distributionTable).getByText(row.licenseKey)).toBeInTheDocument()
+    expect(within(distributionTable).getByText(row.activations.toLocaleString())).toBeInTheDocument()
   })
 
   test('renders loading state', () => {

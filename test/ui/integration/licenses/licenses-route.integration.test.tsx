@@ -1,10 +1,14 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
 
+import { ROUTE_PATH_PRODUCTS } from '../../../../src/app/constants'
 import { LicensesRouteComponent } from '../../../../src/routes/licenses/LicensesRoute'
 import {
   UI_LICENSE_STATUS_DELETED,
   UI_LICENSE_STATUS_ERROR_TITLE,
+  UI_TEST_ID_COPY_BUTTON,
+  UI_TEST_ID_COPYABLE_VALUE,
+  UI_TEST_ID_ENTITY_LINK,
   UI_USER_ROLE_SUPERUSER,
   UI_USER_ROLE_VENDOR_MANAGER,
   UI_USER_ROLE_VIEWER,
@@ -77,6 +81,29 @@ describe('LicensesRouteComponent', () => {
     await waitFor(() => {
       expect(screen.getByText(UI_LICENSE_STATUS_ERROR_TITLE)).toBeInTheDocument()
     })
+  })
+
+  test('exposes the license key as a copyable value and the product as a cross-link', async () => {
+    const superuser = buildUser({ role: UI_USER_ROLE_SUPERUSER, vendorId: null })
+    useAuthMock.mockReturnValue({ user: superuser, currentUser: superuser, isAuthenticated: true })
+    const license = buildLicense({
+      customerEmail: 'wired@example.com',
+      licenseKey: 'KEYABCD12345',
+      productSlug: 'wired-product',
+      status: 'ACTIVE',
+    })
+    useAdminLicensesMock.mockReturnValue({ data: [license], isLoading: false, isError: false, refetch: vi.fn() })
+
+    renderWithProviders(<LicensesRouteComponent />)
+
+    const keyText = await screen.findByText('KEYABCD12345')
+    const keyCopyable = keyText.closest(`[data-testid="${UI_TEST_ID_COPYABLE_VALUE}"]`)
+    expect(keyCopyable).not.toBeNull()
+    expect(within(keyCopyable as HTMLElement).getByTestId(UI_TEST_ID_COPY_BUTTON)).toBeInTheDocument()
+
+    const productLink = screen.getByTestId(UI_TEST_ID_ENTITY_LINK)
+    expect(productLink).toHaveAttribute('href', ROUTE_PATH_PRODUCTS)
+    expect(productLink).toHaveTextContent('wired-product')
   })
 
   test('invokes refetch when retrying after error', async () => {

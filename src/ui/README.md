@@ -14,14 +14,31 @@ tests.
 - `forms/` – layout wrappers plus React Hook Form fields (`FormField`,
   `CheckboxField`, `DateField`)
 - `data/` – tabular and summary widgets (`DataTable`, `TableToolbar`,
-  `CardList`, `TagList`, `Chip`)
-- `navigation/` – `SidebarNav`, `TopNavBar`, `Breadcrumbs`
+  `CardList`, `TagList`, `Chip`, `CopyableValue`)
+- `actions/` – action affordances (`RefreshActionButton`, `CopyButton`,
+  `useCopyToClipboard`)
+- `navigation/` – `SidebarNav`, `TopNavBar`, `Breadcrumbs`, `EntityLink`
 - `feedback/` – `InlineAlert`, `SectionStatus`
 - `overlay/` – `ModalDialog`, `SidePanel`
 - `constants.ts` – Bootstrap class strings, variants, aria labels, and
   `data-testid` definitions
 - `types.ts` – Prop contracts for every primitive
 - `utils/` – shared helpers (`composeClassNames`, `VisibilityGate`)
+
+## Cross-cutting legos
+
+- **Click-to-copy.** `CopyableValue` renders any important value (license
+  keys, emails, domains, IDs, one-time tokens) with an inline `CopyButton`.
+  Both are constants-driven and require no per-call wiring — prefer them over
+  bespoke copy buttons. The underlying `useCopyToClipboard` hook handles the
+  async Clipboard API with an `execCommand` fallback and transient feedback.
+- **Entity cross-links.** `EntityLink` is the presentational link primitive.
+  The connected `EntityCrossLink` (in `app/navigation`) resolves an entity
+  `kind` + value against the entity-link registry (`app/navigation/entityLinks`)
+  and, on activation, seeds the destination table's search and raises a
+  navigation intent so related data opens pre-filtered — no manual tab-switch
+  and re-filtering. Add a new relationship by extending the registry, never by
+  hand-rolling a one-off link.
 
 ## Usage Notes
 

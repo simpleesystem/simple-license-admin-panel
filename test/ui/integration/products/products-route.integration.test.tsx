@@ -1,11 +1,13 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
 
+import { ROUTE_PATH_LICENSES } from '../../../../src/app/constants'
 import { ProductsRouteComponent } from '../../../../src/routes/products/ProductsRoute'
 import {
   UI_PRODUCT_BUTTON_CREATE,
   UI_PRODUCT_STATUS_ERROR_TITLE,
   UI_PRODUCT_STATUS_LOADING_TITLE,
+  UI_TEST_ID_ENTITY_LINK,
 } from '../../../../src/ui/constants'
 import { buildProduct } from '../../../factories/productFactory'
 import { buildTenant } from '../../../factories/tenantFactory'
@@ -83,6 +85,30 @@ describe('ProductsRouteComponent', () => {
 
     expect(await screen.findByText('root-product')).toBeInTheDocument()
     expect(screen.getByText(UI_PRODUCT_BUTTON_CREATE)).toBeInTheDocument()
+  })
+
+  test('exposes the product slug as a cross-link to its licenses', async () => {
+    const superUser = buildUser({ role: 'SUPERUSER', vendorId: null })
+    useAuthMock.mockReturnValue({
+      user: superUser,
+      currentUser: superUser,
+      isAuthenticated: true,
+      status: 'authenticated',
+      token: 'token',
+      login: vi.fn(),
+      logout: vi.fn(),
+      refreshCurrentUser: vi.fn(),
+    })
+
+    const product = buildProduct({ name: 'linked-product', slug: 'linkedslug' })
+    useAdminProductsMock.mockReturnValue({ data: [product], isLoading: false, isError: false, refetch: vi.fn() })
+
+    renderWithProviders(<ProductsRouteComponent />)
+
+    await screen.findByText('linked-product')
+    const slugLink = screen.getByTestId(UI_TEST_ID_ENTITY_LINK)
+    expect(slugLink).toHaveAttribute('href', ROUTE_PATH_LICENSES)
+    expect(slugLink).toHaveTextContent('linkedslug')
   })
 
   test('shows error state when list request fails', async () => {

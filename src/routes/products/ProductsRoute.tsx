@@ -4,6 +4,8 @@ import { useAdminProducts, useAdminTenants } from '@/simpleLicense'
 import { useApiClient } from '../../api/apiContext'
 import { canViewProducts } from '../../app/auth/permissions'
 import { useAuth } from '../../app/auth/useAuth'
+import { ROUTE_PATH_PRODUCTS } from '../../app/constants'
+import { useTableSeed } from '../../app/navigation/useTableSeed'
 import {
   UI_PAGE_SUBTITLE_PRODUCTS,
   UI_PAGE_TITLE_PRODUCTS,
@@ -119,10 +121,12 @@ export function ProductsRouteComponent() {
     [compareText]
   )
 
+  const seededSearch = useTableSeed(ROUTE_PATH_PRODUCTS)
   const productTable = useDataTableState({
     data: filteredProducts,
     pageSize: UI_TABLE_PAGE_SIZE_OPTIONS[0],
     initialSort: { columnId: UI_PRODUCT_COLUMN_ID_NAME, direction: UI_SORT_ASC },
+    initialSearchTerm: seededSearch,
     search: searchProducts,
     filter: (product) => {
       const status = tableState.filters.status

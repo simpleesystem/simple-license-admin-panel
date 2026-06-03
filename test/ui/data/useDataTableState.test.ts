@@ -27,6 +27,20 @@ describe('useDataTableState', () => {
     expect(result.current.sortState).toBeUndefined()
   })
 
+  it('seeds the initial search term and filters from first render', () => {
+    const { result } = renderHook(() =>
+      useDataTableState({
+        data: testData,
+        initialSearchTerm: 'Carrot',
+        search: (row, term) => row.name.toLowerCase().includes(term.toLowerCase()),
+      })
+    )
+
+    expect(result.current.searchTerm).toBe('Carrot')
+    expect(result.current.rows).toHaveLength(1)
+    expect(result.current.rows[0].name).toBe('Carrot')
+  })
+
   it('paginates data', () => {
     const { result } = renderHook(() => useDataTableState({ data: testData, pageSize: 2 }))
 

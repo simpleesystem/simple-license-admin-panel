@@ -5,7 +5,9 @@ import { useAdminLicenses, useAdminProducts, useAdminTenants } from '@/simpleLic
 import { useApiClient } from '../../api/apiContext'
 import { canViewLicenses, isLicenseOwnedByUser } from '../../app/auth/permissions'
 import { useAuth } from '../../app/auth/useAuth'
+import { ROUTE_PATH_LICENSES } from '../../app/constants'
 import { useLogger } from '../../app/logging/loggerContext'
+import { useTableSeed } from '../../app/navigation/useTableSeed'
 import {
   UI_LICENSE_COLUMN_ID_CUSTOMER,
   UI_LICENSE_COLUMN_ID_DOMAIN,
@@ -161,10 +163,12 @@ export function LicensesRouteComponent() {
     [compareText]
   )
 
+  const seededSearch = useTableSeed(ROUTE_PATH_LICENSES)
   const licenseTable = useDataTableState({
     data: visibleLicenses,
     pageSize: UI_TABLE_PAGE_SIZE_OPTIONS[0],
     initialSort: { columnId: UI_LICENSE_COLUMN_ID_CUSTOMER, direction: UI_SORT_ASC },
+    initialSearchTerm: seededSearch,
     search: searchLicenses,
     filter: (license) => {
       const statusFilter = tableState.filters.status

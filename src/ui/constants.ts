@@ -1597,3 +1597,40 @@ export const UI_ACTION_VERB_UPDATE = 'Update' as const
 export const UI_ACTION_VERB_DELETE = 'Delete' as const
 export const UI_ACTION_VERB_SUSPEND = 'Suspend' as const
 export const UI_ACTION_VERB_RESUME = 'Resume' as const
+
+// Click-to-copy primitives
+export const UI_COPY_STATUS_IDLE = 'idle' as const
+export const UI_COPY_STATUS_COPIED = 'copied' as const
+export const UI_COPY_STATUS_FAILED = 'failed' as const
+export const UI_TEST_ID_COPY_BUTTON = `${UI_TEST_ID_PREFIX}copy-button`
+export const UI_TEST_ID_COPYABLE_VALUE = `${UI_TEST_ID_PREFIX}copyable-value`
+export const UI_COPY_LABEL_IDLE = 'Copy' as const
+export const UI_COPY_LABEL_COPIED = 'Copied' as const
+export const UI_COPY_LABEL_FAILED = 'Copy failed' as const
+export const UI_COPY_ICON_IDLE = '⧉' as const
+export const UI_COPY_ICON_COPIED = '✓' as const
+export const UI_COPY_ICON_FAILED = '⚠' as const
+export const UI_COPY_FEEDBACK_RESET_MS = 1500 as const
+export const UI_CLASS_COPY_BUTTON = 'btn btn-link btn-sm p-0 lh-1 text-decoration-none align-baseline'
+export const UI_CLASS_COPY_BUTTON_ICON = 'align-text-bottom'
+export const UI_CLASS_COPYABLE_VALUE = 'd-inline-flex align-items-center gap-2 mw-100'
+export const UI_CLASS_COPYABLE_VALUE_TEXT = 'text-truncate'
+export const UI_CLASS_COPYABLE_VALUE_MONOSPACE = 'font-monospace'
+export const UI_COPYABLE_VALUE_MAX_WIDTH_DEFAULT = '16rem' as const
+
+// Entity cross-link primitives
+export const UI_TEST_ID_ENTITY_LINK = `${UI_TEST_ID_PREFIX}entity-link`
+export const UI_CLASS_ENTITY_LINK = 'btn btn-link btn-sm p-0 align-baseline text-decoration-none text-start mw-100'
+export const UI_CLASS_ENTITY_LINK_LABEL = 'text-truncate'
+export const UI_CLASS_ENTITY_LINK_ICON = 'align-text-bottom ms-1 small'
+export const UI_ENTITY_LINK_ICON = '↗' as const
+
+// License key column + copy labels
+export const UI_LICENSE_COLUMN_ID_KEY = 'license-key' as const
+export const UI_LICENSE_COLUMN_HEADER_KEY = 'License key' as const
+export const UI_LICENSE_COPY_LABEL_KEY = 'license key' as const
+export const UI_LICENSE_COPY_LABEL_CUSTOMER = 'customer email' as const
+export const UI_LICENSE_COPY_LABEL_DOMAIN = 'domain' as const
+export const UI_ENTITY_LINK_LABEL_VIEW_PRODUCT = 'View product' as const
+export const UI_ENTITY_LINK_LABEL_VIEW_LICENSES = 'View licenses' as const
+export const UI_ENTITY_LINK_LABEL_VIEW_TENANT = 'View tenant' as const

@@ -9,6 +9,8 @@ import {
   isProductOwnedByUser,
   isVendorScopedUser,
 } from '../../app/auth/permissions'
+import { EntityCrossLink } from '../../app/navigation/EntityCrossLink'
+import { ENTITY_LINK_KIND_LICENSES_FOR_PRODUCT } from '../../app/navigation/entityLinks'
 import { useNotificationBus } from '../../notifications/useNotificationBus'
 import {
   UI_BUTTON_VARIANT_PRIMARY,
@@ -198,7 +200,7 @@ export function ProductManagementPanel({
       {
         id: UI_PRODUCT_COLUMN_ID_SLUG,
         header: UI_PRODUCT_COLUMN_HEADER_SLUG,
-        cell: (row) => row.slug,
+        cell: (row) => <EntityCrossLink kind={ENTITY_LINK_KIND_LICENSES_FOR_PRODUCT} value={row.slug} />,
         sortable: true,
       },
       {

@@ -585,3 +585,30 @@ export type SidePanelProps = PropsWithChildren<
     sizeClass?: string
   }
 >
+
+export type CopyButtonProps = UiCommonProps & {
+  value: string
+  label?: ReactNode
+  size?: 'sm' | 'lg'
+  disabled?: boolean
+}
+
+export type CopyableValueProps = UiCommonProps & {
+  value: string | null | undefined
+  display?: ReactNode
+  label?: ReactNode
+  monospace?: boolean
+  truncate?: boolean
+  maxWidth?: string
+  placeholder?: ReactNode
+}
+
+export type EntityLinkProps = UiCommonProps & {
+  label: ReactNode
+  href?: string
+  onActivate?: () => void
+  icon?: ReactNode
+  showIcon?: boolean
+  title?: string
+  truncate?: boolean
+}

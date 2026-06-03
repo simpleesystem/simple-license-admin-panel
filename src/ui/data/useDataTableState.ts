@@ -9,6 +9,7 @@ type UseDataTableStateOptions<TData> = {
   data: readonly TData[]
   pageSize?: number
   initialSort?: UiDataTableSortState
+  initialSearchTerm?: string
   sortComparators?: Record<string, Comparator<TData>>
   search?: (row: TData, term: string) => boolean
   filter?: (row: TData) => boolean
@@ -36,12 +37,13 @@ export function useDataTableState<TData>({
   data,
   pageSize = UI_TABLE_PAGE_SIZE_DEFAULT,
   initialSort,
+  initialSearchTerm = '',
   sortComparators = {},
   search = defaultSearch,
   filter,
 }: UseDataTableStateOptions<TData>): UseDataTableStateResult<TData> {
   const [sortState, setSortState] = useState<UiDataTableSortState | undefined>(initialSort)
-  const [searchTerm, setSearchTerm] = useState('')
+  const [searchTerm, setSearchTerm] = useState(initialSearchTerm)
   const [page, setPage] = useState(1)
   const [currentPageSize, setCurrentPageSize] = useState(pageSize)
 
