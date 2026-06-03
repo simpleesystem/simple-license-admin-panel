@@ -7,17 +7,12 @@ import {
   ActivationLimitExceededException,
   ApiException,
   AuthenticationException,
-  DETAIL_KEY_PREVIOUS_LICENSE_KEY,
-  DETAIL_KEY_REPLACEMENT_LICENSE_KEY,
   ERROR_CODE_ACTIVATION_LIMIT_EXCEEDED,
-  ERROR_CODE_DOMAIN_CHANGE_INCOMPLETE,
   ERROR_CODE_INVALID_CREDENTIALS,
   ERROR_CODE_LICENSE_EXPIRED,
   ERROR_CODE_LICENSE_NOT_FOUND,
   ERROR_CODE_UNAUTHORIZED,
   HTTP_UNAUTHORIZED,
-  LICENSE_METADATA_KEY_SUPERSEDED_BY_KEY,
-  LICENSE_SUPERSEDE_REASON_DOMAIN_CHANGE,
   LicenseExpiredException,
   LicenseNotFoundException,
   RELEASE_UPLOAD_FIELD_NAME,
@@ -1980,6 +1975,7 @@ describe('Client', () => {
       const licenseId = faker.string.uuid()
       const supersededByKey = faker.string.alphanumeric({ casing: 'upper', length: 16 })
       const supersededByDomain = faker.internet.domainName().toLowerCase()
+      const supersedeReason = faker.lorem.word()
       mockHttpClient.post.mockResolvedValue({
         data: { success: true, data: { success: true } },
         status: 200,
@@ -1988,7 +1984,7 @@ describe('Client', () => {
       await client.revokeLicense(licenseId, {
         superseded_by_key: supersededByKey,
         superseded_by_domain: supersededByDomain,
-        reason: LICENSE_SUPERSEDE_REASON_DOMAIN_CHANGE,
+        reason: supersedeReason,
       })
 
       expect(mockHttpClient.post).toHaveBeenCalledWith(
@@ -1996,43 +1992,26 @@ describe('Client', () => {
         {
           superseded_by_key: supersededByKey,
           superseded_by_domain: supersededByDomain,
-          reason: LICENSE_SUPERSEDE_REASON_DOMAIN_CHANGE,
+          reason: supersedeReason,
         }
       )
     })
   })
 
   describe('changeLicenseDomain', () => {
-    it('issues a replacement bound to the new domain and revokes the source as superseded', async () => {
+    it('posts to the atomic change-domain endpoint and returns the replacement + previous key', async () => {
       const previousKey = faker.string.alphanumeric({ casing: 'upper', length: 12 })
       const newDomain = faker.internet.domainName().toLowerCase()
       const replacementKey = faker.string.alphanumeric({ casing: 'upper', length: 12 })
-      const source = buildLicense({
-        licenseKey: previousKey,
-        domain: faker.internet.domainName().toLowerCase(),
-        productSlug: faker.lorem.slug(),
-        activationLimit: 5,
-        expiresAt: faker.date.soon({ days: 30 }),
-        metadata: {
-          plan_note: 'keep-me',
-          [LICENSE_METADATA_KEY_SUPERSEDED_BY_KEY]: 'should-be-stripped',
-        },
-      })
       const replacement = buildLicense({ licenseKey: replacementKey, domain: newDomain })
 
-      mockHttpClient.get.mockResolvedValue({
-        data: { success: true, data: { license: source } },
-        status: 200,
+      mockHttpClient.post.mockResolvedValue({
+        data: {
+          success: true,
+          data: { license: replacement, previous_license_key: previousKey },
+        },
+        status: 201,
       })
-      mockHttpClient.post
-        .mockResolvedValueOnce({
-          data: { success: true, data: { license: replacement } },
-          status: 200,
-        })
-        .mockResolvedValueOnce({
-          data: { success: true, data: { success: true } },
-          status: 200,
-        })
 
       const result = await client.changeLicenseDomain({
         current_license_key: previousKey,
@@ -2042,63 +2021,75 @@ describe('Client', () => {
       expect(result.previous_license_key).toBe(previousKey)
       expect(result.license.licenseKey).toBe(replacementKey)
 
-      const [createUrl, createPayload] = mockHttpClient.post.mock.calls[0] ?? []
-      expect(createUrl).toBe('/api/v1/admin/licenses/create')
-      expect(createPayload).toMatchObject({
-        customer_email: source.customerEmail,
-        product_slug: source.productSlug,
-        tier_code: source.tierCode,
-        domain: newDomain,
-        activation_limit: 5,
-      })
-      expect((createPayload as { metadata?: Record<string, unknown> }).metadata).toEqual({ plan_note: 'keep-me' })
-
-      const [revokeUrl, revokePayload] = mockHttpClient.post.mock.calls[1] ?? []
-      expect(revokeUrl).toBe(`/api/v1/admin/licenses/${encodeURIComponent(previousKey)}/revoke`)
-      expect(revokePayload).toEqual({
-        superseded_by_key: replacementKey,
-        superseded_by_domain: newDomain,
-        reason: LICENSE_SUPERSEDE_REASON_DOMAIN_CHANGE,
-      })
-    })
-
-    it('does not revoke the source when the replacement cannot be created', async () => {
-      const previousKey = faker.string.alphanumeric({ casing: 'upper', length: 12 })
-      const source = buildLicense({ licenseKey: previousKey, productSlug: faker.lorem.slug() })
-
-      mockHttpClient.get.mockResolvedValue({
-        data: { success: true, data: { license: source } },
-        status: 200,
-      })
-      mockHttpClient.post.mockRejectedValueOnce(new Error('create failed'))
-
-      await expect(
-        client.changeLicenseDomain({
-          current_license_key: previousKey,
-          new_domain: faker.internet.domainName().toLowerCase(),
-        })
-      ).rejects.toThrow()
-
+      // A single atomic server call — no client-side create-then-revoke orchestration,
+      // and no source license read beforehand.
+      expect(mockHttpClient.get).not.toHaveBeenCalled()
       expect(mockHttpClient.post).toHaveBeenCalledTimes(1)
+      const [url, body] = mockHttpClient.post.mock.calls[0] ?? []
+      expect(url).toBe(`/api/v1/admin/licenses/${encodeURIComponent(previousKey)}/change-domain`)
+      expect(body).toEqual({ new_domain: newDomain })
     })
 
-    it('surfaces the created replacement when superseding the source fails', async () => {
+    it('forwards an explicit supersede reason when one is provided', async () => {
       const previousKey = faker.string.alphanumeric({ casing: 'upper', length: 12 })
       const newDomain = faker.internet.domainName().toLowerCase()
-      const replacementKey = faker.string.alphanumeric({ casing: 'upper', length: 12 })
-      const source = buildLicense({ licenseKey: previousKey, productSlug: faker.lorem.slug() })
-      const replacement = buildLicense({ licenseKey: replacementKey, domain: newDomain })
+      const reason = faker.lorem.words(2)
+      const replacement = buildLicense({ domain: newDomain })
 
-      mockHttpClient.get.mockResolvedValue({
-        data: { success: true, data: { license: source } },
-        status: 200,
+      mockHttpClient.post.mockResolvedValue({
+        data: {
+          success: true,
+          data: { license: replacement, previous_license_key: previousKey },
+        },
+        status: 201,
       })
-      mockHttpClient.post
-        .mockResolvedValueOnce({
-          data: { success: true, data: { license: replacement } },
-          status: 200,
-        })
-        .mockRejectedValueOnce(new Error('revoke failed'))
+
+      await client.changeLicenseDomain({
+        current_license_key: previousKey,
+        new_domain: newDomain,
+        reason,
+      })
+
+      const [, body] = mockHttpClient.post.mock.calls[0] ?? []
+      expect(body).toEqual({ new_domain: newDomain, reason })
+    })
+
+    it('omits a blank reason so the server applies its default', async () => {
+      const previousKey = faker.string.alphanumeric({ casing: 'upper', length: 12 })
+      const newDomain = faker.internet.domainName().toLowerCase()
+      const replacement = buildLicense({ domain: newDomain })
+
+      mockHttpClient.post.mockResolvedValue({
+        data: {
+          success: true,
+          data: { license: replacement, previous_license_key: previousKey },
+        },
+        status: 201,
+      })
+
+      await client.changeLicenseDomain({
+        current_license_key: previousKey,
+        new_domain: newDomain,
+        reason: '   ',
+      })
+
+      const [, body] = mockHttpClient.post.mock.calls[0] ?? []
+      expect(body).toEqual({ new_domain: newDomain })
+    })
+
+    it('propagates a server error without any compensating call (atomic, nothing to orphan)', async () => {
+      const previousKey = faker.string.alphanumeric({ casing: 'upper', length: 12 })
+      const newDomain = faker.internet.domainName().toLowerCase()
+      const conflictCode = faker.string.alpha({ casing: 'upper', length: 10 })
+      const conflictMessage = faker.lorem.sentence()
+
+      mockHttpClient.post.mockResolvedValue({
+        data: {
+          success: false,
+          error: { code: conflictCode, message: conflictMessage },
+        },
+        status: 409,
+      })
 
       const error = await client
         .changeLicenseDomain({ current_license_key: previousKey, new_domain: newDomain })
@@ -2106,13 +2097,10 @@ describe('Client', () => {
 
       expect(error).toBeInstanceOf(ApiException)
       const apiError = error as ApiException
-      expect(apiError.errorCode).toBe(ERROR_CODE_DOMAIN_CHANGE_INCOMPLETE)
-      expect(apiError.message).toContain(replacementKey)
-      expect(apiError.errorDetails?.[DETAIL_KEY_REPLACEMENT_LICENSE_KEY]).toBe(replacementKey)
-      expect(apiError.errorDetails?.[DETAIL_KEY_PREVIOUS_LICENSE_KEY]).toBe(previousKey)
-      // The replacement is created exactly once; the failure must not trigger a retry
-      // that would mint a second replacement.
-      expect(mockHttpClient.post).toHaveBeenCalledTimes(2)
+      expect(apiError.message).toBe(conflictMessage)
+      expect(apiError.errorCode).toBe(conflictCode)
+      // Atomic server endpoint: exactly one call, so there is nothing to compensate for.
+      expect(mockHttpClient.post).toHaveBeenCalledTimes(1)
     })
   })
 

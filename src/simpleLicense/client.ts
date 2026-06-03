@@ -25,6 +25,7 @@ import {
   API_ENDPOINT_ADMIN_HEALTH_SNAPSHOT,
   API_ENDPOINT_ADMIN_LICENSES_ACTIVATIONS,
   API_ENDPOINT_ADMIN_LICENSES_BATCH_SOFT_DELETE,
+  API_ENDPOINT_ADMIN_LICENSES_CHANGE_DOMAIN,
   API_ENDPOINT_ADMIN_LICENSES_CREATE,
   API_ENDPOINT_ADMIN_LICENSES_FREEZE,
   API_ENDPOINT_ADMIN_LICENSES_GET,
@@ -83,20 +84,11 @@ import {
   API_ENDPOINT_LICENSES_VALIDATE,
   API_ENDPOINT_PROTECTION_KEYS,
   API_ENDPOINT_UPDATES_CHECK,
-  DETAIL_KEY_PREVIOUS_LICENSE_KEY,
-  DETAIL_KEY_REPLACEMENT_LICENSE_KEY,
   ERROR_CODE_ACTIVATION_LIMIT_EXCEEDED,
-  ERROR_CODE_DOMAIN_CHANGE_INCOMPLETE,
   ERROR_CODE_INVALID_CREDENTIALS,
   ERROR_CODE_LICENSE_EXPIRED,
   ERROR_CODE_LICENSE_NOT_FOUND,
   HTTP_UNAUTHORIZED,
-  LICENSE_METADATA_KEY_SUPERSEDE_REASON,
-  LICENSE_METADATA_KEY_SUPERSEDED_AT,
-  LICENSE_METADATA_KEY_SUPERSEDED_BY_DOMAIN,
-  LICENSE_METADATA_KEY_SUPERSEDED_BY_KEY,
-  LICENSE_SUPERSEDE_REASON_DOMAIN_CHANGE,
-  MILLISECONDS_PER_DAY,
   RELEASE_UPLOAD_REQUEST_TIMEOUT_MS,
 } from './constants'
 import {
@@ -573,114 +565,26 @@ export class Client {
   }
 
   /**
-   * Move a license to a new domain. A license's domain is cryptographically bound
-   * into its signed key and cannot be edited in place, so this creates a fresh
-   * replacement license bound to `newDomain` (copying the source's product, tier,
-   * customer, activation limit, remaining term, and sanitized metadata) and then
-   * revokes the source with a supersession pointer to the replacement. A connector
-   * still presenting the old key from the new domain self-heals on its next
-   * validate.
+   * Move a license to a new domain via the atomic server endpoint. A license's
+   * domain is cryptographically bound into its signed key and cannot be edited in
+   * place, so the server mints a replacement license bound to `new_domain` (copying
+   * the source's product, tier, customer, demo flag, activation limit, remaining
+   * paid term, and sanitized metadata) and revokes the source with a supersession
+   * pointer to the replacement — all inside a single database transaction. Either
+   * both happen or neither does, so there is no partial-failure window that could
+   * orphan a replacement or strand the source. A connector still presenting the old
+   * key from the new domain self-heals on its next validate.
    */
   async changeLicenseDomain(request: ChangeLicenseDomainRequest): Promise<ChangeLicenseDomainResponse> {
-    const { current_license_key, new_domain } = request
-    const reason = request.reason ?? LICENSE_SUPERSEDE_REASON_DOMAIN_CHANGE
-
-    const { license } = await this.getLicense(current_license_key)
-    if (!license.productSlug) {
-      throw new ApiException('Cannot change domain: source license is missing a product slug')
+    const { current_license_key, new_domain, reason } = request
+    const url = `${API_ENDPOINT_ADMIN_LICENSES_CHANGE_DOMAIN}/${encodeURIComponent(current_license_key)}/change-domain`
+    const body: { new_domain: string; reason?: string } = { new_domain }
+    if (typeof reason === 'string' && reason.trim() !== '') {
+      body.reason = reason
     }
 
-    const createPayload: CreateLicenseRequest = {
-      customer_email: license.customerEmail,
-      product_slug: license.productSlug,
-      tier_code: license.tierCode,
-      domain: new_domain,
-    }
-    if (typeof license.activationLimit === 'number') {
-      createPayload.activation_limit = license.activationLimit
-    }
-    const remainingDays = this.remainingLicenseTermDays(license.expiresAt)
-    if (remainingDays !== undefined) {
-      createPayload.expires_days = remainingDays
-    }
-    const sanitizedMetadata = this.stripSupersessionMetadata(license.metadata)
-    if (sanitizedMetadata) {
-      createPayload.metadata = sanitizedMetadata
-    }
-
-    const created = await this.createLicense(createPayload)
-    const replacement = created.license
-
-    try {
-      await this.revokeLicense(current_license_key, {
-        superseded_by_key: replacement.licenseKey,
-        superseded_by_domain: new_domain,
-        reason,
-      })
-    } catch (error) {
-      // The replacement was created, but superseding the source failed. Surface the
-      // replacement key (and keep the original failure as the cause) so the operator
-      // can finish the move by revoking the source manually, instead of re-running
-      // change domain — which would mint a second replacement and orphan this one.
-      const cause = error instanceof Error ? error : undefined
-      throw new ApiException(
-        `Replacement license ${replacement.licenseKey} was created for "${new_domain}", but revoking the source license failed. Revoke the source license manually to finish the move — do not re-run change domain, which would create another replacement and orphan this one.`,
-        ERROR_CODE_DOMAIN_CHANGE_INCOMPLETE,
-        {
-          [DETAIL_KEY_REPLACEMENT_LICENSE_KEY]: replacement.licenseKey,
-          [DETAIL_KEY_PREVIOUS_LICENSE_KEY]: current_license_key,
-        },
-        cause
-      )
-    }
-
-    return { license: replacement, previous_license_key: current_license_key }
-  }
-
-  /**
-   * Whole days remaining on a license term, for carrying the paid term onto a
-   * replacement. Returns undefined when there is no expiry (does-not-expire) so the
-   * caller omits `expires_days` and the tier/metadata default applies.
-   */
-  private remainingLicenseTermDays(expiresAt?: Date | string | null): number | undefined {
-    if (!expiresAt) {
-      return undefined
-    }
-    const expiry = expiresAt instanceof Date ? expiresAt : new Date(expiresAt)
-    const expiryMs = expiry.getTime()
-    if (Number.isNaN(expiryMs)) {
-      return undefined
-    }
-    const remainingMs = expiryMs - Date.now()
-    const remainingDays = Math.ceil(remainingMs / MILLISECONDS_PER_DAY)
-    // Never carry a non-positive term; a moved-but-expired license should get at
-    // least a single day so the replacement is usable and can be renewed.
-    return remainingDays > 0 ? remainingDays : 1
-  }
-
-  /**
-   * Copy of `metadata` without supersession pointer keys, so a replacement license
-   * is never born already "superseded". Returns undefined when nothing remains.
-   */
-  private stripSupersessionMetadata(
-    metadata?: Record<string, string | number | boolean | null>
-  ): Record<string, string | number | boolean | null> | undefined {
-    if (!metadata) {
-      return undefined
-    }
-    const supersessionKeys = new Set<string>([
-      LICENSE_METADATA_KEY_SUPERSEDED_BY_KEY,
-      LICENSE_METADATA_KEY_SUPERSEDED_BY_DOMAIN,
-      LICENSE_METADATA_KEY_SUPERSEDED_AT,
-      LICENSE_METADATA_KEY_SUPERSEDE_REASON,
-    ])
-    const sanitized: Record<string, string | number | boolean | null> = {}
-    for (const [key, value] of Object.entries(metadata)) {
-      if (!supersessionKeys.has(key)) {
-        sanitized[key] = value
-      }
-    }
-    return Object.keys(sanitized).length > 0 ? sanitized : undefined
+    const response = await this.httpClient.post<ApiResponse<ChangeLicenseDomainResponse>>(url, body)
+    return this.handleApiResponse(response.data, {} as ChangeLicenseDomainResponse)
   }
 
   async softDeleteLicense(idOrKey: string): Promise<ActionSuccessResponse> {

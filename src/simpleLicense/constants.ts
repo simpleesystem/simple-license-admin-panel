@@ -50,6 +50,7 @@ export const API_ENDPOINT_ADMIN_LICENSES_RESUME = '/api/v1/admin/licenses'
 export const API_ENDPOINT_ADMIN_LICENSES_FREEZE = '/api/v1/admin/licenses'
 export const API_ENDPOINT_ADMIN_LICENSES_REVOKE = '/api/v1/admin/licenses'
 export const API_ENDPOINT_ADMIN_LICENSES_MARK_REVOKED = '/api/v1/admin/licenses'
+export const API_ENDPOINT_ADMIN_LICENSES_CHANGE_DOMAIN = '/api/v1/admin/licenses'
 export const API_ENDPOINT_ADMIN_LICENSES_ACTIVATIONS = '/api/v1/admin/licenses'
 export const API_ENDPOINT_ADMIN_LICENSES_BATCH_SOFT_DELETE = '/api/v1/admin/licenses/batch-soft-delete'
 export const API_ENDPOINT_ADMIN_RELEASES_BATCH_DELETE_SUFFIX = '/releases/batch-delete'
@@ -134,25 +135,6 @@ export const LICENSE_STATUS_INACTIVE = 'INACTIVE'
 export const LICENSE_STATUS_EXPIRED = 'EXPIRED'
 export const LICENSE_STATUS_REVOKED = 'REVOKED'
 export const LICENSE_STATUS_SUSPENDED = 'SUSPENDED'
-
-// License supersession (domain-move migration) metadata keys + directive reason.
-// The "change domain" admin action creates a replacement license and revokes the
-// old one, stamping these pointers so a moved site's connector can self-heal.
-export const LICENSE_METADATA_KEY_SUPERSEDED_BY_KEY = 'supersededByKey'
-export const LICENSE_METADATA_KEY_SUPERSEDED_BY_DOMAIN = 'supersededByDomain'
-export const LICENSE_METADATA_KEY_SUPERSEDED_AT = 'supersededAt'
-export const LICENSE_METADATA_KEY_SUPERSEDE_REASON = 'supersedeReason'
-export const LICENSE_SUPERSEDE_REASON_DOMAIN_CHANGE = 'domain_change'
-
-// Raised when a change-domain creates the replacement license but then fails to
-// revoke/supersede the source, so the operator can finish the move manually
-// instead of re-running change-domain (which would mint another replacement).
-export const ERROR_CODE_DOMAIN_CHANGE_INCOMPLETE = 'DOMAIN_CHANGE_INCOMPLETE'
-export const DETAIL_KEY_REPLACEMENT_LICENSE_KEY = 'replacement_license_key'
-export const DETAIL_KEY_PREVIOUS_LICENSE_KEY = 'previous_license_key'
-
-// Time
-export const MILLISECONDS_PER_DAY = 86_400_000
 
 // Activation Status Values
 export const ACTIVATION_STATUS_ACTIVE = 'ACTIVE'
