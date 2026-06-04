@@ -188,7 +188,6 @@ import type {
   ProtectionSigningPublicKeyResponse,
   ReportUsageRequest,
   RevokeAgentServiceCredentialResponse,
-  RevokeLicenseRequest,
   RevokeProtectionBuildTokenResponse,
   ServerStatusResponse,
   SystemStatsResponse,
@@ -557,9 +556,9 @@ export class Client {
     return this.handleApiResponse(response.data, {} as FreezeLicenseResponse)
   }
 
-  async revokeLicense(idOrKey: string, request?: RevokeLicenseRequest): Promise<ActionSuccessResponse> {
+  async revokeLicense(idOrKey: string): Promise<ActionSuccessResponse> {
     const url = `${API_ENDPOINT_ADMIN_LICENSES_MARK_REVOKED}/${encodeURIComponent(idOrKey)}/revoke`
-    const response = await this.httpClient.post<ApiResponse<{ success: boolean }>>(url, request ?? {})
+    const response = await this.httpClient.post<ApiResponse<{ success: boolean }>>(url, {})
 
     return this.handleApiResponse<ActionSuccessResponse>(response.data, { success: true })
   }

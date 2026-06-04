@@ -1970,32 +1970,6 @@ describe('Client', () => {
         {}
       )
     })
-
-    it('forwards supersession pointers to the revoke endpoint', async () => {
-      const licenseId = faker.string.uuid()
-      const supersededByKey = faker.string.alphanumeric({ casing: 'upper', length: 16 })
-      const supersededByDomain = faker.internet.domainName().toLowerCase()
-      const supersedeReason = faker.lorem.word()
-      mockHttpClient.post.mockResolvedValue({
-        data: { success: true, data: { success: true } },
-        status: 200,
-      })
-
-      await client.revokeLicense(licenseId, {
-        superseded_by_key: supersededByKey,
-        superseded_by_domain: supersededByDomain,
-        reason: supersedeReason,
-      })
-
-      expect(mockHttpClient.post).toHaveBeenCalledWith(
-        `/api/v1/admin/licenses/${encodeURIComponent(licenseId)}/revoke`,
-        {
-          superseded_by_key: supersededByKey,
-          superseded_by_domain: supersededByDomain,
-          reason: supersedeReason,
-        }
-      )
-    })
   })
 
   describe('changeLicenseDomain', () => {

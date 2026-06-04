@@ -257,20 +257,9 @@ export interface UpdateLicenseRequest {
 }
 
 /**
- * Optional supersession pointer sent with a revoke. When present, the old license
- * is stamped with the replacement key/domain so the validate endpoint can hand the
- * new key back to a moved site (domain-move migration).
- */
-export interface RevokeLicenseRequest {
-  superseded_by_key?: string
-  superseded_by_domain?: string
-  reason?: string
-}
-
-/**
- * Admin "change domain" orchestration input: create a replacement license bound to
- * `new_domain` (copied from the source license) and revoke the source with a
- * supersession pointer to the replacement.
+ * Admin "change domain" input for the atomic server endpoint: the server mints a
+ * replacement license bound to `new_domain` (copied from the source license) and
+ * supersedes the source in a single transaction.
  */
 export interface ChangeLicenseDomainRequest {
   current_license_key: string

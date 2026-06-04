@@ -140,7 +140,7 @@ export function useRevokeLicense(client: Client) {
   })
 }
 
-// Change a license's domain (create replacement + revoke old as superseded)
+// Change a license's domain via the server's atomic change-domain endpoint
 export function useChangeLicenseDomain(client: Client) {
   const queryClient = useQueryClient()
 
