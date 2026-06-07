@@ -16,6 +16,7 @@ import { buildText } from '../../ui/factories/uiFactories'
 const useCreateUserMock = vi.hoisted(() => vi.fn())
 const useUpdateUserMock = vi.hoisted(() => vi.fn())
 const useDeleteUserMock = vi.hoisted(() => vi.fn())
+const useResetUserPasswordMock = vi.hoisted(() => vi.fn())
 const useAdminTenantsMock = vi.hoisted(() => vi.fn())
 
 vi.mock('../../../src/app/auth/useAuth', () => ({
@@ -36,6 +37,7 @@ vi.mock('@/simpleLicense', async () => {
     useCreateUser: useCreateUserMock,
     useUpdateUser: useUpdateUserMock,
     useDeleteUser: useDeleteUserMock,
+    useResetUserPassword: useResetUserPasswordMock,
     useAdminTenants: useAdminTenantsMock,
   }
 })
@@ -73,6 +75,7 @@ describe('UserManagementPanel', () => {
     useCreateUserMock.mockReturnValue(mockMutation())
     useUpdateUserMock.mockReturnValue(mockMutation())
     useDeleteUserMock.mockReturnValue(mockMutation())
+    useResetUserPasswordMock.mockReturnValue(mockMutation())
   })
 
   test('calls create mutation from CTA', async () => {

@@ -12,6 +12,8 @@ import type {
   GetUserResponse,
   ListUsersRequest,
   ListUsersResponse,
+  ResetUserPasswordRequest,
+  ResetUserPasswordResponse,
   UpdateUserRequest,
   UpdateUserResponse,
 } from '../types/api'
@@ -104,6 +106,20 @@ export function useChangePassword(client: Client) {
   return useMutation<ChangePasswordResponse, Error, ChangePasswordRequest>({
     mutationFn: async (request) => {
       return await client.changePassword(request)
+    },
+  })
+}
+
+export function useResetUserPassword(client: Client) {
+  const queryClient = useQueryClient()
+
+  return useMutation<ResetUserPasswordResponse, Error, { id: string; data: ResetUserPasswordRequest }>({
+    mutationFn: async ({ id, data }) => {
+      return await client.resetUserPassword(id, data)
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminUsers.all() })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminUsers.detail(variables.id) })
     },
   })
 }

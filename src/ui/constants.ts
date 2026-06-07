@@ -883,6 +883,8 @@ export const UI_USER_FORM_SUBMIT_CREATE = 'Create user' as const
 export const UI_USER_FORM_SUBMIT_UPDATE = 'Save user' as const
 export const UI_USER_ACTION_EDIT = 'Edit User' as const
 export const UI_USER_ACTION_DELETE = 'Delete User' as const
+export const UI_USER_ACTION_RESET_PASSWORD = 'Reset Password' as const
+export const UI_USER_BUTTON_RESET_PASSWORD = 'Reset Password' as const
 export const UI_USER_STATUS_ACTION_RETRY = 'Retry' as const
 export const UI_USER_STATUS_LOADING_TITLE = 'Loading users' as const
 export const UI_USER_STATUS_LOADING_BODY = 'Fetching the latest user accounts.' as const
@@ -911,6 +913,7 @@ export const UI_USER_STATUS_LABEL_DELETED = 'Deleted' as const
 export const UI_USER_TOAST_CREATE_SUCCESS = 'User created successfully' as const
 export const UI_USER_TOAST_UPDATE_SUCCESS = 'User updated successfully' as const
 export const UI_USER_TOAST_DELETE_SUCCESS = 'User deleted successfully' as const
+export const UI_USER_TOAST_RESET_PASSWORD_SUCCESS = 'Password reset successfully' as const
 export const UI_AGENT_SERVICE_ACCOUNT_TOAST_CREATE_SUCCESS = 'Agent account created successfully' as const
 export const UI_AGENT_SERVICE_ACCOUNT_TOAST_CREATE_ERROR = 'Unable to create agent account' as const
 export const UI_USER_CONFIRM_DELETE_TITLE = 'Delete user?' as const
@@ -918,6 +921,19 @@ export const UI_USER_CONFIRM_DELETE_BODY =
   'Deleting a user will disable their access. You can restore them later by changing their status.' as const
 export const UI_USER_CONFIRM_DELETE_CONFIRM = 'Delete user' as const
 export const UI_USER_CONFIRM_DELETE_CANCEL = 'Cancel' as const
+export const UI_USER_CONFIRM_RESET_PASSWORD_TITLE = 'Reset user password?' as const
+export const UI_USER_CONFIRM_RESET_PASSWORD_BODY =
+  'Set a temporary password for this user. They will be required to choose a new password on their next login.' as const
+export const UI_USER_CONFIRM_RESET_PASSWORD_CONFIRM = 'Reset password' as const
+export const UI_USER_CONFIRM_RESET_PASSWORD_CANCEL = 'Cancel' as const
+export const UI_USER_RESET_PASSWORD_FIELD_ID = 'reset-user-password' as const
+export const UI_USER_RESET_PASSWORD_FIELD_LABEL = 'New temporary password' as const
+export const UI_USER_RESET_PASSWORD_FIELD_PLACEHOLDER = 'Enter a temporary password' as const
+export const UI_USER_RESET_PASSWORD_FIELD_TYPE = 'password' as const
+export const UI_USER_RESET_PASSWORD_FIELD_AUTOCOMPLETE = 'new-password' as const
+export const UI_USER_RESET_PASSWORD_MIN_LENGTH = 12 as const
+export const UI_USER_RESET_PASSWORD_HELP_TEXT =
+  'Minimum 12 characters. Share this password securely; the user must change it at next login.' as const
 export const UI_USER_ROLE_SUPERUSER = 'SUPERUSER' as const
 export const UI_USER_ROLE_ADMIN = 'ADMIN' as const
 export const UI_USER_ROLE_VENDOR_MANAGER = 'VENDOR_MANAGER' as const

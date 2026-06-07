@@ -72,6 +72,8 @@ import {
   API_ENDPOINT_ADMIN_USERS_LIST,
   API_ENDPOINT_ADMIN_USERS_ME,
   API_ENDPOINT_ADMIN_USERS_ME_PASSWORD,
+  API_ENDPOINT_ADMIN_USERS_RESET_PASSWORD,
+  API_ENDPOINT_ADMIN_USERS_RESET_PASSWORD_SUFFIX,
   API_ENDPOINT_ADMIN_USERS_UPDATE,
   API_ENDPOINT_AUTH_LOGIN,
   API_ENDPOINT_AUTH_LOGOUT,
@@ -187,6 +189,8 @@ import type {
   ProtectionBuildTokenMetadata,
   ProtectionSigningPublicKeyResponse,
   ReportUsageRequest,
+  ResetUserPasswordRequest,
+  ResetUserPasswordResponse,
   RevokeAgentServiceCredentialResponse,
   RevokeProtectionBuildTokenResponse,
   ServerStatusResponse,
@@ -1012,6 +1016,13 @@ export class Client {
     const response = await this.httpClient.delete<ApiResponse<{ success: boolean }>>(url)
 
     return this.handleApiResponse<ActionSuccessResponse>(response.data, { success: true })
+  }
+
+  async resetUserPassword(id: string, request: ResetUserPasswordRequest): Promise<ResetUserPasswordResponse> {
+    const url = `${API_ENDPOINT_ADMIN_USERS_RESET_PASSWORD}/${encodeURIComponent(id)}${API_ENDPOINT_ADMIN_USERS_RESET_PASSWORD_SUFFIX}`
+    const response = await this.httpClient.post<ApiResponse<ResetUserPasswordResponse>>(url, request)
+
+    return this.handleApiResponse<ResetUserPasswordResponse>(response.data, { success: true })
   }
 
   async getCurrentUser(): Promise<GetCurrentUserResponse> {

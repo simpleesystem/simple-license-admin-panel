@@ -5,6 +5,8 @@ import { buildUser } from '@test/factories/userFactory'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   ActivationLimitExceededException,
+  API_ENDPOINT_ADMIN_USERS_RESET_PASSWORD,
+  API_ENDPOINT_ADMIN_USERS_RESET_PASSWORD_SUFFIX,
   ApiException,
   AuthenticationException,
   ERROR_CODE_ACTIVATION_LIMIT_EXCEEDED,
@@ -2541,6 +2543,30 @@ describe('Client', () => {
 
       expect(result).toBeDefined()
       expect(mockHttpClient.delete).toHaveBeenCalled()
+    })
+  })
+
+  describe('resetUserPassword', () => {
+    it('posts to the reset-password endpoint with the new password', async () => {
+      const userId = faker.string.uuid()
+      const newPassword = faker.internet.password()
+      const mockResponse = {
+        data: {
+          success: true,
+          data: { success: true },
+        },
+        status: 200,
+      }
+
+      mockHttpClient.post.mockResolvedValue(mockResponse)
+
+      const result = await client.resetUserPassword(userId, { new_password: newPassword })
+
+      expect(result.success).toBe(true)
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        `${API_ENDPOINT_ADMIN_USERS_RESET_PASSWORD}/${encodeURIComponent(userId)}${API_ENDPOINT_ADMIN_USERS_RESET_PASSWORD_SUFFIX}`,
+        { new_password: newPassword }
+      )
     })
   })
 

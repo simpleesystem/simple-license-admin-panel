@@ -232,6 +232,15 @@ export interface ChangePasswordResponse {
   user: User
 }
 
+export interface ResetUserPasswordRequest {
+  new_password: string
+}
+
+export interface ResetUserPasswordResponse {
+  success: boolean
+  message?: string
+}
+
 export interface GetCurrentUserResponse {
   user: User
 }

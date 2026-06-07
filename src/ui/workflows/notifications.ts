@@ -31,6 +31,7 @@ import {
   UI_TENANT_TOAST_UPDATE_SUCCESS,
   UI_USER_TOAST_CREATE_SUCCESS,
   UI_USER_TOAST_DELETE_SUCCESS,
+  UI_USER_TOAST_RESET_PASSWORD_SUCCESS,
   UI_USER_TOAST_UPDATE_SUCCESS,
 } from '../constants'
 
@@ -89,6 +90,9 @@ const emitSuccessToast = (bus: NotificationBus, titleKey: string) => {
 
 export const notifyUserSuccess = (bus: NotificationBus, kind: Exclude<CrudKind, 'suspend' | 'resume'>) =>
   emitSuccessToast(bus, USER_SUCCESS_TITLES[kind])
+
+export const notifyUserPasswordResetSuccess = (bus: NotificationBus) =>
+  emitSuccessToast(bus, UI_USER_TOAST_RESET_PASSWORD_SUCCESS)
 
 export const notifyTenantSuccess = (bus: NotificationBus, kind: CrudKind) =>
   emitSuccessToast(bus, TENANT_SUCCESS_TITLES[kind])

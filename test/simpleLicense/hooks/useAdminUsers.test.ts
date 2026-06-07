@@ -11,6 +11,7 @@ import {
   useCreateUser,
   useCurrentUser,
   useDeleteUser,
+  useResetUserPassword,
   useUpdateUser,
 } from '@/simpleLicense/hooks/useAdminUsers'
 
@@ -27,6 +28,7 @@ describe('useAdminUsers hooks', () => {
       updateUser: vi.fn(),
       deleteUser: vi.fn(),
       changePassword: vi.fn(),
+      resetUserPassword: vi.fn(),
     } as unknown as Client
   })
 
@@ -310,6 +312,49 @@ describe('useAdminUsers hooks', () => {
       const { result } = renderHookWithQueryClient(() => useChangePassword(mockClient))
 
       result.current.mutate(mockRequest)
+
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true)
+      })
+
+      expect(result.current.error).toEqual(mockError)
+    })
+  })
+
+  describe('useResetUserPassword', () => {
+    it('resets a user password and invalidates queries', async () => {
+      const mockResponse = { success: true }
+      const newPassword = faker.internet.password()
+      ;(mockClient.resetUserPassword as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse)
+
+      const queryClient = new (await import('@tanstack/react-query')).QueryClient({
+        defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      })
+      const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries')
+
+      const { result } = renderHookWithQueryClient(() => useResetUserPassword(mockClient), {
+        queryClient,
+      })
+
+      result.current.mutate({ id: mockUserId, data: { new_password: newPassword } })
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true)
+      })
+
+      expect(result.current.data).toEqual(mockResponse)
+      expect(mockClient.resetUserPassword).toHaveBeenCalledWith(mockUserId, { new_password: newPassword })
+      expect(invalidateQueriesSpy).toHaveBeenCalled()
+    })
+
+    it('handles reset password error', async () => {
+      const newPassword = faker.internet.password()
+      const mockError = new Error('Failed to reset password')
+      ;(mockClient.resetUserPassword as ReturnType<typeof vi.fn>).mockRejectedValue(mockError)
+
+      const { result } = renderHookWithQueryClient(() => useResetUserPassword(mockClient))
+
+      result.current.mutate({ id: mockUserId, data: { new_password: newPassword } })
 
       await waitFor(() => {
         expect(result.current.isError).toBe(true)
