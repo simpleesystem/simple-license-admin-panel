@@ -5,16 +5,22 @@ import {
   UI_USER_ACTION_DELETE,
   UI_USER_ACTION_EDIT,
   UI_USER_ACTION_RESET_PASSWORD,
+  UI_USER_ACTION_SET_SERVICE_PASSWORD,
   UI_USER_CONFIRM_DELETE_CONFIRM,
   UI_USER_CONFIRM_RESET_PASSWORD_CONFIRM,
+  UI_USER_CONFIRM_SET_SERVICE_PASSWORD_CONFIRM,
   UI_USER_RESET_PASSWORD_FIELD_LABEL,
   UI_USER_RESET_PASSWORD_MIN_LENGTH,
+  UI_USER_ROLE_API_VENDOR_WRITE,
+  UI_USER_SET_SERVICE_PASSWORD_FIELD_LABEL,
+  UI_USER_SET_SERVICE_PASSWORD_MIN_LENGTH,
 } from '../../../src/ui/constants'
 import { UserRowActions } from '../../../src/ui/workflows/UserRowActions'
 import { buildUser } from '../../factories/userFactory'
 
 const useDeleteUserMock = vi.hoisted(() => vi.fn())
 const useResetUserPasswordMock = vi.hoisted(() => vi.fn())
+const useSetServiceAccountPasswordMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/simpleLicense', async () => {
   const actual = await vi.importActual<typeof import('@/simpleLicense')>('@/simpleLicense')
@@ -22,6 +28,7 @@ vi.mock('@/simpleLicense', async () => {
     ...actual,
     useDeleteUser: useDeleteUserMock,
     useResetUserPassword: useResetUserPasswordMock,
+    useSetServiceAccountPassword: useSetServiceAccountPasswordMock,
   }
 })
 
@@ -44,11 +51,17 @@ const waitForMicrotasks = () =>
 const RESET_PASSWORD_EXTRA_CHARS = 4 as const
 const VALID_RESET_PASSWORD = 'a'.repeat(UI_USER_RESET_PASSWORD_MIN_LENGTH + RESET_PASSWORD_EXTRA_CHARS)
 const SHORT_RESET_PASSWORD = 'a'.repeat(UI_USER_RESET_PASSWORD_MIN_LENGTH - 1)
+const SET_SERVICE_PASSWORD_EXTRA_CHARS = 6 as const
+const VALID_SET_SERVICE_PASSWORD = 'b'.repeat(
+  UI_USER_SET_SERVICE_PASSWORD_MIN_LENGTH + SET_SERVICE_PASSWORD_EXTRA_CHARS
+)
+const SHORT_SET_SERVICE_PASSWORD = 'b'.repeat(UI_USER_SET_SERVICE_PASSWORD_MIN_LENGTH - 1)
 
 describe('UserRowActions', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     useResetUserPasswordMock.mockReturnValue(mockMutation())
+    useSetServiceAccountPasswordMock.mockReturnValue(mockMutation())
   })
 
   test('calls onEdit when edit action selected', async () => {
@@ -142,5 +155,63 @@ describe('UserRowActions', () => {
     await waitForMicrotasks()
 
     expect(resetMutation.mutateAsync).not.toHaveBeenCalled()
+  })
+
+  test('shows set-service-password (not reset) for a service account and sets it directly', async () => {
+    useDeleteUserMock.mockReturnValue(mockMutation())
+    const setServiceMutation = mockMutation()
+    useSetServiceAccountPasswordMock.mockReturnValue(setServiceMutation)
+    const user = buildUser({ role: UI_USER_ROLE_API_VENDOR_WRITE })
+    const onCompleted = vi.fn()
+
+    render(<UserRowActions client={{} as never} user={user as never} onEdit={vi.fn()} onCompleted={onCompleted} />)
+
+    expect(screen.queryByRole('button', { name: UI_USER_ACTION_RESET_PASSWORD })).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: UI_USER_ACTION_SET_SERVICE_PASSWORD }))
+    fireEvent.change(screen.getByLabelText(UI_USER_SET_SERVICE_PASSWORD_FIELD_LABEL), {
+      target: { value: VALID_SET_SERVICE_PASSWORD },
+    })
+    fireEvent.click(screen.getByRole('button', { name: UI_USER_CONFIRM_SET_SERVICE_PASSWORD_CONFIRM }))
+
+    await waitForMicrotasks()
+
+    expect(setServiceMutation.mutateAsync).toHaveBeenCalledWith({
+      id: user.id,
+      data: { new_password: VALID_SET_SERVICE_PASSWORD },
+    })
+    expect(onCompleted).toHaveBeenCalled()
+  })
+
+  test('keeps set-service-password disabled and skips mutation when password is too short', async () => {
+    useDeleteUserMock.mockReturnValue(mockMutation())
+    const setServiceMutation = mockMutation()
+    useSetServiceAccountPasswordMock.mockReturnValue(setServiceMutation)
+    const user = buildUser({ role: UI_USER_ROLE_API_VENDOR_WRITE })
+
+    render(<UserRowActions client={{} as never} user={user as never} onEdit={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole('button', { name: UI_USER_ACTION_SET_SERVICE_PASSWORD }))
+    fireEvent.change(screen.getByLabelText(UI_USER_SET_SERVICE_PASSWORD_FIELD_LABEL), {
+      target: { value: SHORT_SET_SERVICE_PASSWORD },
+    })
+
+    const confirmButton = screen.getByRole('button', { name: UI_USER_CONFIRM_SET_SERVICE_PASSWORD_CONFIRM })
+    expect(confirmButton).toBeDisabled()
+
+    fireEvent.click(confirmButton)
+    await waitForMicrotasks()
+
+    expect(setServiceMutation.mutateAsync).not.toHaveBeenCalled()
+  })
+
+  test('does not show set-service-password for a non-service-account user', () => {
+    useDeleteUserMock.mockReturnValue(mockMutation())
+    const user = buildUser()
+
+    render(<UserRowActions client={{} as never} user={user as never} onEdit={vi.fn()} />)
+
+    expect(screen.queryByRole('button', { name: UI_USER_ACTION_SET_SERVICE_PASSWORD })).toBeNull()
+    expect(screen.getByRole('button', { name: UI_USER_ACTION_RESET_PASSWORD })).toBeDefined()
   })
 })

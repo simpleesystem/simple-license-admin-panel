@@ -885,6 +885,8 @@ export const UI_USER_ACTION_EDIT = 'Edit User' as const
 export const UI_USER_ACTION_DELETE = 'Delete User' as const
 export const UI_USER_ACTION_RESET_PASSWORD = 'Reset Password' as const
 export const UI_USER_BUTTON_RESET_PASSWORD = 'Reset Password' as const
+export const UI_USER_ACTION_SET_SERVICE_PASSWORD = 'Set Service Password' as const
+export const UI_USER_BUTTON_SET_SERVICE_PASSWORD = 'Set Service Password' as const
 export const UI_USER_STATUS_ACTION_RETRY = 'Retry' as const
 export const UI_USER_STATUS_LOADING_TITLE = 'Loading users' as const
 export const UI_USER_STATUS_LOADING_BODY = 'Fetching the latest user accounts.' as const
@@ -914,6 +916,7 @@ export const UI_USER_TOAST_CREATE_SUCCESS = 'User created successfully' as const
 export const UI_USER_TOAST_UPDATE_SUCCESS = 'User updated successfully' as const
 export const UI_USER_TOAST_DELETE_SUCCESS = 'User deleted successfully' as const
 export const UI_USER_TOAST_RESET_PASSWORD_SUCCESS = 'Password reset successfully' as const
+export const UI_USER_TOAST_SET_SERVICE_PASSWORD_SUCCESS = 'Service account password set successfully' as const
 export const UI_AGENT_SERVICE_ACCOUNT_TOAST_CREATE_SUCCESS = 'Agent account created successfully' as const
 export const UI_AGENT_SERVICE_ACCOUNT_TOAST_CREATE_ERROR = 'Unable to create agent account' as const
 export const UI_USER_CONFIRM_DELETE_TITLE = 'Delete user?' as const
@@ -934,6 +937,19 @@ export const UI_USER_RESET_PASSWORD_FIELD_AUTOCOMPLETE = 'new-password' as const
 export const UI_USER_RESET_PASSWORD_MIN_LENGTH = 12 as const
 export const UI_USER_RESET_PASSWORD_HELP_TEXT =
   'Minimum 12 characters. Share this password securely; the user must change it at next login.' as const
+export const UI_USER_CONFIRM_SET_SERVICE_PASSWORD_TITLE = 'Set service account password?' as const
+export const UI_USER_CONFIRM_SET_SERVICE_PASSWORD_BODY =
+  'Set the final password for this service account. It becomes the working API credential immediately with no forced change, so the connector can authenticate right away.' as const
+export const UI_USER_CONFIRM_SET_SERVICE_PASSWORD_CONFIRM = 'Set password' as const
+export const UI_USER_CONFIRM_SET_SERVICE_PASSWORD_CANCEL = 'Cancel' as const
+export const UI_USER_SET_SERVICE_PASSWORD_FIELD_ID = 'set-service-account-password' as const
+export const UI_USER_SET_SERVICE_PASSWORD_FIELD_LABEL = 'New password' as const
+export const UI_USER_SET_SERVICE_PASSWORD_FIELD_PLACEHOLDER = 'Enter the final password' as const
+export const UI_USER_SET_SERVICE_PASSWORD_FIELD_TYPE = 'password' as const
+export const UI_USER_SET_SERVICE_PASSWORD_FIELD_AUTOCOMPLETE = 'new-password' as const
+export const UI_USER_SET_SERVICE_PASSWORD_MIN_LENGTH = 12 as const
+export const UI_USER_SET_SERVICE_PASSWORD_HELP_TEXT =
+  'Minimum 12 characters. This is the final credential — paste it into the connector. No password change is forced.' as const
 export const UI_USER_ROLE_SUPERUSER = 'SUPERUSER' as const
 export const UI_USER_ROLE_ADMIN = 'ADMIN' as const
 export const UI_USER_ROLE_VENDOR_MANAGER = 'VENDOR_MANAGER' as const
@@ -942,6 +958,13 @@ export const UI_USER_ROLE_VIEWER = 'VIEWER' as const
 export const UI_USER_ROLE_API_READ_ONLY = 'API_READ_ONLY' as const
 export const UI_USER_ROLE_API_VENDOR_WRITE = 'API_VENDOR_WRITE' as const
 export const UI_USER_ROLE_API_CONSUMER_ACTIVATE = 'API_CONSUMER_ACTIVATE' as const
+// Non-interactive service-account roles. These users authenticate over the API only and
+// have no admin UI, so their password must be settable directly (no forced change).
+export const UI_USER_SERVICE_ACCOUNT_ROLES = [
+  UI_USER_ROLE_API_READ_ONLY,
+  UI_USER_ROLE_API_VENDOR_WRITE,
+  UI_USER_ROLE_API_CONSUMER_ACTIVATE,
+] as const
 export const UI_USER_ROLE_LABEL_SUPERUSER = 'Superuser' as const
 export const UI_USER_ROLE_LABEL_ADMIN = 'Admin' as const
 export const UI_USER_ROLE_LABEL_VENDOR_MANAGER = 'Vendor manager' as const

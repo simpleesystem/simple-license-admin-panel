@@ -7,6 +7,8 @@ import {
   ActivationLimitExceededException,
   API_ENDPOINT_ADMIN_USERS_RESET_PASSWORD,
   API_ENDPOINT_ADMIN_USERS_RESET_PASSWORD_SUFFIX,
+  API_ENDPOINT_ADMIN_USERS_SET_SERVICE_PASSWORD,
+  API_ENDPOINT_ADMIN_USERS_SET_SERVICE_PASSWORD_SUFFIX,
   ApiException,
   AuthenticationException,
   ERROR_CODE_ACTIVATION_LIMIT_EXCEEDED,
@@ -2565,6 +2567,30 @@ describe('Client', () => {
       expect(result.success).toBe(true)
       expect(mockHttpClient.post).toHaveBeenCalledWith(
         `${API_ENDPOINT_ADMIN_USERS_RESET_PASSWORD}/${encodeURIComponent(userId)}${API_ENDPOINT_ADMIN_USERS_RESET_PASSWORD_SUFFIX}`,
+        { new_password: newPassword }
+      )
+    })
+  })
+
+  describe('setServiceAccountPassword', () => {
+    it('posts to the set-service-password endpoint with the new password', async () => {
+      const userId = faker.string.uuid()
+      const newPassword = faker.internet.password()
+      const mockResponse = {
+        data: {
+          success: true,
+          data: { success: true },
+        },
+        status: 200,
+      }
+
+      mockHttpClient.post.mockResolvedValue(mockResponse)
+
+      const result = await client.setServiceAccountPassword(userId, { new_password: newPassword })
+
+      expect(result.success).toBe(true)
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        `${API_ENDPOINT_ADMIN_USERS_SET_SERVICE_PASSWORD}/${encodeURIComponent(userId)}${API_ENDPOINT_ADMIN_USERS_SET_SERVICE_PASSWORD_SUFFIX}`,
         { new_password: newPassword }
       )
     })

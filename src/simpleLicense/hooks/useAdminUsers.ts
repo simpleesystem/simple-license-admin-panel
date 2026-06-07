@@ -14,6 +14,8 @@ import type {
   ListUsersResponse,
   ResetUserPasswordRequest,
   ResetUserPasswordResponse,
+  SetServiceAccountPasswordRequest,
+  SetServiceAccountPasswordResponse,
   UpdateUserRequest,
   UpdateUserResponse,
 } from '../types/api'
@@ -116,6 +118,20 @@ export function useResetUserPassword(client: Client) {
   return useMutation<ResetUserPasswordResponse, Error, { id: string; data: ResetUserPasswordRequest }>({
     mutationFn: async ({ id, data }) => {
       return await client.resetUserPassword(id, data)
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminUsers.all() })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminUsers.detail(variables.id) })
+    },
+  })
+}
+
+export function useSetServiceAccountPassword(client: Client) {
+  const queryClient = useQueryClient()
+
+  return useMutation<SetServiceAccountPasswordResponse, Error, { id: string; data: SetServiceAccountPasswordRequest }>({
+    mutationFn: async ({ id, data }) => {
+      return await client.setServiceAccountPassword(id, data)
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminUsers.all() })

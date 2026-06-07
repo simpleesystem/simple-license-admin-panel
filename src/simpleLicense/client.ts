@@ -74,6 +74,8 @@ import {
   API_ENDPOINT_ADMIN_USERS_ME_PASSWORD,
   API_ENDPOINT_ADMIN_USERS_RESET_PASSWORD,
   API_ENDPOINT_ADMIN_USERS_RESET_PASSWORD_SUFFIX,
+  API_ENDPOINT_ADMIN_USERS_SET_SERVICE_PASSWORD,
+  API_ENDPOINT_ADMIN_USERS_SET_SERVICE_PASSWORD_SUFFIX,
   API_ENDPOINT_ADMIN_USERS_UPDATE,
   API_ENDPOINT_AUTH_LOGIN,
   API_ENDPOINT_AUTH_LOGOUT,
@@ -194,6 +196,8 @@ import type {
   RevokeAgentServiceCredentialResponse,
   RevokeProtectionBuildTokenResponse,
   ServerStatusResponse,
+  SetServiceAccountPasswordRequest,
+  SetServiceAccountPasswordResponse,
   SystemStatsResponse,
   TopLicensesResponse,
   UpdateAgentServiceAccountRequest,
@@ -1023,6 +1027,16 @@ export class Client {
     const response = await this.httpClient.post<ApiResponse<ResetUserPasswordResponse>>(url, request)
 
     return this.handleApiResponse<ResetUserPasswordResponse>(response.data, { success: true })
+  }
+
+  async setServiceAccountPassword(
+    id: string,
+    request: SetServiceAccountPasswordRequest
+  ): Promise<SetServiceAccountPasswordResponse> {
+    const url = `${API_ENDPOINT_ADMIN_USERS_SET_SERVICE_PASSWORD}/${encodeURIComponent(id)}${API_ENDPOINT_ADMIN_USERS_SET_SERVICE_PASSWORD_SUFFIX}`
+    const response = await this.httpClient.post<ApiResponse<SetServiceAccountPasswordResponse>>(url, request)
+
+    return this.handleApiResponse<SetServiceAccountPasswordResponse>(response.data, { success: true })
   }
 
   async getCurrentUser(): Promise<GetCurrentUserResponse> {

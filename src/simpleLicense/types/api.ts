@@ -241,6 +241,15 @@ export interface ResetUserPasswordResponse {
   message?: string
 }
 
+export interface SetServiceAccountPasswordRequest {
+  new_password: string
+}
+
+export interface SetServiceAccountPasswordResponse {
+  success: boolean
+  message?: string
+}
+
 export interface GetCurrentUserResponse {
   user: User
 }

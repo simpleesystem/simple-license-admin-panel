@@ -12,6 +12,7 @@ import {
   useCurrentUser,
   useDeleteUser,
   useResetUserPassword,
+  useSetServiceAccountPassword,
   useUpdateUser,
 } from '@/simpleLicense/hooks/useAdminUsers'
 
@@ -29,6 +30,7 @@ describe('useAdminUsers hooks', () => {
       deleteUser: vi.fn(),
       changePassword: vi.fn(),
       resetUserPassword: vi.fn(),
+      setServiceAccountPassword: vi.fn(),
     } as unknown as Client
   })
 
@@ -353,6 +355,49 @@ describe('useAdminUsers hooks', () => {
       ;(mockClient.resetUserPassword as ReturnType<typeof vi.fn>).mockRejectedValue(mockError)
 
       const { result } = renderHookWithQueryClient(() => useResetUserPassword(mockClient))
+
+      result.current.mutate({ id: mockUserId, data: { new_password: newPassword } })
+
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true)
+      })
+
+      expect(result.current.error).toEqual(mockError)
+    })
+  })
+
+  describe('useSetServiceAccountPassword', () => {
+    it('sets a service account password and invalidates queries', async () => {
+      const mockResponse = { success: true }
+      const newPassword = faker.internet.password()
+      ;(mockClient.setServiceAccountPassword as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse)
+
+      const queryClient = new (await import('@tanstack/react-query')).QueryClient({
+        defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      })
+      const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries')
+
+      const { result } = renderHookWithQueryClient(() => useSetServiceAccountPassword(mockClient), {
+        queryClient,
+      })
+
+      result.current.mutate({ id: mockUserId, data: { new_password: newPassword } })
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true)
+      })
+
+      expect(result.current.data).toEqual(mockResponse)
+      expect(mockClient.setServiceAccountPassword).toHaveBeenCalledWith(mockUserId, { new_password: newPassword })
+      expect(invalidateQueriesSpy).toHaveBeenCalled()
+    })
+
+    it('handles set service account password error', async () => {
+      const newPassword = faker.internet.password()
+      const mockError = new Error('Failed to set service account password')
+      ;(mockClient.setServiceAccountPassword as ReturnType<typeof vi.fn>).mockRejectedValue(mockError)
+
+      const { result } = renderHookWithQueryClient(() => useSetServiceAccountPassword(mockClient))
 
       result.current.mutate({ id: mockUserId, data: { new_password: newPassword } })
 
