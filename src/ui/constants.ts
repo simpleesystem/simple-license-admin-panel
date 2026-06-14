@@ -1293,6 +1293,7 @@ export const UI_PRODUCT_TIER_TOAST_CREATE_SUCCESS = 'Tier created successfully' 
 export const UI_PRODUCT_TIER_TOAST_UPDATE_SUCCESS = 'Tier updated successfully' as const
 export const UI_PRODUCT_TIER_TOAST_DELETE_SUCCESS = 'Tier deactivated successfully' as const
 export const UI_PRODUCT_TIER_ERROR_INVALID_METADATA = 'Metadata must be valid JSON.' as const
+export const UI_ERROR_INVALID_METADATA_JSON = 'Metadata must be valid JSON.' as const
 export const UI_PRODUCT_TIER_FIELD_UNLIMITED_ACTIVATIONS_LABEL = 'Unlimited Activations' as const
 export const UI_PRODUCT_TIER_FIELD_UNLIMITED_ACTIVATIONS_DESCRIPTION =
   'When enabled, this tier has no activation cap.' as const

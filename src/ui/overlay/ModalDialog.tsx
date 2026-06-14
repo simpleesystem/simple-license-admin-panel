@@ -33,10 +33,21 @@ export function ModalDialog({
     if (!action) {
       return null
     }
+    // onClick is typed `() => void`, but callers routinely pass async handlers.
+    // react-bootstrap's Button does not await them, so a rejected handler would
+    // surface as an unhandled promise rejection. Capture any returned promise
+    // and swallow rejections here — the action handler is responsible for
+    // surfacing its own error to the user (e.g. a toast).
+    const handleClick = () => {
+      const result: unknown = (action.onClick as () => unknown)()
+      if (result instanceof Promise) {
+        result.catch(() => {})
+      }
+    }
     return (
       <Button
         variant={action.variant ?? UI_BUTTON_VARIANT_PRIMARY}
-        onClick={action.onClick}
+        onClick={handleClick}
         disabled={action.disabled}
         data-testid={action.testId}
       >

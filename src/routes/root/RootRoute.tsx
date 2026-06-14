@@ -3,6 +3,7 @@ import { Container } from 'react-bootstrap'
 import { PasswordResetGate } from '../../app/auth/PasswordResetGate'
 import { TEST_ID_APP_SHELL } from '../../app/constants'
 import { PersistentHeader } from '../../app/layout/PersistentHeader'
+import { RouteErrorBoundary } from '../../errors/RouteErrorBoundary'
 import { AppShell } from '../../ui/layout/AppShell'
 
 export function RootRouteComponent() {
@@ -10,7 +11,10 @@ export function RootRouteComponent() {
     <PasswordResetGate>
       <AppShell testId={TEST_ID_APP_SHELL} topBar={<PersistentHeader />}>
         <Container fluid={true} className="p-0 d-flex flex-column flex-grow-1">
-          <Outlet />
+          {/* Contain route render crashes so the shell + nav stay usable */}
+          <RouteErrorBoundary>
+            <Outlet />
+          </RouteErrorBoundary>
         </Container>
       </AppShell>
     </PasswordResetGate>

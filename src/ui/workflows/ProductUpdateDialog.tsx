@@ -36,6 +36,7 @@ import { DynamicForm } from '../formBuilder/DynamicForm'
 import { createProductBlueprint } from '../formBuilder/factories'
 import { ModalDialog } from '../overlay/ModalDialog'
 import type { UiSelectOption } from '../types'
+import { parseMetadataInput } from './mutationHelpers'
 import { ProductEntitlementManagementPanel } from './ProductEntitlementManagementPanel'
 import type { ProductEntitlementListItem } from './ProductEntitlementRowActions'
 import { type ProductTierListItem, ProductTierManagementPanel } from './ProductTierManagementPanel'
@@ -228,7 +229,7 @@ export function ProductUpdateDialog({
       const data: UpdateProductRequest = {
         ...values,
         vendor_id: sanitizeSelectValue(values.vendor_id),
-        metadata: values.metadata ? JSON.parse(values.metadata) : undefined,
+        metadata: parseMetadataInput(values.metadata),
       }
       const result = await updateMutation.mutateAsync({ id: productId, data })
       return result

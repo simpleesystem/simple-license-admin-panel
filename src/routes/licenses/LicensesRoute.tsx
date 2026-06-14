@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useQueries } from '@tanstack/react-query'
+import { useCallback, useMemo } from 'react'
 import type { License } from '@/simpleLicense'
-import { useAdminLicenses, useAdminProducts, useAdminTenants } from '@/simpleLicense'
+import { QUERY_KEYS, useAdminLicenses, useAdminProducts, useAdminTenants } from '@/simpleLicense'
 
 import { useApiClient } from '../../api/apiContext'
 import { canViewLicenses, isLicenseOwnedByUser } from '../../app/auth/permissions'
 import { useAuth } from '../../app/auth/useAuth'
 import { ROUTE_PATH_LICENSES } from '../../app/constants'
-import { useLogger } from '../../app/logging/loggerContext'
 import { useTableSeed } from '../../app/navigation/useTableSeed'
 import {
   UI_LICENSE_COLUMN_ID_CUSTOMER,
@@ -47,7 +47,6 @@ type LicenseFilters = {
 
 export function LicensesRouteComponent() {
   const client = useApiClient()
-  const logger = useLogger()
   const { user: currentUser } = useAuth()
   const { data, isLoading, isError, refetch } = useAdminLicenses(client)
   const { data: productsData } = useAdminProducts(client)
@@ -61,7 +60,6 @@ export function LicensesRouteComponent() {
   })
   const selectedTenantId = tableState.filters.tenantId
   const selectedProductSlug = tableState.filters.productSlug
-  const [tierOptions, setTierOptions] = useState<{ value: string; label: string }[]>([])
 
   const { filteredProducts, isVendorScoped, tenantOptions, showTenantFilter } = useTenantScopedProducts({
     currentUser,
@@ -71,53 +69,39 @@ export function LicensesRouteComponent() {
     allOptionLabel: UI_TENANT_FILTER_ALL,
   })
 
-  useEffect(() => {
-    let isActive = true
+  // Tiers populate the tier filter dropdown. Fetch them per product through
+  // React Query (same cache key as useProductTiers) instead of a manual
+  // Promise.all in an effect: responses are cached and deduped, so switching
+  // the tenant filter or revisiting the page no longer re-fetches tiers for
+  // products already loaded. Failures only affect a filter dropdown, so they
+  // are suppressed rather than surfaced as blocking errors.
+  const tierQueries = useQueries({
+    queries: filteredProducts.map((product) => ({
+      queryKey: QUERY_KEYS.adminProductTiers.all(product.id),
+      queryFn: () => client.listProductTiers(product.id),
+      meta: { suppressErrorToast: true },
+    })),
+  })
 
-    const fetchTiers = async () => {
-      const list = filteredProducts
-      if (!list.length) {
-        if (isActive) {
-          setTierOptions([])
-        }
+  const tierOptions = useMemo<{ value: string; label: string }[]>(() => {
+    const allTiers: { value: string; label: string }[] = []
+    tierQueries.forEach((query, index) => {
+      const product = filteredProducts[index]
+      if (!product || !query.data) {
         return
       }
-
-      const allTiers: { value: string; label: string }[] = []
-
-      // Fetch tiers for all products
-      await Promise.all(
-        list.map(async (product) => {
-          try {
-            const response = await client.listProductTiers(product.id)
-            const tiers = Array.isArray(response) ? response : (response?.data ?? [])
-
-            for (const tier of tiers) {
-              allTiers.push({
-                value: tier.tierCode,
-                label: `${product.name} - ${tier.tierName}`,
-              })
-            }
-          } catch (e) {
-            logger.error(e instanceof Error ? e : new Error(String(e)), {
-              message: `Failed to fetch tiers for product ${product.name}`,
-            })
-          }
+      const response = query.data
+      const tiers = Array.isArray(response) ? response : (response?.data ?? [])
+      for (const tier of tiers) {
+        allTiers.push({
+          value: tier.tierCode,
+          label: `${product.name} - ${tier.tierName}`,
         })
-      )
-
-      // Sort tiers by label for better UX
-      allTiers.sort((a, b) => a.label.localeCompare(b.label))
-      if (isActive) {
-        setTierOptions(allTiers)
       }
-    }
-
-    void fetchTiers()
-    return () => {
-      isActive = false
-    }
-  }, [client, filteredProducts, logger])
+    })
+    allTiers.sort((a, b) => a.label.localeCompare(b.label))
+    return allTiers
+  }, [tierQueries, filteredProducts])
 
   const filteredProductOptions = useMemo<UiSelectOption[]>(() => {
     const options = filteredProducts.map((product) => ({ value: product.slug, label: product.name }))

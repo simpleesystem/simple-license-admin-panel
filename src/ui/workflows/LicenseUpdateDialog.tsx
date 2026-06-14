@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Tab from 'react-bootstrap/Tab'
 import Tabs from 'react-bootstrap/Tabs'
 import type { Client, UpdateLicenseRequest, User } from '@/simpleLicense'
@@ -35,6 +35,7 @@ import { KeyValueList } from '../typography/KeyValueList'
 import { ChangeDomainPanel } from './ChangeDomainPanel'
 import { LicenseActivationsPanel } from './LicenseActivationsPanel'
 import { LicenseUsageDetailsPanel } from './LicenseUsageDetailsPanel'
+import { parseMetadataInput } from './mutationHelpers'
 import { useDialogFormMutation } from './useDialogFormMutation'
 
 type LicenseUpdateDialogProps = {
@@ -80,7 +81,15 @@ export function LicenseUpdateDialog({
   const [isLicenseLoading, setIsLicenseLoading] = useState(false)
   const [isLicenseError, setIsLicenseError] = useState(false)
 
+  // Monotonic id so a slow response can't apply state after the dialog
+  // closed or the license param changed (stale responses are discarded).
+  const fetchRequestIdRef = useRef(0)
+
   const fetchLicenseDetails = useCallback(async () => {
+    fetchRequestIdRef.current += 1
+    const requestId = fetchRequestIdRef.current
+    const isCurrent = () => fetchRequestIdRef.current === requestId
+
     setIsLicenseLoading(true)
     setIsLicenseError(false)
     setLicenseKey(licenseKeyParam)
@@ -88,6 +97,9 @@ export function LicenseUpdateDialog({
     setMetadataString('')
     try {
       const response = await client.getLicense(licenseKeyParam)
+      if (!isCurrent()) {
+        return
+      }
       const licenseResponse =
         typeof response === 'object' && response !== null
           ? (response as { license?: LicenseDialogPayload } & LicenseDialogPayload)
@@ -105,16 +117,25 @@ export function LicenseUpdateDialog({
       }
     } catch (e) {
       logger.error(e instanceof Error ? e : new Error(String(e)), { message: 'Failed to fetch license details' })
-      setIsLicenseError(true)
+      if (isCurrent()) {
+        setIsLicenseError(true)
+      }
     } finally {
-      setIsLicenseLoading(false)
+      if (isCurrent()) {
+        setIsLicenseLoading(false)
+      }
     }
   }, [client, licenseKeyParam, logger])
 
   useEffect(() => {
     if (show) {
       void fetchLicenseDetails()
+      return () => {
+        // Invalidate in-flight fetches when the dialog closes or params change
+        fetchRequestIdRef.current += 1
+      }
     }
+    return undefined
   }, [show, fetchLicenseDetails])
 
   const updateMutation = useUpdateLicense(client)
@@ -124,7 +145,7 @@ export function LicenseUpdateDialog({
       const { domain: _domain, ...rest } = values
       const data: UpdateLicenseRequest = {
         ...rest,
-        metadata: values.metadata ? JSON.parse(values.metadata) : undefined,
+        metadata: parseMetadataInput(values.metadata),
       }
       return await updateMutation.mutateAsync({
         id: licenseKeyParam,

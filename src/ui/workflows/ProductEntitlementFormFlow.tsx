@@ -14,7 +14,7 @@ import type { EntitlementFormValues } from '../formBuilder/factories'
 import { createEntitlementBlueprint } from '../formBuilder/factories'
 import { FormModalWithMutation } from '../formBuilder/mutationBridge'
 import type { UiSelectOption } from '../types'
-import { wrapMutationAdapter } from './mutationHelpers'
+import { parseMetadataInput, wrapMutationAdapter } from './mutationHelpers'
 
 type ProductEntitlementBaseProps = {
   client: Client
@@ -57,8 +57,7 @@ const baseFormDefaults: EntitlementFormValues = {
 const mapFormToApi = (
   values: EntitlementFormValues
 ): Omit<CreateEntitlementRequest, 'tier_ids'> & { tier_ids?: string[] } => {
-  const metadataStr = values.metadata?.trim()
-  const metadata = metadataStr ? JSON.parse(metadataStr) : undefined
+  const metadata = parseMetadataInput(values.metadata)
   const result: Partial<CreateEntitlementRequest> & { tier_ids?: string[] } = {
     key: values.key,
     description: values.description,

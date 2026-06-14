@@ -1,6 +1,8 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import { useApiClient } from '@/api/apiContext'
 import { useLogger } from '@/app/logging/loggerContext'
+import { clearPersistedQueryCache } from '@/app/query/persistence'
 import type { User } from '@/simpleLicense'
 import { ApiException, ERROR_CODE_MUST_CHANGE_PASSWORD } from '@/simpleLicense'
 import type { LoginCredentials } from '@/types/auth'
@@ -11,6 +13,7 @@ import {
   STORAGE_KEY_AUTH_TOKEN,
   STORAGE_KEY_AUTH_USER,
 } from '../constants'
+import { safeGetItem, safeRemoveItem } from '../state/safeStorage'
 import { useAppStore } from '../state/store'
 import { AuthContext } from './authContext'
 
@@ -21,15 +24,43 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const client = useApiClient()
   const logger = useLogger()
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const queryClient = useQueryClient()
+  const [user, setUserState] = useState<User | null>(null)
+  const [isLoading, setIsLoadingState] = useState(true)
+  const [error, setErrorState] = useState<string | null>(null)
 
   // Use a ref to track if we've already attempted initialization
   // This helps prevents double-fetching in StrictMode
   const initialized = useRef(false)
   // Use a ref to track current user for fetchUser callback
   const userRef = useRef<User | null>(null)
+
+  // The async flows below (initSession, login, logout, fetchUser) resolve
+  // after awaits; if the provider unmounted in the meantime (fast nav, test
+  // teardown), bare setState would fire against an unmounted component.
+  const isMountedRef = useRef(true)
+  useEffect(() => {
+    isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
+
+  const setUser = useCallback((next: User | null) => {
+    if (isMountedRef.current) {
+      setUserState(next)
+    }
+  }, [])
+  const setIsLoading = useCallback((next: boolean) => {
+    if (isMountedRef.current) {
+      setIsLoadingState(next)
+    }
+  }, [])
+  const setError = useCallback((next: string | null) => {
+    if (isMountedRef.current) {
+      setErrorState(next)
+    }
+  }, [])
 
   const fetchUser = useCallback(
     async (retainExistingUser = false) => {
@@ -108,7 +139,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
       }
     },
-    [client, logger]
+    [client, logger, setUser]
   )
 
   const initSession = useCallback(async () => {
@@ -120,15 +151,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setIsLoading(true)
     setError(null)
 
-    // Check for expired tokens in localStorage and clear them
-    const expiry = window.localStorage.getItem(STORAGE_KEY_AUTH_EXPIRY)
+    // Check for expired tokens in localStorage and clear them.
+    // Storage access is best-effort: it can throw in Safari private mode and
+    // sandboxed iframes, and that must never break session initialization.
+    const expiry = safeGetItem(STORAGE_KEY_AUTH_EXPIRY)
     if (expiry) {
       const expiryTime = Number.parseInt(expiry, 10)
       if (expiryTime && expiryTime < Date.now()) {
         // Token is expired, clear it
-        window.localStorage.removeItem(STORAGE_KEY_AUTH_TOKEN)
-        window.localStorage.removeItem(STORAGE_KEY_AUTH_EXPIRY)
-        window.localStorage.removeItem(STORAGE_KEY_AUTH_USER)
+        safeRemoveItem(STORAGE_KEY_AUTH_TOKEN)
+        safeRemoveItem(STORAGE_KEY_AUTH_EXPIRY)
+        safeRemoveItem(STORAGE_KEY_AUTH_USER)
       }
     }
 
@@ -157,7 +190,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } finally {
       setIsLoading(false)
     }
-  }, [client, fetchUser, logger])
+  }, [client, fetchUser, logger, setError, setIsLoading, setUser])
 
   useEffect(() => {
     initSession()
@@ -195,7 +228,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => {
       window.removeEventListener('storage', handleStorageChange)
     }
-  }, [client, logger])
+  }, [client, logger, setUser])
 
   const login = useCallback(
     async (credentials: LoginCredentials) => {
@@ -265,7 +298,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setIsLoading(false)
       }
     },
-    [client, fetchUser, logger]
+    [client, fetchUser, logger, setError, setIsLoading, setUser]
   )
 
   const logout = useCallback(async () => {
@@ -279,12 +312,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
         type: 'auth/setUser',
         payload: null,
       })
+      // Drop all cached admin data (in-memory + persisted) so the next session
+      // on a shared machine cannot briefly see the previous user's data.
+      queryClient.clear()
+      clearPersistedQueryCache()
     } catch (err) {
       logger.error(err instanceof Error ? err : new Error(String(err)), { message: 'Logout failed' })
     } finally {
       setIsLoading(false)
     }
-  }, [client, logger])
+  }, [client, logger, queryClient, setIsLoading, setUser])
 
   const value = {
     user,

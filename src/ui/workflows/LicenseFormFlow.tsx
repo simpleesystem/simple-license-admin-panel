@@ -12,7 +12,7 @@ import type { FormBlueprint } from '../formBuilder/blueprint'
 import { FormModalWithMutation } from '../formBuilder/FormModalWithMutation'
 import { createLicenseBlueprint } from '../formBuilder/factories'
 import type { UiSelectOption } from '../types'
-import { wrapMutationAdapter } from './mutationHelpers'
+import { parseMetadataInput, wrapMutationAdapter } from './mutationHelpers'
 
 type LicenseFormFlowBaseProps = {
   client: Client
@@ -153,7 +153,7 @@ export function LicenseFormFlow(props: LicenseFormFlowProps) {
         ...values,
         activation_limit: sanitizeNumber(values.activation_limit),
         expires_days: sanitizeNumber(values.expires_days),
-        metadata: values.metadata ? JSON.parse(values.metadata) : undefined,
+        metadata: parseMetadataInput(values.metadata),
       }
       return await updateMutation.mutateAsync({
         id: licenseKey,

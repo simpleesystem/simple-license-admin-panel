@@ -134,6 +134,7 @@ export const ADMIN_SYSTEM_WS_HEALTH_REQUEST_DEBOUNCE_MS = 250 as const
 export const TEST_ID_APP_SHELL = 'app-shell' as const
 export const TEST_ID_TOAST_CONTAINER = 'toast-container' as const
 export const TEST_ID_ERROR_FALLBACK = 'error-fallback' as const
+export const TEST_ID_ROUTE_ERROR_FALLBACK = 'route-error-fallback' as const
 export const TEST_ID_NOTIFICATION_PORTAL = 'notification-portal' as const
 
 export const ROUTER_CONTEXT_KEY_QUERY_CLIENT = 'queryClient' as const

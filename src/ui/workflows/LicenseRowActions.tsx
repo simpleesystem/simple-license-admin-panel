@@ -86,14 +86,17 @@ export function LicenseRowActions({
   // Only show buttons if user has permissions and owns the license (or is system admin)
   const canShowButtons = (allowDelete || allowUpdate) && (ownsLicense || isSystemAdmin)
 
+  // These handlers are invoked as modal confirm actions (fire-and-forget). The
+  // error is surfaced to the user via notifyCrudError, so we do not re-throw:
+  // a rejected promise here would become an unhandled rejection because the
+  // modal button does not await the handler.
   const handleSoftDelete = async () => {
     try {
       await softDeleteMutation.mutateAsync(licenseKey)
       notifyLicenseSuccess(notificationBus, 'delete')
       onCompleted?.()
-    } catch (error) {
+    } catch {
       notifyCrudError(notificationBus)
-      throw error
     } finally {
       setShowDeleteConfirm(false)
     }
@@ -104,9 +107,8 @@ export function LicenseRowActions({
       await revokeMutation.mutateAsync(licenseKey)
       notifyLicenseSuccess(notificationBus, 'revoke')
       onCompleted?.()
-    } catch (error) {
+    } catch {
       notifyCrudError(notificationBus)
-      throw error
     } finally {
       setShowRevokeConfirm(false)
     }
@@ -117,9 +119,8 @@ export function LicenseRowActions({
       await suspendMutation.mutateAsync(licenseKey)
       notifyLicenseSuccess(notificationBus, 'suspend')
       onCompleted?.()
-    } catch (error) {
+    } catch {
       notifyCrudError(notificationBus)
-      throw error
     } finally {
       setShowSuspendConfirm(false)
     }
@@ -130,9 +131,8 @@ export function LicenseRowActions({
       await resumeMutation.mutateAsync(licenseKey)
       notifyLicenseSuccess(notificationBus, 'resume')
       onCompleted?.()
-    } catch (error) {
+    } catch {
       notifyCrudError(notificationBus)
-      throw error
     } finally {
       setShowResumeConfirm(false)
     }

@@ -16,7 +16,7 @@ import type { FormBlueprint } from '../formBuilder/blueprint'
 import { createProductBlueprint } from '../formBuilder/factories'
 import { FormModalWithMutation } from '../formBuilder/mutationBridge'
 import type { UiSelectOption } from '../types'
-import { wrapMutationAdapter } from './mutationHelpers'
+import { parseMetadataInput, wrapMutationAdapter } from './mutationHelpers'
 
 type ProductFormBaseProps = {
   client: Client
@@ -103,7 +103,7 @@ export function ProductFormFlow(props: ProductFormFlowProps) {
 
     const adapter: MutationAdapter<FormValuesCreate> = {
       mutateAsync: async (values) => {
-        const metadata = values.metadata ? JSON.parse(values.metadata) : {}
+        const metadata = parseMetadataInput(values.metadata) ?? {}
         const data: CreateProductRequest = {
           ...values,
           default_license_term_days: sanitizeNumber(values.default_license_term_days),
@@ -154,7 +154,7 @@ export function ProductFormFlow(props: ProductFormFlowProps) {
         ...values,
         default_license_term_days: sanitizeNumber(values.default_license_term_days),
         default_max_activations: sanitizeNumber(values.default_max_activations),
-        metadata: values.metadata ? JSON.parse(values.metadata) : undefined,
+        metadata: parseMetadataInput(values.metadata),
       }
       const result = await updateMutation.mutateAsync({ id: props.productId, data })
       return result

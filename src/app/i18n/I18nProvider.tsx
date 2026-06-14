@@ -44,10 +44,17 @@ export function I18nProvider({ children, language }: I18nProviderProps) {
 
   useEffect(() => {
     if (!isReady) {
+      let cancelled = false
       void initializationPromise.then(() => {
-        setIsReady(true)
+        if (!cancelled) {
+          setIsReady(true)
+        }
       })
+      return () => {
+        cancelled = true
+      }
     }
+    return undefined
   }, [isReady])
 
   useEffect(() => {

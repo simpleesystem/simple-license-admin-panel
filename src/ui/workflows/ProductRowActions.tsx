@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useState } from 'react'
+import { type ReactNode, useEffect, useRef, useState } from 'react'
 import Button from 'react-bootstrap/Button'
 import type { Client, ProtectionBuildTokenMetadata, User } from '@/simpleLicense'
 import { useDeleteProduct, useResumeProduct, useSuspendProduct } from '@/simpleLicense'
@@ -171,7 +171,15 @@ export function ProductRowActions({
     }
   }
 
+  // Epochs increment when their modal closes, so slow responses resolving
+  // after close can't reapply loading/error/data state to a hidden modal.
+  const protectionKeyEpochRef = useRef(0)
+  const buildTokensEpochRef = useRef(0)
+
   const handleOpenProtectionKey = async () => {
+    const epoch = protectionKeyEpochRef.current
+    const isCurrent = () => protectionKeyEpochRef.current === epoch
+
     setShowProtectionKeyModal(true)
     setIsProtectionKeyLoading(true)
     setProtectionKeyError(null)
@@ -183,28 +191,44 @@ export function ProductRowActions({
     }
     try {
       const signingMetadata = await client.getProtectionSigningPublicKey(productSlug)
+      if (!isCurrent()) {
+        return
+      }
       setProtectionKeyMetadata({
         productSlug: signingMetadata.product_slug,
         signingKeyId: signingMetadata.signing_key_id,
         publicKey: signingMetadata.public_key,
       })
     } catch {
-      setProtectionKeyError(UI_PRODUCT_PROTECTION_KEY_ERROR)
+      if (isCurrent()) {
+        setProtectionKeyError(UI_PRODUCT_PROTECTION_KEY_ERROR)
+      }
     } finally {
-      setIsProtectionKeyLoading(false)
+      if (isCurrent()) {
+        setIsProtectionKeyLoading(false)
+      }
     }
   }
 
   const loadBuildTokens = async () => {
+    const epoch = buildTokensEpochRef.current
+    const isCurrent = () => buildTokensEpochRef.current === epoch
+
     setIsBuildTokensLoading(true)
     setBuildTokensError(null)
     try {
       const response = await client.listProtectionBuildTokens(productId)
-      setBuildTokens(Array.isArray(response.tokens) ? response.tokens : [])
+      if (isCurrent()) {
+        setBuildTokens(Array.isArray(response.tokens) ? response.tokens : [])
+      }
     } catch {
-      setBuildTokensError(UI_PRODUCT_BUILD_TOKENS_ERROR)
+      if (isCurrent()) {
+        setBuildTokensError(UI_PRODUCT_BUILD_TOKENS_ERROR)
+      }
     } finally {
-      setIsBuildTokensLoading(false)
+      if (isCurrent()) {
+        setIsBuildTokensLoading(false)
+      }
     }
   }
 
@@ -402,7 +426,10 @@ export function ProductRowActions({
           isLoading={isProtectionKeyLoading}
           error={protectionKeyError}
           metadata={protectionKeyMetadata}
-          onClose={() => setShowProtectionKeyModal(false)}
+          onClose={() => {
+            protectionKeyEpochRef.current += 1
+            setShowProtectionKeyModal(false)
+          }}
         />
 
         <BuildTokensModal
@@ -418,7 +445,10 @@ export function ProductRowActions({
           onIssue={() => {
             void handleIssueBuildToken()
           }}
-          onClose={() => setShowBuildTokensModal(false)}
+          onClose={() => {
+            buildTokensEpochRef.current += 1
+            setShowBuildTokensModal(false)
+          }}
         />
 
         <ModalDialog
