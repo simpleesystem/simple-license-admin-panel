@@ -232,7 +232,9 @@ export function LicenseManagementPanel({
         id: UI_LICENSE_COLUMN_ID_PRODUCT,
         header: UI_LICENSE_COLUMN_HEADER_PRODUCT,
         cell: (row) => <EntityCrossLink kind={ENTITY_LINK_KIND_PRODUCT} value={row.productSlug} />,
-        sortable: true,
+        // Product slug lives on the related product, not the License row, so the
+        // server cannot order by it. Sorting is disabled to avoid a no-op control.
+        sortable: false,
       },
       {
         id: UI_LICENSE_COLUMN_ID_DOMAIN,

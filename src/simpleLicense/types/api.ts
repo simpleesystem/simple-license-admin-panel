@@ -2,16 +2,7 @@
  * API Request and Response Types
  */
 
-import type {
-  Entitlement,
-  License,
-  LicenseActivation,
-  LicenseStatus,
-  Product,
-  ProductTier,
-  Tenant,
-  User,
-} from './license'
+import type { Entitlement, License, LicenseActivation, Product, ProductTier, Tenant, User } from './license'
 
 // Validation error structure
 export interface ValidationError {
@@ -291,9 +282,14 @@ export interface ChangeLicenseDomainResponse {
 }
 
 export interface ListLicensesRequest extends PaginationOptions {
-  status?: LicenseStatus
+  // Comma-separated list of statuses; may include the DELETED pseudo-status.
+  status?: string
   product_slug?: string
   customer_email?: string
+  search?: string
+  vendor_id?: string
+  sort_by?: string
+  sort_dir?: 'asc' | 'desc'
 }
 
 export interface CreateProductRequest {

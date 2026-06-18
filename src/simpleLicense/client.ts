@@ -508,11 +508,26 @@ export class Client {
     if (filters?.customer_email) {
       queryParams.append('customer_email', filters.customer_email)
     }
-    if (filters?.limit) {
-      queryParams.append('limit', filters.limit.toString())
+    if (filters?.search) {
+      queryParams.append('search', filters.search)
     }
-    if (filters?.offset) {
-      queryParams.append('offset', filters.offset.toString())
+    if (filters?.vendor_id) {
+      queryParams.append('vendor_id', filters.vendor_id)
+    }
+    if (filters?.sort_by) {
+      queryParams.append('sort_by', filters.sort_by)
+    }
+    if (filters?.sort_dir) {
+      queryParams.append('sort_dir', filters.sort_dir)
+    }
+    if (typeof filters?.limit === 'number') {
+      queryParams.append('limit', String(filters.limit))
+    }
+    if (typeof filters?.offset === 'number') {
+      queryParams.append('offset', String(filters.offset))
+    } else if (typeof filters?.page === 'number' && typeof filters?.limit === 'number') {
+      const pageOffset = Math.max(0, (filters.page - 1) * filters.limit)
+      queryParams.append('offset', String(pageOffset))
     }
 
     const queryString = queryParams.toString()
