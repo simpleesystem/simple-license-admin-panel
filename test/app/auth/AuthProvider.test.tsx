@@ -53,7 +53,7 @@ const AuthConsumer = () => {
   const { login, logout, currentUser, isAuthenticated, refreshCurrentUser, status } = useAuth()
 
   const handleLogin = useCallback(() => {
-    void login(TEST_USERNAME, TEST_PASSWORD).catch(() => {})
+    void login({ username: TEST_USERNAME, password: TEST_PASSWORD }).catch(() => {})
   }, [login])
 
   const handleLogout = useCallback(() => {
@@ -83,7 +83,7 @@ const AuthConsumer = () => {
 }
 
 const renderAuthTree = async () => {
-  let result: ReturnType<typeof render>
+  let result: ReturnType<typeof render> | undefined
   await act(async () => {
     result = render(
       <AppProviders>
@@ -159,14 +159,34 @@ describe('AuthProvider', () => {
     })
   })
 
-  it('removes expired persisted tokens during initialization', async () => {
+  it('purges residual legacy localStorage auth artifacts during initialization', async () => {
+    // Even a NON-expired legacy token must be purged: the localStorage auth
+    // path is removed, so nothing may linger in storage regardless of expiry.
     window.localStorage.setItem(STORAGE_KEY_AUTH_TOKEN, 'legacy-token')
-    window.localStorage.setItem(STORAGE_KEY_AUTH_EXPIRY, `${Date.now() - 1_000}`)
+    window.localStorage.setItem(STORAGE_KEY_AUTH_EXPIRY, `${Date.now() + 3_600_000}`)
+    window.localStorage.setItem(STORAGE_KEY_AUTH_USER, JSON.stringify(buildUser({ username: TEST_USERNAME })))
 
     await renderAuthTree()
 
     expect(screen.getByTestId(TEST_ID_AUTH_STATUS).textContent).toBe(TEXT_ANONYMOUS)
     expect(window.localStorage.getItem(STORAGE_KEY_AUTH_TOKEN)).toBeNull()
+    expect(window.localStorage.getItem(STORAGE_KEY_AUTH_EXPIRY)).toBeNull()
+    expect(window.localStorage.getItem(STORAGE_KEY_AUTH_USER)).toBeNull()
+  })
+
+  it('never authenticates from legacy localStorage artifacts alone', async () => {
+    // Legacy-path regression proof: valid-looking storage artifacts without a
+    // server-side session (restoreSession -> null) must yield anonymous state.
+    window.localStorage.setItem(STORAGE_KEY_AUTH_TOKEN, 'legacy-token')
+    window.localStorage.setItem(STORAGE_KEY_AUTH_EXPIRY, `${Date.now() + 3_600_000}`)
+    window.localStorage.setItem(STORAGE_KEY_AUTH_USER, JSON.stringify(buildUser({ username: TEST_USERNAME })))
+    mockClient.restoreSession.mockResolvedValue(null)
+
+    await renderAuthTree()
+
+    expect(screen.getByTestId(TEST_ID_AUTH_STATUS).textContent).toBe(TEXT_ANONYMOUS)
+    expect(screen.getByTestId(TEST_ID_AUTH_USER).textContent).toBe('')
+    expect(mockClient.getCurrentUser).not.toHaveBeenCalled()
   })
 
   it('refreshes the user when authenticated', async () => {
@@ -198,23 +218,9 @@ describe('AuthProvider', () => {
     expect(mockClient.getCurrentUser).not.toHaveBeenCalled()
   })
 
-  it('logs out when another tab clears the auth token', async () => {
-    await renderAuthTree()
-    fireEvent.click(screen.getByText(BUTTON_LABEL_LOGIN))
-    await waitFor(() => {
-      expect(screen.getByTestId(TEST_ID_AUTH_STATUS).textContent).toBe(TEXT_AUTHENTICATED)
-    })
-
-    act(() => {
-      window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_KEY_AUTH_TOKEN, newValue: null }))
-    })
-
-    await waitFor(() => {
-      expect(screen.getByTestId(TEST_ID_AUTH_STATUS).textContent).toBe(TEXT_ANONYMOUS)
-    })
-  })
-
-  it('updates the current user when storage events provide a new user snapshot', async () => {
+  it('ignores storage events for the removed legacy auth keys', async () => {
+    // The legacy cross-tab listener is gone: storage writes must neither log
+    // the user out nor inject a different user into app state.
     await renderAuthTree()
     fireEvent.click(screen.getByText(BUTTON_LABEL_LOGIN))
     await waitFor(() => {
@@ -223,6 +229,7 @@ describe('AuthProvider', () => {
 
     const externalUser = buildUser({ username: 'external-user' })
     act(() => {
+      window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_KEY_AUTH_TOKEN, newValue: null }))
       window.dispatchEvent(
         new StorageEvent('storage', {
           key: STORAGE_KEY_AUTH_USER,
@@ -232,8 +239,9 @@ describe('AuthProvider', () => {
     })
 
     await waitFor(() => {
-      expect(screen.getByTestId(TEST_ID_AUTH_USER).textContent).toBe(externalUser.username)
+      expect(screen.getByTestId(TEST_ID_AUTH_STATUS).textContent).toBe(TEXT_AUTHENTICATED)
     })
+    expect(screen.getByTestId(TEST_ID_AUTH_USER).textContent).toBe(TEST_USERNAME)
   })
 
   it('resets auth state when login fails', async () => {

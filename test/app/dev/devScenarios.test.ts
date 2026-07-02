@@ -1,14 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import * as persistedAuth from '@/app/auth/persistedAuth'
 import { STORAGE_KEY_AUTH_EXPIRY, STORAGE_KEY_AUTH_TOKEN, STORAGE_KEY_AUTH_USER } from '@/app/constants'
-import {
-  DEV_PERSONA_SUPERUSER,
-  ENV_VAR_DEV_PERSONA_SUPERUSER_EMAIL,
-  ENV_VAR_DEV_PERSONA_SUPERUSER_ID,
-  ENV_VAR_DEV_PERSONA_SUPERUSER_TOKEN,
-  ENV_VAR_DEV_PERSONA_SUPERUSER_USERNAME,
-} from '@/app/dev/constants'
+import { DEV_PERSONA_SUPERUSER } from '@/app/dev/constants'
 import {
   applyDevPersona,
   canUseDevTools,
@@ -23,47 +16,37 @@ describe('devScenarios', () => {
     vi.restoreAllMocks()
   })
 
-  const personaEnv = {
-    [ENV_VAR_DEV_PERSONA_SUPERUSER_TOKEN]: 'token-superuser',
-    [ENV_VAR_DEV_PERSONA_SUPERUSER_ID]: 'user-superuser',
-    [ENV_VAR_DEV_PERSONA_SUPERUSER_USERNAME]: 'dev.superuser',
-    [ENV_VAR_DEV_PERSONA_SUPERUSER_EMAIL]: 'superuser@example.dev',
+  const expectNoPersistedAuthArtifacts = () => {
+    expect(window.localStorage.getItem(STORAGE_KEY_AUTH_TOKEN)).toBeNull()
+    expect(window.localStorage.getItem(STORAGE_KEY_AUTH_EXPIRY)).toBeNull()
+    expect(window.localStorage.getItem(STORAGE_KEY_AUTH_USER)).toBeNull()
   }
 
   it('does not persist auth artifacts (dev persona is a no-op with HttpOnly cookies)', () => {
-    const persistAuthSpy = vi.spyOn(persistedAuth, 'persistAuth')
-    const persistAuthUserSpy = vi.spyOn(persistedAuth, 'persistAuthUser')
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
-    applyDevPersona(DEV_PERSONA_SUPERUSER, 'development', personaEnv)
+    applyDevPersona(DEV_PERSONA_SUPERUSER, 'development')
 
-    expect(persistAuthSpy).not.toHaveBeenCalled()
-    expect(persistAuthUserSpy).not.toHaveBeenCalled()
+    expectNoPersistedAuthArtifacts()
     expect(warnSpy).toHaveBeenCalled()
   })
 
   it('does not persist persona data when required env values are missing', () => {
-    const persistAuthSpy = vi.spyOn(persistedAuth, 'persistAuth')
-    const persistAuthUserSpy = vi.spyOn(persistedAuth, 'persistAuthUser')
+    applyDevPersona(DEV_PERSONA_SUPERUSER, 'development')
 
-    applyDevPersona(DEV_PERSONA_SUPERUSER, 'development', {})
-
-    expect(persistAuthSpy).not.toHaveBeenCalled()
-    expect(persistAuthUserSpy).not.toHaveBeenCalled()
+    expectNoPersistedAuthArtifacts()
   })
 
   it('does not persist persona data outside dev environments', () => {
-    const persistAuthSpy = vi.spyOn(persistedAuth, 'persistAuth')
-
     applyDevPersona(DEV_PERSONA_SUPERUSER, 'production')
 
-    expect(persistAuthSpy).not.toHaveBeenCalled()
+    expectNoPersistedAuthArtifacts()
   })
 
   it('ignores unknown persona keys gracefully', () => {
-    const persistAuthSpy = vi.spyOn(persistedAuth, 'persistAuth')
     applyDevPersona('unknown' as DevPersonaKey)
-    expect(persistAuthSpy).not.toHaveBeenCalled()
+
+    expectNoPersistedAuthArtifacts()
   })
 
   it('clears all stored auth state', () => {

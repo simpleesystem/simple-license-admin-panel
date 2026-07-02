@@ -38,9 +38,6 @@ import {
   NOTIFICATION_VARIANT_INFO,
   NOTIFICATION_VARIANT_SUCCESS,
   NOTIFICATION_VARIANT_WARNING,
-  STORAGE_KEY_AUTH_EXPIRY,
-  STORAGE_KEY_AUTH_TOKEN,
-  STORAGE_KEY_AUTH_USER,
 } from '../../src/app/constants'
 import { i18nResources } from '../../src/app/i18n/resources'
 import { useNotificationBus } from '../../src/notifications/useNotificationBus'
@@ -51,18 +48,15 @@ const BRAND_TEXT = i18nResources.common[I18N_KEY_APP_BRAND]
 const TAGLINE_TEXT = i18nResources.common[I18N_KEY_APP_TAGLINE]
 const TEST_TOAST_ID = 'test-toast' as const
 const TEST_ERROR_TOKEN = 'test-error' as const
-const TOKEN_EXPIRY_BUFFER_MS = 60_000
-const STORED_USER = JSON.stringify({
-  id: 'test-user',
-  username: 'test-user',
-  email: 'test@example.com',
-  role: 'SUPERUSER',
-})
 
 type NotificationTesterProps = {
   titleKey?: string
   descriptionKey?: string
-  variant?: typeof NOTIFICATION_VARIANT_INFO | typeof NOTIFICATION_VARIANT_SUCCESS | typeof NOTIFICATION_VARIANT_WARNING
+  variant?:
+    | typeof NOTIFICATION_VARIANT_INFO
+    | typeof NOTIFICATION_VARIANT_SUCCESS
+    | typeof NOTIFICATION_VARIANT_WARNING
+    | typeof NOTIFICATION_VARIANT_ERROR
 }
 
 const NotificationTester = ({
@@ -88,12 +82,6 @@ const ErrorThrower = (): never => {
   throw new Error(TEST_ERROR_TOKEN)
 }
 
-const simulateLogin = () => {
-  window.localStorage.setItem(STORAGE_KEY_AUTH_TOKEN, 'test-token')
-  window.localStorage.setItem(STORAGE_KEY_AUTH_EXPIRY, `${Date.now() + TOKEN_EXPIRY_BUFFER_MS}`)
-  window.localStorage.setItem(STORAGE_KEY_AUTH_USER, STORED_USER)
-}
-
 describe('AppProviders', () => {
   const originalConsoleError = console.error
 
@@ -109,7 +97,8 @@ describe('AppProviders', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     window.localStorage.clear()
-    simulateLogin()
+    // Authenticated state comes exclusively from the cookie-backed session
+    // restore (mocked here) — the legacy localStorage seeding is gone.
     const user = buildUser({ email: 'test@example.com', role: 'SUPERUSER' })
     mockClient.restoreSession.mockResolvedValue('test-token')
     mockClient.getCurrentUser.mockResolvedValue({ user })

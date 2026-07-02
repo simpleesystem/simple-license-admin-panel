@@ -13,7 +13,7 @@ import {
   STORAGE_KEY_AUTH_TOKEN,
   STORAGE_KEY_AUTH_USER,
 } from '../constants'
-import { safeGetItem, safeRemoveItem } from '../state/safeStorage'
+import { safeRemoveItem } from '../state/safeStorage'
 import { useAppStore } from '../state/store'
 import { AuthContext } from './authContext'
 
@@ -151,19 +151,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setIsLoading(true)
     setError(null)
 
-    // Check for expired tokens in localStorage and clear them.
-    // Storage access is best-effort: it can throw in Safari private mode and
-    // sandboxed iframes, and that must never break session initialization.
-    const expiry = safeGetItem(STORAGE_KEY_AUTH_EXPIRY)
-    if (expiry) {
-      const expiryTime = Number.parseInt(expiry, 10)
-      if (expiryTime && expiryTime < Date.now()) {
-        // Token is expired, clear it
-        safeRemoveItem(STORAGE_KEY_AUTH_TOKEN)
-        safeRemoveItem(STORAGE_KEY_AUTH_EXPIRY)
-        safeRemoveItem(STORAGE_KEY_AUTH_USER)
-      }
-    }
+    // One-time purge of the REMOVED legacy localStorage auth path. Older
+    // builds persisted the access token/expiry/user under these keys; the app
+    // no longer reads or writes them (auth is in-memory token + HttpOnly
+    // refresh cookie only), but residual tokens from old sessions must not be
+    // left sitting in storage. Storage access is best-effort: it can throw in
+    // Safari private mode and sandboxed iframes, and that must never break
+    // session initialization.
+    safeRemoveItem(STORAGE_KEY_AUTH_TOKEN)
+    safeRemoveItem(STORAGE_KEY_AUTH_EXPIRY)
+    safeRemoveItem(STORAGE_KEY_AUTH_USER)
 
     try {
       // 1. Try to restore session via HttpOnly cookie
@@ -196,39 +193,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     initSession()
   }, [initSession])
 
-  // Listen for storage events from other tabs/windows
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === STORAGE_KEY_AUTH_TOKEN && e.newValue === null) {
-        // Another tab cleared the token, log out
-        setUser(null)
-        userRef.current = null
-        client.setToken(null)
-        useAppStore.getState().dispatch({
-          type: 'auth/setUser',
-          payload: null,
-        })
-      } else if (e.key === STORAGE_KEY_AUTH_USER && e.newValue) {
-        // Another tab updated the user, sync it
-        try {
-          const updatedUser = JSON.parse(e.newValue) as User
-          setUser(updatedUser)
-          userRef.current = updatedUser
-          useAppStore.getState().dispatch({
-            type: 'auth/setUser',
-            payload: updatedUser,
-          })
-        } catch (err) {
-          logger.error(err, { message: 'Failed to parse user from storage event' })
-        }
-      }
-    }
-
-    window.addEventListener('storage', handleStorageChange)
-    return () => {
-      window.removeEventListener('storage', handleStorageChange)
-    }
-  }, [client, logger, setUser])
+  // NOTE: the former cross-tab `storage` event listener was removed with the
+  // legacy localStorage auth path. Nothing writes auth state to localStorage
+  // anymore, so the token-removal branch could never fire — and the user-sync
+  // branch let any writer of the legacy key inject a user object into app
+  // state. Session identity now comes exclusively from the server (HttpOnly
+  // refresh cookie -> /auth/refresh -> in-memory access token -> /users/me).
 
   const login = useCallback(
     async (credentials: LoginCredentials) => {
