@@ -17,7 +17,8 @@ updates:
 - package-ecosystem: github-actions
   directory: /
   schedule:
-    interval: monthly
+    interval: weekly
+    day: monday
   open-pull-requests-limit: 3
   reviewers:
   - crcapps
