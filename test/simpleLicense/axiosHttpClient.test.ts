@@ -20,7 +20,7 @@ type RetryProbe = {
 
 describe('AxiosHttpClient retry behavior', () => {
   it('does not retry idempotent requests on 429 rate-limit responses', () => {
-    const client = new AxiosHttpClient('https://license-admin-data.simpleaisystem.com')
+    const client = new AxiosHttpClient('https://license-admin-data.simpleesystem.com')
     const probe = client as unknown as RetryProbe
     const rateLimitError = new ApiException('Too many requests', 'RATE_LIMIT_ERROR', {
       status: HTTP_TOO_MANY_REQUESTS,
@@ -32,7 +32,7 @@ describe('AxiosHttpClient retry behavior', () => {
   })
 
   it('retries idempotent requests on 503 service unavailable responses', () => {
-    const client = new AxiosHttpClient('https://license-admin-data.simpleaisystem.com')
+    const client = new AxiosHttpClient('https://license-admin-data.simpleesystem.com')
     const probe = client as unknown as RetryProbe
     const unavailableError = new ApiException('Service unavailable', 'SERVICE_UNAVAILABLE', {
       status: HTTP_SERVICE_UNAVAILABLE,
@@ -44,7 +44,7 @@ describe('AxiosHttpClient retry behavior', () => {
   })
 
   it('does not auto-refresh/retry unauthorized FormData uploads', () => {
-    const client = new AxiosHttpClient('https://license-admin-data.simpleaisystem.com', undefined, {
+    const client = new AxiosHttpClient('https://license-admin-data.simpleesystem.com', undefined, {
       onRefreshToken: async () => null,
     })
     const probe = client as unknown as RetryProbe
@@ -60,7 +60,7 @@ describe('AxiosHttpClient retry behavior', () => {
   })
 
   it('still auto-refreshes unauthorized JSON requests', () => {
-    const client = new AxiosHttpClient('https://license-admin-data.simpleaisystem.com', undefined, {
+    const client = new AxiosHttpClient('https://license-admin-data.simpleesystem.com', undefined, {
       onRefreshToken: async () => null,
     })
     const probe = client as unknown as RetryProbe
@@ -74,7 +74,7 @@ describe('AxiosHttpClient retry behavior', () => {
   })
 
   it('auto-refreshes 403 responses when error code is INVALID_TOKEN', () => {
-    const client = new AxiosHttpClient('https://license-admin-data.simpleaisystem.com', undefined, {
+    const client = new AxiosHttpClient('https://license-admin-data.simpleesystem.com', undefined, {
       onRefreshToken: async () => null,
     })
     const probe = client as unknown as RetryProbe
@@ -97,7 +97,7 @@ describe('AxiosHttpClient retry behavior', () => {
   })
 
   it('auto-refreshes 403 responses when error code is UNAUTHORIZED', () => {
-    const client = new AxiosHttpClient('https://license-admin-data.simpleaisystem.com', undefined, {
+    const client = new AxiosHttpClient('https://license-admin-data.simpleesystem.com', undefined, {
       onRefreshToken: async () => null,
     })
     const probe = client as unknown as RetryProbe
@@ -120,7 +120,7 @@ describe('AxiosHttpClient retry behavior', () => {
   })
 
   it('auto-refreshes 403 responses when error code is AUTHENTICATION_ERROR', () => {
-    const client = new AxiosHttpClient('https://license-admin-data.simpleaisystem.com', undefined, {
+    const client = new AxiosHttpClient('https://license-admin-data.simpleesystem.com', undefined, {
       onRefreshToken: async () => null,
     })
     const probe = client as unknown as RetryProbe
@@ -143,7 +143,7 @@ describe('AxiosHttpClient retry behavior', () => {
   })
 
   it('does not auto-refresh 403 responses with non-auth error codes', () => {
-    const client = new AxiosHttpClient('https://license-admin-data.simpleaisystem.com', undefined, {
+    const client = new AxiosHttpClient('https://license-admin-data.simpleesystem.com', undefined, {
       onRefreshToken: async () => null,
     })
     const probe = client as unknown as RetryProbe

@@ -31,7 +31,9 @@ const HTML_ENTRY_NOT_FOUND_PATH = `./${VITE_HTML_ENTRY_NOT_FOUND}`
 const includesModule = (id: string, pkg: string) => id.includes(`/node_modules/${pkg}/`)
 const matchesSegment = (id: string, segment: string) => id.startsWith(`${WORKFLOWS_DIR}/${segment}`)
 
-export const PREVIEW_ALLOWED_HOST_LICENSE_ADMIN = 'license-admin.simpleaisystem.com'
+export const PREVIEW_ALLOWED_HOST_LICENSE_ADMIN = 'license-admin.simpleesystem.com'
+// Sunset host: keep serving until the simpleaisystem.com cutover completes, then remove.
+export const PREVIEW_ALLOWED_HOST_LICENSE_ADMIN_LEGACY = 'license-admin.simpleaisystem.com'
 
 const selectWorkflowChunk = (id: string) => {
   if (ANALYTICS_SEGMENTS.some((segment) => matchesSegment(id, segment))) {
@@ -53,7 +55,7 @@ export default defineConfig({
     },
   },
   preview: {
-    allowedHosts: [PREVIEW_ALLOWED_HOST_LICENSE_ADMIN],
+    allowedHosts: [PREVIEW_ALLOWED_HOST_LICENSE_ADMIN, PREVIEW_ALLOWED_HOST_LICENSE_ADMIN_LEGACY],
   },
   server: {
     proxy: {

@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import viteConfig, {
   PREVIEW_ALLOWED_HOST_LICENSE_ADMIN,
+  PREVIEW_ALLOWED_HOST_LICENSE_ADMIN_LEGACY,
   VITE_HTML_ENTRY_INDEX,
   VITE_HTML_ENTRY_NOT_FOUND,
 } from '../vite.config'
@@ -14,6 +15,13 @@ describe('vite preview allowedHosts', () => {
       typeof viteConfig === 'function' ? viteConfig({ command: 'serve', mode: 'test' }) : viteConfig
 
     expect(resolvedConfig.preview?.allowedHosts).toContain(PREVIEW_ALLOWED_HOST_LICENSE_ADMIN)
+  })
+
+  it('keeps serving the legacy admin panel host until the domain cutover completes', () => {
+    const resolvedConfig =
+      typeof viteConfig === 'function' ? viteConfig({ command: 'serve', mode: 'test' }) : viteConfig
+
+    expect(resolvedConfig.preview?.allowedHosts).toContain(PREVIEW_ALLOWED_HOST_LICENSE_ADMIN_LEGACY)
   })
 
   it('includes the SPA HTML entry points for direct navigation', () => {
