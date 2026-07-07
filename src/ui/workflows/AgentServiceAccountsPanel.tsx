@@ -14,6 +14,8 @@ import {
 import {
   UI_ACTION_CANCEL,
   UI_ACTION_CLOSE,
+  UI_AGENT_SCOPE_CATALOG,
+  UI_AGENT_SCOPE_DEFAULTS,
   UI_AGENT_SERVICE_ACCOUNT_ACTION_EDIT,
   UI_AGENT_SERVICE_ACCOUNT_ACTION_ISSUE_CREDENTIAL,
   UI_AGENT_SERVICE_ACCOUNT_ACTION_VIEW_CREDENTIALS,
@@ -63,6 +65,8 @@ import {
   UI_AGENT_SERVICE_ACCOUNT_PANEL_DESCRIPTION,
   UI_AGENT_SERVICE_ACCOUNT_PANEL_TITLE,
   UI_AGENT_SERVICE_ACCOUNT_SCOPE_MODE_SYSTEM,
+  UI_AGENT_SERVICE_ACCOUNT_SCOPES_EMPTY_WARNING,
+  UI_AGENT_SERVICE_ACCOUNT_SCOPES_HELP,
   UI_AGENT_SERVICE_ACCOUNT_STATUS_ACTIVE,
   UI_AGENT_SERVICE_ACCOUNT_STATUS_DISABLED,
   UI_AGENT_SERVICE_ACCOUNT_STATUS_LABEL_ACTIVE,
@@ -139,7 +143,7 @@ function AgentServiceAccountsPanelWithQuery({
   const [editingDescription, setEditingDescription] = useState('')
   const [editingStatus, setEditingStatus] = useState<AccountStatus>(UI_AGENT_SERVICE_ACCOUNT_STATUS_ACTIVE)
   const [credentialName, setCredentialName] = useState('')
-  const [scopesInput, setScopesInput] = useState('')
+  const [selectedScopes, setSelectedScopes] = useState<string[]>([...UI_AGENT_SCOPE_DEFAULTS])
   const [expiresAt, setExpiresAt] = useState('')
   const [credentialResult, setCredentialResult] = useState<CredentialResult | null>(null)
   const [credentialStatusFilter, setCredentialStatusFilter] = useState<CredentialStatusFilter>(
@@ -181,7 +185,7 @@ function AgentServiceAccountsPanelWithQuery({
   const resetIssueState = useCallback(() => {
     setSelectedAccount(null)
     setCredentialName('')
-    setScopesInput('')
+    setSelectedScopes([...UI_AGENT_SCOPE_DEFAULTS])
     setExpiresAt('')
     setCredentialResult(null)
   }, [])
@@ -189,9 +193,15 @@ function AgentServiceAccountsPanelWithQuery({
   const openIssueModal = useCallback((account: AgentServiceAccount) => {
     setSelectedAccount(account)
     setCredentialName('')
-    setScopesInput('')
+    setSelectedScopes([...UI_AGENT_SCOPE_DEFAULTS])
     setExpiresAt('')
     setCredentialResult(null)
+  }, [])
+
+  const toggleScope = useCallback((scope: string) => {
+    setSelectedScopes((current) =>
+      current.includes(scope) ? current.filter((value) => value !== scope) : [...current, scope]
+    )
   }, [])
 
   const openHistoryModal = useCallback((account: AgentServiceAccount) => {
@@ -387,10 +397,7 @@ function AgentServiceAccountsPanelWithQuery({
       return
     }
 
-    const scopes = scopesInput
-      .split(',')
-      .map((scope) => scope.trim())
-      .filter((scope) => scope.length > 0)
+    const scopes = [...new Set(selectedScopes.map((scope) => scope.trim()).filter((scope) => scope.length > 0))]
     try {
       const response = await issueMutation.mutateAsync({
         serviceAccountId: selectedAccount.id,
@@ -479,11 +486,11 @@ function AgentServiceAccountsPanelWithQuery({
       <IssueCredentialModal
         show={Boolean(selectedAccount)}
         credentialName={credentialName}
-        scopesInput={scopesInput}
+        selectedScopes={selectedScopes}
         expiresAt={expiresAt}
         credentialResult={credentialResult}
         onCredentialNameChange={setCredentialName}
-        onScopesInputChange={setScopesInput}
+        onToggleScope={toggleScope}
         onExpiresAtChange={setExpiresAt}
         onClose={resetIssueState}
         onIssue={() => {
@@ -624,11 +631,11 @@ function EditServiceAccountModal({
 type IssueCredentialModalProps = {
   show: boolean
   credentialName: string
-  scopesInput: string
+  selectedScopes: string[]
   expiresAt: string
   credentialResult: CredentialResult | null
   onCredentialNameChange: (value: string) => void
-  onScopesInputChange: (value: string) => void
+  onToggleScope: (scope: string) => void
   onExpiresAtChange: (value: string) => void
   onClose: () => void
   onIssue: () => void
@@ -639,17 +646,30 @@ type IssueCredentialModalProps = {
 function IssueCredentialModal({
   show,
   credentialName,
-  scopesInput,
+  selectedScopes,
   expiresAt,
   credentialResult,
   onCredentialNameChange,
-  onScopesInputChange,
+  onToggleScope,
   onExpiresAtChange,
   onClose,
   onIssue,
   issuePending,
   issueButtonDisabled,
 }: IssueCredentialModalProps) {
+  const scopeGroups = useMemo(() => {
+    const groups = new Map<string, typeof UI_AGENT_SCOPE_CATALOG>()
+    for (const entry of UI_AGENT_SCOPE_CATALOG) {
+      const existing = groups.get(entry.group)
+      if (existing) {
+        groups.set(entry.group, [...existing, entry])
+      } else {
+        groups.set(entry.group, [entry])
+      }
+    }
+    return [...groups.entries()]
+  }, [])
+  const disabled = Boolean(credentialResult)
   return (
     <ModalDialog
       show={show}
@@ -662,16 +682,36 @@ function IssueCredentialModal({
             <Form.Control
               value={credentialName}
               onChange={(event) => onCredentialNameChange(event.target.value)}
-              disabled={Boolean(credentialResult)}
+              disabled={disabled}
             />
           </Form.Group>
           <Form.Group>
             <Form.Label>{UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_SCOPES}</Form.Label>
-            <Form.Control
-              value={scopesInput}
-              onChange={(event) => onScopesInputChange(event.target.value)}
-              disabled={Boolean(credentialResult)}
-            />
+            <Form.Text className="d-block mb-2 text-muted">{UI_AGENT_SERVICE_ACCOUNT_SCOPES_HELP}</Form.Text>
+            {scopeGroups.map(([groupName, entries]) => (
+              <div key={groupName} className="mb-2">
+                <div className="fw-semibold small text-uppercase text-muted">{groupName}</div>
+                {entries.map((entry) => (
+                  <Form.Check
+                    key={entry.scope}
+                    type="checkbox"
+                    id={`agent-scope-${entry.scope}`}
+                    checked={selectedScopes.includes(entry.scope)}
+                    disabled={disabled}
+                    onChange={() => onToggleScope(entry.scope)}
+                    label={
+                      <span>
+                        {entry.label} <code className="small">{entry.scope}</code>
+                        <span className="d-block small text-muted">{entry.description}</span>
+                      </span>
+                    }
+                  />
+                ))}
+              </div>
+            ))}
+            {selectedScopes.length === 0 ? (
+              <Form.Text className="d-block text-warning">{UI_AGENT_SERVICE_ACCOUNT_SCOPES_EMPTY_WARNING}</Form.Text>
+            ) : null}
           </Form.Group>
           <Form.Group>
             <Form.Label>{UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_EXPIRES_AT}</Form.Label>

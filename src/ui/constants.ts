@@ -1002,8 +1002,99 @@ export const UI_AGENT_SERVICE_ACCOUNT_MODAL_ISSUE_CREDENTIAL_TITLE = 'Issue Agen
 export const UI_AGENT_SERVICE_ACCOUNT_MODAL_CREDENTIAL_HISTORY_TITLE = 'Credential History' as const
 export const UI_AGENT_SERVICE_ACCOUNT_MODAL_EDIT_TITLE = 'Edit Agent Service Account' as const
 export const UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_CREDENTIAL_NAME = 'Credential name' as const
-export const UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_SCOPES = 'Scopes (comma-separated)' as const
+export const UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_SCOPES = 'Scopes' as const
+export const UI_AGENT_SERVICE_ACCOUNT_SCOPES_HELP =
+  'Choose exactly what this credential may do. “Execute tools” is required for the credential to call any tool.' as const
+export const UI_AGENT_SERVICE_ACCOUNT_SCOPES_EMPTY_WARNING =
+  'Select at least one scope. Leave all unchecked to fall back to the safe read-only defaults.' as const
 export const UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_EXPIRES_AT = 'Expires at (optional)' as const
+
+/**
+ * Canonical agent scope catalog for the issue-credential selector. Mirrors
+ * license-server `src/config/agentConstants.ts` → AGENT_SCOPE_CATALOG (the
+ * server validates issued scopes against that list, so keep these in sync).
+ */
+export interface UiAgentScopeCatalogEntry {
+  readonly scope: string
+  readonly group: string
+  readonly label: string
+  readonly description: string
+}
+
+export const UI_AGENT_SCOPE_CATALOG: readonly UiAgentScopeCatalogEntry[] = [
+  {
+    scope: 'agent:*',
+    group: 'All',
+    label: 'Full agent access',
+    description: 'Master grant — every current and future agent tool. Prefer specific scopes.',
+  },
+  {
+    scope: 'agent:tools:execute',
+    group: 'Tools',
+    label: 'Execute tools',
+    description: 'Required for the credential to call any tool.',
+  },
+  {
+    scope: 'agent:licenses:read',
+    group: 'Licenses',
+    label: 'Read licenses',
+    description: 'List and inspect licenses.',
+  },
+  {
+    scope: 'agent:licenses:write',
+    group: 'Licenses',
+    label: 'Manage licenses',
+    description: 'Suspend and resume licenses.',
+  },
+  {
+    scope: 'agent:products:read',
+    group: 'Products',
+    label: 'Read products',
+    description: 'List and inspect catalog products.',
+  },
+  {
+    scope: 'agent:products:write',
+    group: 'Products',
+    label: 'Manage products',
+    description: 'Create catalog products (e.g. keyless connectors).',
+  },
+  {
+    scope: 'agent:build-tokens:read',
+    group: 'Build tokens',
+    label: 'Read build tokens',
+    description: 'List protection build tokens (hashes never shown).',
+  },
+  {
+    scope: 'agent:build-tokens:write',
+    group: 'Build tokens',
+    label: 'Manage build tokens',
+    description: 'Issue and revoke per-product CI build tokens.',
+  },
+  {
+    scope: 'agent:releases:read',
+    group: 'Releases',
+    label: 'Read releases',
+    description: 'List product releases.',
+  },
+  {
+    scope: 'agent:releases:write',
+    group: 'Releases',
+    label: 'Manage releases',
+    description: 'Promote a release to the live/active version.',
+  },
+  {
+    scope: 'agent:analytics:read',
+    group: 'Analytics',
+    label: 'Read analytics',
+    description: 'Read aggregate dashboard counts.',
+  },
+]
+
+export const UI_AGENT_SCOPE_DEFAULTS: readonly string[] = [
+  'agent:tools:execute',
+  'agent:licenses:read',
+  'agent:products:read',
+]
 export const UI_AGENT_SERVICE_ACCOUNT_SUBMIT_ISSUE = 'Issue credential' as const
 export const UI_AGENT_SERVICE_ACCOUNT_SUBMIT_REVOKE = 'Revoke' as const
 export const UI_AGENT_SERVICE_ACCOUNT_FIELD_LABEL_STATUS = 'Status' as const
