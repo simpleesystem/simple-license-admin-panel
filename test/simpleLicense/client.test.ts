@@ -4,13 +4,16 @@ import { buildLicense } from '@test/factories/licenseFactory'
 import { buildUser } from '@test/factories/userFactory'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
+  ACCESS_LOGOUT_PATH,
   ActivationLimitExceededException,
   API_ENDPOINT_ADMIN_USERS_RESET_PASSWORD,
   API_ENDPOINT_ADMIN_USERS_RESET_PASSWORD_SUFFIX,
   API_ENDPOINT_ADMIN_USERS_SET_SERVICE_PASSWORD,
   API_ENDPOINT_ADMIN_USERS_SET_SERVICE_PASSWORD_SUFFIX,
+  API_ENDPOINT_AUTH_ACCESS_BOOTSTRAP,
   ApiException,
   AuthenticationException,
+  ERROR_CODE_ACCESS_IDENTITY_FORBIDDEN,
   ERROR_CODE_ACTIVATION_LIMIT_EXCEEDED,
   ERROR_CODE_INVALID_CREDENTIALS,
   ERROR_CODE_LICENSE_EXPIRED,
@@ -157,6 +160,74 @@ describe('Client', () => {
   })
 
   describe('restoreSession', () => {
+    it('uses the same-origin Access bootstrap before a password refresh cookie', async () => {
+      const axiosMock = await import('axios')
+      const accessToken = faker.string.alphanumeric(32)
+      const postSpy = vi.spyOn(axiosMock.default, 'post').mockResolvedValueOnce({
+        data: { success: true, token: accessToken },
+        status: 200,
+      })
+      const accessClient = new Client('https://api.example.com', mockHttpClient as unknown as AxiosHttpClient, {
+        accessBootstrapBaseUrl: window.location.origin,
+      })
+
+      const result = await accessClient.restoreSession()
+
+      expect(result).toBe(accessToken)
+      expect(postSpy).toHaveBeenCalledWith(
+        `${window.location.origin}${API_ENDPOINT_AUTH_ACCESS_BOOTSTRAP}`,
+        {},
+        expect.objectContaining({ withCredentials: true })
+      )
+    })
+
+    it('falls back to the password refresh cookie when Access is not configured', async () => {
+      const axiosMock = await import('axios')
+      const refreshToken = faker.string.alphanumeric(32)
+      const postSpy = vi
+        .spyOn(axiosMock.default, 'post')
+        .mockRejectedValueOnce(new Error('Access not configured'))
+        .mockResolvedValueOnce({
+          data: { success: true, token: refreshToken },
+          status: 200,
+        })
+      const accessClient = new Client('https://api.example.com', mockHttpClient as unknown as AxiosHttpClient, {
+        accessBootstrapBaseUrl: window.location.origin,
+      })
+
+      const result = await accessClient.restoreSession()
+
+      expect(result).toBe(refreshToken)
+      expect(postSpy).toHaveBeenCalledTimes(2)
+    })
+
+    it('does not fall back to a stale password session for an unauthorized Access identity', async () => {
+      const axiosMock = await import('axios')
+      const error = {
+        isAxiosError: true,
+        message: 'Forbidden',
+        response: {
+          status: 403,
+          data: {
+            success: false,
+            error: {
+              code: ERROR_CODE_ACCESS_IDENTITY_FORBIDDEN,
+              message: 'Cloudflare Access identity has no active License Admin account',
+            },
+          },
+        },
+      }
+      const postSpy = vi.spyOn(axiosMock.default, 'post').mockRejectedValueOnce(error)
+      const accessClient = new Client('https://api.example.com', mockHttpClient as unknown as AxiosHttpClient, {
+        accessBootstrapBaseUrl: window.location.origin,
+      })
+
+      const restoration = accessClient.restoreSession()
+
+      await expect(restoration).rejects.toBeInstanceOf(ApiException)
+      expect(postSpy).toHaveBeenCalledTimes(1)
+    })
+
     it('returns existing token if available', async () => {
       const existingToken = faker.string.alphanumeric(32)
       client.setToken(existingToken)
@@ -228,6 +299,26 @@ describe('Client', () => {
 
       expect(result).toBeNull()
       expect(client.getToken()).toBeNull()
+    })
+  })
+
+  describe('Cloudflare Access logout', () => {
+    it('returns the Access logout path after an Access-authenticated session', async () => {
+      const axiosMock = await import('axios')
+      const accessToken = faker.string.alphanumeric(32)
+      vi.spyOn(axiosMock.default, 'post').mockResolvedValueOnce({
+        data: { success: true, token: accessToken },
+        status: 200,
+      })
+      const accessClient = new Client('https://api.example.com', mockHttpClient as unknown as AxiosHttpClient, {
+        accessBootstrapBaseUrl: window.location.origin,
+      })
+      await accessClient.restoreSession()
+      mockHttpClient.post.mockResolvedValue({ data: { success: true }, status: 200 })
+
+      const logoutPath = await accessClient.logout()
+
+      expect(logoutPath).toBe(ACCESS_LOGOUT_PATH)
     })
   })
 

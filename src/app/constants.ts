@@ -145,6 +145,12 @@ export const AUTH_STATUS_LOADING = 'auth/status/loading' as const
 export const AUTH_TOKEN_EXPIRY_SKEW_MS = 30_000 as const
 export const AUTH_LOGIN_TOAST_SUCCESS = 'Signed in successfully' as const
 export const AUTH_LOGIN_TOAST_ERROR = 'Unable to sign in' as const
+export const ACCESS_AUTHORIZATION_DENIED_HEADING = 'Signed in, but not authorized here' as const
+export const ACCESS_AUTHORIZATION_DENIED_DESCRIPTION =
+  'Cloudflare Access authenticated your identity. License Admin still decides authorization from its active user accounts and roles.' as const
+export const ACCESS_AUTHORIZATION_DENIED_ACTION =
+  'Ask a License Admin administrator to add or activate the account with the same email address.' as const
+export const ACCESS_LOGOUT_LABEL = 'Sign out of Cloudflare Access' as const
 export const AUTH_RESET_TOAST_SUCCESS = 'Reset link sent successfully' as const
 export const AUTH_RESET_TOAST_ERROR = 'Unable to send reset link' as const
 export const UI_HEADER_SIGN_OUT_TOAST_SUCCESS = 'Signed out successfully' as const

@@ -13,6 +13,7 @@ export function ApiProvider({ children, client }: PropsWithChildren<{ client?: S
       return client
     }
     return new SimpleLicenseClient(apiBaseUrl, undefined, {
+      accessBootstrapBaseUrl: globalThis.location.origin,
       retryAttempts: httpRetryAttempts,
       retryDelayMs: httpRetryDelayMs,
       timeoutSeconds: httpTimeoutMs / 1000,

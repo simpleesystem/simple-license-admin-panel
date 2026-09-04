@@ -4,6 +4,8 @@
 
 import axios from 'axios'
 import {
+  ACCESS_BARRIER_ERROR_CODES,
+  ACCESS_LOGOUT_PATH,
   API_ENDPOINT_ADMIN_AGENT_CREDENTIAL_REVOKE_SUFFIX,
   API_ENDPOINT_ADMIN_AGENT_CREDENTIALS_BATCH_REVOKE_SUFFIX,
   API_ENDPOINT_ADMIN_AGENT_CREDENTIALS_SUFFIX,
@@ -77,6 +79,7 @@ import {
   API_ENDPOINT_ADMIN_USERS_SET_SERVICE_PASSWORD,
   API_ENDPOINT_ADMIN_USERS_SET_SERVICE_PASSWORD_SUFFIX,
   API_ENDPOINT_ADMIN_USERS_UPDATE,
+  API_ENDPOINT_AUTH_ACCESS_BOOTSTRAP,
   API_ENDPOINT_AUTH_LOGIN,
   API_ENDPOINT_AUTH_LOGOUT,
   API_ENDPOINT_AUTH_REFRESH,
@@ -92,6 +95,7 @@ import {
   ERROR_CODE_INVALID_CREDENTIALS,
   ERROR_CODE_LICENSE_EXPIRED,
   ERROR_CODE_LICENSE_NOT_FOUND,
+  ERROR_MESSAGE_ACCESS_BOOTSTRAP_FAILED,
   HTTP_UNAUTHORIZED,
   RELEASE_UPLOAD_REQUEST_TIMEOUT_MS,
 } from './constants'
@@ -225,6 +229,7 @@ import type {
 import type { ProductTier, User } from './types/license'
 
 export type ClientOptions = {
+  accessBootstrapBaseUrl?: string
   retryAttempts?: number
   retryDelayMs?: number
   timeoutSeconds?: number
@@ -233,13 +238,25 @@ export type ClientOptions = {
 export class Client {
   private readonly httpClient: HttpClientInterface
   private readonly baseUrl: string
+  private readonly accessBootstrapBaseUrl: string | null
   private authToken: string | null = null
+  private authenticatedViaAccess = false
 
   constructor(baseURL: string, httpClient?: HttpClientInterface, options?: ClientOptions) {
     const baseUrlClean = baseURL.endsWith('/') ? baseURL.slice(0, -1) : baseURL
     this.baseUrl = baseUrlClean
+    const accessBaseUrl = options?.accessBootstrapBaseUrl?.trim()
+    this.accessBootstrapBaseUrl = accessBaseUrl
+      ? accessBaseUrl.endsWith('/')
+        ? accessBaseUrl.slice(0, -1)
+        : accessBaseUrl
+      : null
 
     const onRefreshToken = async (): Promise<string | null> => {
+      const accessToken = await this.requestAccessSession()
+      if (accessToken) {
+        return accessToken
+      }
       try {
         const response = await axios.post(`${this.baseUrl}${API_ENDPOINT_AUTH_REFRESH}`, {}, { withCredentials: true })
         const data = response.data
@@ -315,6 +332,7 @@ export class Client {
     }
 
     this.setToken(token)
+    this.authenticatedViaAccess = false
     if (this.httpClient instanceof AxiosHttpClient) {
       this.httpClient.setAuthToken(token)
     }
@@ -331,13 +349,16 @@ export class Client {
     }
   }
 
-  async logout(): Promise<void> {
+  async logout(): Promise<string | null> {
+    const accessLogoutPath = this.authenticatedViaAccess ? ACCESS_LOGOUT_PATH : null
     try {
       await this.httpClient.post(API_ENDPOINT_AUTH_LOGOUT)
     } catch {
       // Ignore errors during logout
     }
     this.setToken(null)
+    this.authenticatedViaAccess = false
+    return accessLogoutPath
   }
 
   /**
@@ -351,6 +372,11 @@ export class Client {
     const currentToken = this.getToken()
     if (currentToken) {
       return currentToken
+    }
+
+    const accessToken = await this.requestAccessSession(signal)
+    if (accessToken) {
+      return accessToken
     }
 
     // Try to refresh via the cookie endpoint
@@ -372,6 +398,54 @@ export class Client {
 
     this.setToken(null)
     return null
+  }
+
+  private async requestAccessSession(signal?: AbortSignal): Promise<string | null> {
+    if (this.accessBootstrapBaseUrl === null) {
+      return null
+    }
+    try {
+      const response = await axios.post(
+        `${this.accessBootstrapBaseUrl}${API_ENDPOINT_AUTH_ACCESS_BOOTSTRAP}`,
+        {},
+        { withCredentials: true, signal }
+      )
+      const data = response.data
+      if (data?.success && typeof data?.token === 'string' && data.token !== '') {
+        this.authenticatedViaAccess = true
+        this.setToken(data.token)
+        return data.token
+      }
+    } catch (error) {
+      const accessError = this.accessBarrierError(error)
+      if (accessError) {
+        throw accessError
+      }
+    }
+    return null
+  }
+
+  private accessBarrierError(error: unknown): ApiException | null {
+    if (!axios.isAxiosError(error)) {
+      return null
+    }
+    const responseData = error.response?.data
+    if (typeof responseData !== 'object' || responseData === null || !('error' in responseData)) {
+      return null
+    }
+    const errorData = responseData.error
+    if (typeof errorData !== 'object' || errorData === null) {
+      return null
+    }
+    const code = 'code' in errorData && typeof errorData.code === 'string' ? errorData.code : ''
+    if (!ACCESS_BARRIER_ERROR_CODES.some((candidate) => candidate === code)) {
+      return null
+    }
+    const message =
+      'message' in errorData && typeof errorData.message === 'string'
+        ? errorData.message
+        : ERROR_MESSAGE_ACCESS_BOOTSTRAP_FAILED
+    return new ApiException(message, code, { status: error.response?.status })
   }
 
   async changePassword(request: ChangePasswordRequest): Promise<ChangePasswordResponse> {

@@ -1,11 +1,12 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { useCallback } from 'react'
 import { beforeEach, vi } from 'vitest'
-import { ApiException, ERROR_CODE_MUST_CHANGE_PASSWORD } from '@/simpleLicense'
+import { ApiException, ERROR_CODE_ACCESS_IDENTITY_FORBIDDEN, ERROR_CODE_MUST_CHANGE_PASSWORD } from '@/simpleLicense'
 
 import { AppProviders } from '../../../src/app/AppProviders'
 import { useAuth } from '../../../src/app/auth/authContext'
 import {
+  ACCESS_AUTHORIZATION_DENIED_HEADING,
   AUTH_STATUS_IDLE,
   STORAGE_KEY_AUTH_EXPIRY,
   STORAGE_KEY_AUTH_TOKEN,
@@ -122,6 +123,28 @@ beforeEach(() => {
 })
 
 describe('AuthProvider', () => {
+  it('shows an authorization barrier instead of a password form for a refused Access identity', async () => {
+    mockClient.restoreSession.mockRejectedValueOnce(
+      new ApiException(
+        'Cloudflare Access verified this identity, but it has no active License Admin account.',
+        ERROR_CODE_ACCESS_IDENTITY_FORBIDDEN
+      )
+    )
+
+    await act(async () => {
+      render(
+        <AppProviders>
+          <AuthConsumer />
+        </AppProviders>
+      )
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText(ACCESS_AUTHORIZATION_DENIED_HEADING)).toBeInTheDocument()
+    })
+    expect(screen.queryByText(BUTTON_LABEL_LOGIN)).not.toBeInTheDocument()
+  })
+
   it('logs in and exposes authenticated user details', async () => {
     await renderAuthTree()
 

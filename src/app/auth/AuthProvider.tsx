@@ -4,8 +4,9 @@ import { useApiClient } from '@/api/apiContext'
 import { useLogger } from '@/app/logging/loggerContext'
 import { clearPersistedQueryCache } from '@/app/query/persistence'
 import type { User } from '@/simpleLicense'
-import { ApiException, ERROR_CODE_MUST_CHANGE_PASSWORD } from '@/simpleLicense'
+import { ACCESS_BARRIER_ERROR_CODES, ApiException, ERROR_CODE_MUST_CHANGE_PASSWORD } from '@/simpleLicense'
 import type { LoginCredentials } from '@/types/auth'
+import { AccessAuthorizationBarrier } from '@/ui/auth/AccessAuthorizationBarrier'
 import {
   APP_ERROR_TYPE_AUTH,
   AUTH_STATUS_IDLE,
@@ -28,6 +29,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUserState] = useState<User | null>(null)
   const [isLoading, setIsLoadingState] = useState(true)
   const [error, setErrorState] = useState<string | null>(null)
+  const [accessAuthorizationError, setAccessAuthorizationError] = useState<string | null>(null)
 
   // Use a ref to track if we've already attempted initialization
   // This helps prevents double-fetching in StrictMode
@@ -179,6 +181,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     } catch (err) {
       logger.error(err, { message: 'Session restoration failed' })
+      if (err instanceof ApiException && ACCESS_BARRIER_ERROR_CODES.some((code) => code === err.errorCode)) {
+        setAccessAuthorizationError(err.message)
+      }
       setUser(null)
       useAppStore.getState().dispatch({
         type: 'auth/setUser',
@@ -273,8 +278,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const logout = useCallback(async () => {
     setIsLoading(true)
+    let accessLogoutPath: string | null = null
     try {
-      await client.logout()
+      accessLogoutPath = await client.logout()
       setUser(null)
       userRef.current = null
       // Dispatch to Zustand store to keep global state in sync
@@ -290,6 +296,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       logger.error(err instanceof Error ? err : new Error(String(err)), { message: 'Logout failed' })
     } finally {
       setIsLoading(false)
+    }
+    if (accessLogoutPath) {
+      globalThis.location.assign(accessLogoutPath)
     }
   }, [client, logger, queryClient, setIsLoading, setUser])
 
@@ -311,6 +320,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Return nothing or a spinner while checking session
     // This prevents the "flash of unauthenticated content"
     return null
+  }
+
+  if (accessAuthorizationError) {
+    return <AccessAuthorizationBarrier errorMessage={accessAuthorizationError} />
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
