@@ -127,6 +127,9 @@ export const API_ENDPOINT_ADMIN_TENANTS_BACKUP_PATH = '/backup'
 // Admin System Endpoints
 export const API_ENDPOINT_ADMIN_STATS = '/api/v1/admin/stats'
 export const API_ENDPOINT_ADMIN_STATUS = '/api/v1/admin/status'
+export const API_ENDPOINT_ADMIN_EMAIL_STATUS = '/api/v1/admin/email/status'
+export const API_ENDPOINT_ADMIN_EMAIL_TEST = '/api/v1/admin/email/test'
+export const EMAIL_TEST_REQUEST_TIMEOUT_MS = 30_000
 export const API_ENDPOINT_ADMIN_HEALTH = '/api/v1/admin/health'
 export const API_ENDPOINT_ADMIN_METRICS = '/api/v1/admin/metrics'
 export const API_ENDPOINT_ADMIN_HEALTH_SNAPSHOT = '/api/v1/admin/health-snapshot'

@@ -1,0 +1,20 @@
+export const UI_EMAIL_TITLE = 'Email delivery'
+export const UI_EMAIL_DESCRIPTION =
+  'Check the license service’s email connection and send a verification message to your account.'
+export const UI_EMAIL_SEND = 'Send test email to me'
+export const UI_EMAIL_SENDING = 'Sending test…'
+export const UI_EMAIL_REFRESH = 'Check email status'
+export const UI_EMAIL_CHECKING = 'Checking email status…'
+export const UI_EMAIL_READY = 'Ready to send a test. Inbox delivery has not been verified.'
+export const UI_EMAIL_UNCONFIGURED = 'Email sending is not configured for this service. Contact a system administrator.'
+export const UI_EMAIL_DISABLED = 'Email sending is disabled in this environment.'
+export const UI_EMAIL_STATUS_FAILED = 'Email status is unavailable. Check the status again before sending a test.'
+export const UI_EMAIL_ACCEPTED =
+  'The email service accepted your test. Check your inbox and spam folder for the reference below; acceptance does not confirm inbox delivery.'
+export const UI_EMAIL_UNKNOWN =
+  'We could not confirm the send result. Check your inbox and ask an administrator to check the reference before sending another test.'
+export const UI_EMAIL_REFUSED = 'The test was not accepted. Share the code below with a system administrator.'
+export const UI_EMAIL_RECIPIENT = 'The test goes only to your account email:'
+export const UI_EMAIL_REFERENCE = 'Inbox reference:'
+export const UI_EMAIL_REQUEST = 'Support reference:'
+export const UI_EMAIL_PANEL_ID = 'health-email-delivery'
