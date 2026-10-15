@@ -19,6 +19,8 @@ import {
   UI_PAGE_VARIANT_FULL_WIDTH,
   UI_STACK_GAP_LARGE,
 } from '../../ui'
+import { EmailDeliveryPanel } from '../../ui/workflows/EmailDeliveryPanel'
+import { UI_EMAIL_PANEL_ID } from '../../ui/workflows/emailDeliveryCopy'
 
 type HealthColumnSpan = 'full' | 'half'
 
@@ -88,6 +90,10 @@ export function HealthRouteComponent() {
             render: () => <SystemMetricsPanel client={client} />,
           },
         ],
+      },
+      {
+        id: UI_EMAIL_PANEL_ID,
+        columns: [{ id: UI_EMAIL_PANEL_ID, span: 'full', render: () => <EmailDeliveryPanel client={client} /> }],
       },
     ],
     [client]

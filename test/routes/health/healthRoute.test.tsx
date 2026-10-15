@@ -15,6 +15,9 @@ const HEALTH_HEADING = i18nResources.common[I18N_KEY_HEALTH_HEADING]
 vi.mock('@/ui/workflows/SystemStatusPanel', () => ({
   SystemStatusPanel: () => <div data-testid="system-status-panel" />,
 }))
+vi.mock('@/ui/workflows/EmailDeliveryPanel', () => ({
+  EmailDeliveryPanel: () => <div data-testid="email-delivery-panel" />,
+}))
 
 vi.mock('@/ui/workflows/HealthMetricsPanel', () => ({
   HealthMetricsPanel: () => <div data-testid="health-metrics-panel" />,
@@ -71,5 +74,6 @@ describe('HealthRouteComponent', () => {
     expect(await screen.findByTestId('system-status-panel')).toBeInTheDocument()
     expect(await screen.findByTestId('health-metrics-panel')).toBeInTheDocument()
     expect(await screen.findByTestId('system-metrics-panel')).toBeInTheDocument()
+    expect(await screen.findByTestId('email-delivery-panel')).toBeInTheDocument()
   })
 })

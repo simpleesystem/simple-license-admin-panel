@@ -19,6 +19,8 @@ import {
   API_ENDPOINT_ADMIN_AUDIT_LOGS,
   API_ENDPOINT_ADMIN_AUDIT_VERIFY,
   API_ENDPOINT_ADMIN_DASHBOARD_SNAPSHOT,
+  API_ENDPOINT_ADMIN_EMAIL_STATUS,
+  API_ENDPOINT_ADMIN_EMAIL_TEST,
   API_ENDPOINT_ADMIN_ENTITLEMENTS_BATCH_DELETE_SUFFIX,
   API_ENDPOINT_ADMIN_ENTITLEMENTS_DELETE,
   API_ENDPOINT_ADMIN_ENTITLEMENTS_GET,
@@ -91,6 +93,7 @@ import {
   API_ENDPOINT_LICENSES_VALIDATE,
   API_ENDPOINT_PROTECTION_KEYS,
   API_ENDPOINT_UPDATES_CHECK,
+  EMAIL_TEST_REQUEST_TIMEOUT_MS,
   ERROR_CODE_ACTIVATION_LIMIT_EXCEEDED,
   ERROR_CODE_INVALID_CREDENTIALS,
   ERROR_CODE_LICENSE_EXPIRED,
@@ -99,6 +102,14 @@ import {
   HTTP_UNAUTHORIZED,
   RELEASE_UPLOAD_REQUEST_TIMEOUT_MS,
 } from './constants'
+import {
+  EMAIL_OUTCOME_UNKNOWN,
+  EMAIL_STATUS_UNAVAILABLE,
+  type EmailDeliveryStatus,
+  type EmailTestResult,
+  parseEmailDeliveryStatus,
+  parseEmailTestResult,
+} from './email'
 import {
   ActivationLimitExceededException,
   ApiException,
@@ -1271,6 +1282,33 @@ export class Client {
   }
 
   // Admin API - System Monitoring
+  async getEmailDeliveryStatus(): Promise<EmailDeliveryStatus> {
+    try {
+      const response = await this.httpClient.get<unknown>(API_ENDPOINT_ADMIN_EMAIL_STATUS)
+      return parseEmailDeliveryStatus(response.data)
+    } catch {
+      throw new ApiException(EMAIL_STATUS_UNAVAILABLE, EMAIL_STATUS_UNAVAILABLE)
+    }
+  }
+
+  async sendEmailDeliveryTest(): Promise<EmailTestResult> {
+    try {
+      // An explicit click confirms a fixed message to the current operator. Inspect
+      // every HTTP result directly: even auth refresh must not replay this send.
+      const response = await this.httpClient.post<unknown>(
+        API_ENDPOINT_ADMIN_EMAIL_TEST,
+        { confirm: true },
+        {
+          timeout: EMAIL_TEST_REQUEST_TIMEOUT_MS,
+          validateStatus: () => true,
+        }
+      )
+      return parseEmailTestResult(response.data, response.status)
+    } catch {
+      return { ok: false, code: EMAIL_OUTCOME_UNKNOWN }
+    }
+  }
+
   async getServerStatus(): Promise<ServerStatusResponse> {
     const response = await this.httpClient.get<ApiResponse<ServerStatusResponse>>(API_ENDPOINT_ADMIN_STATUS)
 

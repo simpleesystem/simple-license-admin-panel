@@ -90,6 +90,7 @@ export const QUERY_KEYS = {
   },
   // Admin API - System Monitoring
   adminSystem: {
+    email: (operatorId: string) => ['admin', 'system', 'email', operatorId] as const,
     healthSnapshot: () => ['admin', 'system', 'health-snapshot'] as const,
     status: () => ['admin', 'system', 'status'] as const,
     health: () => ['admin', 'system', 'health'] as const,

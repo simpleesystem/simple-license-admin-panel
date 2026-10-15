@@ -15,6 +15,18 @@ and ability-based UI gating.
 
 ### Core Infrastructure
 
+System administrators can open **Health → Email delivery** to check mail
+readiness and explicitly send a harmless test to their own account email.
+The panel uses the same protected `/api/v1/admin/email/status` and
+`/api/v1/admin/email/test` actions as operators using the API. It never accepts
+credentials, recipients, or custom message content. An accepted test still needs
+an inbox/spam check using the displayed reference. An uncertain outcome stops
+repeat sends and asks for reconciliation before another test; no send is retried
+automatically. This verifies the transport, not a customer password-reset workflow.
+Known relay refusals, including quota, configuration, and storage errors, keep
+their stable support code. Unrecognized codes remain uncertain; provider prose
+and unexpected response fields are discarded.
+
 - ✅ **Authentication & Authorization**: JWT-based auth with
   role-based permissions (RBAC)
 - ✅ **Routing**: TanStack Router with file-based routes and route guards

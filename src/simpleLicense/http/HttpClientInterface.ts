@@ -28,6 +28,8 @@ export interface HttpRequestConfig {
   headers?: Record<string, string>
   timeout?: number
   signal?: AbortSignal
+  /** Inspect a documented direct-result response without losing its stable outcome code. */
+  validateStatus?: (status: number) => boolean
 }
 
 export interface HttpClientInterface {
