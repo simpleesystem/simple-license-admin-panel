@@ -4,7 +4,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useAuth } from '@/app/auth/useAuth'
 import type { Client } from '@/simpleLicense'
 import { EmailDeliveryPanel } from '@/ui/workflows/EmailDeliveryPanel'
-import { UI_EMAIL_ACCEPTED, UI_EMAIL_SEND, UI_EMAIL_TITLE, UI_EMAIL_UNKNOWN } from '@/ui/workflows/emailDeliveryCopy'
+import {
+  UI_EMAIL_ACCEPTED,
+  UI_EMAIL_REFUSED,
+  UI_EMAIL_SEND,
+  UI_EMAIL_TITLE,
+  UI_EMAIL_UNKNOWN,
+} from '@/ui/workflows/emailDeliveryCopy'
 import { buildEmailResult, buildEmailStatus } from '../../factories/emailFactory'
 import { buildUser } from '../../factories/userFactory'
 
@@ -77,6 +83,21 @@ describe('Email delivery panel', () => {
     expect(await screen.findByText(UI_EMAIL_UNKNOWN)).toBeInTheDocument()
     expect(screen.getByText('unknown_send')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: UI_EMAIL_SEND })).toBeDisabled()
+    expect(send).toHaveBeenCalledTimes(1)
+  })
+  it.each([
+    'quota_exceeded',
+    'storage_unavailable',
+    'config_invalid',
+    'provider_validation_rejected',
+  ])('distinguishes the stable %s refusal from an uncertain result without retrying', async (code) => {
+    send.mockResolvedValue(buildEmailResult({ ok: false, code }))
+    mount()
+    await waitFor(() => expect(screen.getByRole('button', { name: UI_EMAIL_SEND })).toBeEnabled())
+    fireEvent.click(screen.getByRole('button', { name: UI_EMAIL_SEND }))
+    expect(await screen.findByText(UI_EMAIL_REFUSED)).toBeInTheDocument()
+    expect(screen.getByText(code)).toBeInTheDocument()
+    expect(screen.queryByText(UI_EMAIL_UNKNOWN)).not.toBeInTheDocument()
     expect(send).toHaveBeenCalledTimes(1)
   })
   it('does not retry unexpected errors through the application mutation defaults', async () => {

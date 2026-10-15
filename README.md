@@ -23,6 +23,9 @@ credentials, recipients, or custom message content. An accepted test still needs
 an inbox/spam check using the displayed reference. An uncertain outcome stops
 repeat sends and asks for reconciliation before another test; no send is retried
 automatically. This verifies the transport, not a customer password-reset workflow.
+Known relay refusals, including quota, configuration, and storage errors, keep
+their stable support code. Unrecognized codes remain uncertain; provider prose
+and unexpected response fields are discarded.
 
 - ✅ **Authentication & Authorization**: JWT-based auth with
   role-based permissions (RBAC)
