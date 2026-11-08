@@ -1,9 +1,9 @@
 import { faker } from '@faker-js/faker'
 import {
-  UI_BADGE_VARIANT_INFO,
-  UI_BADGE_VARIANT_PRIMARY,
-  UI_BADGE_VARIANT_SUCCESS,
-  UI_BADGE_VARIANT_WARNING,
+  UI_TAG_VARIANT_INFO,
+  UI_TAG_VARIANT_NEUTRAL,
+  UI_TAG_VARIANT_SUCCESS,
+  UI_TAG_VARIANT_WARNING,
 } from '../../../src/ui/constants'
 import type {
   UiBreadcrumbItem,
@@ -44,10 +44,10 @@ export const buildTag = (overrides?: Partial<UiTagItem>): UiTagItem => ({
   id: faker.string.uuid(),
   label: buildText(),
   variant: faker.helpers.arrayElement([
-    UI_BADGE_VARIANT_PRIMARY,
-    UI_BADGE_VARIANT_SUCCESS,
-    UI_BADGE_VARIANT_INFO,
-    UI_BADGE_VARIANT_WARNING,
+    UI_TAG_VARIANT_NEUTRAL,
+    UI_TAG_VARIANT_SUCCESS,
+    UI_TAG_VARIANT_INFO,
+    UI_TAG_VARIANT_WARNING,
   ]),
   ...overrides,
 })
