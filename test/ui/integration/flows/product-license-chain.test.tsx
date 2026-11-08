@@ -24,6 +24,7 @@ import {
 } from '../../../../src/ui/constants'
 import { LicenseRowActions } from '../../../../src/ui/workflows/LicenseRowActions'
 import { ProductEntitlementManagementExample } from '../../../../src/ui/workflows/ProductEntitlementManagementExample'
+import type { ProductEntitlementListItem } from '../../../../src/ui/workflows/ProductEntitlementRowActions'
 import { ProductManagementExample } from '../../../../src/ui/workflows/ProductManagementExample'
 import { ProductTierManagementExample } from '../../../../src/ui/workflows/ProductTierManagementExample'
 import { buildProduct } from '../../../factories/productFactory'
@@ -88,6 +89,14 @@ describe('Product → Tier → Entitlement → License chain', () => {
 
   test('SUPERUSER happy path with refresh callbacks and suspends/resumes license', async () => {
     const chain = buildProductChain()
+    const tier = { ...chain.tier, vendorId: chain.vendorId }
+    const entitlement: ProductEntitlementListItem = {
+      id: chain.entitlement.id,
+      key: chain.entitlement.key,
+      vendorId: chain.vendorId,
+      string_value: 'enabled',
+      productTiers: [{ id: tier.id, tierCode: tier.tierCode }],
+    }
     const onRefresh = vi.fn()
     const createProductMutation = mockMutation()
     const updateProductMutation = mockMutation()
@@ -172,12 +181,9 @@ describe('Product → Tier → Entitlement → License chain', () => {
       <ProductTierManagementExample
         client={{} as never}
         productId={chain.product.id}
-        tiers={[chain.tier]}
+        tiers={[tier]}
         currentUser={buildUser({ role: 'SUPERUSER', vendorId: chain.vendorId })}
         onRefresh={onRefresh}
-        page={1}
-        totalPages={1}
-        onPageChange={vi.fn()}
       />
     )
 
@@ -208,11 +214,11 @@ describe('Product → Tier → Entitlement → License chain', () => {
     const { unmount: unmountRowActions } = renderWithProviders(
       <ProductTierRowActions
         client={{} as never}
-        tier={chain.tier as never}
+        tier={tier}
         onEdit={vi.fn()}
         onCompleted={onRefresh}
         currentUser={buildUser({ role: 'SUPERUSER', vendorId: chain.vendorId })}
-        vendorId={chain.tier.vendorId}
+        vendorId={chain.vendorId}
       />
     )
 
@@ -245,12 +251,10 @@ describe('Product → Tier → Entitlement → License chain', () => {
       <ProductEntitlementManagementExample
         client={{} as never}
         productId={chain.product.id}
-        entitlements={[chain.entitlement]}
+        entitlements={[entitlement]}
         currentUser={buildUser({ role: 'SUPERUSER', vendorId: chain.vendorId })}
         onRefresh={onRefresh}
-        page={1}
-        totalPages={1}
-        onPageChange={vi.fn()}
+        tierOptions={[{ value: tier.id, label: tier.tierName }]}
       />
     )
 
@@ -261,8 +265,14 @@ describe('Product → Tier → Entitlement → License chain', () => {
     await waitFor(() => {
       expect(screen.getByRole('button', { name: UI_ENTITLEMENT_FORM_SUBMIT_CREATE })).toBeInTheDocument()
     })
+    fireEvent.change(screen.getByRole('textbox', { name: /^Key\b/i }), { target: { value: entitlement.key } })
+    fireEvent.change(screen.getByRole('listbox', { name: /^Tiers\b/i }), { target: { value: tier.id } })
     fireEvent.click(screen.getByRole('button', { name: UI_ENTITLEMENT_FORM_SUBMIT_CREATE }))
-    await waitFor(() => expect(createEntitlementMutation.mutateAsync).toHaveBeenCalled())
+    await waitFor(() =>
+      expect(createEntitlementMutation.mutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({ key: entitlement.key, tier_ids: [tier.id] })
+      )
+    )
 
     await waitFor(() => {
       expect(screen.getByText(chain.entitlement.key)).toBeInTheDocument()

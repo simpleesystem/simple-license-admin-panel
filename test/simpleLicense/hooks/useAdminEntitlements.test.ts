@@ -3,7 +3,7 @@ import { buildEntitlement } from '@test/factories/entitlementFactory'
 import { renderHookWithQueryClient } from '@test/utils/renderHookWithQueryClient'
 import { waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { Client } from '@/simpleLicense'
+import type { Client, CreateEntitlementRequest } from '@/simpleLicense'
 import {
   useCreateEntitlement,
   useDeleteEntitlement,
@@ -73,10 +73,10 @@ describe('useAdminEntitlements hooks', () => {
   describe('useCreateEntitlement', () => {
     it('creates entitlement successfully and invalidates queries', async () => {
       const entitlement = buildEntitlement()
-      const mockRequest = {
+      const mockRequest: CreateEntitlementRequest = {
         key: entitlement.key,
-        valueType: entitlement.valueType,
-        defaultValue: entitlement.defaultValue,
+        string_value: 'enabled',
+        tier_ids: [faker.string.uuid()],
       }
       const mockResponse = { data: entitlement }
       ;(mockClient.createEntitlement as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse)
@@ -102,10 +102,10 @@ describe('useAdminEntitlements hooks', () => {
     })
 
     it('handles create error', async () => {
-      const mockRequest = {
+      const mockRequest: CreateEntitlementRequest = {
         key: faker.word.sample(),
-        valueType: 'string' as const,
-        defaultValue: faker.word.sample(),
+        string_value: faker.word.sample(),
+        tier_ids: [faker.string.uuid()],
       }
       const mockError = new Error('Failed to create entitlement')
       ;(mockClient.createEntitlement as ReturnType<typeof vi.fn>).mockRejectedValue(mockError)
@@ -129,8 +129,7 @@ describe('useAdminEntitlements hooks', () => {
         id: entitlement.id,
         data: {
           key: entitlement.key,
-          valueType: entitlement.valueType,
-          defaultValue: entitlement.defaultValue,
+          number_value: 10,
         },
       }
       const mockResponse = { data: entitlement }
@@ -161,8 +160,7 @@ describe('useAdminEntitlements hooks', () => {
         id: faker.string.uuid(),
         data: {
           key: faker.word.sample(),
-          valueType: 'string' as const,
-          defaultValue: faker.word.sample(),
+          boolean_value: false,
         },
       }
       const mockError = new Error('Failed to update entitlement')
