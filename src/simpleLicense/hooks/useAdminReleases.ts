@@ -10,7 +10,15 @@ import {
 } from '@tanstack/react-query'
 import type { Client } from '../client'
 import type { CreateReleaseResponse, ListReleasesResponse } from '../types/api'
+import type { ReleasePublicationExpected } from '../utils/releasePublicationOperation'
 import { QUERY_KEYS } from './queryKeys'
+
+export type ReleaseMutationTarget =
+  | string
+  | {
+      releaseId: string
+      operation: { operationId: string; expected: ReleasePublicationExpected; scopeFingerprint?: string }
+    }
 
 export interface ListReleasesParams {
   sortBy?: 'version' | 'createdAt'
@@ -38,18 +46,21 @@ export function useAdminReleases(client: Client, productId: string, options?: Us
 export function usePromoteRelease(
   client: Client,
   productId: string,
-  options?: UseMutationOptions<CreateReleaseResponse, Error, string>
+  options?: UseMutationOptions<CreateReleaseResponse, Error, ReleaseMutationTarget>
 ) {
   const queryClient = useQueryClient()
 
-  return useMutation<CreateReleaseResponse, Error, string>({
+  return useMutation<CreateReleaseResponse, Error, ReleaseMutationTarget>({
     mutationFn: async (releaseId) => {
-      return await client.promoteRelease(productId, releaseId)
+      return typeof releaseId === 'string'
+        ? client.promoteRelease(productId, releaseId)
+        : client.promoteRelease(productId, releaseId.releaseId, releaseId.operation)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminReleases.all(productId) })
     },
     ...options,
+    retry: false,
   })
 }
 
@@ -68,23 +79,27 @@ export function useCreateRelease(
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminReleases.all(productId) })
     },
     ...options,
+    retry: false,
   })
 }
 
 export function useDeleteRelease(
   client: Client,
   productId: string,
-  options?: UseMutationOptions<{ success: boolean; data: { id: string } }, Error, string>
+  options?: UseMutationOptions<{ success: boolean; data: { id: string } }, Error, ReleaseMutationTarget>
 ) {
   const queryClient = useQueryClient()
 
-  return useMutation<{ success: boolean; data: { id: string } }, Error, string>({
+  return useMutation<{ success: boolean; data: { id: string } }, Error, ReleaseMutationTarget>({
     mutationFn: async (releaseId) => {
-      return await client.deleteRelease(productId, releaseId)
+      return typeof releaseId === 'string'
+        ? client.deleteRelease(productId, releaseId)
+        : client.deleteRelease(productId, releaseId.releaseId, releaseId.operation)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminReleases.all(productId) })
     },
     ...options,
+    retry: false,
   })
 }

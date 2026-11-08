@@ -26,6 +26,7 @@ export function useBatchSoftDeleteLicenses(client: Client) {
 export function useBatchDeleteReleases(client: Client, productId: string) {
   const queryClient = useContext(QueryClientContext)
   return useMutation<BatchOperationResponse, Error, BatchDeleteReleasesRequest>({
+    retry: false,
     mutationFn: (request) => client.batchDeleteReleases(productId, request),
     onSuccess: () => queryClient?.invalidateQueries({ queryKey: QUERY_KEYS.adminReleases.all(productId) }),
   })

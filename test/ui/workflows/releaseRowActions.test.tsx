@@ -34,6 +34,17 @@ const mockMutation = () => ({
 
 const createMockClient = () => ({
   getToken: vi.fn(() => 'token-1'),
+  prepareReleaseMaintenance: vi.fn(async () => ({
+    id: crypto.randomUUID(),
+    expected: {
+      rowId: 'release-1',
+      revision: 1,
+      state: 'READY',
+      objectBindingFingerprint: 'a'.repeat(64),
+      liveProtectionEpoch: null,
+    },
+    scopeFingerprint: 'b'.repeat(64),
+  })),
 })
 
 describe('ReleaseRowActions', () => {
@@ -127,6 +138,16 @@ describe('ReleaseRowActions', () => {
     render(
       <ReleaseRowActions
         client={createMockClient() as never}
+        release={{
+          id: 'release-1',
+          slug: 'synthetic',
+          version: '1.0.0',
+          fileName: 'release.zip',
+          sizeBytes: 8,
+          isPrerelease: false,
+          isPromoted: false,
+          createdAt: new Date().toISOString(),
+        }}
         productId="product-1"
         releaseId="release-1"
         releaseVersion="1.0.0"

@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker'
 import { buildActivation } from '@test/factories/activationFactory'
 import { buildLicense } from '@test/factories/licenseFactory'
+import { buildRelease } from '@test/factories/releaseFactory'
 import { buildUser } from '@test/factories/userFactory'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
@@ -27,6 +28,12 @@ import {
 } from '@/simpleLicense'
 import { Client } from '@/simpleLicense/client'
 import { AxiosHttpClient } from '@/simpleLicense/http/AxiosHttpClient'
+import {
+  listReleaseOperations,
+  prepareRepairReleaseOperation,
+  type ReleaseOperationRecord,
+  releaseOperationScope,
+} from '@/simpleLicense/utils/releasePublicationOperation'
 
 vi.mock('@/simpleLicense/http/AxiosHttpClient')
 
@@ -43,6 +50,7 @@ describe('Client', () => {
   }
 
   beforeEach(() => {
+    localStorage.clear()
     mockHttpClient = {
       get: vi.fn(),
       post: vi.fn(),
@@ -322,162 +330,566 @@ describe('Client', () => {
     })
   })
 
-  describe('createRelease', () => {
-    it('retries once after unauthorized by refreshing session', async () => {
-      const axiosMock = await import('axios')
-      const refreshedToken = faker.string.alphanumeric(32)
-      const axiosPostSpy = vi.spyOn(axiosMock.default, 'post').mockResolvedValue({
-        data: { success: true, token: refreshedToken },
-        status: 200,
-      })
-
-      const unauthorizedError = new ApiException('Unauthorized', ERROR_CODE_UNAUTHORIZED, { status: HTTP_UNAUTHORIZED })
-      const createdRelease = {
-        id: faker.string.uuid(),
-        slug: faker.helpers.slugify(faker.commerce.productName()).toLowerCase(),
-        version: faker.system.semver(),
-      }
-
-      mockHttpClient.postFormData
-        .mockRejectedValueOnce(unauthorizedError)
-        .mockResolvedValueOnce({ data: { success: true, data: createdRelease }, status: 201 })
-
-      const formData = new FormData()
-      formData.append(RELEASE_UPLOAD_FIELD_NAME, new Blob([faker.lorem.word()]), faker.system.fileName())
-
-      const result = await client.createRelease(faker.string.uuid(), formData)
-
-      expect(result.id).toBe(createdRelease.id)
-      expect(result.slug).toBe(createdRelease.slug)
-      expect(result.version).toBe(createdRelease.version)
-      expect(mockHttpClient.postFormData).toHaveBeenCalledTimes(2)
-      expect(axiosMock.default.post).toHaveBeenCalled()
-      axiosPostSpy.mockRestore()
+  const publicationFixture = () => {
+    const productId = faker.string.uuid()
+    const user = buildUser()
+    const scope = releaseOperationScope('https://api.example.com', user.id, productId)
+    const digest = 'a'.repeat(64)
+    const binding = 'b'.repeat(64)
+    const raw = {
+      id: faker.string.uuid(),
+      slug: 'synthetic-product',
+      version: '1.0.0',
+      file_name: 'synthetic.zip',
+      size_bytes: 8,
+      created_at: faker.date.recent().toISOString(),
+      updated_at: faker.date.recent().toISOString(),
+      is_prerelease: false,
+      is_promoted: false,
+      publication_state: 'READY',
+      publication_revision: 1,
+      object_binding_fingerprint: binding,
+    }
+    const form = new FormData()
+    form.set(RELEASE_UPLOAD_FIELD_NAME, new File(['artifact'], raw.file_name))
+    form.set('version', raw.version)
+    const receipt = (original: ReleaseOperationRecord) => ({
+      scopeFingerprint: original.scopeFingerprint,
+      action: original.action,
+      operationId: original.id,
+      productId,
+      slug: raw.slug,
+      version: raw.version,
+      fileName: raw.file_name,
+      sha256: original.sha256,
+      sizeBytes: original.sizeBytes,
+      metadataFingerprint: original.metadataFingerprint,
+      intentHash: digest,
+      state: 'READY',
+      revision: 4,
+      fence: 1,
+      rowId: raw.id,
+      rowRevision: 1,
+      objectBindingFingerprint: binding,
+      generation: 'synthetic-generation',
+      eligible: true,
+      effect: 'CONFIRMED',
+      reason: 'NONE',
+      nextAction: 'NONE',
     })
+    const response = (original: ReleaseOperationRecord) => ({
+      data: {
+        success: true,
+        data: {
+          ...raw,
+          file_sha256: original.sha256,
+          publication_operation_id:
+            original.action === 'create' || original.action === 'repair-missing' ? original.id : 'original-creator',
+        },
+        publication: receipt(original),
+      },
+      status: 201,
+    })
+    mockHttpClient.get.mockImplementation(async (url: string) => {
+      if (url.endsWith('/users/me')) {
+        return { data: { success: true, data: { user } }, status: 200 }
+      }
+      if (url.includes('/publication-context?')) {
+        return {
+          data: {
+            success: true,
+            context: {
+              productId,
+              slug: raw.slug,
+              version: raw.version,
+              fileName: raw.file_name,
+              actorId: user.id,
+              publisherFingerprint: digest,
+              namespaceFingerprint: digest,
+              key: `releases/${raw.file_name}`,
+              liveProtectionEpoch: null,
+              scopeFingerprint: digest,
+              writeQualified: true,
+              reason: 'NONE',
+            },
+          },
+          status: 200,
+        }
+      }
+      const original = listReleaseOperations(scope).find((record) => url.includes(record.id))
+      if (original) {
+        return { data: { success: true, publication: receipt(original) }, status: 200 }
+      }
+      const retained = listReleaseOperations(scope)[0]
+      return retained
+        ? { data: { success: true, data: [response(retained).data.data] }, status: 200 }
+        : { data: { success: true, data: [] }, status: 200 }
+    })
+    return { productId, raw, form, scope, response, receipt, user }
+  }
 
-    it('throws unauthorized error when refresh fails', async () => {
+  describe('createRelease original-operation contract', () => {
+    it('stops on unauthorized without refresh or another multipart attempt and retains its dispatched ID', async () => {
+      const fixture = publicationFixture()
       const axiosMock = await import('axios')
-      const axiosPostSpy = vi.spyOn(axiosMock.default, 'post').mockRejectedValue(new Error('Refresh failed'))
-
-      const unauthorizedError = new ApiException('Unauthorized', ERROR_CODE_UNAUTHORIZED, { status: HTTP_UNAUTHORIZED })
-      mockHttpClient.postFormData.mockRejectedValueOnce(unauthorizedError)
-
-      const formData = new FormData()
-      formData.append(RELEASE_UPLOAD_FIELD_NAME, new Blob([faker.lorem.word()]), faker.system.fileName())
-
-      await expect(client.createRelease(faker.string.uuid(), formData)).rejects.toThrow(unauthorizedError)
+      const refresh = vi.spyOn(axiosMock.default, 'post')
+      const unauthorized = new ApiException('Unauthorized', ERROR_CODE_UNAUTHORIZED, { status: HTTP_UNAUTHORIZED })
+      mockHttpClient.postFormData.mockRejectedValueOnce(unauthorized)
+      await expect(client.createRelease(fixture.productId, fixture.form)).rejects.toBe(unauthorized)
       expect(mockHttpClient.postFormData).toHaveBeenCalledTimes(1)
-      axiosPostSpy.mockRestore()
+      expect(refresh).not.toHaveBeenCalled()
+      expect(listReleaseOperations(fixture.scope)[0]?.dispatchStarted).toBe(true)
+      refresh.mockRestore()
     })
-
-    it('uses release upload request timeout config', async () => {
-      const createdRelease = {
-        id: faker.string.uuid(),
-        slug: faker.helpers.slugify(faker.commerce.productName()).toLowerCase(),
-        version: faker.system.semver(),
-      }
-      mockHttpClient.postFormData.mockResolvedValue({
-        data: { success: true, data: createdRelease },
-        status: 201,
+    it('freezes file and metadata before asynchronous identity preparation', async () => {
+      const fixture = publicationFixture()
+      let releaseIdentity = () => {}
+      const pending = new Promise<void>((resolve) => {
+        releaseIdentity = resolve
       })
-
-      const formData = new FormData()
-      formData.append(RELEASE_UPLOAD_FIELD_NAME, new Blob([faker.lorem.word()]), faker.system.fileName())
-
-      await client.createRelease(faker.string.uuid(), formData)
-
+      mockHttpClient.get.mockImplementationOnce(async () => {
+        await pending
+        return { data: { success: true, data: { user: fixture.user } }, status: 200 }
+      })
+      mockHttpClient.postFormData.mockImplementation(async (_url: string, form: FormData) => {
+        const original = listReleaseOperations(fixture.scope).find((row) => row.id === form.get('operationId'))
+        if (!original) {
+          throw new Error('Missing frozen intent')
+        }
+        expect(form.get('version')).toBe('1.0.0')
+        const file = form.get('file')
+        if (!(file instanceof File)) {
+          throw new Error('Missing fixture file')
+        }
+        expect(file.name).toBe('synthetic.zip')
+        return fixture.response(original)
+      })
+      const result = client.createRelease(fixture.productId, fixture.form)
+      fixture.form.set('version', '9.9.9')
+      fixture.form.set('file', new File(['different'], 'other.zip'))
+      releaseIdentity()
+      expect((await result).version).toBe('1.0.0')
+      expect(mockHttpClient.postFormData).toHaveBeenCalledTimes(1)
+    })
+    it('serializes only the normalized frozen metadata and rejects duplicate or unsupported input fields', async () => {
+      const fixture = publicationFixture()
+      fixture.form.set('changelogMd', '  exact changelog  ')
+      fixture.form.set('requiredTier', '')
+      fixture.form.set('isPrerelease', '1')
+      const original = await client.prepareReleaseOperation(fixture.productId, fixture.form)
+      mockHttpClient.postFormData.mockResolvedValue(fixture.response(original))
+      await client.createRelease(fixture.productId, fixture.form)
+      const posted = mockHttpClient.postFormData.mock.calls[0]?.[1]
+      if (!(posted instanceof FormData)) {
+        throw new Error('Missing multipart fixture')
+      }
+      expect(posted.get('changelogMd')).toBe('exact changelog')
+      expect(posted.get('requiredTier')).toBe('FREE')
+      expect(posted.get('isPrerelease')).toBe('true')
+      const duplicate = new FormData()
+      duplicate.append('version', '1.0.0')
+      duplicate.append('version', '2.0.0')
+      await expect(client.prepareReleaseOperation(fixture.productId, duplicate)).rejects.toThrow('exactly once')
+      const unsupported = new FormData()
+      unsupported.set('artifactSignature', 'not-supported-by-admin-create')
+      await expect(client.prepareReleaseOperation(fixture.productId, unsupported)).rejects.toThrow('Unsupported Admin')
+    })
+    it('recovers a lost acknowledgement by original status and current row without resending the file', async () => {
+      const fixture = publicationFixture()
+      mockHttpClient.postFormData.mockRejectedValueOnce(new Error('response lost'))
+      await expect(client.createRelease(fixture.productId, fixture.form)).rejects.toThrow('response lost')
+      const original = listReleaseOperations(fixture.scope)[0]
+      expect(original).toBeDefined()
+      const result = await client.createRelease(fixture.productId, fixture.form)
+      expect(result.publication?.operationId).toBe(original?.id)
+      expect(mockHttpClient.postFormData).toHaveBeenCalledTimes(1)
+      expect(mockHttpClient.get).toHaveBeenCalledWith(expect.stringContaining(`/operations/${original?.id}`), {
+        replayPolicy: 'never',
+      })
+    })
+    it('uses finite upload timeout and never-replay policy after durable preparation', async () => {
+      const fixture = publicationFixture()
+      const original = await client.prepareReleaseOperation(fixture.productId, fixture.form)
+      mockHttpClient.postFormData.mockResolvedValue(fixture.response(original))
+      await client.createRelease(fixture.productId, fixture.form)
       expect(mockHttpClient.postFormData).toHaveBeenCalledWith(
         expect.any(String),
         expect.any(FormData),
-        expect.objectContaining({ timeout: RELEASE_UPLOAD_REQUEST_TIMEOUT_MS })
+        expect.objectContaining({ timeout: RELEASE_UPLOAD_REQUEST_TIMEOUT_MS, replayPolicy: 'never' })
       )
     })
-
-    it('normalizes snake_case release payloads from createRelease', async () => {
-      const createdAt = faker.date.recent().toISOString()
-      const updatedAt = faker.date.recent().toISOString()
-      mockHttpClient.postFormData.mockResolvedValue({
-        data: {
-          success: true,
-          data: {
-            id: faker.string.uuid(),
-            slug: faker.helpers.slugify(faker.commerce.productName()).toLowerCase(),
-            version: faker.system.semver(),
-            file_name: faker.system.fileName(),
-            size_bytes: 2048,
-            is_prerelease: false,
-            is_promoted: false,
-            created_at: createdAt,
-            updated_at: updatedAt,
-          },
-        },
-        status: 201,
-      })
-
-      const formData = new FormData()
-      formData.append(RELEASE_UPLOAD_FIELD_NAME, new Blob([faker.lorem.word()]), faker.system.fileName())
-
-      const result = await client.createRelease(faker.string.uuid(), formData)
-
-      expect(result.createdAt).toBe(createdAt)
-      expect(result.updatedAt).toBe(updatedAt)
-      expect(result.fileName).not.toBe('')
-      expect(result.sizeBytes).toBe(2048)
-      expect(result.isPrerelease).toBe(false)
+    it('normalizes snake_case payloads only when they match the exact validated receipt', async () => {
+      const fixture = publicationFixture()
+      const original = await client.prepareReleaseOperation(fixture.productId, fixture.form)
+      mockHttpClient.postFormData.mockResolvedValue(fixture.response(original))
+      const result = await client.createRelease(fixture.productId, fixture.form)
+      expect(result.createdAt).toBe(fixture.raw.created_at)
+      expect(result.updatedAt).toBe(fixture.raw.updated_at)
+      expect(result.fileName).toBe(fixture.raw.file_name)
+      expect(result.sizeBytes).toBe(fixture.raw.size_bytes)
       expect(result.isPromoted).toBe(false)
+    })
+    it('refuses a success payload for a different row even with an otherwise matching receipt', async () => {
+      const fixture = publicationFixture()
+      const original = await client.prepareReleaseOperation(fixture.productId, fixture.form)
+      const response = fixture.response(original)
+      response.data.data.id = faker.string.uuid()
+      mockHttpClient.postFormData.mockResolvedValue(response)
+      await expect(client.createRelease(fixture.productId, fixture.form)).rejects.toThrow('does not match')
     })
   })
 
-  describe('promoteRelease', () => {
-    it('normalizes snake_case release payloads from promoteRelease', async () => {
-      const createdAt = faker.date.recent().toISOString()
-      mockHttpClient.patch.mockResolvedValue({
-        data: {
-          success: true,
-          data: {
-            id: faker.string.uuid(),
-            slug: faker.helpers.slugify(faker.commerce.productName()).toLowerCase(),
-            version: faker.system.semver(),
-            file_name: faker.system.fileName(),
-            size_bytes: 4096,
-            is_prerelease: false,
-            is_promoted: true,
-            created_at: createdAt,
-          },
-        },
-        status: 200,
+  describe('repair and retained upload recovery', () => {
+    const prepare = async () => {
+      const f = publicationFixture()
+      const sha256 = Array.from(
+        new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode('artifact'))),
+        (byte) => byte.toString(16).padStart(2, '0')
+      ).join('')
+      const row = buildRelease({
+        id: f.raw.id,
+        slug: f.raw.slug,
+        version: f.raw.version,
+        fileName: f.raw.file_name,
+        sizeBytes: f.raw.size_bytes,
+        fileSha256: sha256,
+        publicationState: 'READY',
+        publicationRevision: 1,
+        publicationOperationId: 'original-creator',
+        objectBindingFingerprint: 'b'.repeat(64),
+        liveProtectionEpoch: null,
+        artifactTrust: 'SIGNED',
+        artifactManifest: 'retained-manifest',
+        artifactManifestVersion: 1,
+        artifactSignature: 'retained-signature',
+        artifactSignatureAlgorithm: 'Ed25519',
+        artifactSigningKeyId: 'retained-key',
       })
-
-      const result = await client.promoteRelease(faker.string.uuid(), faker.string.uuid())
-
-      expect(result.createdAt).toBe(createdAt)
-      expect(result.isPromoted).toBe(true)
-      expect(result.sizeBytes).toBe(4096)
-      expect(result.fileName).not.toBe('')
+      const context = {
+        productId: f.productId,
+        slug: row.slug,
+        version: row.version,
+        fileName: row.fileName,
+        actorId: f.user.id,
+        publisherFingerprint: 'a'.repeat(64),
+        namespaceFingerprint: 'a'.repeat(64),
+        key: `releases/${row.fileName}`,
+        liveProtectionEpoch: null,
+        scopeFingerprint: 'a'.repeat(64),
+        writeQualified: true,
+        reason: 'NONE',
+      }
+      return { ...f, row, context }
+    }
+    it('repairs exact signed bytes with a separately retained ID and canonical CAS, never forwarding caller metadata', async () => {
+      const f = await prepare()
+      f.form.set('artifactSignature', 'caller-cannot-replace-the-owned-envelope')
+      mockHttpClient.postFormData.mockImplementation(async (_url: string, posted: FormData) => {
+        const original = listReleaseOperations(f.scope).find((record) => record.id === posted.get('operationId'))
+        if (!original) {
+          throw new Error('Missing retained repair')
+        }
+        expect(original.action).toBe('repair-missing')
+        expect(original.metadata?.artifactSignature).toBe(f.row.artifactSignature)
+        expect(posted.get('artifactSignature')).toBeNull()
+        expect(JSON.parse(String(posted.get('expected')))).toEqual(original.expected)
+        expect(original.dispatchStarted).toBe(true)
+        return f.response(original)
+      })
+      const result = await client.repairReleaseMissing(f.productId, f.row, f.form)
+      expect(result.publication?.operationId).toBe(String(f.form.get('operationId')))
+      expect(mockHttpClient.postFormData).toHaveBeenCalledWith(
+        expect.stringContaining(`/${f.row.id}/repair-missing`),
+        expect.any(FormData),
+        { timeout: RELEASE_UPLOAD_REQUEST_TIMEOUT_MS, replayPolicy: 'never' }
+      )
+      await client.repairReleaseMissing(f.productId, f.row, f.form)
+      expect(mockHttpClient.postFormData).toHaveBeenCalledTimes(1)
     })
-
-    it('normalizes numeric created_at values from promoteRelease', async () => {
-      const createdAtEpochSeconds = 1713984000
-      mockHttpClient.patch.mockResolvedValue({
-        data: {
-          success: true,
-          data: {
-            id: faker.string.uuid(),
-            slug: faker.helpers.slugify(faker.commerce.productName()).toLowerCase(),
-            version: faker.system.semver(),
-            file_name: faker.system.fileName(),
-            size_bytes: 512,
-            is_prerelease: false,
-            is_promoted: true,
-            created_at: createdAtEpochSeconds,
-          },
-        },
+    it('keeps lost repair acknowledgement recoverable by original status without another multipart attempt', async () => {
+      const f = await prepare()
+      mockHttpClient.postFormData.mockRejectedValueOnce(new Error('reply lost after dispatch'))
+      await expect(client.repairReleaseMissing(f.productId, f.row, f.form)).rejects.toThrow('reply lost')
+      const original = listReleaseOperations(f.scope)[0]
+      if (!original) {
+        throw new Error('Missing original repair')
+      }
+      const result = await client.resumePreparedReleaseOperation(
+        f.productId,
+        original.id,
+        new File(['replacement'], 'other.zip')
+      )
+      expect(result.publication?.operationId).toBe(original.id)
+      expect(mockHttpClient.postFormData).toHaveBeenCalledTimes(1)
+      expect(listReleaseOperations(f.scope)).toHaveLength(1)
+    })
+    it('resumes an undispatched repair only after reloading the original row and identical artifact', async () => {
+      const f = await prepare()
+      const original = await prepareRepairReleaseOperation(f.scope, f.productId, f.form, f.row, async () => f.context)
+      mockHttpClient.get
+        .mockResolvedValueOnce({ data: { success: true, data: { user: f.user } }, status: 200 })
+        .mockResolvedValueOnce({ data: { success: true, data: [f.row] }, status: 200 })
+      mockHttpClient.postFormData.mockResolvedValue(f.response(original))
+      const result = await client.resumePreparedReleaseOperation(
+        f.productId,
+        original.id,
+        new File(['artifact'], f.row.fileName)
+      )
+      expect(result.publication?.operationId).toBe(original.id)
+      expect(listReleaseOperations(f.scope)).toHaveLength(1)
+      expect(mockHttpClient.postFormData).toHaveBeenCalledTimes(1)
+    })
+    it('refuses a changed repair row after reload without marking or dispatching its original ID', async () => {
+      const f = await prepare()
+      const original = await prepareRepairReleaseOperation(f.scope, f.productId, f.form, f.row, async () => f.context)
+      mockHttpClient.get
+        .mockResolvedValueOnce({ data: { success: true, data: { user: f.user } }, status: 200 })
+        .mockResolvedValueOnce({ data: { success: true, data: [{ ...f.row, publicationRevision: 9 }] }, status: 200 })
+      await expect(
+        client.resumePreparedReleaseOperation(f.productId, original.id, new File(['artifact'], f.row.fileName))
+      ).rejects.toThrow('revision changed')
+      expect(mockHttpClient.postFormData).not.toHaveBeenCalled()
+      expect(listReleaseOperations(f.scope)[0]?.dispatchStarted).not.toBe(true)
+    })
+    it('resumes the same undispatched creation after a reload and refuses changed bytes before POST', async () => {
+      const f = publicationFixture()
+      const original = await client.prepareReleaseOperation(f.productId, f.form)
+      await expect(
+        client.resumePreparedReleaseOperation(f.productId, original.id, new File(['different'], f.raw.file_name))
+      ).rejects.toThrow()
+      expect(mockHttpClient.postFormData).not.toHaveBeenCalled()
+      mockHttpClient.postFormData.mockResolvedValue(f.response(original))
+      expect(
+        (await client.resumePreparedReleaseOperation(f.productId, original.id, new File(['artifact'], f.raw.file_name)))
+          .publication?.operationId
+      ).toBe(original.id)
+      expect(listReleaseOperations(f.scope)).toHaveLength(1)
+    })
+    it('never dispatches a repair for a replacement hash or a changed current principal', async () => {
+      const f = await prepare()
+      const original = await prepareRepairReleaseOperation(f.scope, f.productId, f.form, f.row, async () => f.context)
+      f.form.set('file', new File(['differen'], f.row.fileName))
+      await expect(client.repairReleaseMissing(f.productId, f.row, f.form)).rejects.toThrow()
+      mockHttpClient.get.mockResolvedValueOnce({
+        data: { success: true, data: { user: { ...f.user, id: 'other-principal' } } },
         status: 200,
       })
+      await expect(
+        client.resumePreparedReleaseOperation(f.productId, original.id, new File(['artifact'], f.row.fileName))
+      ).rejects.toThrow()
+      expect(mockHttpClient.postFormData).not.toHaveBeenCalled()
+      expect(listReleaseOperations(f.scope)).toHaveLength(1)
+    })
+  })
 
-      const result = await client.promoteRelease(faker.string.uuid(), faker.string.uuid())
+  describe('release batch original-operation coverage', () => {
+    const prepare = async () => {
+      const fixture = publicationFixture()
+      const row = {
+        id: fixture.raw.id,
+        slug: fixture.raw.slug,
+        version: fixture.raw.version,
+        fileName: fixture.raw.file_name,
+        sizeBytes: fixture.raw.size_bytes,
+        fileSha256: 'a'.repeat(64),
+        isPrerelease: false,
+        isPromoted: false,
+        publicationState: 'READY',
+        publicationRevision: 1,
+        objectBindingFingerprint: 'b'.repeat(64),
+        createdAt: fixture.raw.created_at,
+      }
+      const request = await client.prepareReleaseBatchDelete(fixture.productId, [row])
+      const original = listReleaseOperations(fixture.scope).find(
+        (item) => item.id === request.operations?.[0]?.operationId
+      )
+      if (!original) {
+        throw new Error('Missing retained batch fixture')
+      }
+      const receipt = {
+        ...fixture.receipt(original),
+        state: 'TOMBSTONED',
+        eligible: false,
+        effect: 'OBJECT_RETAINED',
+        rowRevision: 2,
+      }
+      const data = {
+        deletedCount: 1,
+        deleted: [row.id],
+        skipped: [] as Array<{ id: string; reason: string }>,
+        failed: [] as Array<{ id: string; reason: string }>,
+        maxBatchSize: 100,
+        publications: [receipt],
+      }
+      return { ...fixture, request, original, row, receipt, data }
+    }
+    it('sends each retained tuple once and requires a matching tombstone receipt', async () => {
+      const fixture = await prepare()
+      mockHttpClient.post.mockResolvedValue({ data: { success: true, data: fixture.data }, status: 200 })
+      expect((await client.batchDeleteReleases(fixture.productId, fixture.request)).success).toBe(true)
+      expect(mockHttpClient.post).toHaveBeenCalledWith(
+        expect.stringContaining('/releases/batch-delete'),
+        fixture.request,
+        { replayPolicy: 'never' }
+      )
+      await expect(client.batchDeleteReleases(fixture.productId, fixture.request)).rejects.toThrow('already dispatched')
+      expect(mockHttpClient.post).toHaveBeenCalledTimes(1)
+    })
+    it.each([
+      'missing-receipt',
+      'duplicate-receipt',
+      'foreign-receipt',
+      'duplicate-outcome',
+      'wrong-state',
+      'missing-outcome',
+    ])('holds %s instead of claiming overall success', async (kind) => {
+      const fixture = await prepare()
+      const data = fixture.data
+      if (kind === 'missing-receipt') {
+        data.publications = []
+      }
+      if (kind === 'duplicate-receipt') {
+        data.publications.push(fixture.receipt)
+      }
+      if (kind === 'foreign-receipt') {
+        data.publications[0] = { ...fixture.receipt, operationId: crypto.randomUUID() }
+      }
+      if (kind === 'duplicate-outcome') {
+        data.failed.push({ id: fixture.row.id, reason: 'OUTCOME_UNKNOWN' })
+      }
+      if (kind === 'wrong-state') {
+        data.publications[0] = { ...fixture.receipt, state: 'READY', effect: 'CONFIRMED', eligible: true }
+      }
+      if (kind === 'missing-outcome') {
+        data.deleted = []
+        data.deletedCount = 0
+      }
+      mockHttpClient.post.mockResolvedValue({ data: { success: true, data }, status: 200 })
+      await expect(client.batchDeleteReleases(fixture.productId, fixture.request)).rejects.toThrow()
+      expect(
+        listReleaseOperations(fixture.scope).find((item) => item.id === fixture.original.id)?.dispatchStarted
+      ).toBe(true)
+    })
+    it('reports failed or skipped rows as incomplete even when no effect receipt exists', async () => {
+      const fixture = await prepare()
+      const data = {
+        ...fixture.data,
+        deleted: [],
+        deletedCount: 0,
+        publications: [],
+        failed: [{ id: fixture.row.id, reason: 'OUTCOME_UNKNOWN' }],
+      }
+      mockHttpClient.post.mockResolvedValue({ data: { success: true, data }, status: 200 })
+      expect((await client.batchDeleteReleases(fixture.productId, fixture.request)).success).toBe(false)
+    })
+    it('rejects duplicate input before marking or posting any operation', async () => {
+      const fixture = await prepare()
+      const request = {
+        ...fixture.request,
+        releaseIds: [fixture.row.id, fixture.row.id],
+        operations: [...(fixture.request.operations ?? []), ...(fixture.request.operations ?? [])],
+      }
+      await expect(client.batchDeleteReleases(fixture.productId, request)).rejects.toThrow('exactly once')
+      expect(mockHttpClient.post).not.toHaveBeenCalled()
+      expect(
+        listReleaseOperations(fixture.scope).find((item) => item.id === fixture.original.id)?.dispatchStarted
+      ).not.toBe(true)
+    })
+  })
 
-      expect(result.createdAt).toBe(new Date(createdAtEpochSeconds * 1000).toISOString())
+  describe('promoteRelease separate CAS contract', () => {
+    const prepare = async () => {
+      const fixture = publicationFixture()
+      const row = {
+        id: fixture.raw.id,
+        slug: fixture.raw.slug,
+        version: fixture.raw.version,
+        fileName: fixture.raw.file_name,
+        sizeBytes: fixture.raw.size_bytes,
+        fileSha256: 'a'.repeat(64),
+        isPrerelease: false,
+        isPromoted: false,
+        publicationState: 'READY',
+        publicationRevision: 1,
+        objectBindingFingerprint: 'b'.repeat(64),
+        createdAt: fixture.raw.created_at,
+      }
+      const original = await client.prepareReleaseMaintenance(fixture.productId, 'promote', row)
+      const operation = {
+        operationId: original.id,
+        expected: original.expected as NonNullable<typeof original.expected>,
+        scopeFingerprint: original.scopeFingerprint,
+      }
+      return { ...fixture, original, operation }
+    }
+    it('normalizes the matching promoted row and sends exact original CAS without retry', async () => {
+      const fixture = await prepare()
+      const response = fixture.response(fixture.original)
+      response.data.data.is_promoted = true
+      mockHttpClient.patch.mockResolvedValue(response)
+      const result = await client.promoteRelease(fixture.productId, fixture.raw.id, fixture.operation)
+      expect(result.createdAt).toBe(fixture.raw.created_at)
+      expect(result.isPromoted).toBe(true)
+      expect(mockHttpClient.patch).toHaveBeenCalledWith(expect.any(String), fixture.operation, {
+        replayPolicy: 'never',
+      })
+    })
+    it('resumes an undispatched original promotion after reload using its same context and CAS', async () => {
+      const fixture = await prepare()
+      mockHttpClient.get
+        .mockResolvedValueOnce({ data: { success: true, data: { user: fixture.user } }, status: 200 })
+        .mockResolvedValueOnce({
+          data: { success: true, data: [fixture.response(fixture.original).data.data] },
+          status: 200,
+        })
+      const response = fixture.response(fixture.original)
+      response.data.data.is_promoted = true
+      mockHttpClient.patch.mockResolvedValue(response)
+      expect((await client.resumePreparedReleaseMaintenance(fixture.productId, fixture.original.id)).operationId).toBe(
+        fixture.original.id
+      )
+      expect(mockHttpClient.patch).toHaveBeenCalledWith(expect.any(String), fixture.operation, {
+        replayPolicy: 'never',
+      })
+      expect(listReleaseOperations(fixture.scope)).toHaveLength(1)
+      await client.resumePreparedReleaseMaintenance(fixture.productId, fixture.original.id)
+      expect(mockHttpClient.patch).toHaveBeenCalledTimes(1)
+    })
+    it('refuses a stale prepared promotion without dispatch or replacement identity', async () => {
+      const fixture = await prepare()
+      mockHttpClient.get
+        .mockResolvedValueOnce({ data: { success: true, data: { user: fixture.user } }, status: 200 })
+        .mockResolvedValueOnce({
+          data: { success: true, data: [{ ...fixture.response(fixture.original).data.data, publication_revision: 9 }] },
+          status: 200,
+        })
+      await expect(client.resumePreparedReleaseMaintenance(fixture.productId, fixture.original.id)).rejects.toThrow(
+        'precondition changed'
+      )
+      expect(mockHttpClient.patch).not.toHaveBeenCalled()
+      expect(listReleaseOperations(fixture.scope)).toHaveLength(1)
+      expect(listReleaseOperations(fixture.scope)[0]?.dispatchStarted).not.toBe(true)
+    })
+    it('normalizes numeric timestamps only within the validated artifact/row binding', async () => {
+      const fixture = await prepare()
+      const response = fixture.response(fixture.original)
+      const epochSeconds = 1713984000
+      mockHttpClient.patch.mockResolvedValue({
+        ...response,
+        data: { ...response.data, data: { ...response.data.data, created_at: epochSeconds } },
+      })
+      const result = await client.promoteRelease(fixture.productId, fixture.raw.id, fixture.operation)
+      expect(result.createdAt).toBe(new Date(epochSeconds * 1000).toISOString())
+    })
+    it('refuses a changed displayed revision before any mutation', async () => {
+      const fixture = await prepare()
+      await expect(
+        client.promoteRelease(fixture.productId, fixture.raw.id, {
+          ...fixture.operation,
+          expected: { ...fixture.operation.expected, revision: 2 },
+        })
+      ).rejects.toThrow('intent changed')
+      expect(mockHttpClient.patch).not.toHaveBeenCalled()
     })
   })
 

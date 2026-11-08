@@ -1,10 +1,13 @@
 import { faker } from '@faker-js/faker'
 import type { ProductTier } from '@/simpleLicense'
 
-export type TestProductTier = ProductTier & { vendorId?: string | null }
+export type TestProductTier = ProductTier & { vendorId?: string | null; metadata?: Record<string, unknown> }
 
 export const buildProductTier = (overrides?: Partial<TestProductTier>): TestProductTier => ({
   id: faker.string.uuid(),
+  productId: faker.string.uuid(),
+  isActive: true,
+  doesNotExpire: false,
   tierName: faker.commerce.productAdjective(),
   tierCode: faker.string.alphanumeric({ length: 6 }).toUpperCase(),
   description: faker.commerce.productDescription(),

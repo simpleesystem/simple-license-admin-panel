@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Button from 'react-bootstrap/Button'
-
 import type { Client } from '@/simpleLicense'
+import type { PluginRelease } from '@/simpleLicense/types/api'
 import { NOTIFICATION_EVENT_TOAST, NOTIFICATION_VARIANT_ERROR } from '../../app/constants'
 import { useNotificationBus } from '../../notifications/useNotificationBus'
 
@@ -37,6 +37,7 @@ import { ModalDialog } from '../overlay/ModalDialog'
 
 type ReleaseRowActionsProps = {
   client: Client
+  release?: PluginRelease
   productId: string
   releaseId: string
   releaseVersion: string
@@ -53,6 +54,7 @@ const UI_RELEASE_PROMOTE_ERROR_GENERIC = 'Unable to set this release live right 
 
 export function ReleaseRowActions({
   client,
+  release,
   productId,
   releaseId,
   releaseVersion,
@@ -68,6 +70,9 @@ export function ReleaseRowActions({
   const [showPromoteConfirm, setShowPromoteConfirm] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
+  const [repairFile, setRepairFile] = useState<File | null>(null)
+  const [isRepairing, setIsRepairing] = useState(false)
+  const [repairForm] = useState(() => new FormData())
   const notificationBus = useNotificationBus()
 
   const showPromoteButton = allowPromote && !isPromoted
@@ -77,30 +82,78 @@ export function ReleaseRowActions({
     return null
   }
 
-  const handleConfirmPromote = () => {
-    promoteMutation.mutate(releaseId, {
-      onSuccess: () => {
-        setShowPromoteConfirm(false)
-        onCompleted?.()
+  const handleConfirmPromote = async () => {
+    if (!release) {
+      notifyDownloadError('Refresh the displayed release before choosing its exact revision.')
+      return
+    }
+    let retained: Awaited<ReturnType<Client['prepareReleaseMaintenance']>>
+    try {
+      retained = await client.prepareReleaseMaintenance(productId, 'promote', release)
+    } catch (error) {
+      notifyDownloadError(error instanceof Error ? error.message : UI_RELEASE_PROMOTE_ERROR_GENERIC)
+      return
+    }
+    if (!retained.expected) {
+      return
+    }
+    promoteMutation.mutate(
+      {
+        releaseId,
+        operation: {
+          operationId: retained.id,
+          expected: retained.expected,
+          scopeFingerprint: retained.scopeFingerprint,
+        },
       },
-      onError: (error) => {
-        const message = error instanceof Error ? error.message : UI_RELEASE_PROMOTE_ERROR_GENERIC
-        const normalizedMessage =
-          message === 'Release file is missing'
-            ? UI_RELEASE_PROMOTE_ERROR_MISSING
-            : message || UI_RELEASE_PROMOTE_ERROR_GENERIC
-        notifyDownloadError(normalizedMessage)
-      },
-    })
+      {
+        onSuccess: () => {
+          setShowPromoteConfirm(false)
+          onCompleted?.()
+        },
+        onError: (error) => {
+          const message = error instanceof Error ? error.message : UI_RELEASE_PROMOTE_ERROR_GENERIC
+          const normalizedMessage =
+            message === 'Release file is missing'
+              ? UI_RELEASE_PROMOTE_ERROR_MISSING
+              : message || UI_RELEASE_PROMOTE_ERROR_GENERIC
+          notifyDownloadError(normalizedMessage)
+        },
+      }
+    )
   }
 
-  const handleConfirmDelete = () => {
-    deleteMutation.mutate(releaseId, {
-      onSuccess: () => {
-        setShowDeleteConfirm(false)
-        onCompleted?.()
+  const handleConfirmDelete = async () => {
+    if (!release) {
+      notifyDownloadError('Refresh the displayed release before choosing its exact revision.')
+      return
+    }
+    let retained: Awaited<ReturnType<Client['prepareReleaseMaintenance']>>
+    try {
+      retained = await client.prepareReleaseMaintenance(productId, 'delete', release)
+    } catch (error) {
+      notifyDownloadError(error instanceof Error ? error.message : 'Unable to prepare the retained delete operation.')
+      return
+    }
+    if (!retained.expected) {
+      return
+    }
+    deleteMutation.mutate(
+      {
+        releaseId,
+        operation: {
+          operationId: retained.id,
+          expected: retained.expected,
+          scopeFingerprint: retained.scopeFingerprint,
+        },
       },
-    })
+      {
+        onSuccess: () => {
+          setShowDeleteConfirm(false)
+          onCompleted?.()
+        },
+      }
+    )
   }
 
   const notifyDownloadError = (message: string) => {
@@ -109,6 +162,27 @@ export function ReleaseRowActions({
       message,
       variant: NOTIFICATION_VARIANT_ERROR,
     })
+  }
+
+  const repairMissing = async () => {
+    if (!release || !repairFile || isRepairing) {
+      return
+    }
+    setIsRepairing(true)
+    repairForm.set('file', repairFile)
+    try {
+      const result = await client.repairReleaseMissing(productId, release, repairForm)
+      if (!result.publication?.eligible) {
+        notifyDownloadError('Repair recorded; current download eligibility remains held. Check its retained operation.')
+      }
+      onCompleted?.()
+    } catch (error) {
+      notifyDownloadError(
+        `${error instanceof Error ? error.message : 'Repair outcome is unresolved.'} Original operation: ${String(repairForm.get('operationId') ?? 'not dispatched')}`
+      )
+    } finally {
+      setIsRepairing(false)
+    }
   }
 
   const parseDownloadErrorMessage = async (response: Response): Promise<string> => {
@@ -199,6 +273,32 @@ export function ReleaseRowActions({
         >
           {deleteMutation.isPending ? UI_RELEASE_ACTION_DELETING : UI_RELEASE_ACTION_DELETE}
         </Button>
+      ) : null}
+
+      {allowPromote && release?.publicationState === 'READY' && release.publicationOperationId ? (
+        <details>
+          <summary>Repair missing artifact</summary>
+          <p>
+            Select the identical retained ZIP for this displayed revision. Existing or ambiguous objects are preserved.
+          </p>
+          <input
+            type="file"
+            accept=".zip"
+            aria-label={`Identical repair ZIP ${releaseVersion}`}
+            disabled={isRepairing}
+            onChange={(event) => setRepairFile(event.currentTarget.files?.[0] ?? null)}
+          />
+          <Button
+            size="sm"
+            variant="outline-secondary"
+            disabled={!repairFile || isRepairing}
+            onClick={() => {
+              void repairMissing()
+            }}
+          >
+            Repair missing artifact
+          </Button>
+        </details>
       ) : null}
 
       <ModalDialog

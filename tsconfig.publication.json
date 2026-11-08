@@ -1,0 +1,33 @@
+{
+  "extends": "./tsconfig.vitest.json",
+  "compilerOptions": {
+    "composite": false,
+    "incremental": false,
+    "moduleResolution": "bundler",
+    "types": ["node", "vitest/globals", "@testing-library/jest-dom", "vite/client"],
+    "typeRoots": ["./node_modules", "./node_modules/@types"],
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noUncheckedIndexedAccess": true
+  },
+  "include": [
+    "src/**/*",
+    "vite.config.ts",
+    "vitest.config.ts",
+    "test/simpleLicense/releasePublicationOperation.test.ts",
+    "test/simpleLicense/client.test.ts",
+    "test/simpleLicense/axiosHttpClient.test.ts",
+    "test/simpleLicense/hooks/useAdminReleases.test.ts",
+    "test/ui/workflows/releaseFormFlow.test.tsx",
+    "test/ui/workflows/releaseRowActions.test.tsx",
+    "test/ui/data/tableBatchBus/releasePublicationActions.test.tsx",
+    "test/factories/releaseFactory.ts",
+    "test/factories/activationFactory.ts",
+    "test/app/errors/appErrors.test.ts",
+    "test/app/logging/logger.test.ts",
+    "test/app/state/themeStorage.test.ts"
+  ],
+  "exclude": ["node_modules"],
+  "references": []
+}

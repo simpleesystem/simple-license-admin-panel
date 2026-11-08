@@ -66,7 +66,7 @@ const VALIDATION_CODES = new Set<string>([ERROR_CODE_VALIDATION_ERROR, ERROR_COD
 const sanitizeMessage = (message: string): string => {
   // If the message contains a stack trace (looks like file paths or 'at ...'), truncate it
   if (message.includes('\n    at ') || message.length > 200) {
-    return message.split('\n')[0].substring(0, 200)
+    return (message.split('\n')[0] ?? '').substring(0, 200)
   }
   return message
 }
