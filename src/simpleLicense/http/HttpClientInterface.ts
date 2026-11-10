@@ -25,6 +25,9 @@ export interface HttpResponse<T = Record<string, never>> {
 }
 
 export interface HttpRequestConfig {
+  /** Internal control: original-operation requests never enter refresh/replay or transport retry queues. */
+  replayPolicy?: 'never'
+  data?: HttpData
   headers?: Record<string, string>
   timeout?: number
   signal?: AbortSignal

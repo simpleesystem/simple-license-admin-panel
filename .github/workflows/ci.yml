@@ -34,6 +34,9 @@ jobs:
       - name: Type check
         run: npm run type-check
 
+      - name: Compile complete publication test and helper closure
+        run: node_modules/.bin/tsc --noEmit --project tsconfig.publication.json
+
       - name: Build
         run: npm run build
 

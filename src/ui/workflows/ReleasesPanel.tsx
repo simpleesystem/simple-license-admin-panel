@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import Button from 'react-bootstrap/Button'
-
 import type { Client, PluginRelease } from '@/simpleLicense'
 import {
   UI_BADGE_VARIANT_SUCCESS,
@@ -62,6 +61,7 @@ import { BadgeText } from '../typography/BadgeText'
 import { EmptyState } from '../typography/EmptyState'
 import { formatBytes, formatDateTimeSafe } from '../utils/formatUtils'
 import { ReleaseFormFlow } from './ReleaseFormFlow'
+import { ReleaseOperationRecovery } from './ReleaseOperationRecovery'
 import { ReleaseRowActions } from './ReleaseRowActions'
 
 export type ReleaseListItem = PluginRelease
@@ -258,6 +258,7 @@ export function ReleasesPanel({
           return (
             <ReleaseRowActions
               client={client}
+              release={row}
               productId={selectedProductId}
               releaseId={row.id}
               releaseVersion={row.version}
@@ -307,6 +308,7 @@ export function ReleasesPanel({
 
   return (
     <Stack direction="column" gap={UI_STACK_GAP_MEDIUM}>
+      <ReleaseOperationRecovery client={client} productId={selectedProductId} />
       {showPanelHeader ? (
         <PanelHeader title={UI_RELEASE_PANEL_TITLE} description={UI_RELEASE_PANEL_DESCRIPTION} />
       ) : null}

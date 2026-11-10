@@ -168,9 +168,8 @@ export function useBuildTableBatchActions<TData, TTableId extends TableBatchTabl
         cancelLabel: UI_RELEASE_MODAL_CANCEL,
         onExecute: async (rows) => {
           const releases = rows as readonly ReleaseListItem[]
-          const result = await sharedClient.batchDeleteReleases(productId, {
-            releaseIds: releases.map((row) => row.id),
-          })
+          const original = await sharedClient.prepareReleaseBatchDelete(productId, [...releases])
+          const result = await sharedClient.batchDeleteReleases(productId, original)
           notifyBatchOperationResult(notificationBus, result, UI_RELEASE_BATCH_TOAST_SUCCESS)
           releaseContext.onRefresh?.()
         },

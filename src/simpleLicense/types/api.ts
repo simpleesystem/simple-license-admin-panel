@@ -707,6 +707,11 @@ export interface BatchSoftDeleteLicensesRequest {
 
 export interface BatchDeleteReleasesRequest {
   releaseIds: string[]
+  operations?: Array<{
+    operationId: string
+    expected: import('../utils/releasePublicationOperation').ReleasePublicationExpected
+    scopeFingerprint?: string
+  }>
 }
 
 export interface BatchDeleteProductsRequest {
@@ -938,6 +943,20 @@ export interface FreezeLicenseResponse {
 
 // Plugin release (admin releases for product)
 export interface PluginRelease {
+  artifactManifest?: string | null
+  artifactManifestVersion?: number | null
+  artifactSignature?: string | null
+  artifactSignatureAlgorithm?: string | null
+  artifactSigningKeyId?: string | null
+  artifactTrust?: string
+
+  fileSha256?: string | null
+  publicationState?: string
+  publicationRevision?: number
+  publicationOperationId?: string | null
+  objectBindingFingerprint?: string | null
+  liveProtectionEpoch?: string | null
+  publication?: import('../utils/releasePublicationOperation').ReleasePublicationReceipt
   id: string
   slug: string
   version: string

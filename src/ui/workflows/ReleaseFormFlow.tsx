@@ -70,7 +70,13 @@ export function ReleaseFormFlow({ client, productId, show, onClose, onSuccess, o
     }
     formData.append('isPrerelease', String(isPrerelease))
     createReleaseMutation.mutate(formData, {
-      onSuccess: () => {
+      onSuccess: (result) => {
+        if (!result.publication?.eligible) {
+          setErrorMessage(
+            'Recorded, currently unavailable for downloads. Check the retained operation and existing trust requirements.'
+          )
+          return
+        }
         resetForm()
         onClose()
         onSuccess?.()
@@ -83,7 +89,14 @@ export function ReleaseFormFlow({ client, productId, show, onClose, onSuccess, o
             ? error.errorCode
             : ''
         setErrorMessage(nextMessage)
-        setErrorHint(errorCode === ERROR_CODE_UPLOAD_TIMEOUT ? UI_RELEASE_FORM_ERROR_TIMEOUT_HINT : null)
+        const operationId = formData.get('operationId')
+        setErrorHint(
+          typeof operationId === 'string'
+            ? `Original operation ${operationId}. Use Retained release operations to check status.`
+            : errorCode === ERROR_CODE_UPLOAD_TIMEOUT
+              ? UI_RELEASE_FORM_ERROR_TIMEOUT_HINT
+              : null
+        )
         onError?.()
       },
     })

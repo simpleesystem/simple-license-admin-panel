@@ -4,6 +4,7 @@ import { renderHookWithQueryClient } from '@test/utils/renderHookWithQueryClient
 import { waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Client } from '@/simpleLicense'
+import { useBatchDeleteReleases } from '@/simpleLicense/hooks/useAdminBatch'
 import {
   useAdminReleases,
   useCreateRelease,
@@ -22,6 +23,30 @@ describe('useAdminReleases hooks', () => {
       promoteRelease: vi.fn(),
       deleteRelease: vi.fn(),
     } as unknown as Client
+  })
+
+  it('does not inherit or accept upload mutation replay after response loss', async () => {
+    const { QueryClient } = await import('@tanstack/react-query')
+    const queryClient = new QueryClient({ defaultOptions: { mutations: { retry: 2, retryDelay: 0 } } })
+    const lost = new Error('Original upload acknowledgement lost')
+    vi.mocked(mockClient.createRelease).mockRejectedValue(lost)
+    const { result } = renderHookWithQueryClient(() => useCreateRelease(mockClient, mockProductId, { retry: 5 }), {
+      queryClient,
+    })
+    await expect(result.current.mutateAsync(new FormData())).rejects.toBe(lost)
+    expect(mockClient.createRelease).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not inherit release batch mutation replay after an authorization refusal', async () => {
+    const { QueryClient } = await import('@tanstack/react-query')
+    const queryClient = new QueryClient({ defaultOptions: { mutations: { retry: 2, retryDelay: 0 } } })
+    const batch = vi.fn().mockRejectedValue(new Error('Original scope expired'))
+    mockClient.batchDeleteReleases = batch
+    const { result } = renderHookWithQueryClient(() => useBatchDeleteReleases(mockClient, mockProductId), {
+      queryClient,
+    })
+    await expect(result.current.mutateAsync({ releaseIds: [faker.string.uuid()] })).rejects.toThrow()
+    expect(batch).toHaveBeenCalledTimes(1)
   })
 
   describe('useAdminReleases', () => {

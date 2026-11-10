@@ -1,7 +1,10 @@
 import { faker } from '@faker-js/faker'
-import type { ProductEntitlementListItem } from '../../src/ui/workflows/ProductEntitlementRowActions'
+import type { ProductEntitlementSummary } from '../../src/ui/workflows/ProductEntitlementRowActions'
 
-export type TestEntitlement = ProductEntitlementListItem & {
+// Legacy mock wire data is intentionally distinct from current UI rows, which forbid these deprecated fields.
+export type TestEntitlement = ProductEntitlementSummary & {
+  productId?: string
+  vendorId?: string | null
   id: string
   key: string
   createdAt: string

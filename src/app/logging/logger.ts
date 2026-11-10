@@ -67,7 +67,8 @@ export type LoggerOptions = {
 }
 
 export const createAppLogger = (config: AppConfig, options?: LoggerOptions): Logger => {
-  const transports: Logger[] = [createConsoleLogger()]
+  const consoleLogger = createConsoleLogger()
+  const transports: Logger[] = [consoleLogger]
   const shouldEnableSentry = options?.enableSentry ?? import.meta.env.MODE !== 'test'
 
   if (config.sentryDsn && shouldEnableSentry) {
@@ -75,7 +76,7 @@ export const createAppLogger = (config: AppConfig, options?: LoggerOptions): Log
   }
 
   if (transports.length === 1) {
-    return transports[0]
+    return consoleLogger
   }
 
   return createCompositeLogger(transports)

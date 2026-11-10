@@ -39,6 +39,7 @@ import { extractHeaderString, getHeaderString, normalizeTelemetry } from './tele
 const DEFAULT_METHOD = 'GET'
 
 type AxiosRequestConfigWithMeta = AxiosRequestConfig & {
+  replayPolicy?: 'never'
   metadata?: {
     start: number
     requestId: string
@@ -196,6 +197,9 @@ export class AxiosHttpClient implements HttpClientInterface {
     error: AxiosError,
     originalRequest: RetriableUnauthorizedRequest
   ): boolean {
+    if (originalRequest?.replayPolicy === 'never') {
+      return false
+    }
     if (!this.isRefreshableAuthFailure(error)) {
       return false
     }
@@ -398,10 +402,11 @@ export class AxiosHttpClient implements HttpClientInterface {
         }
       : undefined
 
-    return this.executeWithRetry('get', async () => {
+    const execute = async () => {
       const response = await this.axiosInstance.get<T>(url, axiosConfig)
       return this.toHttpResponse(response)
-    })
+    }
+    return config?.replayPolicy === 'never' ? execute() : this.executeWithRetry('get', execute)
   }
 
   async post<T = Record<string, never>>(

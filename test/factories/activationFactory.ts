@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker'
 import type { LicenseActivation } from '@/simpleLicense'
 
-const ACTIVATION_STATUSES: LicenseActivation['status'][] = ['ACTIVE', 'SUSPENDED', 'REVOKED']
+const ACTIVATION_STATUSES: LicenseActivation['status'][] = ['ACTIVE', 'SUSPENDED', 'INACTIVE']
 
 export const buildActivation = (overrides?: Partial<LicenseActivation>): LicenseActivation => ({
   id: faker.string.uuid(),

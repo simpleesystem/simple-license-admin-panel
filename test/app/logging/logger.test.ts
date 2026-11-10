@@ -13,11 +13,16 @@ vi.mock('../../../src/app/logging/sentryLogger', () => ({
 }))
 
 import type { AppConfig } from '../../../src/app/config/appConfig'
+import { APP_HTTP_RETRY_ATTEMPTS, APP_HTTP_RETRY_DELAY_MS, APP_HTTP_TIMEOUT_MS } from '../../../src/app/constants'
 import { createAppLogger, createNoopLogger } from '../../../src/app/logging/logger'
 
 const baseConfig: AppConfig = {
   apiBaseUrl: 'https://api.example.com',
   sentryDsn: null,
+  authForgotPasswordUrl: null,
+  httpTimeoutMs: APP_HTTP_TIMEOUT_MS,
+  httpRetryAttempts: APP_HTTP_RETRY_ATTEMPTS,
+  httpRetryDelayMs: APP_HTTP_RETRY_DELAY_MS,
   features: {
     enableDevTools: false,
     enableExperimentalFilters: false,

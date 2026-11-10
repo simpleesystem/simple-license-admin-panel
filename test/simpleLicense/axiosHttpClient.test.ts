@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
-
+import { HttpResponse, http } from 'msw'
+import { describe, expect, it, vi } from 'vitest'
 import {
   ERROR_CODE_AUTHENTICATION_ERROR,
   ERROR_CODE_INVALID_TOKEN,
@@ -9,6 +9,7 @@ import {
 } from '../../src/simpleLicense/constants'
 import { ApiException } from '../../src/simpleLicense/exceptions/ApiException'
 import { AxiosHttpClient } from '../../src/simpleLicense/http/AxiosHttpClient'
+import { server } from '../msw/server'
 
 type RetryProbe = {
   shouldRetry: (error: unknown, isIdempotent: boolean, attempt: number) => boolean
@@ -163,5 +164,79 @@ describe('AxiosHttpClient retry behavior', () => {
     )
 
     expect(shouldHandle).toBe(false)
+  })
+})
+
+// These use the actual Axios adapter and intercepted HTTP, not private retry probes.
+describe('Publication transport one-attempt boundary', () => {
+  const origin = 'https://publication.invalid'
+  it.each([401, 403, 503])('never refreshes or replays publication JSON after HTTP %s', async (status) => {
+    let posts = 0
+    const refresh = vi.fn(async () => 'replacement-token')
+    server.use(
+      http.post(`${origin}/promote`, async ({ request }) => {
+        posts += 1
+        expect(await request.json()).toEqual({ operationId: 'original-operation', expected: { revision: 7 } })
+        return HttpResponse.json({ success: false, error: { code: 'INVALID_TOKEN', message: 'held' } }, { status })
+      })
+    )
+    const client = new AxiosHttpClient(origin, undefined, {
+      retryAttempts: 3,
+      retryDelayMs: 0,
+      onRefreshToken: refresh,
+    })
+    await expect(
+      client.post(
+        '/promote',
+        { operationId: 'original-operation', expected: { revision: 7 } },
+        { replayPolicy: 'never' }
+      )
+    ).rejects.toThrow()
+    expect(posts).toBe(1)
+    expect(refresh).not.toHaveBeenCalled()
+  })
+  it.each([401, 503])('sends multipart bytes and original nonce once after HTTP %s', async (status) => {
+    let posts = 0
+    const refresh = vi.fn(async () => 'replacement-token')
+    server.use(
+      http.post(`${origin}/register`, async ({ request }) => {
+        posts += 1
+        const form = await request.formData()
+        expect(form.get('operation_id')).toBe('retained-operation')
+        expect(form.get('scope_fingerprint')).toBe('a'.repeat(64))
+        const file = form.get('file')
+        expect(file && typeof file !== 'string' ? file.name : null).toBe('retained.zip')
+        expect(file && typeof file !== 'string' ? await file.text() : null).toBe('original bytes')
+        return HttpResponse.json({ success: false, error: { code: 'INVALID_TOKEN', message: 'held' } }, { status })
+      })
+    )
+    const form = new FormData()
+    form.set('operation_id', 'retained-operation')
+    form.set('scope_fingerprint', 'a'.repeat(64))
+    form.set('file', new File(['original bytes'], 'retained.zip'))
+    const client = new AxiosHttpClient(origin, undefined, {
+      retryAttempts: 3,
+      retryDelayMs: 0,
+      onRefreshToken: refresh,
+    })
+    await expect(client.postFormData('/register', form, { replayPolicy: 'never' })).rejects.toThrow()
+    expect(posts).toBe(1)
+    expect(refresh).not.toHaveBeenCalled()
+  })
+  it('preserves the existing single refresh for unrelated JSON requests', async () => {
+    let posts = 0
+    const refresh = vi.fn(async () => 'replacement-token')
+    server.use(
+      http.post(`${origin}/unrelated`, ({ request }) => {
+        posts += 1
+        return request.headers.get('authorization') === 'Bearer replacement-token'
+          ? HttpResponse.json({ success: true })
+          : HttpResponse.json({ error: { code: 'INVALID_TOKEN' } }, { status: 401 })
+      })
+    )
+    const client = new AxiosHttpClient(origin, undefined, { onRefreshToken: refresh })
+    expect((await client.post('/unrelated', { sample: true })).status).toBe(200)
+    expect(posts).toBe(2)
+    expect(refresh).toHaveBeenCalledTimes(1)
   })
 })

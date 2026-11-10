@@ -99,7 +99,6 @@ import {
   ERROR_CODE_LICENSE_EXPIRED,
   ERROR_CODE_LICENSE_NOT_FOUND,
   ERROR_MESSAGE_ACCESS_BOOTSTRAP_FAILED,
-  HTTP_UNAUTHORIZED,
   RELEASE_UPLOAD_REQUEST_TIMEOUT_MS,
 } from './constants'
 import {
@@ -118,7 +117,7 @@ import {
   LicenseNotFoundException,
 } from './exceptions/ApiException'
 import { AxiosHttpClient } from './http/AxiosHttpClient'
-import type { HttpClientInterface, HttpRequestConfig } from './http/HttpClientInterface'
+import type { HttpClientInterface } from './http/HttpClientInterface'
 import type {
   ActionSuccessResponse,
   ActivateLicenseRequest,
@@ -238,6 +237,22 @@ import type {
   ValidationError,
 } from './types/api'
 import type { ProductTier, User } from './types/license'
+import type {
+  ReleaseOperationRecord,
+  ReleasePublicationExpected,
+  ReleasePublicationReceipt,
+} from './utils/releasePublicationOperation'
+import {
+  findReleaseOperation,
+  listReleaseOperations,
+  persistReleaseOperation,
+  prepareCreateReleaseOperation,
+  prepareReleaseMaintenance,
+  prepareRepairReleaseOperation,
+  releaseOperationScope,
+  validatePublicationReceipt,
+  verifyPreparedMaintenanceContext,
+} from './utils/releasePublicationOperation'
 
 export type ClientOptions = {
   accessBootstrapBaseUrl?: string
@@ -716,17 +731,134 @@ export class Client {
     return { success: true, data }
   }
 
-  async batchDeleteReleases(productId: string, request: BatchDeleteReleasesRequest): Promise<BatchOperationResponse> {
-    const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}${API_ENDPOINT_ADMIN_RELEASES_BATCH_DELETE_SUFFIX}`
-    const response = await this.httpClient.post<ApiResponse<BatchOperationResultData>>(url, request)
-    const data = this.handleApiResponse<BatchOperationResultData>(response.data, {
-      deletedCount: 0,
-      deleted: [],
-      skipped: [],
-      failed: [],
-      maxBatchSize: 0,
+  async prepareReleaseBatchDelete(
+    productId: string,
+    inputRows: ListReleasesResponse
+  ): Promise<BatchDeleteReleasesRequest> {
+    const rows = inputRows.map((row) => ({ ...row }))
+    const operations = []
+    for (const row of rows) {
+      const original = await this.prepareReleaseMaintenance(productId, 'delete', row)
+      if (!original.expected) {
+        throw new Error('The retained delete precondition is missing.')
+      }
+      operations.push({
+        operationId: original.id,
+        expected: original.expected,
+        scopeFingerprint: original.scopeFingerprint,
+      })
+    }
+    return { releaseIds: rows.map((row) => row.id), operations }
+  }
+
+  async batchDeleteReleases(
+    productId: string,
+    inputRequest: BatchDeleteReleasesRequest
+  ): Promise<BatchOperationResponse> {
+    const request: BatchDeleteReleasesRequest = {
+      releaseIds: [...inputRequest.releaseIds],
+      ...(inputRequest.operations
+        ? {
+            operations: inputRequest.operations.map((operation) => ({
+              ...operation,
+              expected: { ...operation.expected },
+            })),
+          }
+        : {}),
+    }
+    const scope = await this.publicationScope(productId)
+    if (
+      !request.operations ||
+      request.releaseIds.length === 0 ||
+      request.releaseIds.length > 100 ||
+      request.operations.length !== request.releaseIds.length
+    ) {
+      throw new Error('Every batch row requires its displayed revision and original delete operation.')
+    }
+    if (
+      new Set(request.releaseIds).size !== request.releaseIds.length ||
+      new Set(request.operations.map((operation) => operation.operationId)).size !== request.operations.length ||
+      new Set(request.operations.map((operation) => operation.expected.rowId)).size !== request.releaseIds.length
+    ) {
+      throw new Error('The batch must cover each displayed row exactly once.')
+    }
+    const originals = request.operations.map((operation) => {
+      const original = findReleaseOperation(scope, operation.operationId)
+      if (
+        !request.releaseIds.includes(operation.expected.rowId) ||
+        original.scopeFingerprint !== operation.scopeFingerprint ||
+        original.action !== 'delete' ||
+        JSON.stringify(original.expected) !== JSON.stringify(operation.expected)
+      ) {
+        throw new Error('The retained batch intent changed. Check its original operation.')
+      }
+      return original
     })
-    return { success: true, data }
+    if (originals.some((original) => original.dispatchStarted)) {
+      // Do not replay a partially executed batch; each retained row has an independent status route.
+      await Promise.all(
+        originals
+          .filter((original) => original.dispatchStarted)
+          .map((original) => this.getReleaseOperationStatus(productId, original.id))
+      )
+      throw new Error(
+        'This batch was already dispatched. Check its original per-row operations; it was not sent again.'
+      )
+    }
+    for (const original of originals) {
+      persistReleaseOperation({ ...original, dispatchStarted: true })
+    }
+    const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}${API_ENDPOINT_ADMIN_RELEASES_BATCH_DELETE_SUFFIX}`
+    const response = await this.httpClient.post<unknown>(url, request, { replayPolicy: 'never' })
+    const data = this.handleApiResponse<BatchOperationResultData & { publications?: unknown[] }>(response.data)
+    if (
+      !Array.isArray(data.publications) ||
+      !Array.isArray(data.deleted) ||
+      !Array.isArray(data.skipped) ||
+      !Array.isArray(data.failed) ||
+      !Number.isInteger(data.deletedCount) ||
+      !Number.isInteger(data.maxBatchSize) ||
+      data.maxBatchSize < request.releaseIds.length ||
+      data.maxBatchSize > 100 ||
+      data.deleted.some((id) => typeof id !== 'string') ||
+      [...data.skipped, ...data.failed].some(
+        (item) => !item || typeof item.id !== 'string' || typeof item.reason !== 'string'
+      )
+    ) {
+      throw new Error('The batch outcome is unresolved. Check each original operation.')
+    }
+    const seen = new Set<string>()
+    for (const value of data.publications) {
+      const operationId = value && typeof value === 'object' && 'operationId' in value ? value.operationId : null
+      const original = originals.find((row) => row.id === operationId)
+      if (!original || seen.has(original.id)) {
+        throw new Error('The batch receipt does not match its original operations.')
+      }
+      seen.add(original.id)
+      const receipt = validatePublicationReceipt({ success: true, publication: value }, original)
+      if (
+        data.deleted.includes(String(original.expected?.rowId)) &&
+        (receipt.state !== 'TOMBSTONED' || receipt.effect !== 'OBJECT_RETAINED' || receipt.eligible)
+      ) {
+        throw new Error('A reported deletion lacks its retained tombstone receipt.')
+      }
+    }
+    const resolvedIds = [
+      ...(data.deleted ?? []),
+      ...(data.skipped ?? []).map((item) => item.id),
+      ...(data.failed ?? []).map((item) => item.id),
+    ]
+    const resolved = new Set(resolvedIds)
+    if (
+      resolvedIds.length !== request.releaseIds.length ||
+      resolved.size !== request.releaseIds.length ||
+      request.releaseIds.some((id) => !resolved.has(id)) ||
+      data.deletedCount !== data.deleted.length ||
+      data.deleted.some((id) => !originals.some((item) => item.expected?.rowId === id && seen.has(item.id)))
+    ) {
+      throw new Error('The batch coverage is incomplete. Check every original operation.')
+    }
+    return { success: data.failed.length === 0 && data.skipped.length === 0, data }
   }
 
   private async postBatchOperation(url: string, body: object): Promise<BatchOperationResponse> {
@@ -899,74 +1031,383 @@ export class Client {
     return this.normalizeListReleasesResponse(rawData)
   }
 
-  async promoteRelease(productId: string, releaseId: string): Promise<CreateReleaseResponse> {
-    const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}/releases/${encodeURIComponent(releaseId)}/promote`
-    const response = await this.httpClient.patch<ApiResponse<CreateReleaseResponse>>(url)
-    const rawData = this.handleApiResponse<unknown>(response.data, {})
-    if (typeof rawData === 'object' && rawData !== null) {
-      return this.normalizePluginRelease(rawData as Record<string, unknown>)
+  async promoteRelease(
+    productId: string,
+    releaseId: string,
+    operation?: { operationId: string; expected: ReleasePublicationExpected; scopeFingerprint?: string }
+  ): Promise<CreateReleaseResponse> {
+    if (!operation || operation.expected.rowId !== releaseId) {
+      throw new Error('The displayed release revision and retained promotion operation are required.')
     }
-    return {} as CreateReleaseResponse
+    const original = findReleaseOperation(await this.publicationScope(productId), operation.operationId)
+    if (
+      original.scopeFingerprint !== operation.scopeFingerprint ||
+      original.action !== 'promote' ||
+      JSON.stringify(original.expected) !== JSON.stringify(operation.expected)
+    ) {
+      throw new Error('The original promotion intent changed.')
+    }
+    if (original.dispatchStarted) {
+      const result = await this.retainedReleaseResult(productId, original.id)
+      if (!result.publication?.eligible) {
+        throw new Error('The original promotion is currently ineligible. Check its retained status.')
+      }
+      return result
+    }
+    persistReleaseOperation({ ...original, dispatchStarted: true })
+    const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}/releases/${encodeURIComponent(releaseId)}/promote`
+    const response = await this.httpClient.patch<unknown>(url, operation, { replayPolicy: 'never' })
+    const receipt = validatePublicationReceipt(response.data, original)
+    if (receipt.state !== 'READY' || receipt.effect !== 'CONFIRMED' || !receipt.eligible) {
+      throw new Error('The promotion outcome remains unresolved. Check its original operation.')
+    }
+    const raw = this.handleApiResponse<Record<string, unknown>>(response.data)
+    return this.publicationRelease(raw, receipt)
+  }
+
+  private async publicationIdentity(productId: string): Promise<{ scope: string; actorId: string }> {
+    const response = await this.httpClient.get<ApiResponse<GetCurrentUserResponse>>(API_ENDPOINT_ADMIN_USERS_ME, {
+      replayPolicy: 'never',
+    })
+    const identity = this.handleApiResponse<GetCurrentUserResponse>(response.data)
+    return { scope: releaseOperationScope(this.baseUrl, identity.user.id, productId), actorId: identity.user.id }
+  }
+
+  private async publicationScope(productId: string): Promise<string> {
+    return (await this.publicationIdentity(productId)).scope
+  }
+
+  private async readPublicationContext(
+    productId: string,
+    actorId: string,
+    operationId: string,
+    fileName: string,
+    version: string,
+    isPrerelease: boolean,
+    action = 'create',
+    expected?: ReleasePublicationExpected
+  ): Promise<unknown> {
+    const query = new URLSearchParams({ operationId, fileName, version, isPrerelease: String(isPrerelease), action })
+    if (expected) {
+      query.set('expected', JSON.stringify(expected))
+    }
+    const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}/releases/publication-context?${query}`
+    const response = await this.httpClient.get<unknown>(url, { replayPolicy: 'never' })
+    const envelope = response.data as { success?: unknown; context?: { actorId?: unknown } }
+    if (envelope?.success !== true || envelope.context?.actorId !== actorId) {
+      throw new Error('The publication principal changed. No new action was dispatched.')
+    }
+    return envelope.context
+  }
+
+  private snapshotPublicationForm(input: FormData): FormData {
+    const snapshot = new FormData()
+    const seen = new Set<string>()
+    input.forEach((value, key) => {
+      if (seen.has(key)) {
+        throw new Error('Every release field must occur exactly once.')
+      }
+      seen.add(key)
+      snapshot.append(key, value)
+    })
+    return snapshot
+  }
+
+  private publicationMultipart(original: ReleaseOperationRecord, input: FormData): FormData {
+    const file = input.get('file')
+    if (!(file instanceof File) || file.name !== original.fileName || file.size !== original.sizeBytes) {
+      throw new Error('The frozen original artifact is required.')
+    }
+    const form = new FormData()
+    form.set('file', file)
+    form.set('version', original.version)
+    form.set('operationId', original.id)
+    form.set('scopeFingerprint', original.scopeFingerprint ?? '')
+    form.set('fileSha256', original.sha256)
+    if (original.expected) {
+      form.set('expected', JSON.stringify(original.expected))
+    }
+    if (original.action === 'create') {
+      for (const key of ['changelogMd', 'requiredTier', 'minWpVersion', 'testedWpVersion', 'isPrerelease']) {
+        const value = original.metadata?.[key]
+        if (value !== null && value !== undefined) {
+          form.set(key, String(value))
+        }
+      }
+    }
+    return form
+  }
+
+  private retainPreparedFormIdentity(target: FormData, prepared: FormData): void {
+    for (const key of ['operationId', 'scopeFingerprint', 'fileSha256', 'expected']) {
+      const value = prepared.get(key)
+      if (typeof value === 'string') {
+        target.set(key, value)
+      }
+    }
+  }
+
+  async prepareReleaseOperation(productId: string, formData: FormData): Promise<ReleaseOperationRecord> {
+    const snapshot = this.snapshotPublicationForm(formData)
+    const allowed = new Set([
+      'file',
+      'version',
+      'operationId',
+      'scopeFingerprint',
+      'fileSha256',
+      'changelogMd',
+      'requiredTier',
+      'minWpVersion',
+      'testedWpVersion',
+      'isPrerelease',
+    ])
+    snapshot.forEach((_value, key) => {
+      if (!allowed.has(key)) {
+        throw new Error('Unsupported Admin creation field; no operation was dispatched.')
+      }
+    })
+    const identity = await this.publicationIdentity(productId)
+    const original = await prepareCreateReleaseOperation(identity.scope, productId, snapshot, (...args) =>
+      this.readPublicationContext(productId, identity.actorId, ...args)
+    )
+    this.retainPreparedFormIdentity(formData, snapshot)
+    return original
+  }
+
+  async repairReleaseMissing(
+    productId: string,
+    inputRow: ListReleasesResponse[number],
+    formData: FormData
+  ): Promise<CreateReleaseResponse> {
+    const snapshot = this.snapshotPublicationForm(formData)
+    const row = { ...inputRow }
+    const identity = await this.publicationIdentity(productId)
+    const original = await prepareRepairReleaseOperation(identity.scope, productId, snapshot, row, (...args) =>
+      this.readPublicationContext(productId, identity.actorId, ...args)
+    )
+    if (original.dispatchStarted) {
+      return this.retainedReleaseResult(productId, original.id)
+    }
+    snapshot.set('operationId', original.id)
+    snapshot.set('scopeFingerprint', original.scopeFingerprint ?? '')
+    snapshot.set('expected', JSON.stringify(original.expected))
+    this.retainPreparedFormIdentity(formData, snapshot)
+    persistReleaseOperation({ ...original, dispatchStarted: true })
+    const response = await this.httpClient.postFormData<unknown>(
+      `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}/releases/${encodeURIComponent(row.id)}/repair-missing`,
+      this.publicationMultipart(original, snapshot),
+      { timeout: RELEASE_UPLOAD_REQUEST_TIMEOUT_MS, replayPolicy: 'never' }
+    )
+    const receipt = validatePublicationReceipt(response.data, original)
+    if (receipt.state !== 'READY' || receipt.effect !== 'CONFIRMED') {
+      throw new Error('The repair remains unresolved. Check the original operation.')
+    }
+    return this.publicationRelease(this.handleApiResponse<Record<string, unknown>>(response.data), receipt)
+  }
+
+  async resumePreparedReleaseMaintenance(productId: string, operationId: string): Promise<ReleasePublicationReceipt> {
+    const identity = await this.publicationIdentity(productId)
+    const original = findReleaseOperation(identity.scope, operationId)
+    if (!original.expected || (original.action !== 'promote' && original.action !== 'delete')) {
+      throw new Error('The original maintenance operation is required.')
+    }
+    if (original.dispatchStarted) {
+      return this.getReleaseOperationStatus(productId, operationId)
+    }
+    const row = (await this.listReleases(productId)).find((item) => item.id === original.expected?.rowId)
+    if (
+      !row ||
+      row.version !== original.version ||
+      row.fileName !== original.fileName ||
+      row.publicationRevision !== original.expected.revision ||
+      row.publicationState !== original.expected.state ||
+      row.objectBindingFingerprint !== original.expected.objectBindingFingerprint
+    ) {
+      throw new Error('The retained maintenance precondition changed. No action was dispatched.')
+    }
+    verifyPreparedMaintenanceContext(
+      original,
+      await this.readPublicationContext(
+        productId,
+        identity.actorId,
+        original.id,
+        original.fileName,
+        original.version,
+        row.isPrerelease,
+        original.action,
+        original.expected
+      )
+    )
+    const operation = {
+      operationId: original.id,
+      expected: original.expected,
+      scopeFingerprint: original.scopeFingerprint ?? '',
+    }
+    if (original.action === 'promote') {
+      await this.promoteRelease(productId, row.id, operation)
+    } else {
+      await this.deleteRelease(productId, row.id, operation)
+    }
+    return this.getReleaseOperationStatus(productId, original.id)
+  }
+
+  async resumePreparedReleaseOperation(
+    productId: string,
+    operationId: string,
+    file: File
+  ): Promise<CreateReleaseResponse> {
+    const original = findReleaseOperation(await this.publicationScope(productId), operationId)
+    if (original.dispatchStarted) {
+      return this.retainedReleaseResult(productId, original.id)
+    }
+    if (!original.metadata || (original.action !== 'create' && original.action !== 'repair-missing')) {
+      throw new Error('This original operation cannot be resumed with an upload. Check status instead.')
+    }
+    const form = new FormData()
+    form.set('operationId', original.id)
+    form.set('version', original.version)
+    form.set('file', file)
+    for (const [key, value] of Object.entries(original.metadata)) {
+      if (
+        value !== null &&
+        (original.action !== 'create' ||
+          ['changelogMd', 'requiredTier', 'minWpVersion', 'testedWpVersion', 'isPrerelease'].includes(key))
+      ) {
+        form.set(key, String(value))
+      }
+    }
+    if (original.action === 'create') {
+      return this.createRelease(productId, form)
+    }
+    const row = (await this.listReleases(productId)).find((item) => item.id === original.expected?.rowId)
+    if (!row || row.publicationRevision !== original.expected?.revision) {
+      throw new Error('The displayed repair revision changed. Keep its original operation ID.')
+    }
+    return this.repairReleaseMissing(productId, row, form)
+  }
+
+  private publicationRelease(raw: Record<string, unknown>, receipt: ReleasePublicationReceipt): CreateReleaseResponse {
+    const row = this.normalizePluginRelease(raw)
+    if (
+      row.id !== receipt.rowId ||
+      row.slug !== receipt.slug ||
+      row.version !== receipt.version ||
+      row.fileName !== receipt.fileName ||
+      row.sizeBytes !== receipt.sizeBytes ||
+      row.fileSha256 !== receipt.sha256 ||
+      row.publicationRevision !== receipt.rowRevision ||
+      row.objectBindingFingerprint !== receipt.objectBindingFingerprint ||
+      ((receipt.action === 'create' || receipt.action === 'repair-missing') &&
+        row.publicationOperationId !== receipt.operationId)
+    ) {
+      throw new Error('The release payload does not match its original receipt. Check the retained operation.')
+    }
+    return { ...row, publication: receipt }
+  }
+
+  private async retainedReleaseResult(productId: string, operationId: string): Promise<CreateReleaseResponse> {
+    const receipt = await this.getReleaseOperationStatus(productId, operationId)
+    if (receipt.state !== 'READY' || receipt.effect !== 'CONFIRMED' || !receipt.rowId) {
+      throw new Error('The original operation remains unresolved. Check its retained status.')
+    }
+    const row = (await this.listReleases(productId)).find((item) => item.id === receipt.rowId)
+    if (!row) {
+      throw new Error('The original committed row is unavailable. Keep its operation ID.')
+    }
+    return this.publicationRelease(row as unknown as Record<string, unknown>, receipt)
+  }
+
+  async retainedReleaseOperations(productId: string): Promise<ReleaseOperationRecord[]> {
+    return listReleaseOperations(await this.publicationScope(productId))
+  }
+
+  async getReleaseOperationStatus(productId: string, operationId: string): Promise<ReleasePublicationReceipt> {
+    const original = findReleaseOperation(await this.publicationScope(productId), operationId)
+    const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}/releases/operations/${encodeURIComponent(operationId)}`
+    const response = await this.httpClient.get<unknown>(url, { replayPolicy: 'never' })
+    return validatePublicationReceipt(response.data, original)
+  }
+
+  async reconcileReleaseOperation(productId: string, operationId: string): Promise<ReleasePublicationReceipt> {
+    const original = findReleaseOperation(await this.publicationScope(productId), operationId)
+    const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}/releases/operations/${encodeURIComponent(operationId)}/reconcile`
+    const response = await this.httpClient.post<unknown>(url, {}, { replayPolicy: 'never' })
+    return validatePublicationReceipt(response.data, original)
+  }
+
+  async prepareReleaseMaintenance(
+    productId: string,
+    action: 'delete' | 'promote',
+    inputRow: ListReleasesResponse[number]
+  ): Promise<ReleaseOperationRecord> {
+    const row = { ...inputRow }
+    const identity = await this.publicationIdentity(productId)
+    return prepareReleaseMaintenance(identity.scope, productId, action, row, (...args) =>
+      this.readPublicationContext(productId, identity.actorId, ...args)
+    )
   }
 
   async createRelease(productId: string, formData: FormData): Promise<CreateReleaseResponse> {
+    const snapshot = this.snapshotPublicationForm(formData)
+    const original = await this.prepareReleaseOperation(productId, snapshot)
+    this.retainPreparedFormIdentity(formData, snapshot)
+    if (original.dispatchStarted) {
+      const receipt = await this.getReleaseOperationStatus(productId, original.id)
+      if (receipt.state !== 'READY' || receipt.effect !== 'CONFIRMED' || !receipt.rowId) {
+        throw new Error('The original upload remains unresolved. Check its retained operation status.')
+      }
+      const rows = await this.listReleases(productId)
+      const retained = rows.find((row) => row.id === receipt.rowId)
+      if (!retained) {
+        throw new Error('The original committed row is unavailable. Keep the operation ID.')
+      }
+      return this.publicationRelease(retained as unknown as Record<string, unknown>, receipt)
+    }
+    persistReleaseOperation({ ...original, dispatchStarted: true })
     const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}/releases`
-    const uploadFormData = this.cloneFormData(formData)
-    try {
-      const response = await this.httpClient.postFormData<ApiResponse<CreateReleaseResponse>>(
-        url,
-        uploadFormData,
-        this.getReleaseUploadRequestConfig()
-      )
-      const rawData = this.handleApiResponse<unknown>(response.data, {})
-      if (typeof rawData === 'object' && rawData !== null) {
-        return this.normalizePluginRelease(rawData as Record<string, unknown>)
-      }
-      return {} as CreateReleaseResponse
-    } catch (error) {
-      if (!this.shouldRetryCreateReleaseAfterUnauthorized(error)) {
-        throw error
-      }
-      this.setToken(null)
-      const refreshedToken = await this.restoreSession()
-      if (!refreshedToken) {
-        throw error
-      }
-      const retryFormData = this.cloneFormData(formData)
-      const retryResponse = await this.httpClient.postFormData<ApiResponse<CreateReleaseResponse>>(
-        url,
-        retryFormData,
-        this.getReleaseUploadRequestConfig()
-      )
-      const rawRetryData = this.handleApiResponse<unknown>(retryResponse.data, {})
-      if (typeof rawRetryData === 'object' && rawRetryData !== null) {
-        return this.normalizePluginRelease(rawRetryData as Record<string, unknown>)
-      }
-      return {} as CreateReleaseResponse
+    const response = await this.httpClient.postFormData<unknown>(url, this.publicationMultipart(original, snapshot), {
+      timeout: RELEASE_UPLOAD_REQUEST_TIMEOUT_MS,
+      replayPolicy: 'never',
+    })
+    const receipt = validatePublicationReceipt(response.data, original)
+    if (receipt.state !== 'READY' || receipt.effect !== 'CONFIRMED') {
+      throw new Error('The original upload remains unresolved. Check its retained operation status.')
     }
+    const raw = this.handleApiResponse<Record<string, unknown>>(response.data)
+    return this.publicationRelease(raw, receipt)
   }
 
-  private getReleaseUploadRequestConfig(): HttpRequestConfig {
-    return { timeout: RELEASE_UPLOAD_REQUEST_TIMEOUT_MS }
-  }
-
-  private cloneFormData(source: FormData): FormData {
-    const cloned = new FormData()
-    for (const [key, value] of source.entries()) {
-      cloned.append(key, value)
+  async deleteRelease(
+    productId: string,
+    releaseId: string,
+    operation?: { operationId: string; expected: ReleasePublicationExpected; scopeFingerprint?: string }
+  ): Promise<{ success: boolean; data: { id: string } }> {
+    if (!operation || operation.expected.rowId !== releaseId) {
+      throw new Error('The displayed release revision and retained delete operation are required.')
     }
-    return cloned
-  }
-
-  private shouldRetryCreateReleaseAfterUnauthorized(error: unknown): error is ApiException {
-    return error instanceof ApiException && error.errorDetails?.status === HTTP_UNAUTHORIZED
-  }
-
-  async deleteRelease(productId: string, releaseId: string): Promise<{ success: boolean; data: { id: string } }> {
+    const original = findReleaseOperation(await this.publicationScope(productId), operation.operationId)
+    if (
+      original.scopeFingerprint !== operation.scopeFingerprint ||
+      original.action !== 'delete' ||
+      JSON.stringify(original.expected) !== JSON.stringify(operation.expected)
+    ) {
+      throw new Error('The original delete intent changed.')
+    }
+    if (original.dispatchStarted) {
+      const receipt = await this.getReleaseOperationStatus(productId, original.id)
+      if (receipt.state !== 'TOMBSTONED' || receipt.effect !== 'OBJECT_RETAINED') {
+        throw new Error('The original delete remains unresolved. Check status.')
+      }
+      return { success: true, data: { id: releaseId } }
+    }
+    persistReleaseOperation({ ...original, dispatchStarted: true })
     const url = `${API_ENDPOINT_ADMIN_PRODUCTS_LIST}/${encodeURIComponent(productId)}/releases/${encodeURIComponent(releaseId)}`
-    const response = await this.httpClient.delete<ApiResponse<{ id: string }>>(url)
-
-    return this.handleApiResponse(response.data, { success: true, data: { id: releaseId } })
+    const response = await this.httpClient.delete<unknown>(url, { replayPolicy: 'never', data: operation })
+    const receipt = validatePublicationReceipt(response.data, original)
+    if (receipt.state !== 'TOMBSTONED' || receipt.effect !== 'OBJECT_RETAINED') {
+      throw new Error('Delete outcome remains unresolved. The retained object has not been reported removed.')
+    }
+    return { success: true, data: { id: releaseId } }
   }
 
   getReleaseDownloadUrl(productId: string, releaseId: string): string {
@@ -1646,6 +2087,34 @@ export class Client {
       this.getDateProperty(source, 'updated_at', 'updatedAt') || this.getDateProperty(source, 'updated', 'updated')
 
     return {
+      fileSha256: this.getNullableStringProperty(source, 'file_sha256', 'fileSha256'),
+      artifactTrust: this.getStringProperty(source, 'artifact_trust', 'artifactTrust'),
+      artifactManifest: this.getNullableStringProperty(source, 'artifact_manifest', 'artifactManifest'),
+      ...(Number.isSafeInteger(source.artifactManifestVersion)
+        ? { artifactManifestVersion: Number(source.artifactManifestVersion) }
+        : {}),
+      artifactSignature: this.getNullableStringProperty(source, 'artifact_signature', 'artifactSignature'),
+      artifactSignatureAlgorithm: this.getNullableStringProperty(
+        source,
+        'artifact_signature_algorithm',
+        'artifactSignatureAlgorithm'
+      ),
+      artifactSigningKeyId: this.getNullableStringProperty(source, 'artifact_signing_key_id', 'artifactSigningKeyId'),
+      publicationState: this.getStringProperty(source, 'publication_state', 'publicationState'),
+      ...(Number.isSafeInteger(source.publication_revision ?? source.publicationRevision)
+        ? { publicationRevision: Number(source.publication_revision ?? source.publicationRevision) }
+        : {}),
+      publicationOperationId: this.getNullableStringProperty(
+        source,
+        'publication_operation_id',
+        'publicationOperationId'
+      ),
+      objectBindingFingerprint: this.getNullableStringProperty(
+        source,
+        'object_binding_fingerprint',
+        'objectBindingFingerprint'
+      ),
+      liveProtectionEpoch: this.getNullableStringProperty(source, 'live_protection_epoch', 'liveProtectionEpoch'),
       id: this.getStringProperty(source, 'id', 'id'),
       slug: this.getStringProperty(source, 'slug', 'slug'),
       version: this.getStringProperty(source, 'version', 'version'),

@@ -61,5 +61,8 @@ export const applyThemeClass = (theme: ThemeName): void => {
   body.setAttribute(THEME_BODY_DATA_ATTRIBUTE, theme)
 
   body.classList.remove(...Object.values(THEME_CLASS_MAP))
-  body.classList.add(THEME_CLASS_MAP[theme] ?? THEME_DEFAULT_CLASS)
+  const className = THEME_CLASS_MAP[theme] ?? THEME_DEFAULT_CLASS
+  if (typeof className === 'string') {
+    body.classList.add(className)
+  }
 }
