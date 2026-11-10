@@ -1,5 +1,6 @@
 import { fireEvent, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
+import type { User } from '@/simpleLicense'
 
 import {
   UI_ENTITLEMENT_ACTION_EDIT,
@@ -9,6 +10,7 @@ import {
   UI_ENTITLEMENT_FORM_SUBMIT_UPDATE,
 } from '../../../src/ui/constants'
 import { ProductEntitlementManagementExample } from '../../../src/ui/workflows/ProductEntitlementManagementExample'
+import type { ProductEntitlementListItem } from '../../../src/ui/workflows/ProductEntitlementRowActions'
 import { buildEntitlement } from '../../factories/entitlementFactory'
 import { buildUser } from '../../factories/userFactory'
 import { buildText } from '../../ui/factories/uiFactories'
@@ -36,9 +38,9 @@ vi.mock('../../../src/ui/workflows/ProductEntitlementRowActions', async () => {
       onEdit,
       onCompleted,
     }: {
-      entitlement: { id: string; vendorId?: string | null }
-      currentUser?: { vendorId?: string | null; role?: string } | null
-      onEdit: (entitlement: { id: string }) => void
+      entitlement: ProductEntitlementListItem
+      currentUser?: User | null
+      onEdit: (entitlement: ProductEntitlementListItem) => void
       onCompleted?: () => void
     }) => {
       // Use actual permission check to match component behavior
@@ -65,6 +67,21 @@ const mockMutation = () => ({
   isPending: false,
 })
 
+const tierId = 'entitlement-standard-tier'
+const tierOptions = [{ value: tierId, label: 'Standard' }]
+const buildUiEntitlement = (vendorId = buildText()): ProductEntitlementListItem => {
+  const { id, key } = buildEntitlement()
+  return {
+    id,
+    key,
+    vendorId,
+    number_value: 0,
+    boolean_value: false,
+    string_value: 'enabled',
+    productTiers: [{ id: tierId, tierCode: 'standard' }],
+  }
+}
+
 describe('ProductEntitlementManagementExample', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -77,18 +94,16 @@ describe('ProductEntitlementManagementExample', () => {
     useUpdateEntitlementMock.mockReturnValue(updateMutation)
     const onRefresh = vi.fn()
     const adminUser = buildUser({ role: 'ADMIN' })
-    const entitlement = buildEntitlement()
+    const entitlement = buildUiEntitlement()
 
     const { getByText, getByRole } = renderWithProviders(
       <ProductEntitlementManagementExample
         client={{} as never}
         productId={buildText()}
+        tierOptions={tierOptions}
         entitlements={[entitlement]}
         currentUser={adminUser}
         onRefresh={onRefresh}
-        page={1}
-        totalPages={1}
-        onPageChange={vi.fn()}
       />
     )
 
@@ -99,9 +114,15 @@ describe('ProductEntitlementManagementExample', () => {
     await waitFor(() => {
       expect(getByRole('button', { name: UI_ENTITLEMENT_FORM_SUBMIT_CREATE })).toBeInTheDocument()
     })
+    fireEvent.change(getByRole('textbox', { name: /^Key\b/i }), { target: { value: entitlement.key } })
+    fireEvent.change(getByRole('listbox', { name: /^Tiers\b/i }), { target: { value: tierId } })
     fireEvent.click(getByRole('button', { name: UI_ENTITLEMENT_FORM_SUBMIT_CREATE }))
 
-    await waitFor(() => expect(createMutation.mutateAsync).toHaveBeenCalled())
+    await waitFor(() =>
+      expect(createMutation.mutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({ key: entitlement.key, tier_ids: [tierId] })
+      )
+    )
     expect(onRefresh).toHaveBeenCalled()
   })
 
@@ -112,22 +133,21 @@ describe('ProductEntitlementManagementExample', () => {
     useUpdateEntitlementMock.mockReturnValue(updateMutation)
     const onRefresh = vi.fn()
     const adminUser = buildUser({ role: 'ADMIN' })
-    const entitlement = buildEntitlement()
+    const entitlement = buildUiEntitlement()
 
     const { getByText, getByRole } = renderWithProviders(
       <ProductEntitlementManagementExample
         client={{} as never}
         productId={buildText()}
+        tierOptions={tierOptions}
         entitlements={[entitlement]}
         currentUser={adminUser}
         onRefresh={onRefresh}
-        page={1}
-        totalPages={1}
-        onPageChange={vi.fn()}
       />
     )
 
     await waitFor(() => {
+      expect(getByText('0, false, enabled')).toBeInTheDocument()
       expect(getByText(UI_ENTITLEMENT_ACTION_EDIT)).toBeInTheDocument()
     })
     fireEvent.click(getByText(UI_ENTITLEMENT_ACTION_EDIT))
@@ -152,19 +172,17 @@ describe('ProductEntitlementManagementExample', () => {
     useUpdateEntitlementMock.mockReturnValue(updateMutation)
     const onRefresh = vi.fn()
     const vendorId = buildText()
-    const entitlement = buildEntitlement({ vendorId })
+    const entitlement = buildUiEntitlement(vendorId)
     const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId })
 
     const { queryByText, getByText, getByRole } = renderWithProviders(
       <ProductEntitlementManagementExample
         client={{} as never}
         productId={buildText()}
+        tierOptions={tierOptions}
         entitlements={[entitlement]}
         currentUser={vendorManager}
         onRefresh={onRefresh}
-        page={1}
-        totalPages={1}
-        onPageChange={vi.fn()}
       />
     )
 
@@ -194,18 +212,16 @@ describe('ProductEntitlementManagementExample', () => {
     useCreateEntitlementMock.mockReturnValue(createMutation)
     useUpdateEntitlementMock.mockReturnValue(updateMutation)
     const vendorId = buildText()
-    const entitlement = buildEntitlement({ vendorId })
+    const entitlement = buildUiEntitlement(vendorId)
     const vendorManager = buildUser({ role: 'VENDOR_MANAGER', vendorId: `${vendorId}-other` })
 
     const { queryByText } = renderWithProviders(
       <ProductEntitlementManagementExample
         client={{} as never}
         productId={buildText()}
+        tierOptions={tierOptions}
         entitlements={[entitlement]}
         currentUser={vendorManager}
-        page={1}
-        totalPages={1}
-        onPageChange={vi.fn()}
       />
     )
 
@@ -219,8 +235,8 @@ describe('ProductEntitlementManagementExample', () => {
     useCreateEntitlementMock.mockReturnValue(createMutation)
     useUpdateEntitlementMock.mockReturnValue(updateMutation)
     const vendorId = 'vendor-entitlements-1'
-    const ownEntitlement = buildEntitlement({ vendorId })
-    const otherEntitlement = buildEntitlement({ vendorId: 'vendor-entitlements-2' })
+    const ownEntitlement = buildUiEntitlement(vendorId)
+    const otherEntitlement = buildUiEntitlement('vendor-entitlements-2')
     // Use VIEWER role for true view-only mode (VENDOR_ADMIN can edit their own)
     const vendorUser = buildUser({ role: 'VIEWER', vendorId })
 
@@ -228,11 +244,9 @@ describe('ProductEntitlementManagementExample', () => {
       <ProductEntitlementManagementExample
         client={{} as never}
         productId={buildText()}
+        tierOptions={tierOptions}
         entitlements={[ownEntitlement, otherEntitlement]}
         currentUser={vendorUser}
-        page={1}
-        totalPages={1}
-        onPageChange={vi.fn()}
       />
     )
 
@@ -250,17 +264,15 @@ describe('ProductEntitlementManagementExample', () => {
     useCreateEntitlementMock.mockReturnValue(createMutation)
     useUpdateEntitlementMock.mockReturnValue(updateMutation)
     const vendorUser = buildUser({ role: 'VENDOR_ADMIN', vendorId: buildText() })
-    const otherEntitlement = buildEntitlement({ vendorId: `${vendorUser.vendorId}-other` })
+    const otherEntitlement = buildUiEntitlement(`${vendorUser.vendorId}-other`)
 
     const { getByText } = renderWithProviders(
       <ProductEntitlementManagementExample
         client={{} as never}
         productId={buildText()}
+        tierOptions={tierOptions}
         entitlements={[otherEntitlement]}
         currentUser={vendorUser}
-        page={1}
-        totalPages={1}
-        onPageChange={vi.fn()}
       />
     )
 
@@ -274,18 +286,16 @@ describe('ProductEntitlementManagementExample', () => {
     const updateMutation = mockMutation()
     useCreateEntitlementMock.mockReturnValue(createMutation)
     useUpdateEntitlementMock.mockReturnValue(updateMutation)
-    const entitlement = buildEntitlement()
+    const entitlement = buildUiEntitlement()
     const viewer = buildUser({ role: 'VIEWER', vendorId: null })
 
     const { getByText, queryByText } = renderWithProviders(
       <ProductEntitlementManagementExample
         client={{} as never}
         productId={buildText()}
+        tierOptions={tierOptions}
         entitlements={[entitlement]}
         currentUser={viewer}
-        page={1}
-        totalPages={1}
-        onPageChange={vi.fn()}
       />
     )
 
@@ -303,17 +313,15 @@ describe('ProductEntitlementManagementExample', () => {
     useCreateEntitlementMock.mockReturnValue(createMutation)
     useUpdateEntitlementMock.mockReturnValue(updateMutation)
     const vendorUser = buildUser({ role: 'VENDOR_ADMIN', vendorId: buildText() })
-    const otherEntitlement = buildEntitlement({ vendorId: `${vendorUser.vendorId}-other` })
+    const otherEntitlement = buildUiEntitlement(`${vendorUser.vendorId}-other`)
 
     const { getByText } = renderWithProviders(
       <ProductEntitlementManagementExample
         client={{} as never}
         productId={buildText()}
+        tierOptions={tierOptions}
         entitlements={[otherEntitlement]}
         currentUser={vendorUser}
-        page={1}
-        totalPages={1}
-        onPageChange={vi.fn()}
       />
     )
 
@@ -335,18 +343,16 @@ describe('ProductEntitlementManagementExample', () => {
     useUpdateEntitlementMock.mockReturnValue(updateMutation)
     const onRefresh = vi.fn()
     const adminUser = buildUser({ role: 'ADMIN' })
-    const entitlement = buildEntitlement()
+    const entitlement = buildUiEntitlement()
 
     const { getByText, getByRole } = renderWithProviders(
       <ProductEntitlementManagementExample
         client={{} as never}
         productId={buildText()}
+        tierOptions={tierOptions}
         entitlements={[entitlement]}
         currentUser={adminUser}
         onRefresh={onRefresh}
-        page={1}
-        totalPages={1}
-        onPageChange={vi.fn()}
       />
     )
 
@@ -357,10 +363,16 @@ describe('ProductEntitlementManagementExample', () => {
     await waitFor(() => {
       expect(getByRole('button', { name: UI_ENTITLEMENT_FORM_SUBMIT_CREATE })).toBeInTheDocument()
     })
+    fireEvent.change(getByRole('textbox', { name: /^Key\b/i }), { target: { value: entitlement.key } })
+    fireEvent.change(getByRole('listbox', { name: /^Tiers\b/i }), { target: { value: tierId } })
     fireEvent.click(getByRole('button', { name: UI_ENTITLEMENT_FORM_SUBMIT_CREATE }))
 
-    await waitFor(() => expect(createMutation.mutateAsync).toHaveBeenCalled())
-    const mutateCall = createMutation.mutateAsync.mock.results[0]?.value as Promise<unknown>
+    await waitFor(() =>
+      expect(createMutation.mutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({ key: entitlement.key, tier_ids: [tierId] })
+      )
+    )
+    const mutateCall = createMutation.mutateAsync.mock.results[0]?.value
     await expect(mutateCall).rejects.toThrow(mutationError)
     expect(onRefresh).not.toHaveBeenCalled()
   })

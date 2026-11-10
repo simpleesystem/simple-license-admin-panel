@@ -9,7 +9,10 @@ import {
   UI_USER_ROLE_VENDOR_MANAGER,
   UI_USER_ROLE_VIEWER,
 } from '../../../src/ui/constants'
-import { ProductEntitlementRowActions } from '../../../src/ui/workflows/ProductEntitlementRowActions'
+import {
+  type ProductEntitlementListItem,
+  ProductEntitlementRowActions,
+} from '../../../src/ui/workflows/ProductEntitlementRowActions'
 import { buildEntitlement } from '../../factories/entitlementFactory'
 import { buildUser } from '../../factories/userFactory'
 
@@ -44,6 +47,11 @@ const mockMutation = () => ({
   isPending: false,
 })
 
+const buildUiEntitlement = (vendorId = faker.string.uuid()): ProductEntitlementListItem => {
+  const { id, key } = buildEntitlement()
+  return { id, key, vendorId, number_value: 10, boolean_value: false, string_value: 'enabled' }
+}
+
 describe('ProductEntitlementRowActions', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -53,20 +61,13 @@ describe('ProductEntitlementRowActions', () => {
     const deleteMutation = mockMutation()
     useDeleteEntitlementMock.mockReturnValue(deleteMutation)
     const onEdit = vi.fn()
-    const entitlement = buildEntitlement()
+    const entitlement = buildUiEntitlement()
     const superuser = buildUser({ role: UI_USER_ROLE_SUPERUSER })
 
     render(
       <ProductEntitlementRowActions
         client={{} as never}
-        entitlement={{
-          id: entitlement.id,
-          key: entitlement.key,
-          valueType: entitlement.valueType,
-          defaultValue: entitlement.defaultValue,
-          usageLimit: entitlement.usageLimit,
-          vendorId: entitlement.vendorId,
-        }}
+        entitlement={entitlement}
         onEdit={onEdit}
         currentUser={superuser}
       />
@@ -87,20 +88,13 @@ describe('ProductEntitlementRowActions', () => {
     const deleteMutation = mockMutation()
     useDeleteEntitlementMock.mockReturnValue(deleteMutation)
     const vendorId = faker.string.uuid()
-    const entitlement = buildEntitlement({ vendorId })
+    const entitlement = buildUiEntitlement(vendorId)
     const vendorManager = buildUser({ role: UI_USER_ROLE_VENDOR_MANAGER, vendorId })
 
     render(
       <ProductEntitlementRowActions
         client={{} as never}
-        entitlement={{
-          id: entitlement.id,
-          key: entitlement.key,
-          valueType: entitlement.valueType,
-          defaultValue: entitlement.defaultValue,
-          usageLimit: entitlement.usageLimit,
-          vendorId: entitlement.vendorId,
-        }}
+        entitlement={entitlement}
         onEdit={vi.fn()}
         currentUser={vendorManager}
       />
@@ -114,20 +108,13 @@ describe('ProductEntitlementRowActions', () => {
   test('vendor manager cannot act on other vendor entitlements', async () => {
     const deleteMutation = mockMutation()
     useDeleteEntitlementMock.mockReturnValue(deleteMutation)
-    const entitlement = buildEntitlement()
+    const entitlement = buildUiEntitlement()
     const vendorManager = buildUser({ role: UI_USER_ROLE_VENDOR_MANAGER, vendorId: `${entitlement.vendorId}-other` })
 
     const { container } = render(
       <ProductEntitlementRowActions
         client={{} as never}
-        entitlement={{
-          id: entitlement.id,
-          key: entitlement.key,
-          valueType: entitlement.valueType,
-          defaultValue: entitlement.defaultValue,
-          usageLimit: entitlement.usageLimit,
-          vendorId: entitlement.vendorId,
-        }}
+        entitlement={entitlement}
         onEdit={vi.fn()}
         currentUser={vendorManager}
       />
@@ -139,20 +126,13 @@ describe('ProductEntitlementRowActions', () => {
   test('vendor-scoped viewer renders no actions', () => {
     const deleteMutation = mockMutation()
     useDeleteEntitlementMock.mockReturnValue(deleteMutation)
-    const entitlement = buildEntitlement()
-    const viewer = buildUser({ role: UI_USER_ROLE_VIEWER, vendorId: entitlement.vendorId ?? undefined })
+    const entitlement = buildUiEntitlement()
+    const viewer = buildUser({ role: UI_USER_ROLE_VIEWER, vendorId: entitlement.vendorId })
 
     const { container } = render(
       <ProductEntitlementRowActions
         client={{} as never}
-        entitlement={{
-          id: entitlement.id,
-          key: entitlement.key,
-          valueType: entitlement.valueType,
-          defaultValue: entitlement.defaultValue,
-          usageLimit: entitlement.usageLimit,
-          vendorId: entitlement.vendorId,
-        }}
+        entitlement={entitlement}
         onEdit={vi.fn()}
         currentUser={viewer}
       />
